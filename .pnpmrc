@@ -1,0 +1,60 @@
+# Production optimization
+audit=false
+fund=false
+update-notifier=false
+prefer-offline=true
+
+# pnpm-specific optimizations
+hoist=true
+hoist-pattern[]=*eslint*
+hoist-pattern[]=*prettier*
+hoist-pattern[]=*typescript*
+hoist-pattern[]=*svelte*
+hoist-pattern[]=*vite*
+
+# Build optimizations
+ignore-scripts=false
+shamefully-hoist=true
+public-hoist-pattern[]=*sqlite3*
+node-linker=hoisted
+
+# Caching and performance
+cache-dir=/tmp/pnpm-cache
+store-dir=~/.pnpm-store
+fetch-retries=3
+fetch-retry-factor=2
+fetch-retry-mintimeout=10000
+fetch-retry-maxtimeout=60000
+
+# Node.js version compatibility
+engine-strict=false
+
+# Reduce package size and noise
+loglevel=error
+
+# Build stability for Railway
+network-timeout=300000
+fetch-timeout=300000
+registry=https://registry.npmjs.org/
+
+# GitHub Packages registry
+@adrienlacombe:registry=https://npm.pkg.github.com
+@atomiqlabs:registry=https://registry.npmjs.org/
+@noble:registry=https://registry.npmjs.org/
+@scure:registry=https://registry.npmjs.org/
+@abi-wan-kanabi:registry=https://registry.npmjs.org/
+
+# GitHub Package Registry authentication
+//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+
+# pnpm-specific settings
+auto-install-peers=true
+strict-peer-dependencies=false
+resolution-mode=highest
+
+# Native dependencies and build scripts
+enable-pre-post-scripts=true
+unsafe-perm=true
+optional=true
+fund=false
+audit=false

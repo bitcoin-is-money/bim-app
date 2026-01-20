@@ -1,0 +1,28 @@
+#!/bin/sh
+
+# Run formatting first
+echo "🎨 Running code formatting..."
+pnpm run format
+
+# Check if formatting was successful
+if [ $? -ne 0 ]; then
+  echo "❌ Code formatting failed."
+  exit 1
+fi
+
+# Add only the files that were originally staged (after formatting)
+echo "📝 Adding formatted files to staging area..."
+git add $(git diff --cached --name-only)
+
+# Run SvelteKit sync to ensure generated types are up to date
+echo "🔍 Running SvelteKit sync and basic validation..."
+timeout 30 npx svelte-kit sync > /dev/null 2>&1
+
+# Check exit code
+if [ $? -ne 0 ]; then
+  echo "❌ SvelteKit sync failed. Please fix configuration errors."
+  echo "💡 Tip: Run 'npx svelte-kit sync' to see detailed error output"
+  exit 1
+fi
+
+echo "✅ Pre-commit checks passed - Code formatted and SvelteKit types are synchronized!"

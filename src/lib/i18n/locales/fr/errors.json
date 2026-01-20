@@ -1,0 +1,173 @@
+{
+	"server": {
+		"lightning": {
+			"service_unavailable": "Service Lightning actuellement indisponible",
+			"payment_creation_failed": "Service Lightning : Échec de la création du paiement",
+			"swap_status_failed": "Service Lightning : Échec de la récupération du statut d'échange",
+			"swap_status_update_failed": "Service Lightning : Échec de la mise à jour du statut d'échange",
+			"quote_retrieval_failed": "Service Lightning : Échec de la récupération du devis",
+			"swap_creation_failed": "Service Lightning : Échec de la création d'échange Starknet vers Lightning",
+			"qr_generation_failed": "Service Lightning : Échec de la génération du code QR",
+			"limits_retrieval_failed": "Service Lightning : Échec de la récupération des limites",
+			"auto_initialize_failed": "Échec de l'auto-initialisation du service Lightning",
+			"invalid_destination_asset": "Paramètre d'actif de destination invalide",
+			"asset_not_supported": "L'actif ${destinationAsset} n'est pas pris en charge",
+			"amount_validation_failed": "Échec de la validation du montant",
+			"fee_calculation_failed": "Échec du calcul des frais",
+			"supported_assets_failed": "Échec de la récupération des actifs pris en charge"
+		},
+		"blockchain": {
+			"scanner_already_running": "Le scanner blockchain est déjà en cours d'exécution",
+			"scanner_starting": "Démarrage du scanner blockchain",
+			"scanner_error": "Erreur dans le scanner blockchain",
+			"scanner_stopping": "Arrêt du scanner blockchain",
+			"database_unavailable": "Base de données non disponible pour le scan blockchain",
+			"no_active_addresses": "Aucune adresse active à scanner",
+			"scanning_addresses": "Scan de ${activeAddresses.length} adresses pour de nouvelles transactions",
+			"found_events": "Trouvé ${allEvents.length} événements de transfert totaux dans la plage",
+			"page_events": "Page ${pageCount + 1} : Trouvé ${response.events.length} événements",
+			"collected_events": "Collecté ${allEvents.length} événements totaux sur ${pageCount} pages",
+			"transaction_exists": "La transaction ${txHash} existe déjà dans la base de données, ignorée",
+			"strk_only_transaction": "La transaction ${txHash} ne contient que des événements STRK, ignorée entièrement",
+			"non_strk_events": "La transaction ${txHash} a ${filteredEvents.length} événements de transfert non-STRK, sélection du meilleur",
+			"wbtc_events_found": "Trouvé ${wbtcEvents.length} événements WBTC sur ${filteredEvents.length} événements non-STRK",
+			"no_wbtc_events": "Aucun événement WBTC trouvé, retour à la sélection basée sur le montant",
+			"zero_amounts": "Tous les événements ont des montants zéro, utilisation du premier événement",
+			"no_selectable_event": "Aucun événement sélectionnable trouvé pour TX ${txHash}, transaction ignorée"
+		},
+		"background_jobs": {
+			"cannot_start_shutdown": "Impossible de démarrer les tâches : le service s'arrête",
+			"starting_jobs": "Démarrage des tâches en arrière-plan",
+			"job_already_running": "La tâche ${config.name} est déjà en cours d'exécution",
+			"job_skipping": "La tâche ${config.name} est déjà en cours d'exécution, exécution ignorée",
+			"job_completed": "La tâche ${config.name} terminée avec succès",
+			"unknown_error": "Erreur inconnue",
+			"stopping_jobs": "Arrêt de toutes les tâches en arrière-plan",
+			"shutting_down": "Arrêt du service de tâches en arrière-plan",
+			"waiting_jobs": "Attente de ${runningJobs.length} tâches en cours d'exécution pour se terminer",
+			"timeout_reached": "Délai d'attente atteint, arrêt forcé",
+			"all_jobs_completed": "Toutes les tâches terminées, arrêt"
+		},
+		"atomiq": {
+			"pair_limits_failed": "Échec de la récupération des limites de paire",
+			"asset_support_check_failed": "Échec de la vérification du support d'actif",
+			"webhook_signature_failed": "Échec de la vérification de la signature webhook",
+			"payment_received": "Paiement reçu, déclenchement de la réclamation automatique",
+			"automatic_claim_completed": "Réclamation automatique terminée avec succès",
+			"automatic_claim_failed": "Échec de la réclamation automatique",
+			"automatic_claim_process_failed": "Échec du processus de réclamation automatique",
+			"start_automatic_claim_failed": "Échec du démarrage du processus de réclamation automatique",
+			"missing_required_fields": "Champs requis manquants : event, swapId, timestamp",
+			"swap_created": "Échange Starknet vers Lightning créé avec succès",
+			"swap_creation_failed": "Échec de la création d'échange Starknet vers Lightning",
+			"status_monitor_initialized": "Moniteur de statut Lightning initialisé",
+			"swap_id_required": "SwapId requis",
+			"swap_id_required_message": "L'ID d'échange est requis pour vérifier le statut",
+			"swap_not_found": "Échange non trouvé ou expiré",
+			"swap_status_failed": "Échec de la récupération du statut d'échange",
+			"quote_retrieval": "Récupération du devis d'échange",
+			"quote_retrieved": "Devis d'échange récupéré",
+			"quote_failed": "Échec de la récupération du devis d'échange",
+			"hyperlink_required": "Lien hypertexte requis pour la génération de code QR",
+			"qr_generation_failed": "Échec de la génération du code QR",
+			"qr_generation_unable": "Impossible de générer le code QR pour le paiement Lightning",
+			"invoice_generator_initialized": "Générateur de facture Lightning initialisé",
+			"creating_payment": "Création du paiement Lightning",
+			"payment_created": "Paiement Lightning créé avec succès",
+			"payment_creation_failed": "Échec de la création du paiement Lightning"
+		}
+	},
+	"client": {
+		"auth": {
+			"registration_failed": "Échec de l'enregistrement de l'utilisateur",
+			"not_allowed": "NotAllowedError",
+			"invalid_state": "InvalidStateError",
+			"security_error": "SecurityError",
+			"security_error_message": "Erreur de sécurité. Veuillez vous assurer que vous",
+			"not_supported": "NotSupportedError",
+			"timeout": "TimeoutError"
+		},
+		"webauthn": {
+			"registration_failed": "Échec de l'enregistrement de l'utilisateur",
+			"no_passkey_selected": "Aucune clé d'accès n'a été sélectionnée. Veuillez réessayer et sélectionner une clé d'accès lorsque vous y êtes invité.",
+			"not_allowed_error": "L'authentification a été annulée ou a expiré. Veuillez réessayer et terminer l'authentification par clé d'accès lorsque vous y êtes invité. Si le problème persiste, essayez de rafraîchir la page.",
+			"invalid_state_error": "Aucune clé d'accès trouvée pour ce site. Veuillez d'abord enregistrer une clé d'accès.",
+			"security_error": "Erreur de sécurité. Veuillez vous assurer que vous utilisez HTTPS et réessayez.",
+			"not_supported_error": "Les clés d'accès ne sont pas prises en charge dans ce navigateur. Veuillez utiliser un navigateur moderne comme Chrome, Firefox ou Safari.",
+			"timeout_error": "L'authentification a expiré. Veuillez réessayer et terminer rapidement la vérification de la clé d'accès.",
+			"missing_credentials": "Identifiants WebAuthn manquants",
+			"missing_credentials_for_creation": "Identifiants WebAuthn manquants pour la création de compte"
+		},
+		"payment": {
+			"login_required": "Veuillez vous connecter pour effectuer un paiement",
+			"recipient_required": "L'adresse du destinataire est requise",
+			"malformed_address": "Validation : adresse hex Starknet malformée",
+			"minimum_amount": "Le montant minimum de transfert est de ${this.config.minimumAmount} sats",
+			"passkey_required": "Clé d'accès requise : identifiants WebAuthn manquants",
+			"passkey_load_failed": "Clé d'accès requise : impossible de charger les identifiants WebAuthn",
+			"deployment_service_unavailable": "Service de déploiement de compte non disponible",
+			"manual_gas_not_supported": "Les paiements de gaz manuels ne sont pas pris en charge",
+			"transaction_execution_failed": "Échec de l'exécution de la transaction",
+			"paymaster_failed": "Échec de la construction/exécution du paymaster",
+			"payment_failed": "Échec du paiement"
+		},
+		"starknet": {
+			"balance_unavailable": "Solde indisponible",
+			"deployment_failed": "Échec du déploiement",
+			"class_hash_failed": "Échec de la récupération du hash de classe - le compte peut ne pas être déployé",
+			"max_retries_exceeded": "Nombre maximum de tentatives dépassé",
+			"unknown_error": "Erreur inconnue",
+			"initialization_failed": "Échec de l'initialisation du compte",
+			"cannot_create_account_not_deployed": "Impossible de créer une instance de compte : compte non déployé"
+		},
+		"lightning": {
+			"monitoring_active": "Surveillance déjà active",
+			"payment_failed": "Échec du paiement",
+			"payment_expired": "Paiement expiré",
+			"swap_creation_failed": "Échec de la création d'échange (tentative ${attempt}), nouvelle tentative dans ${this.retryDelay}ms",
+			"all_attempts_failed": "Toutes les ${this.maxRetries} tentatives de création d'échange Starknet vers Lightning ont échoué",
+			"retry_attempts_failed": "Toutes les tentatives de nouvelle tentative ont échoué",
+			"request_timeout": "Délai d'attente de la demande d'échange Starknet vers Lightning",
+			"swap_created": "Échange Starknet vers Lightning créé avec succès"
+		},
+		"transaction": {
+			"received": "Reçu",
+			"sent": "Envoyé",
+			"today": "Aujourd'hui",
+			"yesterday": "Hier"
+		},
+		"rpc": {
+			"service_initialized": "ClientRpcProxyService initialisé",
+			"getting_nonce": "Récupération du nonce de compte via proxy RPC",
+			"failed_to_get_nonce": "Échec de la récupération du nonce de compte",
+			"nonce_retrieved_successfully": "Nonce de compte récupéré avec succès",
+			"call_failed": "Échec de l'appel proxy RPC"
+		}
+	},
+	"validation": {
+		"authentication_required": "Authentification requise",
+		"method_not_allowed": "Méthode non autorisée",
+		"parse_request_failed": "Échec de l'analyse des données de demande",
+		"invalid_request_format": "Format de demande invalide",
+		"validation_failed": "Échec de la validation",
+		"unexpected_fields": "Champs inattendus dans la demande",
+		"transaction_null": "La transaction est nulle ou non définie",
+		"transaction_type_missing": "Le type de transaction est manquant",
+		"transaction_data_missing": "Les données de transaction (tx.tx) sont manquantes",
+		"invalid_amount": "Montant invalide : doit être positif",
+		"amount_too_small": "Montant trop petit : minimum 1000 satoshis",
+		"amount_too_small_bitcoin": "Montant trop petit : minimum 10 000 satoshis pour les échanges Bitcoin",
+		"invalid_starknet_address": "Format d'adresse Starknet invalide",
+		"unsupported_destination_asset": "Actif de destination non pris en charge",
+		"expiration_range": "L'expiration doit être entre 5 minutes et 24 heures",
+		"expiration_range_bitcoin": "L'expiration doit être entre 30 minutes et 48 heures pour les échanges Bitcoin"
+	},
+	"network": {
+		"request_timeout": "Délai d'attente de la demande après ${timeoutDuration}ms",
+		"timeout_error": "TimeoutError",
+		"abort_error": "AbortError' ? 'abandonné' : 'échoué",
+		"connection_failed": "Échec de la connexion réseau",
+		"operation_timeout": "Délai d'attente de l'opération",
+		"service_connection_failed": "Échec de la connexion au service"
+	}
+}
