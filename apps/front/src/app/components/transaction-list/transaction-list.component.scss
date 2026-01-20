@@ -1,0 +1,39 @@
+.transaction-list {
+  @apply flex flex-col gap-2;
+
+  .transaction-item {
+    @apply py-3;
+
+    .transaction-content {
+      @apply flex items-start gap-3;
+
+      .transaction-bullet {
+        @apply w-2 h-2 rounded-full bg-gray-500 mt-2 flex-shrink-0;
+      }
+
+      .transaction-info {
+        @apply flex-1 min-w-0;
+
+        .transaction-label {
+          @apply text-white font-medium;
+        }
+
+        .transaction-date {
+          @apply text-sm text-gray-400 mt-1;
+        }
+      }
+
+      .transaction-amount {
+        @apply text-right font-semibold flex-shrink-0;
+
+        &.credit {
+          @apply text-green-400;
+        }
+
+        &.debit {
+          @apply text-gray-300;
+        }
+      }
+    }
+  }
+}

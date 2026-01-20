@@ -1,0 +1,52 @@
+.auth-page {
+  @apply min-h-screen flex flex-col;
+
+  .auth-header {
+    @apply p-4;
+
+    .logo {
+      @apply text-xl font-bold text-white;
+    }
+  }
+
+  .auth-main {
+    @apply flex-1 flex flex-col px-4 pb-4;
+
+    .welcome-message {
+      @apply text-2xl font-semibold text-center mb-8 text-gray-100;
+    }
+
+    .auth-section {
+      @apply flex flex-col gap-4;
+
+      &.sign-in-section {
+        @apply flex-1 justify-end mb-4;
+      }
+
+      &.sign-up-section {
+        @apply flex-1 justify-start;
+      }
+    }
+
+    .sign-in-button,
+    .sign-up-button {
+      @apply w-full py-4 px-6 rounded-lg font-medium text-white transition-colors;
+      @apply bg-blue-600 hover:bg-blue-700 active:bg-blue-800;
+      @apply disabled:opacity-50 disabled:cursor-not-allowed;
+
+      .button-text {
+        @apply text-lg;
+      }
+    }
+
+    .username-input {
+      @apply w-full py-4 px-6 rounded-lg bg-gray-800 text-white placeholder-gray-400;
+      @apply border border-gray-700 focus:border-blue-500 focus:outline-none;
+      @apply disabled:opacity-50 disabled:cursor-not-allowed;
+    }
+
+    .error-message {
+      @apply mt-4 p-4 rounded-lg bg-red-900 text-red-100 text-sm;
+    }
+  }
+}

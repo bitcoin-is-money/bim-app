@@ -1,0 +1,50 @@
+<div class="home-page">
+  <header class="home-header">
+    <div class="header-content">
+      <h2 class="greeting">Hi {{ username }}</h2>
+      <button 
+        class="menu-button"
+        (click)="toggleMenu()"
+        aria-label="Menu">
+        <span class="menu-icon"></span>
+        <span class="menu-icon"></span>
+        <span class="menu-icon"></span>
+      </button>
+    </div>
+
+    @if (isMenuOpen()) {
+      <nav class="menu-dropdown">
+        <button class="menu-item" (click)="navigateToAbout()">
+          About
+        </button>
+      </nav>
+    }
+  </header>
+
+  <main class="home-main">
+    @if (isLoading()) {
+      <div class="loading">Loading...</div>
+    } @else {
+      @if (balance()) {
+        <app-balance-display
+          [amount]="balance()!.amount"
+          [currency]="balance()!.currency">
+        </app-balance-display>
+      }
+
+      <div class="transactions-section">
+        <h3 class="transactions-title">Historic</h3>
+        <app-transaction-list [transactions]="transactions()"></app-transaction-list>
+      </div>
+    }
+  </main>
+
+  <footer class="home-footer">
+    <button class="footer-button" (click)="onReceive()">
+      Receive
+    </button>
+    <button class="footer-button" (click)="onPay()">
+      Pay
+    </button>
+  </footer>
+</div>

@@ -1,0 +1,39 @@
+<div class="auth-page">
+  <header class="auth-header">
+    <div class="logo">BIM</div>
+  </header>
+
+  <main class="auth-main">
+    <h1 class="welcome-message">Welcome</h1>
+
+    <div class="auth-section sign-in-section">
+      <button
+        class="sign-in-button"
+        (click)="onSignIn()"
+        [disabled]="isLoading()">
+        <span class="button-text">Sign In</span>
+      </button>
+    </div>
+
+    <div class="auth-section sign-up-section">
+      <input
+        type="text"
+        class="username-input"
+        placeholder="Username"
+        [value]="username()"
+        (input)="updateUsername($event)"
+        [disabled]="isLoading()"
+      />
+      <button
+        class="sign-up-button"
+        (click)="onSignUp()"
+        [disabled]="isLoading() || !username()">
+        <span class="button-text">Sign Up</span>
+      </button>
+    </div>
+
+    @if (error()) {
+      <div class="error-message">{{ error() }}</div>
+    }
+  </main>
+</div>
