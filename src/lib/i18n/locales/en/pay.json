@@ -1,0 +1,49 @@
+{
+	"head": {
+		"title": "Pay - BIM",
+		"description": "Send Bitcoin and Lightning payments"
+	},
+	"header": {
+		"title": "Pay.",
+		"back": "Go back"
+	},
+	"clipboard": {
+		"empty": "Your clipboard is empty.",
+		"close": "Close notification"
+	},
+	"amount": {
+		"placeholder": "0",
+		"change_currency": "Change currency"
+	},
+	"form": {
+		"address": "Address",
+		"address_locked": "Bitcoin address (locked)",
+		"description": "Description",
+		"fee": "Fee"
+	},
+	"status": {
+		"min_swap": "Minimum swap amount: {amount} SATS",
+		"processing": "Processing...",
+		"success": "Payment sent successfully!",
+		"swap_completed": "🎉 Swap to Bitcoin completed.",
+		"swap_error_prefix": "Swap monitoring error:",
+		"monitoring": "Monitoring swap progress...",
+		"insufficient": "Insufficient funds",
+		"tx": "Transaction:",
+		"swap_id": "Swap ID:"
+	},
+	"buttons": {
+		"pay": "Pay",
+		"send_alt": "Send"
+	},
+	"errors": {
+		"insufficient": "Insufficient funds",
+		"missing_btc_address": "Missing Bitcoin address",
+		"enter_amount": "Enter an amount to swap",
+		"starknet_unavailable": "Starknet address not available",
+		"swap_api": "Swap API error",
+		"missing_deposit": "Missing deposit address from swap",
+		"swap_to_btc_failed": "Swap-to-Bitcoin failed",
+		"payment_failed": "Payment failed"
+	}
+}

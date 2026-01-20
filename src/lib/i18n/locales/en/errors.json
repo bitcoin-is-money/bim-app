@@ -1,0 +1,173 @@
+{
+	"server": {
+		"lightning": {
+			"service_unavailable": "Lightning service is currently unavailable",
+			"payment_creation_failed": "Lightning Service: Payment creation failed",
+			"swap_status_failed": "Lightning Service: Swap status retrieval failed",
+			"swap_status_update_failed": "Lightning Service: Swap status update failed",
+			"quote_retrieval_failed": "Lightning Service: Quote retrieval failed",
+			"swap_creation_failed": "Lightning Service: Starknet to Lightning swap creation failed",
+			"qr_generation_failed": "Lightning Service: QR code generation failed",
+			"limits_retrieval_failed": "Lightning Service: Limits retrieval failed",
+			"auto_initialize_failed": "Failed to auto-initialize Lightning service",
+			"invalid_destination_asset": "Invalid destination asset parameter",
+			"asset_not_supported": "Asset ${destinationAsset} is not supported",
+			"amount_validation_failed": "Amount validation failed",
+			"fee_calculation_failed": "Failed to calculate fees",
+			"supported_assets_failed": "Failed to get supported assets"
+		},
+		"blockchain": {
+			"scanner_already_running": "Blockchain scanner is already running",
+			"scanner_starting": "Starting blockchain scanner",
+			"scanner_error": "Error in blockchain scanner",
+			"scanner_stopping": "Stopping blockchain scanner",
+			"database_unavailable": "Database not available for blockchain scanning",
+			"no_active_addresses": "No active addresses to scan",
+			"scanning_addresses": "Scanning ${activeAddresses.length} addresses for new transactions",
+			"found_events": "Found ${allEvents.length} total Transfer events in range",
+			"page_events": "Page ${pageCount + 1}: Found ${response.events.length} events",
+			"collected_events": "Collected ${allEvents.length} total events across ${pageCount} pages",
+			"transaction_exists": "Transaction ${txHash} already exists in database, skipping",
+			"strk_only_transaction": "Transaction ${txHash} only contains STRK events, skipping entirely",
+			"non_strk_events": "Transaction ${txHash} has ${filteredEvents.length} non-STRK Transfer events, selecting best one",
+			"wbtc_events_found": "Found ${wbtcEvents.length} WBTC events out of ${filteredEvents.length} non-STRK events",
+			"no_wbtc_events": "No WBTC events found, falling back to amount-based selection",
+			"zero_amounts": "All events have zero amounts, using first event",
+			"no_selectable_event": "No selectable event found for TX ${txHash}, skipping transaction"
+		},
+		"background_jobs": {
+			"cannot_start_shutdown": "Cannot start jobs: service is shutting down",
+			"starting_jobs": "Starting background jobs",
+			"job_already_running": "Job ${config.name} is already running",
+			"job_skipping": "Job ${config.name} is already running, skipping execution",
+			"job_completed": "Job ${config.name} completed successfully",
+			"unknown_error": "Unknown error",
+			"stopping_jobs": "Stopping all background jobs",
+			"shutting_down": "Shutting down background jobs service",
+			"waiting_jobs": "Waiting for ${runningJobs.length} running jobs to complete",
+			"timeout_reached": "Timeout reached, forcing shutdown",
+			"all_jobs_completed": "All jobs completed, shutting down"
+		},
+		"atomiq": {
+			"pair_limits_failed": "Failed to get pair limits",
+			"asset_support_check_failed": "Failed to check if asset is supported",
+			"webhook_signature_failed": "Webhook signature verification failed",
+			"payment_received": "Payment received, triggering automatic claim",
+			"automatic_claim_completed": "Automatic claim completed successfully",
+			"automatic_claim_failed": "Automatic claim failed",
+			"automatic_claim_process_failed": "Automatic claim process failed",
+			"start_automatic_claim_failed": "Failed to start automatic claim process",
+			"missing_required_fields": "Missing required fields: event, swapId, timestamp",
+			"swap_created": "Starknet to Lightning swap created successfully",
+			"swap_creation_failed": "Failed to create Starknet to Lightning swap",
+			"status_monitor_initialized": "Lightning Status Monitor initialized",
+			"swap_id_required": "SwapId is required",
+			"swap_id_required_message": "Swap ID is required to check status",
+			"swap_not_found": "Swap not found or expired",
+			"swap_status_failed": "Failed to get swap status",
+			"quote_retrieval": "Getting swap quote",
+			"quote_retrieved": "Swap quote retrieved",
+			"quote_failed": "Failed to get swap quote",
+			"hyperlink_required": "Hyperlink is required for QR code generation",
+			"qr_generation_failed": "Failed to generate QR code",
+			"qr_generation_unable": "Unable to generate QR code for Lightning payment",
+			"invoice_generator_initialized": "Lightning Invoice Generator initialized",
+			"creating_payment": "Creating Lightning payment",
+			"payment_created": "Lightning payment created successfully",
+			"payment_creation_failed": "Lightning payment creation failed"
+		}
+	},
+	"client": {
+		"auth": {
+			"registration_failed": "Failed to register user",
+			"not_allowed": "NotAllowedError",
+			"invalid_state": "InvalidStateError",
+			"security_error": "SecurityError",
+			"security_error_message": "Security error. Please ensure you",
+			"not_supported": "NotSupportedError",
+			"timeout": "TimeoutError"
+		},
+		"webauthn": {
+			"registration_failed": "Failed to register user",
+			"no_passkey_selected": "No passkey was selected. Please try again and select a passkey when prompted.",
+			"not_allowed_error": "Authentication was cancelled or timed out. Please try again and complete the passkey authentication when prompted. If the issue persists, try refreshing the page.",
+			"invalid_state_error": "No passkeys found for this site. Please register a passkey first.",
+			"security_error": "Security error. Please ensure you're using HTTPS and try again.",
+			"not_supported_error": "Passkeys are not supported in this browser. Please use a modern browser like Chrome, Firefox, or Safari.",
+			"timeout_error": "Authentication timed out. Please try again and complete the passkey verification promptly.",
+			"missing_credentials": "Missing WebAuthn credentials",
+			"missing_credentials_for_creation": "Missing WebAuthn credentials for account creation"
+		},
+		"payment": {
+			"login_required": "Please log in to make a payment",
+			"recipient_required": "Recipient address is required",
+			"malformed_address": "Validation: malformed Starknet hex address",
+			"minimum_amount": "Minimum transfer amount is ${this.config.minimumAmount} sats",
+			"passkey_required": "Passkey required: missing WebAuthn credentials",
+			"passkey_load_failed": "Passkey required: unable to load WebAuthn credentials",
+			"deployment_service_unavailable": "Account deployment service not available",
+			"manual_gas_not_supported": "Manual gas payments are not supported",
+			"transaction_execution_failed": "Transaction failed during execution",
+			"paymaster_failed": "Paymaster build/execute failed",
+			"payment_failed": "Payment failed"
+		},
+		"starknet": {
+			"balance_unavailable": "Balance unavailable",
+			"deployment_failed": "Deployment failed",
+			"class_hash_failed": "Failed to get class hash - account may not be deployed",
+			"max_retries_exceeded": "Max retries exceeded",
+			"unknown_error": "Unknown error",
+			"initialization_failed": "Failed to initialize account",
+			"cannot_create_account_not_deployed": "Cannot create account instance: account not deployed"
+		},
+		"lightning": {
+			"monitoring_active": "Monitoring already active",
+			"payment_failed": "Payment failed",
+			"payment_expired": "Payment expired",
+			"swap_creation_failed": "Swap creation failed (attempt ${attempt}), retrying in ${this.retryDelay}ms",
+			"all_attempts_failed": "All ${this.maxRetries} attempts to create Starknet to Lightning swap failed",
+			"retry_attempts_failed": "All retry attempts failed",
+			"request_timeout": "Starknet to Lightning swap request timed out",
+			"swap_created": "Starknet to Lightning swap created successfully"
+		},
+		"transaction": {
+			"received": "Received",
+			"sent": "Sent",
+			"today": "Today",
+			"yesterday": "Yesterday"
+		},
+		"rpc": {
+			"service_initialized": "ClientRpcProxyService initialized",
+			"getting_nonce": "Getting account nonce via RPC proxy",
+			"failed_to_get_nonce": "Failed to get account nonce",
+			"nonce_retrieved_successfully": "Account nonce retrieved successfully",
+			"call_failed": "RPC proxy call failed"
+		}
+	},
+	"validation": {
+		"authentication_required": "Authentication required",
+		"method_not_allowed": "Method not allowed",
+		"parse_request_failed": "Failed to parse request data",
+		"invalid_request_format": "Invalid request format",
+		"validation_failed": "Validation failed",
+		"unexpected_fields": "Unexpected fields in request",
+		"transaction_null": "Transaction is null or undefined",
+		"transaction_type_missing": "Transaction type is missing",
+		"transaction_data_missing": "Transaction data (tx.tx) is missing",
+		"invalid_amount": "Invalid amount: must be positive",
+		"amount_too_small": "Amount too small: minimum 1000 satoshis",
+		"amount_too_small_bitcoin": "Amount too small: minimum 10,000 satoshis for Bitcoin swaps",
+		"invalid_starknet_address": "Invalid Starknet address format",
+		"unsupported_destination_asset": "Unsupported destination asset",
+		"expiration_range": "Expiration must be between 5 minutes and 24 hours",
+		"expiration_range_bitcoin": "Expiration must be between 30 minutes and 48 hours for Bitcoin swaps"
+	},
+	"network": {
+		"request_timeout": "Request timeout after ${timeoutDuration}ms",
+		"timeout_error": "TimeoutError",
+		"abort_error": "AbortError' ? 'aborted' : 'failed",
+		"connection_failed": "Network connection failed",
+		"operation_timeout": "Operation timed out",
+		"service_connection_failed": "Connection to service failed"
+	}
+}
