@@ -1,0 +1,37 @@
+{
+  "name": "@bim/api",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "clean": "rm -rf dist && find public -mindepth 1 ! -name '.gitkeep' -delete 2>/dev/null || true",
+    "clean:all": "npm run clean && rm -rf node_modules",
+    "build": "esbuild src/main.ts --bundle --platform=node --format=esm --outfile=dist/main.js --packages=external",
+    "dev": "node --watch --experimental-strip-types src/main.ts",
+    "start": "node dist/main.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "copy:front": "cp -r ../front/dist/frontend/browser/browser/* ./public/",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push"
+  },
+  "dependencies": {
+    "@atomiqlabs/chain-starknet": "^7.0.25",
+    "@atomiqlabs/sdk": "^7.0.10",
+    "@atomiqlabs/storage-sqlite": "^4.0.0",
+    "@bim/domain": "*",
+    "@bim/lib": "*",
+    "@hono/node-server": "^1.13.0",
+    "@simplewebauthn/server": "^13.1.1",
+    "drizzle-orm": "^0.38.0",
+    "hono": "^4.6.0",
+    "pg": "^8.13.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.9",
+    "@types/pg": "^8.11.6",
+    "drizzle-kit": "^0.30.0"
+  }
+}

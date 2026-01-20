@@ -1,0 +1,32 @@
+{
+  "name": "bim",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "clean": "npm run clean --workspaces --if-present",
+    "clean:all": "npm run clean:all --workspaces --if-present && rm -rf node_modules",
+    "build": "npm run build -w @bim/lib && npm run build -w @bim/domain && npm run build -w @bim/api",
+    "build:front": "npm run build -w @bim/front",
+    "build:all": "npm run build && npm run build:front && npm run copy:front -w @bim/api",
+    "dev": "npm run dev -w @bim/api",
+    "dev:front": "npm run dev -w front",
+    "test": "npm run test -w @bim/lib && npm run test -w @bim/domain && npm run test -w @bim/api && npm run test -w @bim/front",
+    "test:run": "vitest run",
+    "test:e2e": "echo TODO"
+  },
+  "packageManager": "npm@11.6.2",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.27.2",
+    "typescript": "^5.9.3",
+    "vite-tsconfig-paths": "^6.0.4",
+    "vitest": "^4.0.17"
+  }
+}

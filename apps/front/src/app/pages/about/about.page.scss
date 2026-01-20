@@ -1,0 +1,28 @@
+.about-page {
+  @apply min-h-screen flex flex-col bg-gray-900;
+
+  .about-header {
+    @apply p-4 border-b border-gray-800 flex items-center gap-4;
+
+    .back-button {
+      @apply px-4 py-2 text-white hover:bg-gray-800 rounded-lg transition-colors;
+      @apply bg-transparent border-none cursor-pointer;
+    }
+
+    .about-title {
+      @apply text-xl font-semibold text-white;
+    }
+  }
+
+  .about-main {
+    @apply flex-1 p-4;
+
+    .about-content {
+      @apply max-w-2xl mx-auto;
+
+      .about-text {
+        @apply text-gray-300 leading-relaxed;
+      }
+    }
+  }
+}
