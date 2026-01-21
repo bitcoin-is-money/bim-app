@@ -1,11 +1,8 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+
+@reference "tailwindcss";
 
 :root {
-  @apply dark;
-}
-
-body {
   @apply bg-gray-900 text-gray-100;
 }
+
+
