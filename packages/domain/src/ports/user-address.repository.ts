@@ -1,6 +1,5 @@
-import {AccountId, StarknetAddress} from '../account/types';
-import {UserAddressId} from '../user/types';
-import {UserAddress} from '../user/user-address';
+import {AccountId, StarknetAddress} from '@bim/domain/account';
+import {UserAddress, UserAddressId} from '@bim/domain/user';
 
 /**
  * Repository interface for UserAddress persistence.

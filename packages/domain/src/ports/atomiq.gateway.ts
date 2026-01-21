@@ -1,5 +1,5 @@
-import {StarknetAddress} from '../account/types';
-import {BitcoinAddress, LightningInvoice, SwapId, type SwapLimits} from '../swap/types';
+import {StarknetAddress} from '@bim/domain/account';
+import {BitcoinAddress, LightningInvoice, SwapId, type SwapLimits} from '@bim/domain/swap';
 
 /**
  * Gateway interface for Atomiq SDK interactions (cross-chain swaps).

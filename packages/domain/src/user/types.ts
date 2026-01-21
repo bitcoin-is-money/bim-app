@@ -1,5 +1,5 @@
-import {AccountId, StarknetAddress} from '../account/types';
-import {DomainError} from '../shared/errors';
+import {AccountId, StarknetAddress} from '@bim/domain/account';
+import {DomainError} from '@bim/domain/shared';
 
 // =============================================================================
 // Branded Types

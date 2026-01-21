@@ -1,4 +1,4 @@
-import {StarknetAddress} from '../account/types';
+import {StarknetAddress} from '@bim/domain/account';
 import type {DeployTransaction, StarknetTransaction} from './starknet.gateway';
 
 /**

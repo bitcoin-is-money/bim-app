@@ -1,5 +1,5 @@
-import {AccountId} from '../account/types';
-import type {UserSettingsRepository} from '../ports/user-settings.repository';
+import {AccountId} from '@bim/domain/account';
+import type {UserSettingsRepository} from '@bim/domain/ports';
 import {FiatCurrency, UserSettingsId,} from './types';
 import {UserSettings} from './user-settings';
 
