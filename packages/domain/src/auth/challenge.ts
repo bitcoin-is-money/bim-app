@@ -1,4 +1,4 @@
-import {AccountId} from '../account/types';
+import {AccountId} from '@bim/domain/account';
 import {
   CHALLENGE_DURATION_MS,
   ChallengeAlreadyUsedError,

@@ -1,5 +1,4 @@
-import {Challenge} from '../auth/challenge';
-import {ChallengeId} from '../auth/types';
+import {Challenge, ChallengeId} from '@bim/domain/auth';
 
 /**
  * Repository interface for WebAuthn Challenge persistence.

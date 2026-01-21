@@ -1,5 +1,4 @@
-import {Account} from '../account/account';
-import {AccountId, CredentialId} from '../account/types';
+import {Account, AccountId, CredentialId} from '@bim/domain/account';
 
 /**
  * Repository interface for Account persistence.

@@ -1,5 +1,4 @@
-import type {AccountRepository} from '../ports/account.repository';
-import type {StarknetGateway} from '../ports/starknet.gateway';
+import type {AccountRepository, StarknetGateway} from '@bim/domain/ports';
 import {Account} from './account';
 import {AccountAlreadyExistsError, AccountId, CredentialId, StarknetAddress,} from './types';
 

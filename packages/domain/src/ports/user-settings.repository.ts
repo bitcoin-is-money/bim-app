@@ -1,5 +1,5 @@
-import {AccountId} from '../account/types';
-import {UserSettings} from '../user/user-settings';
+import {AccountId} from '@bim/domain/account';
+import {UserSettings} from '@bim/domain/user';
 
 /**
  * Repository interface for UserSettings persistence.

@@ -1,6 +1,5 @@
-import {Account} from '../account/account';
-import type {AccountRepository} from '../ports/account.repository';
-import type {SessionRepository} from '../ports/session.repository';
+import {Account} from '@bim/domain/account';
+import type {AccountRepository, SessionRepository} from '@bim/domain/ports';
 import {Session} from './session';
 import {SessionId, SessionNotFoundError} from './types';
 

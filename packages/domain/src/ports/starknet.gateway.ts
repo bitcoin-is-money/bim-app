@@ -1,4 +1,4 @@
-import {StarknetAddress} from '../account/types';
+import {StarknetAddress} from '@bim/domain/account';
 
 /**
  * Gateway interface for Starknet blockchain interactions.

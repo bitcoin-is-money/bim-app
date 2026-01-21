@@ -1,6 +1,5 @@
 import {AccountId} from '@bim/domain/account';
-import type {TransactionRepository} from '../ports/transaction.repository';
-import type {UserAddressRepository} from '../ports/user-address.repository';
+import type {TransactionRepository, UserAddressRepository} from '@bim/domain/ports';
 import {Transaction} from './transaction';
 import {UserAddressId, UserAddressNotFoundError} from './types';
 

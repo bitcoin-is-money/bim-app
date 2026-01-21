@@ -1,5 +1,4 @@
-import type {AtomiqGateway} from '../ports/atomiq.gateway';
-import type {SwapRepository} from '../ports/swap.repository';
+import type {AtomiqGateway, SwapRepository} from '@bim/domain/ports';
 import {Swap} from './swap';
 import {InvalidSwapStateError, SwapClaimError, SwapId, SwapNotFoundError,} from './types';
 

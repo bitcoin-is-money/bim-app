@@ -1,10 +1,11 @@
-import {Account} from '../account/account';
-import {AccountAlreadyExistsError, AccountId, CredentialId} from '../account/types';
-import type {AccountRepository} from '../ports/account.repository';
-import type {ChallengeRepository} from '../ports/challenge.repository';
-import type {SessionRepository} from '../ports/session.repository';
-import type {StarknetGateway} from '../ports/starknet.gateway';
-import type {WebAuthnGateway} from '../ports/webauthn.gateway';
+import {Account, AccountAlreadyExistsError, AccountId, CredentialId} from '@bim/domain/account';
+import type {
+  AccountRepository,
+  ChallengeRepository,
+  SessionRepository,
+  StarknetGateway,
+  WebAuthnGateway
+} from '@bim/domain/ports';
 import {Challenge} from './challenge';
 import {Session} from './session';
 import {ChallengeId, ChallengeNotFoundError, RegistrationFailedError, type WebAuthnRegistrationOptions,} from './types';

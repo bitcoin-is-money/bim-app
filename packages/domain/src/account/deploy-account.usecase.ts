@@ -1,6 +1,4 @@
-import type {AccountRepository} from '../ports/account.repository';
-import type {PaymasterGateway} from '../ports/paymaster.gateway';
-import type {StarknetGateway} from '../ports/starknet.gateway';
+import type {AccountRepository, PaymasterGateway, StarknetGateway} from '@bim/domain/ports';
 import {Account} from './account';
 import {AccountId, AccountNotFoundError, InvalidAccountStateError,} from './types';
 
