@@ -8,13 +8,16 @@ import {
 } from '@bim/domain';
 import {eq} from 'drizzle-orm';
 import type {NodePgDatabase} from 'drizzle-orm/node-postgres';
-import * as schema from '../../db/schema.js';
+import * as schema from '../../../database/schema.js';
 
 /**
  * Drizzle-based implementation of AccountRepository.
  */
 export class DrizzleAccountRepository implements AccountRepository {
-  constructor(private readonly db: NodePgDatabase<typeof schema>) {}
+
+  constructor(
+    private readonly db: NodePgDatabase<typeof schema>
+  ) {}
 
   async save(account: Account): Promise<void> {
     const data = account.toData();

@@ -11,10 +11,13 @@
     "start": "node dist/main.js",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:integration": "vitest run --config vitest.config.integration.ts",
+    "test:all": "npm run test && npm run test:integration",
     "copy:front": "cp -r ../front/dist/frontend/browser/browser/* ./public/",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
-    "db:push": "drizzle-kit push"
+    "db:generate": "drizzle-kit generate --config database/drizzle.config.ts",
+    "db:migrate": "drizzle-kit migrate --config database/drizzle.config.ts",
+    "db:push": "drizzle-kit push --config database/drizzle.config.ts",
+    "db:studio": "drizzle-kit studio --config database/drizzle.config.ts"
   },
   "dependencies": {
     "@atomiqlabs/chain-starknet": "^7.0.25",
@@ -30,8 +33,10 @@
     "zod": "^3.24.0"
   },
   "devDependencies": {
+    "@testcontainers/postgresql": "^11.11.0",
     "@types/node": "^25.0.9",
     "@types/pg": "^8.11.6",
-    "drizzle-kit": "^0.30.0"
+    "drizzle-kit": "^0.30.0",
+    "testcontainers": "^11.11.0"
   }
 }
