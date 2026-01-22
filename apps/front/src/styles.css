@@ -1,8 +1,20 @@
-
 @reference "tailwindcss";
 
+/* Reset for all form elements */
+input,
+textarea,
+select,
+button {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
 :root {
-  @apply bg-gray-900 text-gray-100;
+  @apply bg-black text-neutral-100;
+  body {
+    margin: 0;
+  }
 }
 
 

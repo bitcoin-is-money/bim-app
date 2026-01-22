@@ -1,13 +1,13 @@
 @reference "tailwindcss";
 
 .about-page {
-  @apply min-h-screen flex flex-col bg-gray-900;
+  @apply min-h-screen flex flex-col bg-neutral-900;
 
   .about-header {
-    @apply p-4 border-b border-gray-800 flex items-center gap-4;
+    @apply p-4 border-b border-neutral-800 flex items-center gap-4;
 
     .back-button {
-      @apply px-4 py-2 text-white hover:bg-gray-800 rounded-lg transition-colors;
+      @apply px-4 py-2 text-white hover:bg-neutral-800 rounded-lg transition-colors;
       @apply bg-transparent border-none cursor-pointer;
     }
 
@@ -23,7 +23,7 @@
       @apply max-w-2xl mx-auto;
 
       .about-text {
-        @apply text-gray-300 leading-relaxed;
+        @apply text-neutral-300 leading-relaxed;
       }
     }
   }

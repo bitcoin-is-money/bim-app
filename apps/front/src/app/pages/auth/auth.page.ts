@@ -2,12 +2,13 @@ import {CommonModule} from '@angular/common';
 import {Component, signal} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {Router} from '@angular/router';
+import {ButtonComponent} from "../../components/button/button.component";
 import {AuthService} from '../../services/auth.service';
 
 @Component({
   selector: 'app-auth',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ButtonComponent],
   templateUrl: './auth.page.html',
   styleUrl: './auth.page.scss',
 })
