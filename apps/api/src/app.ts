@@ -2,19 +2,7 @@ import {serveStatic} from '@hono/node-server/serve-static';
 import {Hono} from 'hono';
 import {cors} from 'hono/cors';
 import {logger} from 'hono/logger';
-import {
-  AtomiqSdkGateway,
-  AvnuPaymasterGateway,
-  DrizzleAccountRepository,
-  DrizzleChallengeRepository,
-  DrizzleSessionRepository,
-  DrizzleTransactionRepository,
-  DrizzleUserSettingsRepository,
-  DrizzleWatchedAddressRepository,
-  InMemorySwapRepository,
-  SimpleWebAuthnGateway,
-  StarknetRpcGateway,
-} from './adapters';
+import {AppContext} from "./app-context";
 import {getDb} from './db';
 import {
   createAccountRoutes,
@@ -25,63 +13,25 @@ import {
   createTransactionRoutes,
   createUserRoutes,
 } from './routes';
-import {type AppConfig, type AppEnv, loadConfig} from './types';
+import {type AppConfig, type DeepPartial, loadConfig} from './types';
 
 export interface CreateAppOptions {
   config?: Partial<AppConfig>;
-  env?: Partial<AppEnv>;
+  context?: DeepPartial<AppContext>;
   skipStaticFiles?: boolean;
   skipLogger?: boolean;
 }
 
 /**
  * Creates the Hono application.
- * Can be customized for testing by passing options.
+ * Can be customized for testing by passing context overrides.
  */
 export function createApp(options: CreateAppOptions = {}): Hono {
   const config = {...loadConfig(), ...options.config};
   const db = getDb();
-
-  // Create repositories (can be overridden for testing)
-  const repositories = options.env?.repositories ?? {
-    account: new DrizzleAccountRepository(db),
-    session: new DrizzleSessionRepository(db),
-    challenge: new DrizzleChallengeRepository(db),
-    swap: new InMemorySwapRepository(),
-    userSettings: new DrizzleUserSettingsRepository(db),
-    watchedAddress: new DrizzleWatchedAddressRepository(db),
-    transaction: new DrizzleTransactionRepository(db),
-  };
-
-  // Create gateways (can be overridden for testing)
-  const gateways = options.env?.gateways ?? {
-    webAuthn: new SimpleWebAuthnGateway(),
-    starknet: new StarknetRpcGateway({
-      rpcUrl: config.starknetRpcUrl,
-      accountClassHash: config.accountClassHash,
-    }),
-    paymaster: new AvnuPaymasterGateway({
-      apiUrl: config.avnuApiUrl,
-      apiKey: config.avnuApiKey,
-    }),
-    atomiq: new AtomiqSdkGateway({
-      network: config.nodeEnv === 'production' ? 'mainnet' : 'testnet',
-      starknetRpcUrl: config.starknetRpcUrl,
-    }),
-  };
-
-  // Build environment
-  const env: AppEnv = {
-    repositories,
-    gateways,
-    webauthn: options.env?.webauthn ?? {
-      rpId: config.webauthnRpId,
-      rpName: config.webauthnRpName,
-      origin: config.webauthnOrigin,
-    },
-  };
-
-  // Create main Hono app
+  const context = AppContext.mergeContext(
+    AppContext.createDefault(config, db),
+    options.context);
   const app = new Hono();
 
   // Middleware
@@ -100,13 +50,13 @@ export function createApp(options: CreateAppOptions = {}): Hono {
   );
 
   // API routes
-  app.route('/api/auth', createAuthRoutes(env));
-  app.route('/api/account', createAccountRoutes(env));
-  app.route('/api/user', createUserRoutes(env));
-  app.route('/api/swap', createSwapRoutes(env));
+  app.route('/api/auth', createAuthRoutes(context));
+  app.route('/api/account', createAccountRoutes(context));
+  app.route('/api/user', createUserRoutes(context));
+  app.route('/api/swap', createSwapRoutes(context));
   app.route('/api/health', createHealthRoutes());
-  app.route('/api/balance', createBalanceRoutes(env));
-  app.route('/api/transactions', createTransactionRoutes(env));
+  app.route('/api/balance', createBalanceRoutes(context));
+  app.route('/api/transactions', createTransactionRoutes(context));
 
   // Serve static files (frontend) - skip for tests
   if (!options.skipStaticFiles) {

@@ -13,33 +13,11 @@ import {
   type WatchedAddressRepository,
   type WebAuthnGateway,
 } from '@bim/domain';
-import type {Hono} from "hono";
+import {type DeepPartial} from '@bim/lib';
+import type {Hono} from 'hono';
 
-/**
- * Application environment containing all dependencies.
- */
-export interface AppEnv {
-  repositories: {
-    account: AccountRepository;
-    session: SessionRepository;
-    challenge: ChallengeRepository;
-    swap: SwapRepository;
-    userSettings: UserSettingsRepository;
-    watchedAddress: WatchedAddressRepository;
-    transaction: TransactionRepository;
-  };
-  gateways: {
-    webAuthn: WebAuthnGateway;
-    starknet: StarknetGateway;
-    paymaster: PaymasterGateway;
-    atomiq: AtomiqGateway;
-  };
-  webauthn: {
-    rpId: string;
-    rpName: string;
-    origin: string;
-  };
-}
+export type {DeepPartial};
+
 
 /**
  * Application configuration loaded from environment variables.

@@ -9,6 +9,12 @@ import {type Uint8Array_, verifyAuthenticationResponse, verifyRegistrationRespon
 import {cose, decodeCredentialPublicKey,} from '@simplewebauthn/server/helpers';
 
 /**
+ * Stark curve prime: 2^251 + 17 * 2^192 + 1
+ * Values used in Starknet Pedersen hash must be < this prime.
+ */
+const STARK_PRIME = 2n ** 251n + 17n * 2n ** 192n + 1n;
+
+/**
  * SimpleWebAuthn-based implementation of WebAuthnGateway.
  */
 export class SimpleWebAuthnGateway implements WebAuthnGateway {
@@ -52,9 +58,11 @@ export class SimpleWebAuthnGateway implements WebAuthnGateway {
       ).toString('base64url');
 
       // Extract the credential ID
-      const encodedCredentialId: Base64URLString = Buffer.from(
-        registrationInfo.credential.id,
-      ).toString('base64url');
+      // In SimpleWebAuthn v13+, credential.id is already a base64url string
+      const credId = registrationInfo.credential.id;
+      const encodedCredentialId: Base64URLString = credId instanceof Uint8Array
+        ? Buffer.from(credId).toString('base64url')
+        : String(credId);
 
       // For Starknet compatibility, we need to extract the x-coordinate
       // This assumes P-256 (secp256r1) curve used by WebAuthn
@@ -134,8 +142,11 @@ export class SimpleWebAuthnGateway implements WebAuthnGateway {
   }
 
   /**
-   * Extracts the x-coordinate from a COSE-encoded P-256 public key.
-   * This is used for Starknet account compatibility.
+   * Extracts the x-coordinate from a COSE-encoded P-256 public key and
+   * reduces it to fit within the Stark field (< STARK_PRIME).
+   *
+   * P-256 uses a 256-bit field, but Starknet's Stark curve uses ~251 bits.
+   * We apply modular reduction to ensure the value is valid for Pedersen hash.
    */
   private extractP256XCoordinate(coseKey: Uint8Array_): string {
     const cosePublicKey = decodeCredentialPublicKey(coseKey);
@@ -149,6 +160,13 @@ export class SimpleWebAuthnGateway implements WebAuthnGateway {
       throw new Error('Missing x coordinate in public key');
     }
 
-    return '0x' + Buffer.from(xCoord).toString('hex');
+    // Convert to bigint for modular reduction
+    const xCoordBigInt = BigInt('0x' + Buffer.from(xCoord).toString('hex'));
+
+    // Reduce to fit within Stark field (< STARK_PRIME)
+    const reducedX = xCoordBigInt % STARK_PRIME;
+
+    // Convert back to hex, padded to 64 characters
+    return '0x' + reducedX.toString(16).padStart(64, '0');
   }
 }

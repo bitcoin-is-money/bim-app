@@ -7,13 +7,13 @@ import {
   type ValidateSessionOutput,
 } from '@bim/domain';
 import {Hono} from 'hono';
-import type {AppEnv, AuthenticatedHono} from '../types.js';
+import type {AppContext, AuthenticatedHono} from '../types.js';
 
 // =============================================================================
 // Routes
 // =============================================================================
 
-export function createTransactionRoutes(env: AppEnv): AuthenticatedHono {
+export function createTransactionRoutes(appContext: AppContext): AuthenticatedHono {
   const app: AuthenticatedHono = new Hono();
 
   // Middleware: Require authentication
@@ -25,8 +25,8 @@ export function createTransactionRoutes(env: AppEnv): AuthenticatedHono {
 
     try {
       const validate = validateSession({
-        sessionRepository: env.repositories.session,
-        accountRepository: env.repositories.account,
+        sessionRepository: appContext.repositories.session,
+        accountRepository: appContext.repositories.account,
       });
 
       const result: ValidateSessionOutput = await validate({sessionId});
@@ -59,8 +59,8 @@ export function createTransactionRoutes(env: AppEnv): AuthenticatedHono {
       const offset = offsetParam ? Number.parseInt(offsetParam, 10) : 0;
 
       const fetchTransactions = getFetchTransactionsUseCase({
-        transactionRepository: env.repositories.transaction,
-        watchedAddressRepository: env.repositories.watchedAddress,
+        transactionRepository: appContext.repositories.transaction,
+        watchedAddressRepository: appContext.repositories.watchedAddress,
       });
 
       const result = await fetchTransactions({

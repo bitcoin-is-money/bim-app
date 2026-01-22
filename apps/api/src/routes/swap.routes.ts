@@ -17,7 +17,7 @@ import {
 } from '@bim/domain';
 import {Hono} from 'hono';
 import {z} from 'zod';
-import type {AppEnv, AuthenticatedHono} from '../types.js';
+import type {AppContext, AuthenticatedHono} from '../types.js';
 
 // =============================================================================
 // Validation Schemas
@@ -55,7 +55,7 @@ const SwapDirectionSchema = z.enum([
 // Routes
 // =============================================================================
 
-export function createSwapRoutes(env: AppEnv): AuthenticatedHono {
+export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
   const app: AuthenticatedHono = new Hono();
 
   // Middleware: Optional authentication (some routes require it)
@@ -64,8 +64,8 @@ export function createSwapRoutes(env: AppEnv): AuthenticatedHono {
     if (sessionId) {
       try {
         const validate = validateSession({
-          sessionRepository: env.repositories.session,
-          accountRepository: env.repositories.account,
+          sessionRepository: appContext.repositories.session,
+          accountRepository: appContext.repositories.account,
         });
 
         const result = await validate({ sessionId });
@@ -94,7 +94,7 @@ export function createSwapRoutes(env: AppEnv): AuthenticatedHono {
       const direction = SwapDirectionSchema.parse(ctx.req.param('direction'));
 
       const fetchSwapLimits = getFetchSwapLimitsUseCase({
-        atomiqGateway: env.gateways.atomiq,
+        atomiqGateway: appContext.gateways.atomiq,
       });
 
       const result = await fetchSwapLimits({ direction });
@@ -119,8 +119,8 @@ export function createSwapRoutes(env: AppEnv): AuthenticatedHono {
       const input = CreateLightningSwapSchema.parse(body);
 
       const createSwap = getCreateLightningSwapUseCase({
-        swapRepository: env.repositories.swap,
-        atomiqGateway: env.gateways.atomiq,
+        swapRepository: appContext.repositories.swap,
+        atomiqGateway: appContext.gateways.atomiq,
       });
 
       const result = await createSwap({
@@ -149,8 +149,8 @@ export function createSwapRoutes(env: AppEnv): AuthenticatedHono {
       const input = CreateBitcoinSwapSchema.parse(body);
 
       const createSwap = getCreateBitcoinSwapUseCase({
-        swapRepository: env.repositories.swap,
-        atomiqGateway: env.gateways.atomiq,
+        swapRepository: appContext.repositories.swap,
+        atomiqGateway: appContext.gateways.atomiq,
       });
 
       const result = await createSwap({
@@ -180,8 +180,8 @@ export function createSwapRoutes(env: AppEnv): AuthenticatedHono {
       const input = CreateStarknetToLightningSchema.parse(body);
 
       const createSwap = getCreateStarknetToLightningUseCase({
-        swapRepository: env.repositories.swap,
-        atomiqGateway: env.gateways.atomiq,
+        swapRepository: appContext.repositories.swap,
+        atomiqGateway: appContext.gateways.atomiq,
       });
 
       const result = await createSwap({
@@ -210,8 +210,8 @@ export function createSwapRoutes(env: AppEnv): AuthenticatedHono {
       const input = CreateStarknetToBitcoinSchema.parse(body);
 
       const createSwap = getCreateStarknetToBitcoinUseCase({
-        swapRepository: env.repositories.swap,
-        atomiqGateway: env.gateways.atomiq,
+        swapRepository: appContext.repositories.swap,
+        atomiqGateway: appContext.gateways.atomiq,
       });
 
       const result = await createSwap({
@@ -240,8 +240,8 @@ export function createSwapRoutes(env: AppEnv): AuthenticatedHono {
       const swapId = ctx.req.param('swapId');
 
       const fetchSwapStatus = getFetchSwapStatusUseCase({
-        swapRepository: env.repositories.swap,
-        atomiqGateway: env.gateways.atomiq,
+        swapRepository: appContext.repositories.swap,
+        atomiqGateway: appContext.gateways.atomiq,
       });
 
       const result = await fetchSwapStatus({ swapId });
@@ -270,8 +270,8 @@ export function createSwapRoutes(env: AppEnv): AuthenticatedHono {
       const swapId = ctx.req.param('swapId');
 
       const claimSwap = getClaimSwapUseCase({
-        swapRepository: env.repositories.swap,
-        atomiqGateway: env.gateways.atomiq,
+        swapRepository: appContext.repositories.swap,
+        atomiqGateway: appContext.gateways.atomiq,
       });
 
       const result = await claimSwap({ swapId });

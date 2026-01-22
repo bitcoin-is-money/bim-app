@@ -9,6 +9,7 @@ import {
   getBeginRegistrationUseCase,
   getCompleteAuthenticationUseCase,
   getCompleteRegistrationUseCase,
+  InvalidSessionIdError,
   InvalidUsernameError,
   logout,
   RegistrationFailedError,
@@ -19,7 +20,7 @@ import {
 } from '@bim/domain';
 import {Hono} from 'hono';
 import {z} from 'zod';
-import type {AppEnv} from '../types.js';
+import type {AppContext} from '../types.js';
 
 // =============================================================================
 // Validation Schemas
@@ -73,10 +74,10 @@ const CompleteAuthenticationSchema = z.object({
 // Routes
 // =============================================================================
 
-export function createAuthRoutes(env: AppEnv): Hono {
+export function createAuthRoutes(appContext: AppContext): Hono {
   const app = new Hono();
 
-  const { rpId, rpName, origin } = env.webauthn;
+  const { rpId, rpName, origin } = appContext.webauthn;
 
   // ---------------------------------------------------------------------------
   // Registration
@@ -88,7 +89,7 @@ export function createAuthRoutes(env: AppEnv): Hono {
       const input = BeginRegistrationSchema.parse(body);
 
       const begin = getBeginRegistrationUseCase({
-        challengeRepository: env.repositories.challenge,
+        challengeRepository: appContext.repositories.challenge,
       });
 
       const result = await begin({
@@ -113,11 +114,11 @@ export function createAuthRoutes(env: AppEnv): Hono {
       const input = CompleteRegistrationSchema.parse(body);
 
       const complete = getCompleteRegistrationUseCase({
-        accountRepository: env.repositories.account,
-        challengeRepository: env.repositories.challenge,
-        sessionRepository: env.repositories.session,
-        webAuthnGateway: env.gateways.webAuthn,
-        starknetGateway: env.gateways.starknet,
+        accountRepository: appContext.repositories.account,
+        challengeRepository: appContext.repositories.challenge,
+        sessionRepository: appContext.repositories.session,
+        webAuthnGateway: appContext.gateways.webAuthn,
+        starknetGateway: appContext.gateways.starknet,
         idGenerator: () => AccountId.generate(),
       });
 
@@ -153,8 +154,8 @@ export function createAuthRoutes(env: AppEnv): Hono {
       const input = BeginAuthenticationSchema.parse(body);
 
       const begin = getBeginAuthenticationUseCase({
-        accountRepository: env.repositories.account,
-        challengeRepository: env.repositories.challenge,
+        accountRepository: appContext.repositories.account,
+        challengeRepository: appContext.repositories.challenge,
       });
 
       const result = await begin({
@@ -178,10 +179,10 @@ export function createAuthRoutes(env: AppEnv): Hono {
       const input = CompleteAuthenticationSchema.parse(body);
 
       const complete = getCompleteAuthenticationUseCase({
-        accountRepository: env.repositories.account,
-        challengeRepository: env.repositories.challenge,
-        sessionRepository: env.repositories.session,
-        webAuthnGateway: env.gateways.webAuthn,
+        accountRepository: appContext.repositories.account,
+        challengeRepository: appContext.repositories.challenge,
+        sessionRepository: appContext.repositories.session,
+        webAuthnGateway: appContext.gateways.webAuthn,
       });
 
       const result = await complete({
@@ -217,8 +218,8 @@ export function createAuthRoutes(env: AppEnv): Hono {
       }
 
       const validate = validateSession({
-        sessionRepository: env.repositories.session,
-        accountRepository: env.repositories.account,
+        sessionRepository: appContext.repositories.session,
+        accountRepository: appContext.repositories.account,
       });
 
       const result = await validate({ sessionId });
@@ -235,7 +236,8 @@ export function createAuthRoutes(env: AppEnv): Hono {
     } catch (error) {
       if (
         error instanceof SessionExpiredError ||
-        error instanceof SessionNotFoundError
+        error instanceof SessionNotFoundError ||
+        error instanceof InvalidSessionIdError
       ) {
         clearCookie(ctx);
         return ctx.json({ authenticated: false }, 401);
@@ -249,7 +251,7 @@ export function createAuthRoutes(env: AppEnv): Hono {
       const sessionId = getSessionId(ctx);
       if (sessionId) {
         const doLogout = logout({
-          sessionRepository: env.repositories.session,
+          sessionRepository: appContext.repositories.session,
         });
 
         await doLogout({ sessionId });
@@ -301,7 +303,12 @@ function clearCookie(ctx: { header: (name: string, value: string) => void }): vo
 }
 
 function handleError(ctx: { json: (data: unknown, status: number) => Response }, error: unknown): Response {
-  console.error('Auth error:', error);
+  // Log error safely - some error objects (like ZodError) can cause console.error to throw
+  try {
+    console.error('Auth error:', error);
+  } catch {
+    console.error('Auth error:', error instanceof Error ? error.message : String(error));
+  }
 
   if (error instanceof z.ZodError) {
     return ctx.json(
