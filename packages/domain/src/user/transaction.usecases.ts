@@ -1,7 +1,7 @@
 import {AccountId} from '@bim/domain/account';
-import type {TransactionRepository, UserAddressRepository} from '@bim/domain/ports';
+import type {TransactionRepository, WatchedAddressRepository} from '@bim/domain/ports';
 import {Transaction} from './transaction';
-import {UserAddressId, UserAddressNotFoundError} from './types';
+import {WatchedAddressId, WatchedAddressNotFoundError} from './types';
 
 // =============================================================================
 // Shared Dependencies
@@ -9,7 +9,7 @@ import {UserAddressId, UserAddressNotFoundError} from './types';
 
 export interface TransactionUseCasesDeps {
   transactionRepository: TransactionRepository;
-  userAddressRepository: UserAddressRepository;
+  watchedAddressRepository: WatchedAddressRepository;
 }
 
 // =============================================================================
@@ -42,8 +42,8 @@ export function getFetchTransactionsUseCase(
     const limit = input.limit ?? 50;
     const offset = input.offset ?? 0;
 
-    // Get all addresses for this account
-    const addresses = await deps.userAddressRepository.findByAccountId(accountId);
+    // Get all watched addresses for this account
+    const addresses = await deps.watchedAddressRepository.findByAccountId(accountId);
 
     if (addresses.length === 0) {
       return {transactions: [], total: 0};
@@ -51,10 +51,10 @@ export function getFetchTransactionsUseCase(
 
     // Fetch transactions for all addresses
     const transactionPromises = addresses.map((addr) =>
-      deps.transactionRepository.findByUserAddressId(addr.id, {limit, offset}),
+      deps.transactionRepository.findByWatchedAddressId(addr.id, {limit, offset}),
     );
     const countPromises = addresses.map((addr) =>
-      deps.transactionRepository.countByUserAddressId(addr.id),
+      deps.transactionRepository.countByWatchedAddressId(addr.id),
     );
 
     const [transactionResults, countResults] = await Promise.all([
@@ -94,27 +94,27 @@ export type FetchTransactionsForAddressUseCase = (
 ) => Promise<FetchTransactionsForAddressOutput>;
 
 /**
- * Fetches transactions for a specific address.
+ * Fetches transactions for a specific watched address.
  */
 export function getFetchTransactionsForAddressUseCase(
-  deps: Pick<TransactionUseCasesDeps, 'transactionRepository' | 'userAddressRepository'>,
+  deps: Pick<TransactionUseCasesDeps, 'transactionRepository' | 'watchedAddressRepository'>,
 ): FetchTransactionsForAddressUseCase {
   return async (
     input: FetchTransactionsForAddressInput,
   ): Promise<FetchTransactionsForAddressOutput> => {
-    const addressId = UserAddressId.of(input.addressId);
+    const addressId = WatchedAddressId.of(input.addressId);
     const limit = input.limit ?? 50;
     const offset = input.offset ?? 0;
 
     // Verify address exists
-    const address = await deps.userAddressRepository.findById(addressId);
+    const address = await deps.watchedAddressRepository.findById(addressId);
     if (!address) {
-      throw new UserAddressNotFoundError(addressId);
+      throw new WatchedAddressNotFoundError(addressId);
     }
 
     const [transactions, total] = await Promise.all([
-      deps.transactionRepository.findByUserAddressId(addressId, {limit, offset}),
-      deps.transactionRepository.countByUserAddressId(addressId),
+      deps.transactionRepository.findByWatchedAddressId(addressId, {limit, offset}),
+      deps.transactionRepository.countByWatchedAddressId(addressId),
     ]);
 
     return {transactions, total};

@@ -1,4 +1,4 @@
-import {Transaction, TransactionHash, TransactionId, UserAddressId} from '@bim/domain/user';
+import {Transaction, TransactionHash, TransactionId, WatchedAddressId} from '@bim/domain/user';
 
 /**
  * Pagination options for transaction queries.
@@ -33,17 +33,17 @@ export interface TransactionRepository {
   findByHash(hash: TransactionHash): Promise<Transaction | undefined>;
 
   /**
-   * Finds all transactions for a user address with pagination.
+   * Finds all transactions for a watched address with pagination.
    */
-  findByUserAddressId(
-    userAddressId: UserAddressId,
+  findByWatchedAddressId(
+    watchedAddressId: WatchedAddressId,
     options: TransactionPaginationOptions,
   ): Promise<Transaction[]>;
 
   /**
-   * Counts transactions for a user address.
+   * Counts transactions for a watched address.
    */
-  countByUserAddressId(userAddressId: UserAddressId): Promise<number>;
+  countByWatchedAddressId(watchedAddressId: WatchedAddressId): Promise<number>;
 
   /**
    * Checks if a transaction with the given hash exists.

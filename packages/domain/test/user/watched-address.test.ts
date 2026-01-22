@@ -1,15 +1,15 @@
 import {AccountId, StarknetAddress} from '@bim/domain/account';
-import {UserAddress, UserAddressId} from '@bim/domain/user';
+import {WatchedAddress, WatchedAddressId} from '@bim/domain/user';
 import {describe, expect, it} from 'vitest';
 
-describe('UserAddress', () => {
+describe('WatchedAddress', () => {
   const accountId = AccountId.of('550e8400-e29b-41d4-a716-446655440000');
-  const addressId = UserAddressId.of('660e8400-e29b-41d4-a716-446655440001');
+  const addressId = WatchedAddressId.of('660e8400-e29b-41d4-a716-446655440001');
   const starknetAddress = StarknetAddress.of('0x123');
 
   describe('create', () => {
     it('creates address with correct properties', () => {
-      const address = UserAddress.create({
+      const address = WatchedAddress.create({
         id: addressId,
         accountId,
         starknetAddress,
@@ -26,7 +26,7 @@ describe('UserAddress', () => {
 
     it('sets registeredAt to current time', () => {
       const before = new Date();
-      const address = UserAddress.create({
+      const address = WatchedAddress.create({
         id: addressId,
         accountId,
         starknetAddress,
@@ -51,7 +51,7 @@ describe('UserAddress', () => {
         lastScannedBlock: 12345n,
       };
 
-      const address = UserAddress.fromData(data);
+      const address = WatchedAddress.fromData(data);
 
       expect(address.id).toBe(addressId);
       expect(address.addressType).toBe('imported');
@@ -62,7 +62,7 @@ describe('UserAddress', () => {
 
   describe('activate/deactivate', () => {
     it('activates address', () => {
-      const address = UserAddress.create({
+      const address = WatchedAddress.create({
         id: addressId,
         accountId,
         starknetAddress,
@@ -76,7 +76,7 @@ describe('UserAddress', () => {
     });
 
     it('deactivates address', () => {
-      const address = UserAddress.create({
+      const address = WatchedAddress.create({
         id: addressId,
         accountId,
         starknetAddress,
@@ -91,7 +91,7 @@ describe('UserAddress', () => {
 
   describe('updateLastScannedBlock', () => {
     it('updates last scanned block', () => {
-      const address = UserAddress.create({
+      const address = WatchedAddress.create({
         id: addressId,
         accountId,
         starknetAddress,
@@ -104,7 +104,7 @@ describe('UserAddress', () => {
     });
 
     it('updates to higher block number', () => {
-      const address = UserAddress.create({
+      const address = WatchedAddress.create({
         id: addressId,
         accountId,
         starknetAddress,
@@ -118,7 +118,7 @@ describe('UserAddress', () => {
     });
 
     it('does not update to lower block number', () => {
-      const address = UserAddress.create({
+      const address = WatchedAddress.create({
         id: addressId,
         accountId,
         starknetAddress,
@@ -132,7 +132,7 @@ describe('UserAddress', () => {
     });
 
     it('does not update to same block number', () => {
-      const address = UserAddress.create({
+      const address = WatchedAddress.create({
         id: addressId,
         accountId,
         starknetAddress,
@@ -148,7 +148,7 @@ describe('UserAddress', () => {
 
   describe('toData', () => {
     it('exports all address data', () => {
-      const address = UserAddress.create({
+      const address = WatchedAddress.create({
         id: addressId,
         accountId,
         starknetAddress,

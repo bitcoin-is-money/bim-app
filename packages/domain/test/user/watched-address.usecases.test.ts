@@ -1,23 +1,23 @@
 import {AccountId, StarknetAddress} from '@bim/domain/account';
-import type {UserAddressRepository} from '@bim/domain/ports';
+import type {WatchedAddressRepository} from '@bim/domain/ports';
 import {
-  getDeactivateUserAddressUseCase,
-  getFetchUserAddressesUseCase,
-  getRegisterUserAddressUseCase,
-  UserAddress,
-  UserAddressAlreadyExistsError,
-  UserAddressId,
-  UserAddressNotFoundError
+  getDeactivateWatchedAddressUseCase,
+  getFetchWatchedAddressesUseCase,
+  getRegisterWatchedAddressUseCase,
+  WatchedAddress,
+  WatchedAddressAlreadyExistsError,
+  WatchedAddressId,
+  WatchedAddressNotFoundError
 } from '@bim/domain/user';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
-describe('UserAddress UseCases', () => {
+describe('WatchedAddress UseCases', () => {
   const accountId = AccountId.of('550e8400-e29b-41d4-a716-446655440000');
-  const addressId = UserAddressId.of('660e8400-e29b-41d4-a716-446655440001');
+  const addressId = WatchedAddressId.of('660e8400-e29b-41d4-a716-446655440001');
   const starknetAddress = StarknetAddress.of('0x123');
 
-  let mockRepository: UserAddressRepository;
-  let idGenerator: () => UserAddressId;
+  let mockRepository: WatchedAddressRepository;
+  let idGenerator: () => WatchedAddressId;
 
   beforeEach(() => {
     mockRepository = {
@@ -30,24 +30,24 @@ describe('UserAddress UseCases', () => {
     idGenerator = () => addressId;
   });
 
-  describe('getFetchUserAddressesUseCase', () => {
+  describe('getFetchWatchedAddressesUseCase', () => {
     it('returns addresses for account', async () => {
-      const address1 = UserAddress.create({
+      const address1 = WatchedAddress.create({
         id: addressId,
         accountId,
         starknetAddress,
         addressType: 'main',
       });
-      const address2 = UserAddress.create({
-        id: UserAddressId.of('770e8400-e29b-41d4-a716-446655440002'),
+      const address2 = WatchedAddress.create({
+        id: WatchedAddressId.of('770e8400-e29b-41d4-a716-446655440002'),
         accountId,
         starknetAddress: StarknetAddress.of('0x456'),
         addressType: 'imported',
       });
       vi.mocked(mockRepository.findByAccountId).mockResolvedValue([address1, address2]);
 
-      const useCase = getFetchUserAddressesUseCase({
-        userAddressRepository: mockRepository,
+      const useCase = getFetchWatchedAddressesUseCase({
+        watchedAddressRepository: mockRepository,
       });
       const result = await useCase({accountId: accountId});
 
@@ -59,8 +59,8 @@ describe('UserAddress UseCases', () => {
     it('returns empty array if no addresses', async () => {
       vi.mocked(mockRepository.findByAccountId).mockResolvedValue([]);
 
-      const useCase = getFetchUserAddressesUseCase({
-        userAddressRepository: mockRepository,
+      const useCase = getFetchWatchedAddressesUseCase({
+        watchedAddressRepository: mockRepository,
       });
       const result = await useCase({accountId: accountId});
 
@@ -68,12 +68,12 @@ describe('UserAddress UseCases', () => {
     });
   });
 
-  describe('getRegisterUserAddressUseCase', () => {
+  describe('getRegisterWatchedAddressUseCase', () => {
     it('registers new address', async () => {
       vi.mocked(mockRepository.findByStarknetAddress).mockResolvedValue(undefined);
 
-      const useCase = getRegisterUserAddressUseCase({
-        userAddressRepository: mockRepository,
+      const useCase = getRegisterWatchedAddressUseCase({
+        watchedAddressRepository: mockRepository,
         idGenerator,
       });
       const result = await useCase({
@@ -88,7 +88,7 @@ describe('UserAddress UseCases', () => {
     });
 
     it('throws if address already registered', async () => {
-      const existingAddress = UserAddress.create({
+      const existingAddress = WatchedAddress.create({
         id: addressId,
         accountId,
         starknetAddress,
@@ -96,24 +96,24 @@ describe('UserAddress UseCases', () => {
       });
       vi.mocked(mockRepository.findByStarknetAddress).mockResolvedValue(existingAddress);
 
-      const useCase = getRegisterUserAddressUseCase({
-        userAddressRepository: mockRepository,
+      const useCase = getRegisterWatchedAddressUseCase({
+        watchedAddressRepository: mockRepository,
         idGenerator,
       });
 
-      expect(
+      await expect(
         useCase({
           accountId: accountId,
           starknetAddress: starknetAddress,
           addressType: 'imported',
         }),
-      ).rejects.toThrow(UserAddressAlreadyExistsError);
+      ).rejects.toThrow(WatchedAddressAlreadyExistsError);
     });
   });
 
-  describe('getDeactivateUserAddressUseCase', () => {
+  describe('getDeactivateWatchedAddressUseCase', () => {
     it('deactivates existing address', async () => {
-      const address = UserAddress.create({
+      const address = WatchedAddress.create({
         id: addressId,
         accountId,
         starknetAddress,
@@ -121,8 +121,8 @@ describe('UserAddress UseCases', () => {
       });
       vi.mocked(mockRepository.findById).mockResolvedValue(address);
 
-      const useCase = getDeactivateUserAddressUseCase({
-        userAddressRepository: mockRepository,
+      const useCase = getDeactivateWatchedAddressUseCase({
+        watchedAddressRepository: mockRepository,
       });
       const result = await useCase({addressId: addressId});
 
@@ -133,13 +133,13 @@ describe('UserAddress UseCases', () => {
     it('throws if address not found', async () => {
       vi.mocked(mockRepository.findById).mockResolvedValue(undefined);
 
-      const useCase = getDeactivateUserAddressUseCase({
-        userAddressRepository: mockRepository,
+      const useCase = getDeactivateWatchedAddressUseCase({
+        watchedAddressRepository: mockRepository,
       });
 
       await expect(
         useCase({addressId: addressId}),
-      ).rejects.toThrow(UserAddressNotFoundError);
+      ).rejects.toThrow(WatchedAddressNotFoundError);
     });
   });
 });

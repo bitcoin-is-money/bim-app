@@ -1,8 +1,12 @@
 import {
   Account,
-  getFetchTransactionsUseCase,
+  FiatCurrency,
+  getFetchUserSettingsUseCase,
+  getUpdateUserSettingsUseCase,
   SessionExpiredError,
   SessionNotFoundError,
+  UnsupportedCurrencyError,
+  UserSettingsId,
   validateSession,
   type ValidateSessionOutput,
 } from '@bim/domain';
@@ -13,7 +17,7 @@ import type {AppEnv, AuthenticatedHono} from '../types.js';
 // Routes
 // =============================================================================
 
-export function createTransactionRoutes(env: AppEnv): AuthenticatedHono {
+export function createUserRoutes(env: AppEnv): AuthenticatedHono {
   const app: AuthenticatedHono = new Hono();
 
   // Middleware: Require authentication
@@ -45,50 +49,54 @@ export function createTransactionRoutes(env: AppEnv): AuthenticatedHono {
   });
 
   // ---------------------------------------------------------------------------
-  // Get Transactions
+  // Get User Settings
   // ---------------------------------------------------------------------------
 
-  app.get('/', async (ctx) => {
+  app.get('/settings', async (ctx) => {
     try {
       const account: Account = ctx.get('account');
 
-      // Parse pagination parameters
-      const limitParam = ctx.req.query('limit');
-      const offsetParam = ctx.req.query('offset');
-      const limit = limitParam ? Number.parseInt(limitParam, 10) : 50;
-      const offset = offsetParam ? Number.parseInt(offsetParam, 10) : 0;
-
-      const fetchTransactions = getFetchTransactionsUseCase({
-        transactionRepository: env.repositories.transaction,
-        watchedAddressRepository: env.repositories.watchedAddress,
+      const fetchSettings = getFetchUserSettingsUseCase({
+        userSettingsRepository: env.repositories.userSettings,
+        idGenerator: UserSettingsId.generate,
       });
 
-      const result = await fetchTransactions({
+      const result = await fetchSettings({accountId: account.id});
+
+      return ctx.json({
+        fiatCurrency: result.settings.getFiatCurrency(),
+        supportedCurrencies: FiatCurrency.getSupportedCurrencies(),
+      });
+    } catch (error) {
+      return handleError(ctx, error);
+    }
+  });
+
+  // ---------------------------------------------------------------------------
+  // Update User Settings
+  // ---------------------------------------------------------------------------
+
+  app.put('/settings', async (ctx) => {
+    try {
+      const account: Account = ctx.get('account');
+      const body = await ctx.req.json();
+
+      const updateSettings = getUpdateUserSettingsUseCase({
+        userSettingsRepository: env.repositories.userSettings,
+        idGenerator: UserSettingsId.generate,
+      });
+
+      const result = await updateSettings({
         accountId: account.id,
-        limit,
-        offset,
+        fiatCurrency: body.fiatCurrency,
       });
 
       return ctx.json({
-        transactions: result.transactions.map((tx) => ({
-          id: tx.id,
-          transactionHash: tx.transactionHash,
-          blockNumber: tx.blockNumber.toString(),
-          type: tx.transactionType,
-          amount: tx.amount,
-          tokenAddress: tx.tokenAddress,
-          fromAddress: tx.fromAddress,
-          toAddress: tx.toAddress,
-          timestamp: tx.timestamp.toISOString(),
-          indexedAt: tx.indexedAt.toISOString(),
-        })),
-        total: result.total,
-        limit,
-        offset,
+        fiatCurrency: result.settings.getFiatCurrency(),
+        supportedCurrencies: FiatCurrency.getSupportedCurrencies(),
       });
     } catch (error) {
-      console.error('Transaction error:', error);
-      return ctx.json({error: 'Internal server error'}, 500);
+      return handleError(ctx, error);
     }
   });
 
@@ -105,4 +113,17 @@ function getSessionId(ctx: {req: {header: (name: string) => string | undefined}}
 
   const match = /session=([^;]+)/.exec(cookie);
   return match?.[1];
+}
+
+function handleError(
+  ctx: {json: (data: unknown, status: number) => Response},
+  error: unknown
+): Response {
+  console.error('User settings error:', error);
+
+  if (error instanceof UnsupportedCurrencyError) {
+    return ctx.json({error: error.message}, 400);
+  }
+
+  return ctx.json({error: 'Internal server error'}, 500);
 }

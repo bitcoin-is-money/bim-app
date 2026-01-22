@@ -8,6 +8,9 @@ import {
   type SessionRepository,
   type StarknetGateway,
   type SwapRepository,
+  type TransactionRepository,
+  type UserSettingsRepository,
+  type WatchedAddressRepository,
   type WebAuthnGateway,
 } from '@bim/domain';
 import type {Hono} from "hono";
@@ -21,6 +24,9 @@ export interface AppEnv {
     session: SessionRepository;
     challenge: ChallengeRepository;
     swap: SwapRepository;
+    userSettings: UserSettingsRepository;
+    watchedAddress: WatchedAddressRepository;
+    transaction: TransactionRepository;
   };
   gateways: {
     webAuthn: WebAuthnGateway;

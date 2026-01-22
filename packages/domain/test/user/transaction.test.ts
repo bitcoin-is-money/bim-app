@@ -1,10 +1,10 @@
 import {StarknetAddress} from "@bim/domain/account";
-import {Transaction, TransactionHash, TransactionId, UserAddressId} from '@bim/domain/user';
+import {Transaction, TransactionHash, TransactionId, WatchedAddressId} from '@bim/domain/user';
 import {describe, expect, it} from 'vitest';
 
 describe('Transaction', () => {
   const transactionId = TransactionId.of('550e8400-e29b-41d4-a716-446655440000');
-  const userAddressId = UserAddressId.of('660e8400-e29b-41d4-a716-446655440001');
+  const watchedAddressId = WatchedAddressId.of('660e8400-e29b-41d4-a716-446655440001');
   const transactionHash = TransactionHash.of('0xabc123');
   const tokenAddress = StarknetAddress.of('0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7');
   const fromAddress = StarknetAddress.of('0x111');
@@ -14,7 +14,7 @@ describe('Transaction', () => {
     it('creates receipt transaction', () => {
       const tx = Transaction.create({
         id: transactionId,
-        userAddressId,
+        watchedAddressId,
         transactionHash,
         blockNumber: 12345n,
         transactionType: 'receipt',
@@ -26,7 +26,7 @@ describe('Transaction', () => {
       });
 
       expect(tx.id).toBe(transactionId);
-      expect(tx.userAddressId).toBe(userAddressId);
+      expect(tx.watchedAddressId).toBe(watchedAddressId);
       expect(tx.transactionHash).toBe(transactionHash);
       expect(tx.blockNumber).toBe(12345n);
       expect(tx.transactionType).toBe('receipt');
@@ -38,7 +38,7 @@ describe('Transaction', () => {
     it('creates spent transaction', () => {
       const tx = Transaction.create({
         id: transactionId,
-        userAddressId,
+        watchedAddressId,
         transactionHash,
         blockNumber: 12345n,
         transactionType: 'spent',
@@ -54,11 +54,11 @@ describe('Transaction', () => {
       expect(tx.isReceipt()).toBe(false);
     });
 
-    it('sets processedAt to current time', () => {
+    it('sets indexedAt to current time', () => {
       const before = new Date();
       const tx = Transaction.create({
         id: transactionId,
-        userAddressId,
+        watchedAddressId,
         transactionHash,
         blockNumber: 12345n,
         transactionType: 'receipt',
@@ -70,8 +70,8 @@ describe('Transaction', () => {
       });
       const after = new Date();
 
-      expect(tx.processedAt.getTime()).toBeGreaterThanOrEqual(before.getTime());
-      expect(tx.processedAt.getTime()).toBeLessThanOrEqual(after.getTime());
+      expect(tx.indexedAt.getTime()).toBeGreaterThanOrEqual(before.getTime());
+      expect(tx.indexedAt.getTime()).toBeLessThanOrEqual(after.getTime());
     });
   });
 
@@ -79,7 +79,7 @@ describe('Transaction', () => {
     it('reconstitutes transaction from persisted data', () => {
       const data = {
         id: transactionId,
-        userAddressId,
+        watchedAddressId,
         transactionHash,
         blockNumber: 99999n,
         transactionType: 'spent' as const,
@@ -88,7 +88,7 @@ describe('Transaction', () => {
         fromAddress,
         toAddress,
         timestamp: new Date('2024-02-01T10:00:00Z'),
-        processedAt: new Date('2024-02-01T10:05:00Z'),
+        indexedAt: new Date('2024-02-01T10:05:00Z'),
       };
 
       const tx = Transaction.fromData(data);
@@ -97,7 +97,7 @@ describe('Transaction', () => {
       expect(tx.blockNumber).toBe(99999n);
       expect(tx.amount).toBe('123456789');
       expect(tx.timestamp).toEqual(data.timestamp);
-      expect(tx.processedAt).toEqual(data.processedAt);
+      expect(tx.indexedAt).toEqual(data.indexedAt);
     });
   });
 
@@ -106,7 +106,7 @@ describe('Transaction', () => {
       const timestamp = new Date('2024-01-15T12:00:00Z');
       const tx = Transaction.create({
         id: transactionId,
-        userAddressId,
+        watchedAddressId,
         transactionHash,
         blockNumber: 12345n,
         transactionType: 'receipt',
@@ -120,7 +120,7 @@ describe('Transaction', () => {
       const data = tx.toData();
 
       expect(data.id).toBe(transactionId);
-      expect(data.userAddressId).toBe(userAddressId);
+      expect(data.watchedAddressId).toBe(watchedAddressId);
       expect(data.transactionHash).toBe(transactionHash);
       expect(data.blockNumber).toBe(12345n);
       expect(data.transactionType).toBe('receipt');
@@ -129,7 +129,7 @@ describe('Transaction', () => {
       expect(data.fromAddress).toBe(fromAddress);
       expect(data.toAddress).toBe(toAddress);
       expect(data.timestamp).toEqual(timestamp);
-      expect(data.processedAt).toBeDefined();
+      expect(data.indexedAt).toBeDefined();
     });
   });
 });

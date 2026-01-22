@@ -1,35 +1,35 @@
 import {AccountId, StarknetAddress} from '@bim/domain/account';
-import type {TransactionRepository, UserAddressRepository} from '@bim/domain/ports';
+import type {TransactionRepository, WatchedAddressRepository} from '@bim/domain/ports';
 import {
   getFetchTransactionsForAddressUseCase,
   getFetchTransactionsUseCase,
   Transaction,
   TransactionHash,
   TransactionId,
-  UserAddress,
-  UserAddressId,
-  UserAddressNotFoundError
+  WatchedAddress,
+  WatchedAddressId,
+  WatchedAddressNotFoundError
 } from '@bim/domain/user';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
 describe('Transaction UseCases', () => {
   const accountId = AccountId.of('550e8400-e29b-41d4-a716-446655440000');
-  const addressId1 = UserAddressId.of('660e8400-e29b-41d4-a716-446655440001');
-  const addressId2 = UserAddressId.of('770e8400-e29b-41d4-a716-446655440002');
+  const addressId1 = WatchedAddressId.of('660e8400-e29b-41d4-a716-446655440001');
+  const addressId2 = WatchedAddressId.of('770e8400-e29b-41d4-a716-446655440002');
   const starknetAddress = StarknetAddress.of('0x123');
   const tokenAddress = StarknetAddress.of('0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7');
 
   let mockTransactionRepo: TransactionRepository;
-  let mockAddressRepo: UserAddressRepository;
+  let mockAddressRepo: WatchedAddressRepository;
 
   const createMockTransaction = (
     id: string,
-    userAddressId: UserAddressId,
+    watchedAddressId: WatchedAddressId,
     timestamp: Date,
   ): Transaction => {
     return Transaction.create({
       id: TransactionId.of(id),
-      userAddressId,
+      watchedAddressId,
       transactionHash: TransactionHash.of(`0x${id.slice(0, 8)}`),
       blockNumber: 12345n,
       transactionType: 'receipt',
@@ -47,8 +47,8 @@ describe('Transaction UseCases', () => {
       saveMany: vi.fn(),
       findById: vi.fn(),
       findByHash: vi.fn(),
-      findByUserAddressId: vi.fn(),
-      countByUserAddressId: vi.fn(),
+      findByWatchedAddressId: vi.fn(),
+      countByWatchedAddressId: vi.fn(),
       existsByHash: vi.fn(),
     };
     mockAddressRepo = {
@@ -62,13 +62,13 @@ describe('Transaction UseCases', () => {
 
   describe('getFetchTransactionsUseCase', () => {
     it('returns transactions for all account addresses', async () => {
-      const address1 = UserAddress.create({
+      const address1 = WatchedAddress.create({
         id: addressId1,
         accountId,
         starknetAddress,
         addressType: 'main',
       });
-      const address2 = UserAddress.create({
+      const address2 = WatchedAddress.create({
         id: addressId2,
         accountId,
         starknetAddress: StarknetAddress.of('0x456'),
@@ -87,16 +87,16 @@ describe('Transaction UseCases', () => {
       );
 
       vi.mocked(mockAddressRepo.findByAccountId).mockResolvedValue([address1, address2]);
-      vi.mocked(mockTransactionRepo.findByUserAddressId)
+      vi.mocked(mockTransactionRepo.findByWatchedAddressId)
         .mockResolvedValueOnce([tx1])
         .mockResolvedValueOnce([tx2]);
-      vi.mocked(mockTransactionRepo.countByUserAddressId)
+      vi.mocked(mockTransactionRepo.countByWatchedAddressId)
         .mockResolvedValueOnce(1)
         .mockResolvedValueOnce(1);
 
       const useCase = getFetchTransactionsUseCase({
         transactionRepository: mockTransactionRepo,
-        userAddressRepository: mockAddressRepo,
+        watchedAddressRepository: mockAddressRepo,
       });
       const result = await useCase({accountId: accountId});
 
@@ -113,7 +113,7 @@ describe('Transaction UseCases', () => {
 
       const useCase = getFetchTransactionsUseCase({
         transactionRepository: mockTransactionRepo,
-        userAddressRepository: mockAddressRepo,
+        watchedAddressRepository: mockAddressRepo,
       });
       const result = await useCase({accountId: accountId});
 
@@ -122,7 +122,7 @@ describe('Transaction UseCases', () => {
     });
 
     it('uses default pagination values', async () => {
-      const address = UserAddress.create({
+      const address = WatchedAddress.create({
         id: addressId1,
         accountId,
         starknetAddress,
@@ -130,16 +130,16 @@ describe('Transaction UseCases', () => {
       });
 
       vi.mocked(mockAddressRepo.findByAccountId).mockResolvedValue([address]);
-      vi.mocked(mockTransactionRepo.findByUserAddressId).mockResolvedValue([]);
-      vi.mocked(mockTransactionRepo.countByUserAddressId).mockResolvedValue(0);
+      vi.mocked(mockTransactionRepo.findByWatchedAddressId).mockResolvedValue([]);
+      vi.mocked(mockTransactionRepo.countByWatchedAddressId).mockResolvedValue(0);
 
       const useCase = getFetchTransactionsUseCase({
         transactionRepository: mockTransactionRepo,
-        userAddressRepository: mockAddressRepo,
+        watchedAddressRepository: mockAddressRepo,
       });
       await useCase({accountId: accountId});
 
-      expect(mockTransactionRepo.findByUserAddressId).toHaveBeenCalledWith(
+      expect(mockTransactionRepo.findByWatchedAddressId).toHaveBeenCalledWith(
         addressId1,
         {limit: 50, offset: 0},
       );
@@ -148,7 +148,7 @@ describe('Transaction UseCases', () => {
 
   describe('getFetchTransactionsForAddressUseCase', () => {
     it('returns transactions for specific address', async () => {
-      const address = UserAddress.create({
+      const address = WatchedAddress.create({
         id: addressId1,
         accountId,
         starknetAddress,
@@ -161,12 +161,12 @@ describe('Transaction UseCases', () => {
       );
 
       vi.mocked(mockAddressRepo.findById).mockResolvedValue(address);
-      vi.mocked(mockTransactionRepo.findByUserAddressId).mockResolvedValue([tx]);
-      vi.mocked(mockTransactionRepo.countByUserAddressId).mockResolvedValue(1);
+      vi.mocked(mockTransactionRepo.findByWatchedAddressId).mockResolvedValue([tx]);
+      vi.mocked(mockTransactionRepo.countByWatchedAddressId).mockResolvedValue(1);
 
       const useCase = getFetchTransactionsForAddressUseCase({
         transactionRepository: mockTransactionRepo,
-        userAddressRepository: mockAddressRepo,
+        watchedAddressRepository: mockAddressRepo,
       });
       const result = await useCase({addressId: addressId1});
 
@@ -179,16 +179,16 @@ describe('Transaction UseCases', () => {
 
       const useCase = getFetchTransactionsForAddressUseCase({
         transactionRepository: mockTransactionRepo,
-        userAddressRepository: mockAddressRepo,
+        watchedAddressRepository: mockAddressRepo,
       });
 
       await expect(
         useCase({addressId: addressId1}),
-      ).rejects.toThrow(UserAddressNotFoundError);
+      ).rejects.toThrow(WatchedAddressNotFoundError);
     });
 
     it('uses custom pagination values', async () => {
-      const address = UserAddress.create({
+      const address = WatchedAddress.create({
         id: addressId1,
         accountId,
         starknetAddress,
@@ -196,16 +196,16 @@ describe('Transaction UseCases', () => {
       });
 
       vi.mocked(mockAddressRepo.findById).mockResolvedValue(address);
-      vi.mocked(mockTransactionRepo.findByUserAddressId).mockResolvedValue([]);
-      vi.mocked(mockTransactionRepo.countByUserAddressId).mockResolvedValue(0);
+      vi.mocked(mockTransactionRepo.findByWatchedAddressId).mockResolvedValue([]);
+      vi.mocked(mockTransactionRepo.countByWatchedAddressId).mockResolvedValue(0);
 
       const useCase = getFetchTransactionsForAddressUseCase({
         transactionRepository: mockTransactionRepo,
-        userAddressRepository: mockAddressRepo,
+        watchedAddressRepository: mockAddressRepo,
       });
       await useCase({addressId: addressId1, limit: 10, offset: 20});
 
-      expect(mockTransactionRepo.findByUserAddressId).toHaveBeenCalledWith(
+      expect(mockTransactionRepo.findByWatchedAddressId).toHaveBeenCalledWith(
         addressId1,
         {limit: 10, offset: 20},
       );
