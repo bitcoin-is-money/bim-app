@@ -26,22 +26,22 @@ export namespace UserSettingsId {
 }
 
 /**
- * Unique identifier for a UserAddress.
+ * Unique identifier for a WatchedAddress.
  */
-export type UserAddressId = string & {readonly __brand: 'UserAddressId'};
+export type WatchedAddressId = string & {readonly __brand: 'WatchedAddressId'};
 
-export namespace UserAddressId {
+export namespace WatchedAddressId {
   const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-  export function of(value: string): UserAddressId {
+  export function of(value: string): WatchedAddressId {
     if (!UUID_REGEX.test(value)) {
-      throw new InvalidUserAddressIdError(value);
+      throw new InvalidWatchedAddressIdError(value);
     }
-    return value as UserAddressId;
+    return value as WatchedAddressId;
   }
 
-  export function generate(): UserAddressId {
-    return crypto.randomUUID() as UserAddressId;
+  export function generate(): WatchedAddressId {
+    return crypto.randomUUID() as WatchedAddressId;
   }
 }
 
@@ -136,8 +136,8 @@ export interface UserSettingsData {
   updatedAt: Date;
 }
 
-export interface UserAddressData {
-  id: UserAddressId;
+export interface WatchedAddressData {
+  id: WatchedAddressId;
   accountId: AccountId;
   starknetAddress: StarknetAddress;
   addressType: AddressType;
@@ -148,7 +148,7 @@ export interface UserAddressData {
 
 export interface TransactionData {
   id: TransactionId;
-  userAddressId: UserAddressId;
+  watchedAddressId: WatchedAddressId;
   transactionHash: TransactionHash;
   blockNumber: bigint;
   transactionType: TransactionType;
@@ -157,7 +157,7 @@ export interface TransactionData {
   fromAddress: StarknetAddress;
   toAddress: StarknetAddress;
   timestamp: Date;
-  processedAt: Date;
+  indexedAt: Date;
 }
 
 // =============================================================================
@@ -170,9 +170,9 @@ export class InvalidUserSettingsIdError extends DomainError {
   }
 }
 
-export class InvalidUserAddressIdError extends DomainError {
+export class InvalidWatchedAddressIdError extends DomainError {
   constructor(readonly value: string) {
-    super(`Invalid user address ID format: ${value}`);
+    super(`Invalid watched address ID format: ${value}`);
   }
 }
 
@@ -200,15 +200,15 @@ export class UserSettingsNotFoundError extends DomainError {
   }
 }
 
-export class UserAddressNotFoundError extends DomainError {
-  constructor(readonly identifier: UserAddressId | string) {
-    super(`User address not found: ${identifier}`);
+export class WatchedAddressNotFoundError extends DomainError {
+  constructor(readonly identifier: WatchedAddressId | string) {
+    super(`Watched address not found: ${identifier}`);
   }
 }
 
-export class UserAddressAlreadyExistsError extends DomainError {
+export class WatchedAddressAlreadyExistsError extends DomainError {
   constructor(readonly starknetAddress: StarknetAddress) {
-    super(`User address already registered: ${starknetAddress}`);
+    super(`Watched address already registered: ${starknetAddress}`);
   }
 }
 

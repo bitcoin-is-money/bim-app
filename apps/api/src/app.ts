@@ -8,6 +8,9 @@ import {
   DrizzleAccountRepository,
   DrizzleChallengeRepository,
   DrizzleSessionRepository,
+  DrizzleTransactionRepository,
+  DrizzleUserSettingsRepository,
+  DrizzleWatchedAddressRepository,
   InMemorySwapRepository,
   SimpleWebAuthnGateway,
   StarknetRpcGateway,
@@ -20,6 +23,7 @@ import {
   createHealthRoutes,
   createSwapRoutes,
   createTransactionRoutes,
+  createUserRoutes,
 } from './routes';
 import {type AppConfig, type AppEnv, loadConfig} from './types';
 
@@ -44,6 +48,9 @@ export function createApp(options: CreateAppOptions = {}): Hono {
     session: new DrizzleSessionRepository(db),
     challenge: new DrizzleChallengeRepository(db),
     swap: new InMemorySwapRepository(),
+    userSettings: new DrizzleUserSettingsRepository(db),
+    watchedAddress: new DrizzleWatchedAddressRepository(db),
+    transaction: new DrizzleTransactionRepository(db),
   };
 
   // Create gateways (can be overridden for testing)
@@ -95,6 +102,7 @@ export function createApp(options: CreateAppOptions = {}): Hono {
   // API routes
   app.route('/api/auth', createAuthRoutes(env));
   app.route('/api/account', createAccountRoutes(env));
+  app.route('/api/user', createUserRoutes(env));
   app.route('/api/swap', createSwapRoutes(env));
   app.route('/api/health', createHealthRoutes());
   app.route('/api/balance', createBalanceRoutes(env));

@@ -1,5 +1,5 @@
 import {StarknetAddress} from '@bim/domain/account';
-import {type TransactionData, TransactionHash, TransactionId, type TransactionType, UserAddressId,} from './types';
+import {type TransactionData, TransactionHash, TransactionId, type TransactionType, WatchedAddressId,} from './types';
 
 /**
  * Transaction entity representing a recorded blockchain transaction.
@@ -7,7 +7,7 @@ import {type TransactionData, TransactionHash, TransactionId, type TransactionTy
 export class Transaction {
   private constructor(
     readonly id: TransactionId,
-    readonly userAddressId: UserAddressId,
+    readonly watchedAddressId: WatchedAddressId,
     readonly transactionHash: TransactionHash,
     readonly blockNumber: bigint,
     readonly transactionType: TransactionType,
@@ -16,7 +16,7 @@ export class Transaction {
     readonly fromAddress: StarknetAddress,
     readonly toAddress: StarknetAddress,
     readonly timestamp: Date,
-    readonly processedAt: Date,
+    readonly indexedAt: Date,
   ) {}
 
   /**
@@ -24,7 +24,7 @@ export class Transaction {
    */
   static create(params: {
     id: TransactionId;
-    userAddressId: UserAddressId;
+    watchedAddressId: WatchedAddressId;
     transactionHash: TransactionHash;
     blockNumber: bigint;
     transactionType: TransactionType;
@@ -36,7 +36,7 @@ export class Transaction {
   }): Transaction {
     return new Transaction(
       params.id,
-      params.userAddressId,
+      params.watchedAddressId,
       params.transactionHash,
       params.blockNumber,
       params.transactionType,
@@ -55,7 +55,7 @@ export class Transaction {
   static fromData(data: TransactionData): Transaction {
     return new Transaction(
       data.id,
-      data.userAddressId,
+      data.watchedAddressId,
       data.transactionHash,
       data.blockNumber,
       data.transactionType,
@@ -64,7 +64,7 @@ export class Transaction {
       data.fromAddress,
       data.toAddress,
       data.timestamp,
-      data.processedAt,
+      data.indexedAt,
     );
   }
 
@@ -88,7 +88,7 @@ export class Transaction {
   toData(): TransactionData {
     return {
       id: this.id,
-      userAddressId: this.userAddressId,
+      watchedAddressId: this.watchedAddressId,
       transactionHash: this.transactionHash,
       blockNumber: this.blockNumber,
       transactionType: this.transactionType,
@@ -97,7 +97,7 @@ export class Transaction {
       fromAddress: this.fromAddress,
       toAddress: this.toAddress,
       timestamp: this.timestamp,
-      processedAt: this.processedAt,
+      indexedAt: this.indexedAt,
     };
   }
 }

@@ -1,15 +1,15 @@
 import {AccountId, StarknetAddress} from '@bim/domain/account';
-import {type AddressType, type UserAddressData, UserAddressId,} from './types';
+import {type AddressType, type WatchedAddressData, WatchedAddressId,} from './types';
 
 /**
- * UserAddress entity representing a tracked Starknet address for a user.
+ * WatchedAddress entity representing a tracked Starknet address for polling.
  */
-export class UserAddress {
+export class WatchedAddress {
   private isActive: boolean;
   private lastScannedBlock?: bigint;
 
   private constructor(
-    readonly id: UserAddressId,
+    readonly id: WatchedAddressId,
     readonly accountId: AccountId,
     readonly starknetAddress: StarknetAddress,
     readonly addressType: AddressType,
@@ -22,15 +22,15 @@ export class UserAddress {
   }
 
   /**
-   * Creates a new user address.
+   * Creates a new watched address.
    */
   static create(params: {
-    id: UserAddressId;
+    id: WatchedAddressId;
     accountId: AccountId;
     starknetAddress: StarknetAddress;
     addressType: AddressType;
-  }): UserAddress {
-    return new UserAddress(
+  }): WatchedAddress {
+    return new WatchedAddress(
       params.id,
       params.accountId,
       params.starknetAddress,
@@ -42,10 +42,10 @@ export class UserAddress {
   }
 
   /**
-   * Reconstitutes user address from persisted data.
+   * Reconstitutes watched address from persisted data.
    */
-  static fromData(data: UserAddressData): UserAddress {
-    return new UserAddress(
+  static fromData(data: WatchedAddressData): WatchedAddress {
+    return new WatchedAddress(
       data.id,
       data.accountId,
       data.starknetAddress,
@@ -97,7 +97,7 @@ export class UserAddress {
   /**
    * Exports the address data for persistence.
    */
-  toData(): UserAddressData {
+  toData(): WatchedAddressData {
     return {
       id: this.id,
       accountId: this.accountId,

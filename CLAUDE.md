@@ -223,6 +223,181 @@ import { SomeUseCase } from '@bim/domain';
 
 ---
 
+## New API Design
+
+### Design Principles
+
+1. **Backend orchestration**: Complex operations (swaps, RPC calls) handled server-side
+2. **Simple frontend**: Client only displays data and collects user input
+3. **Stateful operations**: Long-running operations return an ID for status polling
+4. **WebAuthn signing**: Payment confirmation uses WebAuthn challenge/response
+5. **Auto-deployment**: Account deployment is transparent, triggered on first payment
+
+---
+
+### API Endpoints (18 total vs 69 old)
+
+#### Authentication (6 endpoints)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/auth/register/begin` | Start WebAuthn registration |
+| `POST` | `/api/auth/register/complete` | Complete registration |
+| `POST` | `/api/auth/login/begin` | Start WebAuthn authentication |
+| `POST` | `/api/auth/login/complete` | Complete authentication |
+| `GET` | `/api/auth/session` | Get current session |
+| `POST` | `/api/auth/logout` | Logout |
+
+#### Account (2 endpoints)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/account` | Get account info (status, starknetAddress, balances) |
+| `POST` | `/api/account/deploy` | Trigger manual deployment (if not auto-deployed) |
+
+#### Receive (2 endpoints)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/receive` | Create receive request → returns QR data |
+| `GET` | `/api/receive/:id` | Get receive request status (pending/completed/expired) |
+
+**POST /api/receive request:**
+```json
+{
+  "network": "lightning" | "bitcoin" | "starknet",
+  "amount": 1000,           // Optional, in sats (Lightning/Bitcoin) or wei (Starknet)
+  "asset": "ETH" | "STRK"   // For Starknet only, defaults to ETH
+}
+```
+
+**POST /api/receive response:**
+```json
+{
+  "id": "recv_xxx",
+  "qrData": "lnbc1000n1...",  // Lightning invoice, bitcoin:xxx, or starknet address
+  "expiresAt": "2024-01-01T00:00:00Z",
+  "network": "lightning",
+  "amount": 1000
+}
+```
+
+#### Pay (3 endpoints)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/pay/parse` | Parse QR/payment request → returns payment details |
+| `POST` | `/api/pay/execute` | Execute payment (requires WebAuthn) |
+| `GET` | `/api/pay/:id` | Get payment status |
+
+**POST /api/pay/parse request:**
+```json
+{
+  "data": "lnbc1000n1..."  // Raw QR content
+}
+```
+
+**POST /api/pay/parse response:**
+```json
+{
+  "type": "lightning" | "bitcoin" | "starknet",
+  "destination": "...",
+  "amount": 1000,           // In sats or wei
+  "amountEditable": false,  // true if amount not specified in QR
+  "description": "...",     // From Lightning invoice memo
+  "expiresAt": "..."        // If applicable
+}
+```
+
+**POST /api/pay/execute request:**
+```json
+{
+  "data": "lnbc1000n1...",   // Original QR data
+  "amount": 1000,            // Required if amountEditable was true
+  "challengeId": "...",      // From WebAuthn begin flow
+  "credential": { ... }      // WebAuthn assertion response
+}
+```
+
+**POST /api/pay/execute response:**
+```json
+{
+  "id": "pay_xxx",
+  "status": "pending"
+}
+```
+
+#### User (3 endpoints)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/user/settings` | Get user settings |
+| `PUT` | `/api/user/settings` | Update user settings |
+| `GET` | `/api/user/transactions` | Get transaction history (paginated) |
+
+#### Utility (2 endpoints)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/health` | Health check |
+| `GET` | `/api/prices` | Get current BTC/ETH/STRK prices in USD |
+
+---
+
+### Backend Internal Flows
+
+#### Receive Lightning Payment
+```
+POST /api/receive {network: "lightning", amount: 1000}
+  └─> Backend creates swap with Atomiq (Starknet → Lightning)
+  └─> Stores swap details in DB
+  └─> Returns Lightning invoice as QR data
+
+GET /api/receive/:id (frontend polls)
+  └─> Backend checks swap status with Atomiq
+  └─> If payment received: updates DB, returns "completed"
+  └─> Frontend shows success
+```
+
+#### Pay Lightning Invoice
+```
+POST /api/pay/parse {data: "lnbc..."}
+  └─> Backend decodes Lightning invoice
+  └─> Gets quote from Atomiq
+  └─> Returns payment details + estimated fees
+
+POST /api/pay/execute {data, amount, challengeId, credential}
+  └─> Backend verifies WebAuthn assertion
+  └─> If account.status === "pending": auto-deploy via AVNU paymaster
+  └─> Creates swap with Atomiq
+  └─> Signs & submits Starknet transaction
+  └─> Returns payment ID
+
+GET /api/pay/:id (frontend polls)
+  └─> Backend checks swap status
+  └─> Returns current status (pending/confirming/completed/failed)
+```
+
+#### Auto-deployment Flow
+```
+User calls POST /api/pay/execute (first payment)
+       │
+       ▼
+Backend checks account.status
+       │
+       ├─► "deployed" → proceed with payment
+       │
+       └─► "pending" → auto-deploy first:
+              │
+              ▼
+         Call AVNU paymaster API
+              │
+              ▼
+         Deploy account contract (gasless)
+              │
+              ▼
+         Update account.status = "deployed"
+              │
+              ▼
+         Proceed with payment
+```
+
+---
+
 ## WebAuthn Implementation Comparison
 
 ### Endpoint Mapping (Old → New)
@@ -314,42 +489,41 @@ import { SomeUseCase } from '@bim/domain';
 
 ## Migration Checklist
 
-### Phase 1: Core Auth (Current)
+### Phase 1: Core Auth ✅
 - [x] WebAuthn registration flow
 - [x] WebAuthn authentication flow
 - [x] Session management
 - [x] Username validation (stricter regex via `Username` domain type)
 
-### Phase 2: User Data (Domain layer complete)
+### Phase 2: User & Account
 - [x] User settings entity + use cases (Fetch, Update)
-- [x] User addresses entity + use cases (Fetch, Register, Deactivate)
 - [x] Transaction entity + use cases (Fetch, FetchForAddress)
-- [x] Repository interfaces (UserSettingsRepository, UserAddressRepository, TransactionRepository)
-- [ ] API routes implementation (GET/POST /api/user/settings, /api/user/addresses, /api/user/transactions)
+- [ ] `GET /api/account` - account info with balances
+- [ ] `GET /api/user/settings` + `PUT /api/user/settings`
+- [ ] `GET /api/user/transactions` (paginated)
 
-### Phase 3: Starknet Integration
-- [ ] RPC proxy endpoints
-- [ ] Balance checking
-- [ ] Nonce management
-- [ ] Fee estimation
-- [ ] Transaction waiting
+### Phase 3: Receive Payments
+- [ ] `POST /api/receive` - create receive request
+- [ ] `GET /api/receive/:id` - poll status
+- [ ] Atomiq gateway (create swap, check status)
+- [ ] Background job: monitor incoming payments
 
-### Phase 4: AVNU Paymaster
-- [ ] Build paymaster transaction
-- [ ] Deploy account
-- [ ] Execute paymaster transaction
+### Phase 4: Pay
+- [ ] `POST /api/pay/parse` - decode QR codes (Lightning/Bitcoin/Starknet)
+- [ ] `POST /api/pay/execute` - execute payment with WebAuthn
+- [ ] `GET /api/pay/:id` - poll payment status
+- [ ] AVNU gateway (paymaster for auto-deployment)
+- [ ] Starknet gateway (sign & submit transactions)
 
-### Phase 5: Lightning/Bitcoin Swaps
-- [ ] Create invoice
-- [ ] Swap creation (Lightning, Bitcoin)
-- [ ] Swap status polling
-- [ ] Transaction signing flow
-- [ ] Claim swap
-- [ ] Webhook handling
-
-### Phase 6: Frontend Pages
-- [ ] Home page (balance, account status)
-- [ ] Receive page (Lightning, Bitcoin, Starknet)
-- [ ] Pay page (send to Lightning/Bitcoin)
+### Phase 5: Frontend
+- [ ] Home page (balance, account status, recent transactions)
+- [ ] Receive page (network selector, QR display)
+- [ ] Pay page (QR scanner, confirmation, status)
 - [ ] Settings page
-- [ ] QR scanner
+
+### Phase 6: Production Readiness
+- [ ] `GET /api/health` - comprehensive health check
+- [ ] `GET /api/prices` - BTC/ETH/STRK prices
+- [ ] Webhook endpoints for external services
+- [ ] Error handling & retry logic
+- [ ] Logging & monitoring
