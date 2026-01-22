@@ -11,13 +11,13 @@ import {
   type ValidateSessionOutput,
 } from '@bim/domain';
 import {Hono} from 'hono';
-import type {AppEnv, AuthenticatedHono} from '../types.js';
+import type {AppContext, AuthenticatedHono} from '../types.js';
 
 // =============================================================================
 // Routes
 // =============================================================================
 
-export function createUserRoutes(env: AppEnv): AuthenticatedHono {
+export function createUserRoutes(appContext: AppContext): AuthenticatedHono {
   const app: AuthenticatedHono = new Hono();
 
   // Middleware: Require authentication
@@ -29,8 +29,8 @@ export function createUserRoutes(env: AppEnv): AuthenticatedHono {
 
     try {
       const validate = validateSession({
-        sessionRepository: env.repositories.session,
-        accountRepository: env.repositories.account,
+        sessionRepository: appContext.repositories.session,
+        accountRepository: appContext.repositories.account,
       });
 
       const result: ValidateSessionOutput = await validate({sessionId});
@@ -57,7 +57,7 @@ export function createUserRoutes(env: AppEnv): AuthenticatedHono {
       const account: Account = ctx.get('account');
 
       const fetchSettings = getFetchUserSettingsUseCase({
-        userSettingsRepository: env.repositories.userSettings,
+        userSettingsRepository: appContext.repositories.userSettings,
         idGenerator: UserSettingsId.generate,
       });
 
@@ -82,7 +82,7 @@ export function createUserRoutes(env: AppEnv): AuthenticatedHono {
       const body = await ctx.req.json();
 
       const updateSettings = getUpdateUserSettingsUseCase({
-        userSettingsRepository: env.repositories.userSettings,
+        userSettingsRepository: appContext.repositories.userSettings,
         idGenerator: UserSettingsId.generate,
       });
 

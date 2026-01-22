@@ -7,8 +7,8 @@ export default defineConfig({
     pool: 'forks',
     isolate: false, // Run all tests in the same fork (sequential)
     fileParallelism: false, // Don't run test files in parallel
-    testTimeout: 30000, // Longer timeout for database operations
-    hookTimeout: 60000, // Longer timeout for setup/teardown (container startup)
+    testTimeout: 60000, // Longer timeout for Starknet operations
+    hookTimeout: 120000, // Longer timeout for setup/teardown (container startup)
     sequence: {
       shuffle: false, // Don't shuffle tests, run in order
     },

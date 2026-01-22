@@ -16,7 +16,7 @@
     "dev": "npm run dev -w @bim/api",
     "dev:front": "npm run dev -w front",
     "test": "npm run test -w @bim/lib && npm run test -w @bim/domain && npm run test -w @bim/api && npm run test -w @bim/front",
-    "test:run": "vitest run",
+    "test:integration": "npm run test:integration -w @bim/api",
     "test:e2e": "echo TODO"
   },
   "packageManager": "npm@11.6.2",
@@ -25,6 +25,7 @@
   },
   "devDependencies": {
     "esbuild": "^0.27.2",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vite-tsconfig-paths": "^6.0.4",
     "vitest": "^4.0.17"

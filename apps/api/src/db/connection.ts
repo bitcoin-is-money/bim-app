@@ -4,8 +4,10 @@ import * as schema from '../../database/schema.js';
 
 const { Pool } = pg;
 
+export type Database = ReturnType<typeof drizzle<typeof schema>>;
+
 let pool: pg.Pool | undefined;
-let db: ReturnType<typeof drizzle<typeof schema>> | undefined;
+let db: Database | undefined;
 
 /**
  * Gets the database connection pool.
@@ -41,7 +43,7 @@ export function getPool(): pg.Pool {
 /**
  * Gets the Drizzle database instance.
  */
-export function getDb(): ReturnType<typeof drizzle<typeof schema>> {
+export function getDb(): Database {
   db ??= drizzle(getPool(), {schema});
   return db;
 }

@@ -5,20 +5,21 @@ import {
   type DeployAccountOutput,
   getDeployAccountUseCase,
   InvalidAccountStateError,
+  InvalidSessionIdError,
   SessionExpiredError,
   SessionNotFoundError,
   validateSession,
   type ValidateSessionOutput,
 } from '@bim/domain';
 import {Hono} from 'hono';
-import type {AppEnv, AuthenticatedHono} from '../types.js';
+import type {AppContext, AuthenticatedHono} from '../types.js';
 
 
 // =============================================================================
 // Routes
 // =============================================================================
 
-export function createAccountRoutes(env: AppEnv): AuthenticatedHono {
+export function createAccountRoutes(appContext: AppContext): AuthenticatedHono {
   const app: AuthenticatedHono = new Hono();
 
   // Middleware: Require authentication
@@ -30,8 +31,8 @@ export function createAccountRoutes(env: AppEnv): AuthenticatedHono {
 
     try {
       const validate = validateSession({
-        sessionRepository: env.repositories.session,
-        accountRepository: env.repositories.account,
+        sessionRepository: appContext.repositories.session,
+        accountRepository: appContext.repositories.account,
       });
 
       const result: ValidateSessionOutput = await validate({ sessionId });
@@ -41,7 +42,8 @@ export function createAccountRoutes(env: AppEnv): AuthenticatedHono {
     } catch (error) {
       if (
         error instanceof SessionExpiredError ||
-        error instanceof SessionNotFoundError
+        error instanceof SessionNotFoundError ||
+        error instanceof InvalidSessionIdError
       ) {
         return ctx.json({ error: 'Session expired' }, 401);
       }
@@ -75,9 +77,9 @@ export function createAccountRoutes(env: AppEnv): AuthenticatedHono {
       const account: Account = ctx.get('account');
 
       const deployAccount = getDeployAccountUseCase({
-        accountRepository: env.repositories.account,
-        starknetGateway: env.gateways.starknet,
-        paymasterGateway: env.gateways.paymaster,
+        accountRepository: appContext.repositories.account,
+        starknetGateway: appContext.gateways.starknet,
+        paymasterGateway: appContext.gateways.paymaster,
       });
 
       const result: DeployAccountOutput = await deployAccount({
@@ -101,7 +103,7 @@ export function createAccountRoutes(env: AppEnv): AuthenticatedHono {
     const account: Account = ctx.get('account');
 
     // Reload account to get the latest status
-    const freshAccount: Account | undefined = await env.repositories.account.findById(
+    const freshAccount: Account | undefined = await appContext.repositories.account.findById(
       AccountId.of(account.id),
     );
 

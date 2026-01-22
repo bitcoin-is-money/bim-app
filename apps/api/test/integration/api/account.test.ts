@@ -1,27 +1,37 @@
-import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import {createTestApp} from '../helpers/test-app';
-import {closeTestDb, testHelpers, truncateAllTables} from '../helpers/test-context';
 import type {Hono} from 'hono';
+import pg from "pg";
+import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
+import {accounts} from '../../../database/schema.js';
+import {type DbClient, TestApp, TestDatabase} from '../helpers';
+import {AccountFixture} from "../helpers/account";
+import {AuthFixture} from "../helpers/auth";
 
 describe('Account API', () => {
   let app: Hono;
+  let pool: pg.Pool;
+  let db: DbClient;
+  let accountFixture: AccountFixture;
+  let authFixture: AuthFixture;
 
   beforeAll(() => {
-    app = createTestApp();
+    app = TestApp.createTestApp();
+    pool = TestDatabase.createPool();
+    db = TestDatabase.getClient(pool);
+    accountFixture = AccountFixture.create(db);
+    authFixture = AuthFixture.create(db);
   });
 
   beforeEach(async () => {
-    await truncateAllTables();
+    await TestDatabase.reset(pool);
   });
 
   afterAll(async () => {
-    await closeTestDb();
+    await pool.end();
   });
 
   describe('Database operations', () => {
-    it('should be able to create and retrieve accounts from database', async () => {
-      // Insert the test account directly
-      const account = await testHelpers.insertAccount({
+    it('creates and retrieves accounts from database', async () => {
+      const account = await accountFixture.insertAccount({
         username: 'testUser',
         status: 'deployed',
         starknetAddress: '0x123456789abcdef',
@@ -33,29 +43,24 @@ describe('Account API', () => {
       expect(account.starknetAddress).toBe('0x123456789abcdef');
     });
 
-    it('should isolate data between tests (truncate works)', async () => {
-      // This test runs after the previous one
+    it('isolates data between tests (truncate works)', async () => {
       // The account created in the previous test should not exist
-      const {getTestDb} = await import('../helpers/test-context.js');
-      const {accounts} = await import('../../../database/schema.js');
-
-      const db = getTestDb();
       const allAccounts = await db.select().from(accounts);
 
       // Table should be empty because beforeEach truncates
       expect(allAccounts).toHaveLength(0);
     });
 
-    it('should handle session creation with account', async () => {
-      const account = await testHelpers.insertAccount();
-      const session = await testHelpers.insertSession(account.id);
+    it('handles session creation with account', async () => {
+      const account = await accountFixture.insertAccount();
+      const session = await authFixture.insertSession(account.id);
 
       expect(session.accountId).toBe(account.id);
       expect(session.expiresAt).toBeDefined();
     });
 
-    it('should handle challenge creation', async () => {
-      const challenge = await testHelpers.insertChallenge({
+    it('handles challenge creation', async () => {
+      const challenge = await authFixture.insertChallenge({
         purpose: 'authentication',
       });
 
