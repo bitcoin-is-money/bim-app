@@ -1,0 +1,52 @@
+@reference "tailwindcss";
+
+.btn {
+  @apply inline-flex items-center justify-center gap-2
+  px-4 py-2
+  font-medium
+  rounded-md
+  transition-colors transition-transform
+  duration-150
+  focus:outline-none
+  focus-visible:ring-2 focus-visible:ring-orange-500
+  disabled:opacity-50 disabled:cursor-not-allowed w-full;
+}
+
+/* ---------- Primary ---------- */
+
+.btn-primary {
+  @apply bg-orange-400
+  border-2 border-orange-400
+  text-neutral-100;
+
+  @apply hover:bg-orange-500 hover:border-orange-500;
+  @apply active:bg-orange-500 active:border-orange-500;
+  @apply disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+/* ---------- Secondary ---------- */
+
+.btn-secondary {
+  @apply bg-transparent
+  border-2 border-neutral-100
+  text-neutral-100;
+
+  @apply hover:bg-neutral-200 hover:text-neutral-900;
+  @apply active:bg-neutral-200 hover:text-neutral-900;
+  @apply disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+/* ---------- Transparent ---------- */
+
+.btn-transparent {
+  @apply bg-transparent
+  border border-transparent
+  text-neutral-100;
+  @apply disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+/* ---------- Icon ---------- */
+
+.btn-icon {
+  @apply inline-flex items-center;
+}
