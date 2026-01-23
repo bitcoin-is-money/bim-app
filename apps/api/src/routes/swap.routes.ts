@@ -17,7 +17,8 @@ import {
 } from '@bim/domain';
 import {Hono} from 'hono';
 import {z} from 'zod';
-import type {AppContext, AuthenticatedHono} from '../types.js';
+import type {AppContext} from "../app-context";
+import type {AuthenticatedHono} from '../types.js';
 
 // =============================================================================
 // Validation Schemas

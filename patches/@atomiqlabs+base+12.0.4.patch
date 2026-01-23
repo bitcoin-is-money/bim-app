@@ -1,0 +1,20 @@
+diff --git a/node_modules/@atomiqlabs/base/src/swaps/SwapData.ts b/node_modules/@atomiqlabs/base/src/swaps/SwapData.ts
+index 7c93f8b..8805138 100644
+--- a/node_modules/@atomiqlabs/base/src/swaps/SwapData.ts
++++ b/node_modules/@atomiqlabs/base/src/swaps/SwapData.ts
+@@ -1,5 +1,5 @@
+ import {ChainSwapType} from "./ChainSwapType";
+-import {StorageObject} from "../storage/StorageObject";
++import type {StorageObject} from "../storage/StorageObject";
+ 
+ export abstract class SwapData implements StorageObject {
+ 
+@@ -48,7 +48,7 @@ export abstract class SwapData implements StorageObject {
+     abstract getConfirmationsHint(): number;
+     abstract getNonceHint(): bigint;
+     abstract getTxoHashHint(): string;
+-    getHTLCHashHint(): string {
++    getHTLCHashHint(): string | null {
+         return null;
+     }
+     abstract setExtraData(extraData: string): void;

@@ -1,5 +1,5 @@
 import {Hono} from 'hono';
-import type {AppContext} from '../types.js';
+import type {AppContext} from "../app-context";
 
 export function createBalanceRoutes(appContext: AppContext): Hono {
   const app = new Hono();

@@ -107,14 +107,19 @@ describe('Registration Flow', () => {
    * Helper to perform the full registration flow.
    */
   async function registerUser(username: string) {
-    const beginResponse = await TestApp.request(app).post('/api/auth/register/begin', {username});
+    const beginResponse = await TestApp
+      .request(app)
+      .post('/api/auth/register/begin', {username});
     const beginBody = await beginResponse.json() as BeginRegistrationResponse;
-    const credential = await authenticator.createCredential(toAuthenticatorOptions(beginBody));
-    const completeResponse = await TestApp.request(app).post('/api/auth/register/complete', {
-      challengeId: beginBody.challengeId,
-      username,
-      credential,
-    });
+    const credential = await authenticator
+      .createCredential(toAuthenticatorOptions(beginBody));
+    const completeResponse = await TestApp
+      .request(app)
+      .post('/api/auth/register/complete', {
+        challengeId: beginBody.challengeId,
+        username,
+        credential,
+      });
     return {beginBody, credential, completeResponse};
   }
 
@@ -213,7 +218,9 @@ describe('Registration Flow', () => {
 
       // Expire the challenge by updating it in the database
       await db.execute(
-        sql`UPDATE challenges SET expires_at = NOW() - INTERVAL '1 minute' WHERE id = ${beginBody.challengeId}`,
+        sql`UPDATE challenges
+            SET expires_at = NOW() - INTERVAL '1 minute'
+            WHERE id = ${beginBody.challengeId}`,
       );
 
       // Try to complete - should fail
@@ -265,7 +272,7 @@ describe('Registration Flow', () => {
       expect(sessionResponse.status).toBe(200);
       const body = await sessionResponse.json() as {
         authenticated: boolean;
-        account: {username: string};
+        account: { username: string };
       };
       expect(body.authenticated).toBe(true);
       expect(body.account.username).toBe(username);
@@ -275,7 +282,7 @@ describe('Registration Flow', () => {
       const response = await TestApp.request(app).get('/api/auth/session');
 
       expect(response.status).toBe(401);
-      const body = await response.json() as {authenticated: boolean};
+      const body = await response.json() as { authenticated: boolean };
       expect(body.authenticated).toBe(false);
     });
   });
