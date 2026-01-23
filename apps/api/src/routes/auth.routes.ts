@@ -20,7 +20,7 @@ import {
 } from '@bim/domain';
 import {Hono} from 'hono';
 import {z} from 'zod';
-import type {AppContext} from '../types.js';
+import type {AppContext} from "../app-context";
 
 // =============================================================================
 // Validation Schemas

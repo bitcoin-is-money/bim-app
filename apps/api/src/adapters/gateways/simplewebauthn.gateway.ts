@@ -59,10 +59,7 @@ export class SimpleWebAuthnGateway implements WebAuthnGateway {
 
       // Extract the credential ID
       // In SimpleWebAuthn v13+, credential.id is already a base64url string
-      const credId = registrationInfo.credential.id;
-      const encodedCredentialId: Base64URLString = credId instanceof Uint8Array
-        ? Buffer.from(credId).toString('base64url')
-        : String(credId);
+      const encodedCredentialId: Base64URLString = registrationInfo.credential.id;
 
       // For Starknet compatibility, we need to extract the x-coordinate
       // This assumes P-256 (secp256r1) curve used by WebAuthn

@@ -11,7 +11,8 @@ import {
   type ValidateSessionOutput,
 } from '@bim/domain';
 import {Hono} from 'hono';
-import type {AppContext, AuthenticatedHono} from '../types.js';
+import type {AppContext} from "../app-context";
+import type {AuthenticatedHono} from '../types.js';
 
 // =============================================================================
 // Routes
