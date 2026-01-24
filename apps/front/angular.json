@@ -26,7 +26,8 @@
               }
             ],
             "styles": [
-              "src/styles.css"
+              "@ngxpert/hot-toast/styles.css",
+              "src/styles.scss"
             ]
           },
           "configurations": {

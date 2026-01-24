@@ -1,0 +1,13 @@
+@use '@ngxpert/hot-toast/src/styles/styles.scss';
+
+:root {
+  --hot-toast-width: auto;
+  --hot-toast-max-width: 100%;
+}
+
+.hot-toast-bar-base-wrapper {
+  width: 100%;
+}
+.hot-toast-close-btn {
+  //margin-top: 5px;
+}
