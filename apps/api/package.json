@@ -27,11 +27,14 @@
     "@bim/domain": "*",
     "@bim/lib": "*",
     "@hono/node-server": "^1.13.0",
+    "@noble/curves": "^1.7.0",
+    "@noble/hashes": "^1.6.1",
     "@simplewebauthn/server": "^13.1.1",
     "deepmerge": "^4.3.1",
     "drizzle-orm": "^0.38.0",
     "hono": "^4.6.0",
     "pg": "^8.13.0",
+    "starknet": "^9.3.0",
     "zod": "^3.24.0"
   },
   "devDependencies": {

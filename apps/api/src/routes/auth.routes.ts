@@ -11,12 +11,12 @@ import {
   getCompleteRegistrationUseCase,
   InvalidSessionIdError,
   InvalidUsernameError,
-  logout,
+  getLogoutUseCase,
   RegistrationFailedError,
   SessionExpiredError,
   SessionNotFoundError,
   Username,
-  validateSession,
+  getValidateSessionUseCase,
 } from '@bim/domain';
 import {Hono} from 'hono';
 import {z} from 'zod';
@@ -88,11 +88,11 @@ export function createAuthRoutes(appContext: AppContext): Hono {
       const body = await ctx.req.json();
       const input = BeginRegistrationSchema.parse(body);
 
-      const begin = getBeginRegistrationUseCase({
+      const beginRegistration = getBeginRegistrationUseCase({
         challengeRepository: appContext.repositories.challenge,
       });
 
-      const result = await begin({
+      const result = await beginRegistration({
         username: input.username,
         rpId,
         rpName,
@@ -217,7 +217,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
         return ctx.json({ authenticated: false }, 401);
       }
 
-      const validate = validateSession({
+      const validate = getValidateSessionUseCase({
         sessionRepository: appContext.repositories.session,
         accountRepository: appContext.repositories.account,
       });
@@ -250,21 +250,20 @@ export function createAuthRoutes(appContext: AppContext): Hono {
     try {
       const sessionId = getSessionId(ctx);
       if (sessionId) {
-        const doLogout = logout({
+        const logout = getLogoutUseCase({
           sessionRepository: appContext.repositories.session,
         });
-
-        await doLogout({ sessionId });
+        await logout({ sessionId });
       }
 
       clearCookie(ctx);
       return ctx.json({ success: true });
     } catch (error) {
+      console.error("Logout error :", error);
       clearCookie(ctx);
       return ctx.json({ success: true });
     }
   });
-
   return app;
 }
 

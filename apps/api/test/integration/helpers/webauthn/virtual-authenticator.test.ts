@@ -1,6 +1,6 @@
 import {generateChallenge, isoBase64URL} from '@simplewebauthn/server/helpers';
 import {describe, beforeEach, it, expect} from 'vitest';
-import {SimpleWebAuthnGateway} from '../../../../src/adapters/gateways/simplewebauthn.gateway.js';
+import {SimpleWebAuthnGateway} from '../../../../src/adapters';
 import {VirtualAuthenticator} from './virtual-authenticator.js';
 
 /**
@@ -33,7 +33,7 @@ describe('VirtualAuthenticator', () => {
         rp: {id: rpId, name: rpName},
         user: {
           id: isoBase64URL.fromBuffer(Buffer.from('user123')),
-          name: 'testuser',
+          name: 'testUser',
           displayName: 'Test User',
         },
       });
@@ -61,7 +61,7 @@ describe('VirtualAuthenticator', () => {
         rp: {id: rpId, name: rpName},
         user: {
           id: isoBase64URL.fromBuffer(Buffer.from('user456')),
-          name: 'anotheruser',
+          name: 'anotherUser',
           displayName: 'Another User',
         },
       });
@@ -82,8 +82,8 @@ describe('VirtualAuthenticator', () => {
         challenge: regChallengeBase64,
         rp: {id: rpId, name: rpName},
         user: {
-          id: isoBase64URL.fromBuffer(Buffer.from('authuser')),
-          name: 'authuser',
+          id: isoBase64URL.fromBuffer(Buffer.from('authUser')),
+          name: 'authUser',
           displayName: 'Auth User',
         },
       });
@@ -177,7 +177,7 @@ describe('VirtualAuthenticator', () => {
     });
 
     it('throws error if no credential found for rpId', async () => {
-      await expect(
+      expect(
         authenticator.getAssertion({
           challenge: isoBase64URL.fromBuffer(await generateChallenge()),
           rpId: 'unknown.example.com',
@@ -193,8 +193,8 @@ describe('VirtualAuthenticator', () => {
         challenge: isoBase64URL.fromBuffer(await generateChallenge()),
         rp: {id: rpId, name: rpName},
         user: {
-          id: isoBase64URL.fromBuffer(Buffer.from('clearuser')),
-          name: 'clearuser',
+          id: isoBase64URL.fromBuffer(Buffer.from('clearUser')),
+          name: 'clearUser',
           displayName: 'Clear User',
         },
       });
@@ -204,6 +204,244 @@ describe('VirtualAuthenticator', () => {
       authenticator.clear();
 
       expect(authenticator.getStoredCredentials()).toHaveLength(0);
+    });
+  });
+
+  describe('verification failures', () => {
+    describe('registration failures', () => {
+      it('fails verification when challenge does not match', async () => {
+        const challenge = await generateChallenge();
+        const wrongChallenge = await generateChallenge();
+
+        const credential = await authenticator.createCredential({
+          challenge: isoBase64URL.fromBuffer(challenge),
+          rp: {id: rpId, name: rpName},
+          user: {
+            id: isoBase64URL.fromBuffer(Buffer.from('user-wrong-challenge')),
+            name: 'testUser',
+            displayName: 'Test User',
+          },
+        });
+
+        const result = await gateway.verifyRegistration({
+          expectedChallenge: isoBase64URL.fromBuffer(wrongChallenge),
+          expectedOrigin: origin,
+          expectedRPID: rpId,
+          credential,
+        });
+
+        expect(result.verified).toBe(false);
+      });
+
+      it('fails verification when origin does not match', async () => {
+        const challenge = await generateChallenge();
+
+        const credential = await authenticator.createCredential({
+          challenge: isoBase64URL.fromBuffer(challenge),
+          rp: {id: rpId, name: rpName},
+          user: {
+            id: isoBase64URL.fromBuffer(Buffer.from('user-wrong-origin')),
+            name: 'testUser',
+            displayName: 'Test User',
+          },
+        });
+
+        const result = await gateway.verifyRegistration({
+          expectedChallenge: isoBase64URL.fromBuffer(challenge),
+          expectedOrigin: 'https://evil.com',
+          expectedRPID: rpId,
+          credential,
+        });
+
+        expect(result.verified).toBe(false);
+      });
+
+      it('fails verification when RP ID does not match', async () => {
+        const challenge = await generateChallenge();
+
+        const credential = await authenticator.createCredential({
+          challenge: isoBase64URL.fromBuffer(challenge),
+          rp: {id: rpId, name: rpName},
+          user: {
+            id: isoBase64URL.fromBuffer(Buffer.from('user-wrong-rpid')),
+            name: 'testUser',
+            displayName: 'Test User',
+          },
+        });
+
+        const result = await gateway.verifyRegistration({
+          expectedChallenge: isoBase64URL.fromBuffer(challenge),
+          expectedOrigin: origin,
+          expectedRPID: 'evil.com',
+          credential,
+        });
+
+        expect(result.verified).toBe(false);
+      });
+    });
+
+    describe('authentication failures', () => {
+      it('fails verification when challenge does not match', async () => {
+        // Register first
+        const regChallenge = await generateChallenge();
+        const regChallengeBase64 = isoBase64URL.fromBuffer(regChallenge);
+
+        const regCredential = await authenticator.createCredential({
+          challenge: regChallengeBase64,
+          rp: {id: rpId, name: rpName},
+          user: {
+            id: isoBase64URL.fromBuffer(Buffer.from('user-auth-wrong-challenge')),
+            name: 'testUser',
+            displayName: 'Test User',
+          },
+        });
+
+        const regResult = await gateway.verifyRegistration({
+          expectedChallenge: regChallengeBase64,
+          expectedOrigin: origin,
+          expectedRPID: rpId,
+          credential: regCredential,
+        });
+
+        // Authenticate with a wrong challenge
+        const authChallenge = await generateChallenge();
+        const wrongChallenge = await generateChallenge();
+
+        const assertion = await authenticator.getAssertion({
+          challenge: isoBase64URL.fromBuffer(authChallenge),
+          rpId,
+        });
+
+        const authResult = await gateway.verifyAuthentication({
+          expectedChallenge: isoBase64URL.fromBuffer(wrongChallenge),
+          expectedOrigin: origin,
+          expectedRPID: rpId,
+          credential: assertion,
+          storedCredential: {
+            credentialId: regResult.encodedCredentialId,
+            publicKey: regResult.starknetPublicKeyX,
+            credentialPublicKey: regResult.encodedCredentialPublicKey,
+            signCount: regResult.signCount,
+          },
+        });
+
+        expect(authResult.verified).toBe(false);
+      });
+
+      it('fails verification when origin does not match', async () => {
+        // Register first
+        const regChallenge = await generateChallenge();
+        const regChallengeBase64 = isoBase64URL.fromBuffer(regChallenge);
+
+        const regCredential = await authenticator.createCredential({
+          challenge: regChallengeBase64,
+          rp: {id: rpId, name: rpName},
+          user: {
+            id: isoBase64URL.fromBuffer(Buffer.from('user-auth-wrong-origin')),
+            name: 'testUser',
+            displayName: 'Test User',
+          },
+        });
+
+        const regResult = await gateway.verifyRegistration({
+          expectedChallenge: regChallengeBase64,
+          expectedOrigin: origin,
+          expectedRPID: rpId,
+          credential: regCredential,
+        });
+
+        // Authenticate
+        const authChallenge = await generateChallenge();
+        const authChallengeBase64 = isoBase64URL.fromBuffer(authChallenge);
+
+        const assertion = await authenticator.getAssertion({
+          challenge: authChallengeBase64,
+          rpId,
+        });
+
+        const authResult = await gateway.verifyAuthentication({
+          expectedChallenge: authChallengeBase64,
+          expectedOrigin: 'https://evil.com',
+          expectedRPID: rpId,
+          credential: assertion,
+          storedCredential: {
+            credentialId: regResult.encodedCredentialId,
+            publicKey: regResult.starknetPublicKeyX,
+            credentialPublicKey: regResult.encodedCredentialPublicKey,
+            signCount: regResult.signCount,
+          },
+        });
+
+        expect(authResult.verified).toBe(false);
+      });
+
+      it('fails verification when sign count is not greater than stored', async () => {
+        // Register first
+        const regChallenge = await generateChallenge();
+        const regChallengeBase64 = isoBase64URL.fromBuffer(regChallenge);
+
+        const regCredential = await authenticator.createCredential({
+          challenge: regChallengeBase64,
+          rp: {id: rpId, name: rpName},
+          user: {
+            id: isoBase64URL.fromBuffer(Buffer.from('user-replayed-counter')),
+            name: 'testUser',
+            displayName: 'Test User',
+          },
+        });
+
+        const regResult = await gateway.verifyRegistration({
+          expectedChallenge: regChallengeBase64,
+          expectedOrigin: origin,
+          expectedRPID: rpId,
+          credential: regCredential,
+        });
+
+        // First authentication (succeeds)
+        const authChallenge1 = await generateChallenge();
+        const assertion1 = await authenticator.getAssertion({
+          challenge: isoBase64URL.fromBuffer(authChallenge1),
+          rpId,
+        });
+
+        const authResult1 = await gateway.verifyAuthentication({
+          expectedChallenge: isoBase64URL.fromBuffer(authChallenge1),
+          expectedOrigin: origin,
+          expectedRPID: rpId,
+          credential: assertion1,
+          storedCredential: {
+            credentialId: regResult.encodedCredentialId,
+            publicKey: regResult.starknetPublicKeyX,
+            credentialPublicKey: regResult.encodedCredentialPublicKey,
+            signCount: regResult.signCount,
+          },
+        });
+
+        expect(authResult1.verified).toBe(true);
+
+        // Second authentication with outdated stored sign count (simulate replay attack)
+        // We pass a sign count higher than what the authenticator will produce
+        const authChallenge2 = await generateChallenge();
+        const assertion2 = await authenticator.getAssertion({
+          challenge: isoBase64URL.fromBuffer(authChallenge2),
+          rpId,
+        });
+
+        const authResult2 = await gateway.verifyAuthentication({
+          expectedChallenge: isoBase64URL.fromBuffer(authChallenge2),
+          expectedOrigin: origin,
+          expectedRPID: rpId,
+          credential: assertion2,
+          storedCredential: {
+            credentialId: regResult.encodedCredentialId,
+            publicKey: regResult.starknetPublicKeyX,
+            credentialPublicKey: regResult.encodedCredentialPublicKey,
+            signCount: 9999, // Much higher than the authenticator's counter
+          },
+        });
+
+        expect(authResult2.verified).toBe(false);
+      });
     });
   });
 });

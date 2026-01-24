@@ -1,14 +1,18 @@
+import {StarknetAddress} from '@bim/domain';
+import {eq} from 'drizzle-orm';
 import type {Hono} from 'hono';
 import pg from 'pg';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
+import * as schema from '../../../database/schema';
 import {
+  type CredentialCreationOptions,
   type DbClient,
-  StrkDevnet,
+  DEVNET_ACCOUNT_CLASS_HASH,
+  DevnetPaymasterGateway,
   StrkDevnetContext,
   TestApp,
   TestDatabase,
   VirtualAuthenticator,
-  type CredentialCreationOptions,
 } from '../helpers';
 
 /**
@@ -89,7 +93,7 @@ function toRegistrationOptions(apiResponse: BeginRegistrationResponse): Credenti
  * - GET /api/account/deployment-status - Deployment status polling
  * - POST /api/account/deploy - Trigger deployment (requires real paymaster)
  *
- * NOTE: Full deployment tests require a real paymaster or mocked infrastructure
+ * NOTE: Full deployment tests require a real paymaster or a mocked infrastructure
  * because WebAuthn accounts need signature from the credential during deployment.
  * The tests here focus on API behavior that doesn't require actual chain deployment.
  */
@@ -98,27 +102,27 @@ describe('Account Deployment Flow', () => {
   let pool: pg.Pool;
   let db: DbClient;
   let authenticator: VirtualAuthenticator;
-  let strkContext: StrkDevnetContext | undefined;
+  let strkContext: StrkDevnetContext;
+  let paymasterGateway: DevnetPaymasterGateway;
 
-  beforeAll(() => {
-    authenticator = new VirtualAuthenticator();
-
-    if (StrkDevnet.isAvailable()) {
-      strkContext = StrkDevnetContext.create();
-      app = TestApp.createTestApp({
-        context: {
-          gateways: {
-            starknet: strkContext.getStarknetGateway(),
-            paymaster: strkContext.getDevnetPaymasterGateway(),
-          },
-        },
-      });
-    } else {
-      app = TestApp.createTestApp();
-    }
-
+  beforeAll(async () => {
+    strkContext = StrkDevnetContext.create();
+    // Initialize StarkSigner with a devnet account's private key
+    await strkContext.ensureStarkSignerInitialized();
+    // Use P256Signer for WebAuthn credential creation
+    authenticator = new VirtualAuthenticator({signer: strkContext.getP256Signer()});
+    // Get reference to paymaster gateway for verifying the deployed address
+    paymasterGateway = strkContext.getDevnetPaymasterGateway();
     pool = TestDatabase.createPool();
     db = TestDatabase.getClient(pool);
+    app = TestApp.createTestApp({
+      context: {
+        gateways: {
+          starknet: strkContext.getStarknetGateway(),
+          paymaster: paymasterGateway,
+        },
+      },
+    });
   });
 
   beforeEach(async () => {
@@ -127,28 +131,31 @@ describe('Account Deployment Flow', () => {
   });
 
   afterAll(async () => {
-    if (strkContext) {
-      strkContext.resetStarknetContext();
-    }
+    strkContext.resetStarknetContext();
     await pool.end();
   });
 
   /**
-   * Helper to register a user and return session cookie + account info.
+   * Helper to register a user, return session cookie and account info.
    */
   async function registerUser(username: string): Promise<{
     sessionCookie: string;
     account: RegistrationCompleteResponse['account'];
   }> {
-    const beginResponse = await TestApp.request(app).post('/api/auth/register/begin', {username});
+    const beginResponse = await TestApp
+      .request(app)
+      .post('/api/auth/register/begin', {username});
     const beginBody = await beginResponse.json() as BeginRegistrationResponse;
-    const credential = await authenticator.createCredential(toRegistrationOptions(beginBody));
+    const credential = await authenticator
+      .createCredential(toRegistrationOptions(beginBody));
 
-    const completeResponse = await TestApp.request(app).post('/api/auth/register/complete', {
-      challengeId: beginBody.challengeId,
-      username,
-      credential,
-    });
+    const completeResponse = await TestApp
+      .request(app)
+      .post('/api/auth/register/complete', {
+        challengeId: beginBody.challengeId,
+        username,
+        credential,
+      });
 
     const completeBody = await completeResponse.json() as RegistrationCompleteResponse;
     const setCookie = completeResponse.headers.get('Set-Cookie') || '';
@@ -163,17 +170,18 @@ describe('Account Deployment Flow', () => {
 
   describe('GET /api/account/me', () => {
     it('returns account info for authenticated user', async () => {
-      if (!strkContext) {
-        console.log('Skipping: Starknet devnet not available');
-        return;
-      }
-
       const username = 'account_info';
       const {sessionCookie, account} = await registerUser(username);
 
-      const response = await TestApp.request(app).get('/api/account/me', {
-        headers: {Cookie: sessionCookie},
-      });
+      // Verify account state from registration response
+      expect(account.status).toBe('pending');
+      expect(account.starknetAddress).toMatch(/^0x[0-9a-fA-F]{64}$/);
+
+      const response = await TestApp
+        .request(app)
+        .get('/api/account/me', {
+          headers: {Cookie: sessionCookie},
+        });
 
       expect(response.status).toBe(200);
       const body = await response.json() as AccountMeResponse;
@@ -187,15 +195,19 @@ describe('Account Deployment Flow', () => {
     });
 
     it('rejects unauthenticated request', async () => {
-      const response = await TestApp.request(app).get('/api/account/me');
+      const response = await TestApp
+        .request(app)
+        .get('/api/account/me');
 
       expect(response.status).toBe(401);
     });
 
     it('rejects invalid session', async () => {
-      const response = await TestApp.request(app).get('/api/account/me', {
-        headers: {Cookie: 'session=invalid-session-id'},
-      });
+      const response = await TestApp
+        .request(app)
+        .get('/api/account/me', {
+          headers: {Cookie: 'session=invalid-session-id'},
+        });
 
       expect(response.status).toBe(401);
     });
@@ -203,17 +215,13 @@ describe('Account Deployment Flow', () => {
 
   describe('GET /api/account/deployment-status', () => {
     it('returns pending status for new account', async () => {
-      if (!strkContext) {
-        console.log('Skipping: Starknet devnet not available');
-        return;
-      }
-
       const username = 'status_pending';
       const {sessionCookie} = await registerUser(username);
-
-      const response = await TestApp.request(app).get('/api/account/deployment-status', {
-        headers: {Cookie: sessionCookie},
-      });
+      const response = await TestApp
+        .request(app)
+        .get('/api/account/deployment-status', {
+          headers: {Cookie: sessionCookie},
+        });
 
       expect(response.status).toBe(200);
       const body = await response.json() as DeploymentStatusResponse;
@@ -224,7 +232,9 @@ describe('Account Deployment Flow', () => {
     });
 
     it('rejects unauthenticated status request', async () => {
-      const response = await TestApp.request(app).get('/api/account/deployment-status');
+      const response = await TestApp
+        .request(app)
+        .get('/api/account/deployment-status');
 
       expect(response.status).toBe(401);
     });
@@ -232,58 +242,85 @@ describe('Account Deployment Flow', () => {
 
   describe('POST /api/account/deploy', () => {
     it('rejects unauthenticated deployment request', async () => {
-      const response = await TestApp.request(app).post('/api/account/deploy', {});
+      const response = await TestApp
+        .request(app)
+        .post('/api/account/deploy', {});
 
       expect(response.status).toBe(401);
     });
 
-    /**
-     * NOTE: Full deployment testing is skipped because:
-     * 1. WebAuthn accounts require a signature during deployment
-     * 2. The VirtualAuthenticator creates the credential at registration time
-     * 3. Deployment would need a separate WebAuthn signing flow (challenge/assertion)
-     * 4. The DevnetPaymasterGateway cannot simulate this without additional infrastructure
-     *
-     * To test full deployment:
-     * - Mock the PaymasterGateway to return success
-     * - Or implement a test-specific deployment flow that bypasses WebAuthn signing
-     */
-    it.skip('deploys account to Starknet devnet (requires real paymaster)', async () => {
-      // This test would require either:
-      // 1. A mocked PaymasterGateway
-      // 2. A real paymaster service
-      // 3. Additional WebAuthn signing during deployment
+    it('deploys account to Starknet devnet', async () => {
+      const username = 'deploy_test';
+      const {sessionCookie, account} = await registerUser(username);
+
+      // Verify the account is pending before deployment
+      expect(account.status).toBe('pending');
+      expect(account.starknetAddress).toBeDefined();
+
+      // Trigger deployment
+      const deployResponse = await TestApp
+        .request(app)
+        .post('/api/account/deploy', {}, {
+          headers: {Cookie: sessionCookie},
+        });
+
+      expect(deployResponse.status).toBe(200);
+      const deployBody = await deployResponse.json() as {
+        txHash: string;
+        status: string;
+      };
+
+      expect(deployBody.txHash).toMatch(/^0x[0-9a-fA-F]+$/);
+      expect(deployBody.status).toBe('deploying');
+
+      // Wait for deployment confirmation
+      await strkContext.waitForTransaction(deployBody.txHash);
+
+      // Give the async confirmation handler time to update the DB
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Verify account status in DB is now 'deployed'
+      const dbAccount = await db
+        .select({
+          status: schema.accounts.status,
+          deploymentTxHash: schema.accounts.deploymentTxHash,
+        })
+        .from(schema.accounts)
+        .where(eq(schema.accounts.id, account.id))
+        .then(rows => rows[0]);
+
+      expect(dbAccount?.status).toBe('deployed');
+      expect(dbAccount?.deploymentTxHash).toBe(deployBody.txHash);
+
+      // Verify on-chain: the account is actually deployed
+      // NOTE: On devnet, we deploy at a STARK-based address (not P256-based)
+      // because devnet uses OpenZeppelin account which expects STARK signatures.
+      // In production, the WebAuthn contract would accept P256 signatures at
+      // the P256-based address. This test verifies deployment mechanics work.
+      const deployedAddress = paymasterGateway.getLastDeployedAddress();
+      expect(deployedAddress).toBeDefined();
+      const starknetAddress = StarknetAddress.of(deployedAddress!);
+      const isDeployed = await strkContext.isAccountDeployed(starknetAddress);
+      expect(isDeployed).toBe(true);
+
+      // Verify via API endpoint
+      const statusResponse = await TestApp
+        .request(app)
+        .get('/api/account/deployment-status', {
+          headers: {Cookie: sessionCookie},
+        });
+
+      expect(statusResponse.status).toBe(200);
+      const statusBody = await statusResponse.json() as DeploymentStatusResponse;
+      expect(statusBody.status).toBe('deployed');
+      expect(statusBody.isDeployed).toBe(true);
+      expect(statusBody.txHash).toBe(deployBody.txHash);
     });
   });
 
   describe('Account State Transitions', () => {
-    it('account starts in pending state after registration', async () => {
-      if (!strkContext) {
-        console.log('Skipping: Starknet devnet not available');
-        return;
-      }
-
-      const username = 'state_test';
-      const {sessionCookie, account} = await registerUser(username);
-
-      // Verify account state from registration response
-      expect(account.status).toBe('pending');
-      expect(account.starknetAddress).toMatch(/^0x[0-9a-fA-F]{64}$/);
-
-      // Verify through API
-      const meResponse = await TestApp.request(app).get('/api/account/me', {
-        headers: {Cookie: sessionCookie},
-      });
-      const meBody = await meResponse.json() as AccountMeResponse;
-      expect(meBody.status).toBe('pending');
-    });
 
     it('account has computed Starknet address after registration', async () => {
-      if (!strkContext) {
-        console.log('Skipping: Starknet devnet not available');
-        return;
-      }
-
       const username = 'address_test';
       const {account} = await registerUser(username);
 

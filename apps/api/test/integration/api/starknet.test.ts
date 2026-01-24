@@ -19,11 +19,6 @@ import {AuthFixture} from "../helpers/auth";
  * -- WORK IN PROGRESS --
  */
 describe('Starknet Integration', () => {
-  if (!StrkDevnet.isAvailable()) {
-    it.skip('devnet not available - skipping Starknet tests', () => {});
-    return;
-  }
-
   let app: Hono;
   let pool: pg.Pool;
   let db: DbClient;
