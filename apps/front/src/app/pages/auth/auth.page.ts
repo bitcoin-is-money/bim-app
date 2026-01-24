@@ -106,7 +106,12 @@ export class AuthPage {
   }
 
   updateUsername(event: Event): void {
-    const target = event.target as HTMLInputElement;
-    this.username.set(target.value);
+    const input = event.target as HTMLInputElement;
+    const sanitized = input.value.replaceAll(/[^\w]/g, '');
+    if (sanitized !== input.value) {
+      input.value = sanitized;
+    }
+    this.username.set(sanitized);
   }
+
 }
