@@ -1,3 +1,4 @@
+export * from './crypto/index.js';
 export * from './devnet-paymaster.gateway.js';
 export * from './strk-devnet-context.js';
 export * from './strk-devnet.js';

@@ -7,7 +7,7 @@ import {
   SessionNotFoundError,
   UnsupportedCurrencyError,
   UserSettingsId,
-  validateSession,
+  getValidateSessionUseCase,
   type ValidateSessionOutput,
 } from '@bim/domain';
 import {Hono} from 'hono';
@@ -29,7 +29,7 @@ export function createUserRoutes(appContext: AppContext): AuthenticatedHono {
     }
 
     try {
-      const validate = validateSession({
+      const validate = getValidateSessionUseCase({
         sessionRepository: appContext.repositories.session,
         accountRepository: appContext.repositories.account,
       });

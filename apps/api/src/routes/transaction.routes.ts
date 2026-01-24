@@ -3,7 +3,7 @@ import {
   getFetchTransactionsUseCase,
   SessionExpiredError,
   SessionNotFoundError,
-  validateSession,
+  getValidateSessionUseCase,
   type ValidateSessionOutput,
 } from '@bim/domain';
 import {Hono} from 'hono';
@@ -25,7 +25,7 @@ export function createTransactionRoutes(appContext: AppContext): AuthenticatedHo
     }
 
     try {
-      const validate = validateSession({
+      const validate = getValidateSessionUseCase({
         sessionRepository: appContext.repositories.session,
         accountRepository: appContext.repositories.account,
       });

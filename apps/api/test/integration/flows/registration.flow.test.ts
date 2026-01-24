@@ -1,15 +1,14 @@
-import type {Hono} from 'hono';
 import {sql} from 'drizzle-orm';
+import type {Hono} from 'hono';
 import pg from 'pg';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 import {
+  type CredentialCreationOptions,
   type DbClient,
-  StrkDevnet,
   StrkDevnetContext,
   TestApp,
   TestDatabase,
   VirtualAuthenticator,
-  type CredentialCreationOptions,
 } from '../helpers';
 
 /**
@@ -63,32 +62,24 @@ describe('Registration Flow', () => {
   let pool: pg.Pool;
   let db: DbClient;
   let authenticator: VirtualAuthenticator;
-  let strkContext: StrkDevnetContext | undefined;
+  let strkContext: StrkDevnetContext;
 
   const rpId = 'localhost';
 
   beforeAll(() => {
-    // Create virtual authenticator for simulating WebAuthn
-    authenticator = new VirtualAuthenticator();
-
-    // Set up Starknet devnet context if available
-    if (StrkDevnet.isAvailable()) {
-      strkContext = StrkDevnetContext.create();
-      app = TestApp.createTestApp({
-        context: {
-          gateways: {
-            starknet: strkContext.getStarknetGateway(),
-            paymaster: strkContext.getDevnetPaymasterGateway(),
-          },
-        },
-      });
-    } else {
-      // Run without Starknet devnet (won't calculate real addresses)
-      app = TestApp.createTestApp();
-    }
-
     pool = TestDatabase.createPool();
+    authenticator = new VirtualAuthenticator();
+    strkContext = StrkDevnetContext.create();
     db = TestDatabase.getClient(pool);
+    app = TestApp.createTestApp({
+      context: {
+        gateways: {
+          starknet: strkContext.getStarknetGateway(),
+          paymaster: strkContext.getDevnetPaymasterGateway(),
+        },
+      },
+    });
+
   });
 
   beforeEach(async () => {
@@ -125,9 +116,11 @@ describe('Registration Flow', () => {
 
   describe('POST /api/auth/register/begin', () => {
     it('returns WebAuthn registration options and challenge ID', async () => {
-      const response = await TestApp.request(app).post('/api/auth/register/begin', {
-        username: 'alice',
-      });
+      const response = await TestApp
+        .request(app)
+        .post('/api/auth/register/begin', {
+          username: 'alice',
+        });
 
       expect(response.status).toBe(200);
       const body = await response.json() as BeginRegistrationResponse;
@@ -139,16 +132,18 @@ describe('Registration Flow', () => {
     });
 
     it('rejects invalid username', async () => {
-      const response = await TestApp.request(app).post('/api/auth/register/begin', {
-        username: 'ab', // Too short
-      });
+      const response = await TestApp
+        .request(app)
+        .post('/api/auth/register/begin', {
+          username: 'ab', // Too short
+        });
 
       expect(response.status).toBe(400);
     });
   });
 
   describe('POST /api/auth/register/complete', () => {
-    it('creates account with valid WebAuthn credential', async () => {
+    it('creates account with valid WebAuthn credential and starknet address', async () => {
       const username = 'bob';
       const {completeResponse} = await registerUser(username);
 
@@ -169,26 +164,6 @@ describe('Registration Flow', () => {
       // Verify the session cookie is set
       const setCookie = completeResponse.headers.get('Set-Cookie');
       expect(setCookie).toContain('session=');
-    });
-
-    it('creates account with valid Starknet address when devnet is available', async () => {
-      if (!strkContext) {
-        console.log('Skipping: Starknet devnet not available');
-        return;
-      }
-
-      const username = 'charlie';
-      const {completeResponse} = await registerUser(username);
-
-      expect(completeResponse.status).toBe(200);
-      const body = await completeResponse.json() as {
-        account: {
-          id: string;
-          username: string;
-          starknetAddress: string | null;
-          status: string;
-        };
-      };
 
       // Verify Starknet address is a valid 66-char hex string
       expect(body.account.starknetAddress).toMatch(/^0x[0-9a-fA-F]{64}$/);
@@ -210,11 +185,14 @@ describe('Registration Flow', () => {
       const username = 'expired_user';
 
       // Begin registration
-      const beginResponse = await TestApp.request(app).post('/api/auth/register/begin', {username});
+      const beginResponse = await TestApp
+        .request(app)
+        .post('/api/auth/register/begin', {username});
       const beginBody = await beginResponse.json() as BeginRegistrationResponse;
 
       // Create credential
-      const credential = await authenticator.createCredential(toAuthenticatorOptions(beginBody));
+      const credential = await authenticator
+        .createCredential(toAuthenticatorOptions(beginBody));
 
       // Expire the challenge by updating it in the database
       await db.execute(
@@ -224,11 +202,13 @@ describe('Registration Flow', () => {
       );
 
       // Try to complete - should fail
-      const completeResponse = await TestApp.request(app).post('/api/auth/register/complete', {
-        challengeId: beginBody.challengeId,
-        username,
-        credential,
-      });
+      const completeResponse = await TestApp
+        .request(app)
+        .post('/api/auth/register/complete', {
+          challengeId: beginBody.challengeId,
+          username,
+          credential,
+        });
 
       expect(completeResponse.status).toBe(400);
     });
@@ -237,18 +217,23 @@ describe('Registration Flow', () => {
       const username = 'invalid_challenge';
 
       // Begin registration to get valid options
-      const beginResponse = await TestApp.request(app).post('/api/auth/register/begin', {username});
+      const beginResponse = await TestApp
+        .request(app)
+        .post('/api/auth/register/begin', {username});
       const beginBody = await beginResponse.json() as BeginRegistrationResponse;
 
       // Create credential
-      const credential = await authenticator.createCredential(toAuthenticatorOptions(beginBody));
+      const credential = await authenticator
+        .createCredential(toAuthenticatorOptions(beginBody));
 
-      // Try to complete with the random challenge ID
-      const completeResponse = await TestApp.request(app).post('/api/auth/register/complete', {
-        challengeId: '00000000-0000-0000-0000-000000000000',
-        username,
-        credential,
-      });
+      // Try to complete with a random challenge ID
+      const completeResponse = await TestApp
+        .request(app)
+        .post('/api/auth/register/complete', {
+          challengeId: '00000000-0000-0000-0000-000000000000',
+          username,
+          credential,
+        });
 
       expect(completeResponse.status).toBe(400);
     });
@@ -265,9 +250,11 @@ describe('Registration Flow', () => {
       const sessionCookie = sessionMatch ? `session=${sessionMatch[1]}` : '';
 
       // Check session
-      const sessionResponse = await TestApp.request(app).get('/api/auth/session', {
-        headers: {Cookie: sessionCookie},
-      });
+      const sessionResponse = await TestApp
+        .request(app)
+        .get('/api/auth/session', {
+          headers: {Cookie: sessionCookie},
+        });
 
       expect(sessionResponse.status).toBe(200);
       const body = await sessionResponse.json() as {
@@ -279,7 +266,9 @@ describe('Registration Flow', () => {
     });
 
     it('returns unauthenticated without session cookie', async () => {
-      const response = await TestApp.request(app).get('/api/auth/session');
+      const response = await TestApp
+        .request(app)
+        .get('/api/auth/session');
 
       expect(response.status).toBe(401);
       const body = await response.json() as { authenticated: boolean };

@@ -29,7 +29,7 @@ export interface ValidateSessionOutput {
  * Validates an active session and returns the associated account.
  * Use this for protected routes to verify user authentication.
  */
-export function validateSession(
+export function getValidateSessionUseCase(
   deps: SessionUseCasesDeps,
 ) {
   return async (input: ValidateSessionInput): Promise<ValidateSessionOutput> => {
@@ -64,7 +64,7 @@ export interface LogoutInput {
 /**
  * Invalidates a session (logout).
  */
-export function logout(
+export function getLogoutUseCase(
   deps: Pick<SessionUseCasesDeps, 'sessionRepository'>,
 ) {
   return async (input: LogoutInput): Promise<void> => {

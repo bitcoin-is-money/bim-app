@@ -1,15 +1,15 @@
+import {eq} from 'drizzle-orm';
 import type {Hono} from 'hono';
 import pg from 'pg';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
+import * as schema from '../../../database/schema';
 import {
-  type DbClient,
-  StrkDevnet,
+  type CredentialCreationOptions,
+  type CredentialRequestOptions, type DbClient,
   StrkDevnetContext,
   TestApp,
   TestDatabase,
   VirtualAuthenticator,
-  type CredentialCreationOptions,
-  type CredentialRequestOptions,
 } from '../helpers';
 
 /**
@@ -107,27 +107,21 @@ describe('Authentication Flow', () => {
   let pool: pg.Pool;
   let db: DbClient;
   let authenticator: VirtualAuthenticator;
-  let strkContext: StrkDevnetContext | undefined;
+  let strkContext: StrkDevnetContext;
 
   const rpId = 'localhost';
 
   beforeAll(() => {
     authenticator = new VirtualAuthenticator();
-
-    if (StrkDevnet.isAvailable()) {
-      strkContext = StrkDevnetContext.create();
-      app = TestApp.createTestApp({
-        context: {
-          gateways: {
-            starknet: strkContext.getStarknetGateway(),
-            paymaster: strkContext.getDevnetPaymasterGateway(),
-          },
+    strkContext = StrkDevnetContext.create();
+    app = TestApp.createTestApp({
+      context: {
+        gateways: {
+          starknet: strkContext.getStarknetGateway(),
+          paymaster: strkContext.getDevnetPaymasterGateway(),
         },
-      });
-    } else {
-      app = TestApp.createTestApp();
-    }
-
+      },
+    });
     pool = TestDatabase.createPool();
     db = TestDatabase.getClient(pool);
   });
@@ -138,28 +132,30 @@ describe('Authentication Flow', () => {
   });
 
   afterAll(async () => {
-    if (strkContext) {
-      strkContext.resetStarknetContext();
-    }
+    strkContext.resetStarknetContext();
     await pool.end();
   });
 
   /**
-   * Helper to register a user and return session cookie.
+   * Helper to register a user and return the session cookie.
    */
   async function registerUser(username: string): Promise<{
     sessionCookie: string;
     accountId: string;
   }> {
-    const beginResponse = await TestApp.request(app).post('/api/auth/register/begin', {username});
+    const beginResponse = await TestApp
+      .request(app)
+      .post('/api/auth/register/begin', {username});
     const beginBody = await beginResponse.json() as BeginRegistrationResponse;
-    const credential = await authenticator.createCredential(toRegistrationOptions(beginBody));
-
-    const completeResponse = await TestApp.request(app).post('/api/auth/register/complete', {
-      challengeId: beginBody.challengeId,
-      username,
-      credential,
-    });
+    const credential = await authenticator
+      .createCredential(toRegistrationOptions(beginBody));
+    const completeResponse = await TestApp
+      .request(app)
+      .post('/api/auth/register/complete', {
+        challengeId: beginBody.challengeId,
+        username,
+        credential,
+      });
 
     const completeBody = await completeResponse.json() as AuthCompleteResponse;
     const setCookie = completeResponse.headers.get('Set-Cookie') || '';
@@ -179,15 +175,18 @@ describe('Authentication Flow', () => {
     beginBody: BeginAuthenticationResponse;
     completeResponse: Response;
   }> {
-    const beginResponse = await TestApp.request(app).post('/api/auth/login/begin', {username});
+    const beginResponse = await TestApp
+      .request(app)
+      .post('/api/auth/login/begin', {username});
     const beginBody = await beginResponse.json() as BeginAuthenticationResponse;
-    const assertion = await authenticator.getAssertion(toAuthenticationOptions(beginBody, rpId));
-
-    const completeResponse = await TestApp.request(app).post('/api/auth/login/complete', {
-      challengeId: beginBody.challengeId,
-      credential: assertion,
-    });
-
+    const assertion = await authenticator
+      .getAssertion(toAuthenticationOptions(beginBody, rpId));
+    const completeResponse = await TestApp
+      .request(app)
+      .post('/api/auth/login/complete', {
+        challengeId: beginBody.challengeId,
+        credential: assertion,
+      });
     return {beginBody, completeResponse};
   }
 
@@ -196,7 +195,9 @@ describe('Authentication Flow', () => {
       const username = 'login_test_user';
       await registerUser(username);
 
-      const response = await TestApp.request(app).post('/api/auth/login/begin', {username});
+      const response = await TestApp
+        .request(app)
+        .post('/api/auth/login/begin', {username});
 
       expect(response.status).toBe(200);
       const body = await response.json() as BeginAuthenticationResponse;
@@ -209,17 +210,21 @@ describe('Authentication Flow', () => {
     });
 
     it('rejects login for non-existent user', async () => {
-      const response = await TestApp.request(app).post('/api/auth/login/begin', {
-        username: 'nonexistent_user',
-      });
+      const response = await TestApp
+        .request(app)
+        .post('/api/auth/login/begin', {
+          username: 'nonexistent_user',
+        });
 
       expect(response.status).toBe(404);
     });
 
     it('rejects invalid username format', async () => {
-      const response = await TestApp.request(app).post('/api/auth/login/begin', {
-        username: 'ab', // Too short
-      });
+      const response = await TestApp
+        .request(app)
+        .post('/api/auth/login/begin', {
+          username: 'ab', // Too short
+        });
 
       expect(response.status).toBe(400);
     });
@@ -238,41 +243,37 @@ describe('Authentication Flow', () => {
       expect(body.account.id).toBeDefined();
       expect(body.account.username).toBe(username);
 
-      // Verify session cookie is set
+      // Verify the session cookie is set
       const setCookie = completeResponse.headers.get('Set-Cookie');
       expect(setCookie).toContain('session=');
-    });
 
-    it('returns account with Starknet address when devnet is available', async () => {
-      if (!strkContext) {
-        console.log('Skipping: Starknet devnet not available');
-        return;
-      }
-
-      const username = 'starknet_login_user';
-      await registerUser(username);
-
-      const {completeResponse} = await loginUser(username);
-
-      expect(completeResponse.status).toBe(200);
-      const body = await completeResponse.json() as AuthCompleteResponse;
-
+      // Verify the account has a Starknet address
       expect(body.account.starknetAddress).toMatch(/^0x[0-9a-fA-F]{64}$/);
     });
 
     it('increments sign count after successful authentication', async () => {
-      const username = 'signcount_user';
-      await registerUser(username);
+      const username = 'signCountUser';
+      const {accountId} = await registerUser(username);
+
+      async function expectSignCount(expected: number) {
+        let result = await db
+          .select({signCount: schema.accounts.signCount})
+          .from(schema.accounts)
+          .where(eq(schema.accounts.id, accountId))
+          .then(rows => rows[0]);
+        expect(result?.signCount).toBe(expected);
+      }
+
+      await expectSignCount(0);
 
       // First login
       await loginUser(username);
+      await expectSignCount(1);
 
       // Second login
       const {completeResponse} = await loginUser(username);
       expect(completeResponse.status).toBe(200);
-
-      // The sign count should have been incremented (validated server-side)
-      // We can't directly check the DB here, but if auth succeeds, sign count was validated
+      await expectSignCount(2);
     });
 
     it('rejects invalid challenge ID', async () => {
@@ -280,15 +281,20 @@ describe('Authentication Flow', () => {
       await registerUser(username);
 
       // Start login to get valid assertion options
-      const beginResponse = await TestApp.request(app).post('/api/auth/login/begin', {username});
+      const beginResponse = await TestApp
+        .request(app)
+        .post('/api/auth/login/begin', {username});
       const beginBody = await beginResponse.json() as BeginAuthenticationResponse;
-      const assertion = await authenticator.getAssertion(toAuthenticationOptions(beginBody, rpId));
+      const assertion = await authenticator
+        .getAssertion(toAuthenticationOptions(beginBody, rpId));
 
-      // Try to complete with wrong challenge ID
-      const completeResponse = await TestApp.request(app).post('/api/auth/login/complete', {
-        challengeId: '00000000-0000-0000-0000-000000000000',
-        credential: assertion,
-      });
+      // Try to complete with the wrong challenge ID
+      const completeResponse = await TestApp
+        .request(app)
+        .post('/api/auth/login/complete', {
+          challengeId: '00000000-0000-0000-0000-000000000000',
+          credential: assertion,
+        });
 
       expect(completeResponse.status).toBe(400);
     });
@@ -297,9 +303,12 @@ describe('Authentication Flow', () => {
       const username = 'tampered_sig_user';
       await registerUser(username);
 
-      const beginResponse = await TestApp.request(app).post('/api/auth/login/begin', {username});
+      const beginResponse = await TestApp
+        .request(app)
+        .post('/api/auth/login/begin', {username});
       const beginBody = await beginResponse.json() as BeginAuthenticationResponse;
-      const assertion = await authenticator.getAssertion(toAuthenticationOptions(beginBody, rpId));
+      const assertion = await authenticator
+        .getAssertion(toAuthenticationOptions(beginBody, rpId));
 
       // Tamper with the signature (change a character)
       const tamperedAssertion = {
@@ -310,10 +319,12 @@ describe('Authentication Flow', () => {
         },
       };
 
-      const completeResponse = await TestApp.request(app).post('/api/auth/login/complete', {
-        challengeId: beginBody.challengeId,
-        credential: tamperedAssertion,
-      });
+      const completeResponse = await TestApp
+        .request(app)
+        .post('/api/auth/login/complete', {
+          challengeId: beginBody.challengeId,
+          credential: tamperedAssertion,
+        });
 
       expect(completeResponse.status).toBe(401);
     });
@@ -329,31 +340,37 @@ describe('Authentication Flow', () => {
       const sessionMatch = /session=([^;]+)/.exec(setCookie);
       const sessionCookie = sessionMatch ? `session=${sessionMatch[1]}` : '';
 
-      const sessionResponse = await TestApp.request(app).get('/api/auth/session', {
-        headers: {Cookie: sessionCookie},
-      });
+      const sessionResponse = await TestApp
+        .request(app)
+        .get('/api/auth/session', {
+          headers: {Cookie: sessionCookie},
+        });
 
       expect(sessionResponse.status).toBe(200);
       const body = await sessionResponse.json() as {
         authenticated: boolean;
-        account: {username: string};
+        account: { username: string };
       };
       expect(body.authenticated).toBe(true);
       expect(body.account.username).toBe(username);
     });
 
     it('rejects access without session cookie', async () => {
-      const response = await TestApp.request(app).get('/api/auth/session');
+      const response = await TestApp
+        .request(app)
+        .get('/api/auth/session');
 
       expect(response.status).toBe(401);
-      const body = await response.json() as {authenticated: boolean};
+      const body = await response.json() as { authenticated: boolean };
       expect(body.authenticated).toBe(false);
     });
 
     it('rejects access with invalid session cookie', async () => {
-      const response = await TestApp.request(app).get('/api/auth/session', {
-        headers: {Cookie: 'session=invalid-session-id'},
-      });
+      const response = await TestApp
+        .request(app)
+        .get('/api/auth/session', {
+          headers: {Cookie: 'session=invalid-session-id'},
+        });
 
       expect(response.status).toBe(401);
     });
@@ -365,29 +382,37 @@ describe('Authentication Flow', () => {
       const {sessionCookie} = await registerUser(username);
 
       // Verify session is valid before logout
-      const beforeLogout = await TestApp.request(app).get('/api/auth/session', {
-        headers: {Cookie: sessionCookie},
-      });
+      const beforeLogout = await TestApp
+        .request(app)
+        .get('/api/auth/session', {
+          headers: {Cookie: sessionCookie},
+        });
       expect(beforeLogout.status).toBe(200);
 
       // Logout
-      const logoutResponse = await TestApp.request(app).post('/api/auth/logout', {}, {
-        headers: {Cookie: sessionCookie},
-      });
+      const logoutResponse = await TestApp
+        .request(app)
+        .post('/api/auth/logout', {}, {
+          headers: {Cookie: sessionCookie},
+        });
       expect(logoutResponse.status).toBe(200);
 
       // Verify session is invalid after logout
-      const afterLogout = await TestApp.request(app).get('/api/auth/session', {
-        headers: {Cookie: sessionCookie},
-      });
+      const afterLogout = await TestApp
+        .request(app)
+        .get('/api/auth/session', {
+          headers: {Cookie: sessionCookie},
+        });
       expect(afterLogout.status).toBe(401);
     });
 
     it('succeeds even without session cookie', async () => {
-      const response = await TestApp.request(app).post('/api/auth/logout', {});
+      const response = await TestApp
+        .request(app)
+        .post('/api/auth/logout', {});
 
       expect(response.status).toBe(200);
-      const body = await response.json() as {success: boolean};
+      const body = await response.json() as { success: boolean };
       expect(body.success).toBe(true);
     });
   });

@@ -1,5 +1,8 @@
-import {createHash, createSign, generateKeyPairSync, randomBytes} from 'node:crypto';
-import {cose, isoCBOR, isoBase64URL} from '@simplewebauthn/server/helpers';
+import {cose, isoBase64URL, isoCBOR} from '@simplewebauthn/server/helpers';
+import {sha256} from '@noble/hashes/sha256';
+import {p256} from '@noble/curves/p256';
+import {randomBytes} from 'node:crypto';
+import {P256Signer} from '../crypto';
 
 /**
  * Encodes bytes to base64url string using native Node.js Buffer.
@@ -14,11 +17,23 @@ function toBase64Url(data: Uint8Array | Buffer): string {
  */
 export interface StoredCredential {
   credentialId: Uint8Array;
-  privateKey: string; // PEM format
+  signer: P256Signer;
   publicKey: Uint8Array; // COSE-encoded
   rpId: string;
   userHandle: Uint8Array;
   signCount: number;
+}
+
+/**
+ * Options for VirtualAuthenticator constructor.
+ */
+export interface VirtualAuthenticatorOptions {
+  /**
+   * When provided, all credentials will use this signer's key pair.
+   * This enables deterministic testing and allows DevnetPaymasterGateway
+   * to sign deployment transactions with the same key.
+   */
+  signer?: P256Signer;
 }
 
 /**
@@ -83,19 +98,27 @@ export interface CredentialRequestOptions {
  * Virtual WebAuthn authenticator for integration testing.
  *
  * This class simulates a hardware authenticator (like a YubiKey or Touch ID):
- * - Generates real P-256 key pairs
+ * - Generates real P-256 key pairs (or uses a deterministic signer)
  * - Creates valid CBOR-encoded attestation objects
  * - Signs authentication challenges with real ECDSA signatures
  * - Stores credentials in memory
  *
  * The credentials it produces can be verified by the real SimpleWebAuthnGateway,
  * allowing end-to-end testing without browser/hardware involvement.
+ *
+ * When constructed with a P256Signer, all credentials use the same deterministic
+ * key pair, enabling DevnetPaymasterGateway to sign deployment transactions.
  */
 export class VirtualAuthenticator {
   private readonly credentials: Map<string, StoredCredential> = new Map();
+  private readonly signer?: P256Signer;
 
   // AAGUID for our virtual authenticator (all zeros = no attestation)
   private static readonly AAGUID = new Uint8Array(16);
+
+  constructor(options?: VirtualAuthenticatorOptions) {
+    this.signer = options?.signer;
+  }
 
   /**
    * Creates a new credential for WebAuthn registration.
@@ -109,21 +132,15 @@ export class VirtualAuthenticator {
     // Use Buffer's native base64url encoding
     const credentialIdBase64 = credentialIdBuffer.toString('base64url');
 
-    // Generate P-256 key pair
-    const {publicKey, privateKey} = generateKeyPairSync('ec', {
-      namedCurve: 'P-256',
-      publicKeyEncoding: {type: 'spki', format: 'der'},
-      privateKeyEncoding: {type: 'pkcs8', format: 'pem'},
-    });
-
-    // Extract raw public key coordinates from SPKI DER format
-    const {x, y} = this.extractP256Coordinates(publicKey as Buffer);
+    // Use provided signer or generate a new one
+    const credentialSigner = this.signer ?? P256Signer.generate();
+    const {x, y} = credentialSigner.getPublicKey();
 
     // Encode public key in COSE format (required by WebAuthn)
     const cosePublicKey = this.encodeCosePublicKey(x, y);
 
     // Build authenticator data
-    const rpIdHash = createHash('sha256').update(options.rp.id).digest();
+    const rpIdHash = sha256(new TextEncoder().encode(options.rp.id));
     const flags = 0x45; // UP (user present) + UV (user verified) + AT (attested credential)
     const signCount = 0;
 
@@ -157,7 +174,7 @@ export class VirtualAuthenticator {
     const userHandle = isoBase64URL.toBuffer(options.user.id);
     this.credentials.set(credentialIdBase64, {
       credentialId,
-      privateKey: privateKey as string,
+      signer: credentialSigner,
       publicKey: cosePublicKey,
       rpId: options.rp.id,
       userHandle,
@@ -214,7 +231,7 @@ export class VirtualAuthenticator {
     credential.signCount++;
 
     // Build authenticator data (no attested credential data for assertions)
-    const rpIdHash = createHash('sha256').update(options.rpId).digest();
+    const rpIdHash = sha256(new TextEncoder().encode(options.rpId));
     const flags = 0x05; // UP (user present) + UV (user verified)
 
     const authenticatorData = this.buildAuthenticatorData(
@@ -234,13 +251,16 @@ export class VirtualAuthenticator {
     const clientDataJSON = Buffer.from(JSON.stringify(clientData));
 
     // Create signature over authenticatorData || SHA-256(clientDataJSON)
-    const clientDataHash = createHash('sha256').update(clientDataJSON).digest();
-    const signedData = Buffer.concat([authenticatorData, clientDataHash]);
+    const clientDataHash = sha256(clientDataJSON);
+    const signedData = new Uint8Array(authenticatorData.length + clientDataHash.length);
+    signedData.set(authenticatorData);
+    signedData.set(clientDataHash, authenticatorData.length);
 
-    const sign = createSign('SHA256');
-    sign.update(signedData);
-    // Keep signature in DER format (WebAuthn/SimpleWebAuthn expects DER for ES256)
-    const signature = sign.sign(credential.privateKey);
+    // Hash the data and sign (WebAuthn uses SHA-256 + ECDSA)
+    const dataHash = sha256(signedData);
+    const sig = p256.sign(dataHash, credential.signer.getPrivateKeyBytes(), {lowS: true});
+    // WebAuthn/SimpleWebAuthn expects DER-encoded signature for ES256
+    const signature = sig.toDERRawBytes();
 
     return {
       id: credentialIdBase64,
@@ -277,27 +297,6 @@ export class VirtualAuthenticator {
   }
 
   /**
-   * Extracts X and Y coordinates from a P-256 SPKI DER public key.
-   */
-  private extractP256Coordinates(spkiDer: Buffer): {x: Uint8Array; y: Uint8Array} {
-    // SPKI format for P-256:
-    // SEQUENCE {
-    //   SEQUENCE { OID, OID }  -- algorithm identifier
-    //   BIT STRING { 04 || x || y }  -- uncompressed point
-    // }
-    // The uncompressed point starts at a fixed offset for P-256
-    const pointStart = spkiDer.length - 65; // 65 = 1 (0x04) + 32 (x) + 32 (y)
-    if (spkiDer[pointStart] !== 0x04) {
-      throw new Error('Expected uncompressed point format (0x04)');
-    }
-
-    return {
-      x: new Uint8Array(spkiDer.slice(pointStart + 1, pointStart + 33)),
-      y: new Uint8Array(spkiDer.slice(pointStart + 33, pointStart + 65)),
-    };
-  }
-
-  /**
    * Encodes a P-256 public key in COSE format.
    */
   private encodeCosePublicKey(x: Uint8Array, y: Uint8Array): Uint8Array {
@@ -326,43 +325,55 @@ export class VirtualAuthenticator {
    * - rpIdHash (32 bytes)
    * - flags (1 byte)
    * - signCount (4 bytes, big-endian)
-   * - [attestedCredentialData] (variable, only if AT flag set)
+   * - [attestedCredentialData] (variable, only if AT the flag is set)
    */
   private buildAuthenticatorData(
-    rpIdHash: Buffer,
+    rpIdHash: Uint8Array,
     flags: number,
     signCount: number,
     credentialId?: Uint8Array,
     cosePublicKey?: Uint8Array,
   ): Uint8Array {
-    const parts: Buffer[] = [
+    const parts: Uint8Array[] = [
       rpIdHash,
-      Buffer.from([flags]),
+      new Uint8Array([flags]),
       this.uint32BE(signCount),
     ];
 
     // Add attested credential data if present (for registration)
     if (credentialId && cosePublicKey) {
       parts.push(
-        Buffer.from(VirtualAuthenticator.AAGUID), // AAGUID (16 bytes)
+        VirtualAuthenticator.AAGUID, // AAGUID (16 bytes)
         this.uint16BE(credentialId.length), // credential ID length (2 bytes)
-        Buffer.from(credentialId), // credential ID
-        Buffer.from(cosePublicKey), // COSE public key
+        credentialId, // credential ID
+        cosePublicKey, // COSE public key
       );
     }
 
-    return Buffer.concat(parts);
+    // Concatenate all parts
+    const totalLength = parts.reduce((sum, part) => sum + part.length, 0);
+    const result = new Uint8Array(totalLength);
+    let offset = 0;
+    for (const part of parts) {
+      result.set(part, offset);
+      offset += part.length;
+    }
+    return result;
   }
 
-  private uint32BE(value: number): Buffer {
-    const buf = Buffer.alloc(4);
-    buf.writeUInt32BE(value, 0);
+  private uint32BE(value: number): Uint8Array {
+    const buf = new Uint8Array(4);
+    buf[0] = (value >>> 24) & 0xff;
+    buf[1] = (value >>> 16) & 0xff;
+    buf[2] = (value >>> 8) & 0xff;
+    buf[3] = value & 0xff;
     return buf;
   }
 
-  private uint16BE(value: number): Buffer {
-    const buf = Buffer.alloc(2);
-    buf.writeUInt16BE(value, 0);
+  private uint16BE(value: number): Uint8Array {
+    const buf = new Uint8Array(2);
+    buf[0] = (value >>> 8) & 0xff;
+    buf[1] = value & 0xff;
     return buf;
   }
 }

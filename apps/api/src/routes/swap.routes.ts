@@ -13,7 +13,7 @@ import {
   SwapClaimError,
   SwapCreationError,
   SwapNotFoundError,
-  validateSession,
+  getValidateSessionUseCase,
 } from '@bim/domain';
 import {Hono} from 'hono';
 import {z} from 'zod';
@@ -64,7 +64,7 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
     const sessionId = getSessionId(ctx);
     if (sessionId) {
       try {
-        const validate = validateSession({
+        const validate = getValidateSessionUseCase({
           sessionRepository: appContext.repositories.session,
           accountRepository: appContext.repositories.account,
         });

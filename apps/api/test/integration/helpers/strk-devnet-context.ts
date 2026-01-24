@@ -1,17 +1,20 @@
 import {StarknetAddress} from '@bim/domain';
-import {RpcProvider} from 'starknet';
+import {Account, RpcProvider, Signer} from 'starknet';
 import {StarknetRpcGateway} from '../../../src/adapters/gateways/starknet.gateway.js';
+import {getSharedP256Signer, P256Signer, resetSharedP256Signer} from './crypto/p256-signer';
+import {resetSharedStarkSigner, setSharedStarkSigner, StarkSigner} from './crypto/stark-signer';
 import {
   DEVNET_ACCOUNT_CLASS_HASH,
   DevnetPaymasterGateway,
   fetchDevnetAccounts,
+  resetCachedAccountClassHash,
   resetCachedAccounts,
 } from './devnet-paymaster.gateway.js';
 import {StrkDevnet} from "./strk-devnet";
 
 
 /**
- * ETH token address on Starknet.
+ * ETH token address on Starknet (smart contract address)
  */
 export const ETH_TOKEN_ADDRESS = '0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7';
 
@@ -25,18 +28,26 @@ export class StrkDevnetContext {
 
   private readonly devnetProvider: RpcProvider;
   private readonly starknetGateway: StarknetRpcGateway;
-  private readonly paymasterGateway: DevnetPaymasterGateway;
-  private paymasterGatewayId = 0;
+  private paymasterGateway: DevnetPaymasterGateway;
+  private readonly p256Signer: P256Signer;
+  private starkSigner: StarkSigner | null = null;
+  private readonly devnetUrl: string;
+  private starkSignerInitialized = false;
 
   private constructor() {
-    const devnetUrl: string = StrkDevnet.getDevnetUrl();
-    this.devnetProvider = new RpcProvider({nodeUrl: devnetUrl});
+    this.devnetUrl = StrkDevnet.getDevnetUrl();
+    this.devnetProvider = new RpcProvider({nodeUrl: this.devnetUrl});
     this.starknetGateway = new StarknetRpcGateway({
-      rpcUrl: devnetUrl,
+      rpcUrl: this.devnetUrl,
       accountClassHash: DEVNET_ACCOUNT_CLASS_HASH,
     });
 
-    this.paymasterGateway = new DevnetPaymasterGateway(devnetUrl);
+    // Use shared P256Signer for WebAuthn credential testing
+    this.p256Signer = getSharedP256Signer();
+
+    // Create the paymaster gateway without StarkSigner initially
+    // It will be updated when ensureStarkSignerInitialized is called
+    this.paymasterGateway = new DevnetPaymasterGateway(this.devnetUrl);
   }
 
   static create(): StrkDevnetContext {
@@ -44,10 +55,55 @@ export class StrkDevnetContext {
   }
 
   /**
+   * Ensures the StarkSigner is initialized with a devnet account's private key.
+   * Call this in beforeAll() for tests that need STARK signing (deployment tests).
+   * @param accountIndex - Index of the devnet account to use (default: 1, since 0 is for funding)
+   */
+  async ensureStarkSignerInitialized(accountIndex: number = 1): Promise<void> {
+    if (this.starkSignerInitialized) return;
+
+    // Fetch a devnet account's private key for the StarkSigner
+    const accounts = await fetchDevnetAccounts(this.devnetUrl);
+    // Use the specified account index (default: 1 since account 0 is used for funding)
+    const account = accounts[accountIndex];
+    if (!account?.privateKey) {
+      throw new Error(`No devnet account with private key available at index ${accountIndex}`);
+    }
+
+    // Initialize the shared StarkSigner with the devnet account's key
+    setSharedStarkSigner(account.privateKey);
+    this.starkSigner = new StarkSigner(account.privateKey);
+
+    // Recreate paymaster gateway with the StarkSigner
+    this.paymasterGateway = new DevnetPaymasterGateway(this.devnetUrl, this.starkSigner);
+    this.starkSignerInitialized = true;
+  }
+
+  /**
    * Resets all cached gateways. Call in afterEach if needed.
    */
   resetStarknetContext(): void {
     resetCachedAccounts();
+    resetCachedAccountClassHash();
+    resetSharedP256Signer();
+    resetSharedStarkSigner();
+  }
+
+  /**
+   * Gets the shared P256Signer for use with VirtualAuthenticator.
+   * This is used for WebAuthn credential creation/verification.
+   */
+  getP256Signer(): P256Signer {
+    return this.p256Signer;
+  }
+
+  /**
+   * Gets the shared StarkSigner for devnet deployment.
+   * Devnet uses OpenZeppelin account (STARK signatures), not WebAuthn (P256).
+   * NOTE: Must call ensureStarkSignerInitialized() before using this in tests.
+   */
+  getStarkSigner(): StarkSigner | null {
+    return this.starkSigner;
   }
 
   /**
@@ -66,6 +122,7 @@ export class StrkDevnetContext {
 
   /**
    * Gets the devnet paymaster gateway.
+   * NOTE: For deployment tests, call ensureStarkSignerInitialized() first to enable signing.
    */
   getDevnetPaymasterGateway(): DevnetPaymasterGateway {
     return this.paymasterGateway;
@@ -187,17 +244,142 @@ export class StrkDevnetContext {
 
   /**
    * Mints ETH to an address (devnet-specific).
+   * Uses devnet mint endpoint with unit: WEI.
    */
   async mintEth(address: string, amountWei: string): Promise<void> {
     const devnetUrl = StrkDevnet.getDevnetUrl();
+
+    // Try new RPC method first (devnet 0.7.x+)
+    const rpcResponse = await fetch(`${devnetUrl}/rpc`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        method: 'devnet_mint',
+        params: {address, amount: Number(amountWei), unit: 'WEI'},
+        id: 1,
+      }),
+    });
+
+    if (rpcResponse.ok) {
+      const result = await rpcResponse.json() as {error?: {message: string}};
+      if (!result.error) {
+        return;
+      }
+    }
+
+    // Fallback to old HTTP endpoint (devnet 0.2.x)
     await fetch(`${devnetUrl}/mint`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
         address,
         amount: Number.parseInt(amountWei),
+        unit: 'WEI',
       }),
     });
+  }
+
+  /**
+   * Creates a starknet.js Account instance from a pre-deployed devnet account.
+   * @param accountIndex - Index of the pre-deployed account (0, 1, or 2)
+   */
+  async createAccountFromPredeployed(accountIndex: number): Promise<Account> {
+    const accounts = await fetchDevnetAccounts(this.devnetUrl);
+    if (accountIndex >= accounts.length) {
+      throw new Error(`Account index ${accountIndex} out of range (max: ${accounts.length - 1})`);
+    }
+    const account = accounts[accountIndex];
+    return new Account({
+      provider: this.devnetProvider,
+      address: account.address,
+      signer: new Signer(account.privateKey),
+    });
+  }
+
+  /**
+   * Resource bounds for devnet transactions (skips slow fee estimation).
+   * L2 gas needs to be high enough for ERC20 transfers (~1.2M gas).
+   */
+  private static readonly DEVNET_RESOURCE_BOUNDS = {
+    l1_gas: {max_amount: 100000n, max_price_per_unit: 1000000000000000n},
+    l2_gas: {max_amount: 5000000n, max_price_per_unit: 1000000000000n},
+    l1_data_gas: {max_amount: 100000n, max_price_per_unit: 1000000000000n},
+  };
+
+  /**
+   * Transfers ETH from one account to another.
+   * @param from - Source Account instance
+   * @param toAddress - Destination address
+   * @param amountWei - Amount in wei (string)
+   * @param skipFeeEstimation - If true, uses explicit resourceBounds (faster)
+   * @returns Transaction hash
+   */
+  async transferEth(
+    from: Account,
+    toAddress: string,
+    amountWei: string,
+    skipFeeEstimation = true,
+  ): Promise<string> {
+    const call = {
+      contractAddress: ETH_TOKEN_ADDRESS,
+      entrypoint: 'transfer',
+      calldata: [toAddress, amountWei, '0'], // amount is u256 (low, high)
+    };
+    try {
+      const options = skipFeeEstimation
+        ? {resourceBounds: StrkDevnetContext.DEVNET_RESOURCE_BOUNDS}
+        : undefined;
+      const result = await from.execute(call, options);
+      console.log('ETH transfer tx:', result.transaction_hash);
+      const receipt = await this.devnetProvider.waitForTransaction(result.transaction_hash);
+      console.log('ETH transfer receipt:', JSON.stringify(receipt, null, 2));
+      return result.transaction_hash;
+    } catch (error) {
+      console.error('ETH transfer error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Transfers STRK from one account to another.
+   * @param from - Source Account instance
+   * @param toAddress - Destination address
+   * @param amountFri - Amount in fri (string)
+   * @param skipFeeEstimation - If true, uses explicit resourceBounds (faster)
+   * @returns Transaction hash
+   */
+  async transferStrk(
+    from: Account,
+    toAddress: string,
+    amountFri: string,
+    skipFeeEstimation = true,
+  ): Promise<string> {
+    const call = {
+      contractAddress: STRK_TOKEN_ADDRESS,
+      entrypoint: 'transfer',
+      calldata: [toAddress, amountFri, '0'], // amount is u256 (low, high)
+    };
+    const options = skipFeeEstimation
+      ? {resourceBounds: StrkDevnetContext.DEVNET_RESOURCE_BOUNDS}
+      : undefined;
+    const result = await from.execute(call, options);
+    await this.devnetProvider.waitForTransaction(result.transaction_hash);
+    return result.transaction_hash;
+  }
+
+  /**
+   * Gets the STRK balance for an address.
+   */
+  async getStrkBalance(address: string | StarknetAddress): Promise<bigint> {
+    const result = await this.devnetProvider.callContract({
+      contractAddress: STRK_TOKEN_ADDRESS,
+      entrypoint: 'balanceOf',
+      calldata: [address],
+    });
+    const low = BigInt(result[0] || '0');
+    const high = BigInt(result[1] || '0');
+    return low + (high << 128n);
   }
 
 }
