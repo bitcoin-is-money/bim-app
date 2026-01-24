@@ -38,6 +38,7 @@
     "@fortawesome/free-brands-svg-icons": "^7.1.0",
     "@fortawesome/free-regular-svg-icons": "^7.1.0",
     "@fortawesome/free-solid-svg-icons": "^7.1.0",
+    "@ngneat/overview": "7.0.0",
     "@stablelib/base64": "^2.0.1",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
@@ -46,6 +47,7 @@
     "@angular/build": "^21.0.5",
     "@angular/cli": "^21.0.5",
     "@angular/compiler-cli": "^21.0.0",
+    "@ngxpert/hot-toast": "^6.1.0",
     "@tailwindcss/postcss": "^4.1.18",
     "autoprefixer": "^10.4.23",
     "jsdom": "^27.1.0",

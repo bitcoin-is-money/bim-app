@@ -19,7 +19,7 @@ export class AuthPage {
 
   constructor(
     private readonly authService: AuthService,
-    private readonly router: Router
+    private readonly router: Router,
   ) {}
 
   async onSignIn(): Promise<void> {
