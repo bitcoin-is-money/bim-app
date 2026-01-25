@@ -1,10 +1,4 @@
-import {
-  AccountId,
-  FiatCurrency,
-  UserSettings,
-  UserSettingsId,
-  type UserSettingsRepository,
-} from '@bim/domain';
+import {AccountId, FiatCurrency, UserSettings, UserSettingsId, type UserSettingsRepository,} from '@bim/domain';
 import {eq} from 'drizzle-orm';
 import type {NodePgDatabase} from 'drizzle-orm/node-postgres';
 import * as schema from '../../../database/schema.js';

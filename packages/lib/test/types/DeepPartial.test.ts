@@ -1,5 +1,5 @@
+import type {DeepPartial} from "@bim/lib/types/DeepPartial";
 import {describe, expectTypeOf, it} from 'vitest';
-import type {DeepPartial} from '@bim/lib';
 
 describe('DeepPartial', () => {
   it('makes first-level properties optional', () => {

@@ -1,3 +1,4 @@
+import type {DeepPartial} from "@bim/lib/types/DeepPartial";
 import {serveStatic} from '@hono/node-server/serve-static';
 import {Hono} from 'hono';
 import {cors} from 'hono/cors';
@@ -13,7 +14,7 @@ import {
   createTransactionRoutes,
   createUserRoutes,
 } from './routes';
-import {type AppConfig, type DeepPartial, loadConfig} from './types';
+import {type AppConfig, loadConfig} from './types';
 
 export interface CreateAppOptions {
   config?: Partial<AppConfig>;

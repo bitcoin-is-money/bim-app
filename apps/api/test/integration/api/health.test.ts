@@ -14,7 +14,9 @@ describe('Health API', () => {
 
   describe('GET /api/health', () => {
     it('should return healthy status when database is connected', async () => {
-      const res = await TestApp.request(app).get('/api/health');
+      const res = await TestApp
+        .request(app)
+        .get('/api/health');
 
       expect(res.status).toBe(200);
 

@@ -1,8 +1,8 @@
-import {P256Signer} from '../crypto/p256-signer.js';
-import {cose, isoBase64URL, isoCBOR} from '@simplewebauthn/server/helpers';
-import {sha256} from '@noble/hashes/sha256';
 import {p256} from '@noble/curves/p256';
+import {sha256} from '@noble/hashes/sha256';
+import {cose, isoBase64URL, isoCBOR} from '@simplewebauthn/server/helpers';
 import {randomBytes} from 'node:crypto';
+import {P256Signer} from '../crypto/p256-signer.js';
 
 /**
  * Encodes bytes to base64url string using native Node.js Buffer.

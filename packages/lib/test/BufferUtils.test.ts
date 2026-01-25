@@ -1,4 +1,4 @@
-import {BufferUtils} from '@bim/lib';
+import {BufferUtils} from '@bim/lib/BufferUtils';
 import {describe, expect, it} from 'vitest';
 
 describe('BufferUtils', () => {

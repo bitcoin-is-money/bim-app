@@ -1,1 +1,1 @@
-export {StarkSigner, getSharedStarkSigner, setSharedStarkSigner, resetSharedStarkSigner} from './stark-signer';
+export {StarkSigner} from './stark-signer';

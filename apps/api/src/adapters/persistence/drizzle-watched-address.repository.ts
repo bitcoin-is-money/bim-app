@@ -6,7 +6,7 @@ import {
   WatchedAddressId,
   type WatchedAddressRepository,
 } from '@bim/domain';
-import {and, eq} from 'drizzle-orm';
+import {eq} from 'drizzle-orm';
 import type {NodePgDatabase} from 'drizzle-orm/node-postgres';
 import * as schema from '../../../database/schema.js';
 

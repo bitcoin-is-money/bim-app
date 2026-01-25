@@ -1,5 +1,5 @@
-import {AccountId} from '@bim/domain/account';
-import {DomainError, ValidationError} from '@bim/domain/shared';
+import {AccountId} from '../account';
+import {DomainError, ValidationError} from '../shared';
 
 // =============================================================================
 // Branded Types

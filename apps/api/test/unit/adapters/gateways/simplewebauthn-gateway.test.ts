@@ -263,7 +263,7 @@ describe('SimpleWebAuthnGateway', () => {
         credential,
       });
 
-      // Authenticate with wrong challenge
+      // Authenticate with a wrong challenge
       const assertion = await authenticator.getAssertion({
         challenge: generateChallenge(),
         rpId: RP_ID,
@@ -378,7 +378,7 @@ describe('SimpleWebAuthnGateway', () => {
           credentialId: regResult.encodedCredentialId,
           publicKey: regResult.starknetPublicKeyX,
           credentialPublicKey: regResult.encodedCredentialPublicKey,
-          signCount: 9999, // Much higher than authenticator's counter
+          signCount: 9999, // Much higher than the authenticator's counter
         },
       });
 

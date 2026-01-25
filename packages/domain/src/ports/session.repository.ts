@@ -1,5 +1,5 @@
-import {AccountId} from '@bim/domain/account';
-import {Session, SessionId} from '@bim/domain/auth';
+import {AccountId} from '../account';
+import {Session, SessionId} from '../auth';
 
 /**
  * Repository interface for Session persistence.

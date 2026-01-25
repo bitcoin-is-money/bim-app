@@ -2,12 +2,12 @@ import {HTTP_INTERCEPTORS, provideHttpClient, withInterceptors} from '@angular/c
 import {ApplicationConfig, inject, provideAppInitializer, provideBrowserGlobalErrorListeners} from '@angular/core';
 import {provideRouter} from '@angular/router';
 import {FaIconLibrary} from '@fortawesome/angular-fontawesome';
+import {provideHotToastConfig} from '@ngxpert/hot-toast';
 import {environment} from '../environments/environment';
 import {registerIcons} from "../icons";
 import {routes} from './app.routes';
 import {HttpNotificationInterceptor} from "./interceptor/http-notification.interceptor";
 import {backendInterceptor} from './mocks';
-import { provideHotToastConfig } from '@ngxpert/hot-toast';
 
 const httpProviders = environment.useMockBackend
   ? provideHttpClient(withInterceptors([backendInterceptor]))

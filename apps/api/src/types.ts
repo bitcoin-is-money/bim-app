@@ -1,23 +1,5 @@
-import {
-  Account,
-  type AccountRepository,
-  type AtomiqGateway,
-  type ChallengeRepository,
-  type PaymasterGateway,
-  Session,
-  type SessionRepository,
-  type StarknetGateway,
-  type SwapRepository,
-  type TransactionRepository,
-  type UserSettingsRepository,
-  type WatchedAddressRepository,
-  type WebAuthnGateway,
-} from '@bim/domain';
-import {type DeepPartial} from '@bim/lib';
+import {Account, Session,} from '@bim/domain';
 import type {Hono} from 'hono';
-
-export type {DeepPartial};
-
 
 /**
  * Application configuration loaded from environment variables.

@@ -1,9 +1,6 @@
-import {describe, it, expect, beforeEach} from 'vitest';
-import {
-  verifyRegistrationResponse,
-  verifyAuthenticationResponse,
-} from '@simplewebauthn/server';
+import {verifyAuthenticationResponse, verifyRegistrationResponse,} from '@simplewebauthn/server';
 import {isoBase64URL} from '@simplewebauthn/server/helpers';
+import {beforeEach, describe, expect, it} from 'vitest';
 import {WebauthnVirtualAuthenticator} from '../../src/auth/webauthn-virtual-authenticator';
 import {P256Signer} from '../../src/crypto/p256-signer';
 

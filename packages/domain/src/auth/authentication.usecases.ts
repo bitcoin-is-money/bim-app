@@ -1,5 +1,5 @@
-import {Account, AccountNotFoundError} from '@bim/domain/account';
-import type {AccountRepository, ChallengeRepository, SessionRepository, WebAuthnGateway} from '@bim/domain/ports';
+import {Account, AccountNotFoundError} from '../account';
+import type {AccountRepository, ChallengeRepository, SessionRepository, WebAuthnGateway} from '../ports';
 import {Challenge} from './challenge';
 import {Session} from './session';
 import {

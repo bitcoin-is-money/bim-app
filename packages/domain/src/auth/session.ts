@@ -1,4 +1,4 @@
-import {AccountId} from '@bim/domain/account';
+import {AccountId} from '../account';
 import {SESSION_DURATION_MS, type SessionData, SessionExpiredError, SessionId,} from './types';
 
 /**
