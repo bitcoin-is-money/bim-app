@@ -9,7 +9,7 @@ import {bytesToHex, hexToBytes} from '@noble/curves/abstract/utils';
  * - VirtualAuthenticator: for WebAuthn credential creation and assertions
  * - DevnetPaymasterGateway: for signing DEPLOY_ACCOUNT transactions
  *
- * IMPORTANT: This is for TESTING ONLY. Never use in production.
+ * IMPORTANT: This is for TESTING ONLY. Do not use in production.
  */
 export class P256Signer {
   private readonly privateKey: Uint8Array;
@@ -17,7 +17,6 @@ export class P256Signer {
 
   constructor(privateKey?: Uint8Array) {
     this.privateKey = privateKey ?? p256.utils.randomPrivateKey();
-    // false = uncompressed format (65 bytes: 0x04 || x || y)
     this.publicKey = p256.getPublicKey(this.privateKey, false);
   }
 
@@ -92,32 +91,3 @@ export class P256Signer {
   }
 }
 
-/**
- * Hardcoded P-256 private key for deterministic testing.
- * This ensures consistent keys across test runs.
- */
-const TEST_PRIVATE_KEY_HEX =
-  '5c611a4c560b27d2124d37f0a1640fe7b04690cb7fb345314e75fa599419866c';
-
-/**
- * Singleton instance for consistent key usage across tests.
- */
-let sharedSigner: P256Signer | undefined;
-
-/**
- * Gets the shared P256Signer instance.
- * All test components should use this to ensure consistent keys.
- */
-export function getSharedP256Signer(): P256Signer {
-  if (!sharedSigner) {
-    sharedSigner = P256Signer.fromHex(TEST_PRIVATE_KEY_HEX);
-  }
-  return sharedSigner;
-}
-
-/**
- * Resets the shared signer (for test isolation if needed).
- */
-export function resetSharedP256Signer(): void {
-  sharedSigner = undefined;
-}
