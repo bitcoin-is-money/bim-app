@@ -1,5 +1,5 @@
 import {Hono} from 'hono';
-import {testConnection} from '../db';
+import {testConnection} from '../../db';
 
 export function createHealthRoutes(): Hono {
   const app = new Hono();

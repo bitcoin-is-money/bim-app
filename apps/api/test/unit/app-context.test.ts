@@ -11,7 +11,7 @@ import type {
   WatchedAddressRepository,
   WebAuthnGateway,
 } from '@bim/domain';
-import type {DeepPartial} from '@bim/lib';
+import type {DeepPartial} from '@bim/lib/types/DeepPartial';
 import {describe, expect, it} from 'vitest';
 import {AppContext} from '../../src/app-context.js';
 

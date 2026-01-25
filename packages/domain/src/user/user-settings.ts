@@ -1,4 +1,4 @@
-import {AccountId} from '@bim/domain/account';
+import {AccountId} from '../account';
 import {FiatCurrency, type UserSettingsData, UserSettingsId,} from './types';
 
 /**

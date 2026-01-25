@@ -1,4 +1,4 @@
-import {Transaction, TransactionHash, TransactionId, WatchedAddressId} from '@bim/domain/user';
+import {Transaction, TransactionHash, TransactionId, WatchedAddressId} from '../user';
 
 /**
  * Pagination options for transaction queries.

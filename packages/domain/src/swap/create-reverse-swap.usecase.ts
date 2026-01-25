@@ -1,5 +1,5 @@
-import {StarknetAddress} from '@bim/domain/account';
-import type {AtomiqGateway, SwapRepository} from '@bim/domain/ports';
+import {StarknetAddress} from '../account';
+import type {AtomiqGateway, SwapRepository} from '../ports';
 import {Swap} from './swap';
 import {BitcoinAddress, LightningInvoice, SwapAmountError, SwapCreationError, SwapId,} from './types';
 

@@ -1,6 +1,6 @@
-import {describe, it, expect} from 'vitest';
-import {p256} from '@noble/curves/p256';
 import {bytesToHex, hexToBytes} from '@noble/curves/abstract/utils';
+import {p256} from '@noble/curves/p256';
+import {describe, expect, it} from 'vitest';
 import {P256Signer} from '../../src/crypto/p256-signer';
 
 describe('P256Signer', () => {

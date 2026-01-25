@@ -1,4 +1,4 @@
-import { HttpResponse } from '@angular/common/http';
+import {HttpResponse} from '@angular/common/http';
 import type {
   Account,
   AuthResponse,
@@ -6,7 +6,7 @@ import type {
   BeginRegisterResponse,
   UserSessionResponse,
 } from '../services/auth.service';
-import { DataStoreMock, type StoredCredential } from './data-store.mock';
+import {DataStoreMock, type StoredCredential} from './data-store.mock';
 
 // Predictable test Starknet address based on username
 function generateStarknetAddress(username: string): string {

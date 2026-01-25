@@ -1,5 +1,5 @@
-import {p256} from '@noble/curves/p256';
 import {bytesToHex, hexToBytes} from '@noble/curves/abstract/utils';
+import {p256} from '@noble/curves/p256';
 
 /**
  * P-256 signer for testing.

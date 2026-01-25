@@ -16,8 +16,7 @@
   "scripts": {
     "clean": "rm -rf dist",
     "clean:all": "npm run clean && rm -rf node_modules",
-    "typecheck": "tsc --noEmit",
-    "build": "npm run typecheck && esbuild src/index.ts --bundle --platform=node --format=esm --outdir=dist --packages=external && tsc --emitDeclarationOnly -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json",
     "dev": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest"

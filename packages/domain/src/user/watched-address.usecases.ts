@@ -1,6 +1,11 @@
-import {AccountId, StarknetAddress} from '@bim/domain/account';
-import type {WatchedAddressRepository} from '@bim/domain/ports';
-import {type AddressType, WatchedAddressAlreadyExistsError, WatchedAddressId, WatchedAddressNotFoundError,} from './types';
+import {AccountId, StarknetAddress} from '../account';
+import type {WatchedAddressRepository} from '../ports';
+import {
+  type AddressType,
+  WatchedAddressAlreadyExistsError,
+  WatchedAddressId,
+  WatchedAddressNotFoundError,
+} from './types';
 import {WatchedAddress} from './watched-address';
 
 // =============================================================================

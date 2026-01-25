@@ -1,4 +1,4 @@
-import {AccountId, StarknetAddress} from '@bim/domain/account';
+import {AccountId, StarknetAddress} from '../account';
 import {type AddressType, type WatchedAddressData, WatchedAddressId,} from './types';
 
 /**

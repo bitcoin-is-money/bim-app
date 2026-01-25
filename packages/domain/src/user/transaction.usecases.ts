@@ -1,5 +1,5 @@
-import {AccountId} from '@bim/domain/account';
-import type {TransactionRepository, WatchedAddressRepository} from '@bim/domain/ports';
+import {AccountId} from '../account';
+import type {TransactionRepository, WatchedAddressRepository} from '../ports';
 import {Transaction} from './transaction';
 import {WatchedAddressId, WatchedAddressNotFoundError} from './types';
 

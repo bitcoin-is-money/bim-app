@@ -1,6 +1,6 @@
 import {serve} from '@hono/node-server';
-import {createApp} from './app.js';
-import {closeDb} from './db/connection.js';
+import {createApp} from './app';
+import {closeDb} from './db';
 
 // =============================================================================
 // Server Startup

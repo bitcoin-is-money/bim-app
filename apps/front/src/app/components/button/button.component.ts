@@ -1,5 +1,5 @@
 import {CommonModule} from "@angular/common";
-import { Component, Input } from '@angular/core';
+import {Component, Input} from '@angular/core';
 import {FaIconComponent} from "@fortawesome/angular-fontawesome";
 import {IconProp} from "@fortawesome/fontawesome-svg-core";
 

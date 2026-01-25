@@ -1,4 +1,4 @@
-import {DomainError, ValidationError} from '@bim/domain/shared';
+import {DomainError, ValidationError} from '../shared';
 
 // =============================================================================
 // Branded Types

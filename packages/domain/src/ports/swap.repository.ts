@@ -1,4 +1,4 @@
-import {Swap, type SwapDirection, SwapId, type SwapStatus} from '@bim/domain/swap';
+import {Swap, type SwapDirection, SwapId, type SwapStatus} from '../swap';
 
 /**
  * Repository interface for Swap persistence.

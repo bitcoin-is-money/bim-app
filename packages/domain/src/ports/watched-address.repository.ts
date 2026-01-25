@@ -1,5 +1,5 @@
-import {AccountId, StarknetAddress} from '@bim/domain/account';
-import {WatchedAddress, WatchedAddressId} from '@bim/domain/user';
+import {AccountId, StarknetAddress} from '../account';
+import {WatchedAddress, WatchedAddressId} from '../user';
 
 /**
  * Repository interface for WatchedAddress persistence.

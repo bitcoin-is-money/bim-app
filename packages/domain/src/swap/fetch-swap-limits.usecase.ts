@@ -1,4 +1,4 @@
-import type {AtomiqGateway} from "@bim/domain/ports";
+import type {AtomiqGateway} from "../ports";
 import {type SwapDirection, type SwapLimits} from './types';
 
 export interface FetchSwapLimitsDeps {

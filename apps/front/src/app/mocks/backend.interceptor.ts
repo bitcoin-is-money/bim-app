@@ -1,15 +1,9 @@
-import {
-  HttpEvent,
-  HttpHandlerFn,
-  HttpInterceptorFn,
-  HttpRequest,
-  HttpResponse,
-} from '@angular/common/http';
-import { Observable, of } from 'rxjs';
-import { delay } from 'rxjs/operators';
-import { AuthHandlerMock } from './auth-handler.mock';
-import { BalanceHandlerMock } from './balance-handler.mock';
-import { TransactionHandlerMock } from './transaction-handler.mock';
+import {HttpEvent, HttpHandlerFn, HttpInterceptorFn, HttpRequest, HttpResponse,} from '@angular/common/http';
+import {Observable, of} from 'rxjs';
+import {delay} from 'rxjs/operators';
+import {AuthHandlerMock} from './auth-handler.mock';
+import {BalanceHandlerMock} from './balance-handler.mock';
+import {TransactionHandlerMock} from './transaction-handler.mock';
 
 const mockAuthHandler = new AuthHandlerMock();
 const mockBalanceHandler = new BalanceHandlerMock();

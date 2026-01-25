@@ -1,6 +1,6 @@
 import {HttpClient} from '@angular/common/http';
 import {Injectable, signal} from '@angular/core';
-import {BufferUtils} from "@bim/lib";
+import {BufferUtils} from "@bim/lib/BufferUtils";
 import {catchError, map, Observable} from 'rxjs';
 import {environment} from '../../environments/environment';
 
@@ -124,7 +124,7 @@ export class AuthService {
 
   private credentialToJson(credential: PublicKeyCredential): any {
     const response = credential.response as AuthenticatorAssertionResponse | AuthenticatorAttestationResponse;
-    
+
     if ('attestationObject' in response) {
       // Registration
       return {

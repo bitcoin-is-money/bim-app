@@ -1,5 +1,5 @@
-import {StarknetAddress} from '@bim/domain/account';
-import {DomainError, ValidationError} from '@bim/domain/shared';
+import {StarknetAddress} from '../account';
+import {DomainError, ValidationError} from '../shared';
 
 // =============================================================================
 // Branded Types

@@ -2,7 +2,7 @@ import {StarknetAddress} from '@bim/domain';
 import {P256Signer} from "@bim/test-toolkit";
 import {Account, RpcProvider, Signer} from 'starknet';
 import {StarknetRpcGateway} from '../../../src/adapters';
-import {resetSharedStarkSigner, setSharedStarkSigner, StarkSigner} from './crypto/stark-signer';
+import {StarkSigner} from './crypto';
 import {
   DEVNET_ACCOUNT_CLASS_HASH,
   DevnetPaymasterGateway,
@@ -11,7 +11,6 @@ import {
   resetCachedAccounts,
 } from './devnet-paymaster.gateway.js';
 import {StrkDevnet} from "./strk-devnet";
-
 
 /**
  * ETH token address on Starknet (smart contract address)
@@ -22,7 +21,6 @@ export const ETH_TOKEN_ADDRESS = '0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c
  * STRK token address on Starknet.
  */
 export const STRK_TOKEN_ADDRESS = '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d';
-
 
 export class StrkDevnetContext {
 
@@ -43,7 +41,7 @@ export class StrkDevnetContext {
     });
 
     // Use shared P256Signer for WebAuthn credential testing
-    this.p256Signer = P256Signer.generate();//getSharedP256Signer();
+    this.p256Signer = P256Signer.generate();
 
     // Create the paymaster gateway without StarkSigner initially
     // It will be updated when ensureStarkSignerInitialized is called
@@ -71,8 +69,8 @@ export class StrkDevnetContext {
     }
 
     // Initialize the shared StarkSigner with the devnet account's key
-    setSharedStarkSigner(account.privateKey);
-    this.starkSigner = new StarkSigner(account.privateKey);
+    // setSharedStarkSigner(account.privateKey);
+    this.starkSigner = StarkSigner.create(account.privateKey);
 
     // Recreate paymaster gateway with the StarkSigner
     this.paymasterGateway = new DevnetPaymasterGateway(this.devnetUrl, this.starkSigner);
@@ -85,7 +83,6 @@ export class StrkDevnetContext {
   resetStarknetContext(): void {
     resetCachedAccounts();
     resetCachedAccountClassHash();
-    resetSharedStarkSigner();
   }
 
   /**

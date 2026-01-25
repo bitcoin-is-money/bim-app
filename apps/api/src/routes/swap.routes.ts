@@ -6,6 +6,7 @@ import {
   getCreateStarknetToLightningUseCase,
   getFetchSwapLimitsUseCase,
   getFetchSwapStatusUseCase,
+  getValidateSessionUseCase,
   InvalidSwapStateError,
   SessionExpiredError,
   SessionNotFoundError,
@@ -13,11 +14,11 @@ import {
   SwapClaimError,
   SwapCreationError,
   SwapNotFoundError,
-  getValidateSessionUseCase,
 } from '@bim/domain';
 import {Hono} from 'hono';
 import {z} from 'zod';
 import type {AppContext} from "../app-context";
+import {createAuthMiddleware} from "../middleware/auth.middleware";
 import type {AuthenticatedHono} from '../types.js';
 
 // =============================================================================
@@ -59,32 +60,7 @@ const SwapDirectionSchema = z.enum([
 export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
   const app: AuthenticatedHono = new Hono();
 
-  // Middleware: Optional authentication (some routes require it)
-  app.use('*', async (ctx, next) => {
-    const sessionId = getSessionId(ctx);
-    if (sessionId) {
-      try {
-        const validate = getValidateSessionUseCase({
-          sessionRepository: appContext.repositories.session,
-          accountRepository: appContext.repositories.account,
-        });
-
-        const result = await validate({ sessionId });
-        ctx.set('account', result.account);
-        ctx.set('session', result.session);
-      } catch (error) {
-        if (
-          !(
-            error instanceof SessionExpiredError ||
-            error instanceof SessionNotFoundError
-          )
-        ) {
-          throw error;
-        }
-      }
-    }
-    await next();
-  });
+  app.use('*', createAuthMiddleware(appContext));
 
   // ---------------------------------------------------------------------------
   // Get Swap Limits

@@ -8,58 +8,22 @@ import type {Hono} from 'hono';
 import pg from 'pg';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 import * as schema from '../../../database/schema';
+import type {
+  BeginAuthenticationResponse,
+  BeginRegistrationResponse,
+  CompleteAuthenticationResponse
+} from "../../../src/routes";
 import {type DbClient, StrkDevnetContext, TestApp, TestDatabase,} from '../helpers';
-
-/**
- * API response type from /api/auth/register/begin
- */
-interface BeginRegistrationResponse {
-  options: {
-    challenge: string;
-    rpId: string;
-    rpName: string;
-    userId: string;
-    userName: string;
-    timeout: number;
-  };
-  challengeId: string;
-}
-
-/**
- * API response type from /api/auth/login/begin
- */
-interface BeginAuthenticationResponse {
-  options: {
-    challenge: string;
-    rpId: string;
-    allowCredentials: Array<{
-      id: string;
-      type: 'public-key';
-    }>;
-    timeout: number;
-  };
-  challengeId: string;
-}
-
-/**
- * API response type from registration/login complete
- */
-interface AuthCompleteResponse {
-  account: {
-    id: string;
-    username: string;
-    starknetAddress: string | null;
-    status: string;
-  };
-}
 
 // The expected origin matches WEBAUTHN_ORIGIN env var set in test-app.ts
 const webAuthnOrigin = 'http://localhost:8080';
 
 /**
- * Converts API registration options to VirtualAuthenticator format.
+ * Converts API registration options to WebauthnVirtualAuthenticator format.
  */
-function toRegistrationOptions(apiResponse: BeginRegistrationResponse): CredentialCreationOptions {
+function toRegistrationOptions(
+  apiResponse: BeginRegistrationResponse
+): CredentialCreationOptions {
   return {
     challenge: apiResponse.options.challenge,
     rp: {
@@ -76,7 +40,7 @@ function toRegistrationOptions(apiResponse: BeginRegistrationResponse): Credenti
 }
 
 /**
- * Converts API authentication options to VirtualAuthenticator format.
+ * Converts API authentication options to WebauthnVirtualAuthenticator format.
  */
 function toAuthenticationOptions(
   apiResponse: BeginAuthenticationResponse,
@@ -155,7 +119,7 @@ describe('Authentication Flow', () => {
         credential,
       });
 
-    const completeBody = await completeResponse.json() as AuthCompleteResponse;
+    const completeBody = await completeResponse.json() as CompleteAuthenticationResponse;
     const setCookie = completeResponse.headers.get('Set-Cookie') || '';
     const sessionMatch = /session=([^;]+)/.exec(setCookie);
     const sessionCookie = sessionMatch ? `session=${sessionMatch[1]}` : '';
@@ -236,7 +200,7 @@ describe('Authentication Flow', () => {
       const {completeResponse} = await loginUser(username);
 
       expect(completeResponse.status).toBe(200);
-      const body = await completeResponse.json() as AuthCompleteResponse;
+      const body = await completeResponse.json() as CompleteAuthenticationResponse;
 
       expect(body.account.id).toBeDefined();
       expect(body.account.username).toBe(username);

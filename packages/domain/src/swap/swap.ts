@@ -1,4 +1,4 @@
-import {InvalidStateTransitionError} from '@bim/domain/shared';
+import {InvalidStateTransitionError} from '../shared';
 import {
   type CreateBitcoinToStarknetParams,
   type CreateLightningToStarknetParams,
