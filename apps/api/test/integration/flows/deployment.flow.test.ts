@@ -1,19 +1,11 @@
 import {StarknetAddress} from '@bim/domain';
+import {type CredentialCreationOptions, WebauthnVirtualAuthenticator} from "@bim/test-toolkit";
 import {eq} from 'drizzle-orm';
 import type {Hono} from 'hono';
 import pg from 'pg';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 import * as schema from '../../../database/schema';
-import {
-  type CredentialCreationOptions,
-  type DbClient,
-  DEVNET_ACCOUNT_CLASS_HASH,
-  DevnetPaymasterGateway,
-  StrkDevnetContext,
-  TestApp,
-  TestDatabase,
-  VirtualAuthenticator,
-} from '../helpers';
+import {type DbClient, DevnetPaymasterGateway, StrkDevnetContext, TestApp, TestDatabase,} from '../helpers';
 
 /**
  * API response type from /api/auth/register/begin
@@ -101,7 +93,7 @@ describe('Account Deployment Flow', () => {
   let app: Hono;
   let pool: pg.Pool;
   let db: DbClient;
-  let authenticator: VirtualAuthenticator;
+  let authenticator: WebauthnVirtualAuthenticator;
   let strkContext: StrkDevnetContext;
   let paymasterGateway: DevnetPaymasterGateway;
 
@@ -110,7 +102,7 @@ describe('Account Deployment Flow', () => {
     // Initialize StarkSigner with a devnet account's private key
     await strkContext.ensureStarkSignerInitialized();
     // Use P256Signer for WebAuthn credential creation
-    authenticator = new VirtualAuthenticator({signer: strkContext.getP256Signer()});
+    authenticator = new WebauthnVirtualAuthenticator({signer: strkContext.getP256Signer()});
     // Get reference to paymaster gateway for verifying the deployed address
     paymasterGateway = strkContext.getDevnetPaymasterGateway();
     pool = TestDatabase.createPool();

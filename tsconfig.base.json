@@ -17,6 +17,8 @@
     "paths": {
       "@bim/lib": ["packages/lib/src/index.ts"],
       "@bim/lib/*": ["packages/lib/src/*"],
+      "@bim/test-toolkit": ["packages/test-toolkit/src/index.ts"],
+      "@bim/test-toolkit/*": ["packages/test-toolkit/src/*"],
       "@bim/domain": ["packages/domain/src/index.ts"],
       "@bim/domain/*": ["packages/domain/src/*"]
     }

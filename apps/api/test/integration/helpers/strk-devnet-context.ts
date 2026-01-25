@@ -1,7 +1,7 @@
 import {StarknetAddress} from '@bim/domain';
+import {P256Signer} from "@bim/test-toolkit";
 import {Account, RpcProvider, Signer} from 'starknet';
-import {StarknetRpcGateway} from '../../../src/adapters/gateways/starknet.gateway.js';
-import {getSharedP256Signer, P256Signer, resetSharedP256Signer} from './crypto/p256-signer';
+import {StarknetRpcGateway} from '../../../src/adapters';
 import {resetSharedStarkSigner, setSharedStarkSigner, StarkSigner} from './crypto/stark-signer';
 import {
   DEVNET_ACCOUNT_CLASS_HASH,
@@ -43,7 +43,7 @@ export class StrkDevnetContext {
     });
 
     // Use shared P256Signer for WebAuthn credential testing
-    this.p256Signer = getSharedP256Signer();
+    this.p256Signer = P256Signer.generate();//getSharedP256Signer();
 
     // Create the paymaster gateway without StarkSigner initially
     // It will be updated when ensureStarkSignerInitialized is called
@@ -85,7 +85,6 @@ export class StrkDevnetContext {
   resetStarknetContext(): void {
     resetCachedAccounts();
     resetCachedAccountClassHash();
-    resetSharedP256Signer();
     resetSharedStarkSigner();
   }
 
@@ -324,7 +323,7 @@ export class StrkDevnetContext {
     const call = {
       contractAddress: ETH_TOKEN_ADDRESS,
       entrypoint: 'transfer',
-      calldata: [toAddress, amountWei, '0'], // amount is u256 (low, high)
+      calldata: [toAddress, amountWei, '0'], // the amount is u256 (low, high)
     };
     try {
       const options = skipFeeEstimation
@@ -358,7 +357,7 @@ export class StrkDevnetContext {
     const call = {
       contractAddress: STRK_TOKEN_ADDRESS,
       entrypoint: 'transfer',
-      calldata: [toAddress, amountFri, '0'], // amount is u256 (low, high)
+      calldata: [toAddress, amountFri, '0'], // the amount is u256 (low, high)
     };
     const options = skipFeeEstimation
       ? {resourceBounds: StrkDevnetContext.DEVNET_RESOURCE_BOUNDS}

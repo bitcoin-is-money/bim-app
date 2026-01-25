@@ -1,8 +1,8 @@
+import {P256Signer} from '../crypto/p256-signer.js';
 import {cose, isoBase64URL, isoCBOR} from '@simplewebauthn/server/helpers';
 import {sha256} from '@noble/hashes/sha256';
 import {p256} from '@noble/curves/p256';
 import {randomBytes} from 'node:crypto';
-import {P256Signer} from '../crypto';
 
 /**
  * Encodes bytes to base64url string using native Node.js Buffer.
@@ -18,7 +18,7 @@ function toBase64Url(data: Uint8Array | Buffer): string {
 export interface StoredCredential {
   credentialId: Uint8Array;
   signer: P256Signer;
-  publicKey: Uint8Array; // COSE-encoded
+  publicKey: Uint8Array; // COSE-encoded (RFC 8152 standard using CBOR)
   rpId: string;
   userHandle: Uint8Array;
   signCount: number;
@@ -30,8 +30,7 @@ export interface StoredCredential {
 export interface VirtualAuthenticatorOptions {
   /**
    * When provided, all credentials will use this signer's key pair.
-   * This enables deterministic testing and allows DevnetPaymasterGateway
-   * to sign deployment transactions with the same key.
+   * This enables deterministic testing.
    */
   signer?: P256Signer;
 }
@@ -47,6 +46,7 @@ export interface RegistrationCredential {
     attestationObject: string; // base64url
   };
   type: 'public-key';
+  clientExtensionResults: Record<string, unknown>;
 }
 
 /**
@@ -62,6 +62,7 @@ export interface AuthenticationCredential {
     userHandle: string; // base64url
   };
   type: 'public-key';
+  clientExtensionResults: Record<string, unknown>;
 }
 
 /**
@@ -109,7 +110,7 @@ export interface CredentialRequestOptions {
  * When constructed with a P256Signer, all credentials use the same deterministic
  * key pair, enabling DevnetPaymasterGateway to sign deployment transactions.
  */
-export class VirtualAuthenticator {
+export class WebauthnVirtualAuthenticator {
   private readonly credentials: Map<string, StoredCredential> = new Map();
   private readonly signer?: P256Signer;
 
@@ -132,7 +133,7 @@ export class VirtualAuthenticator {
     // Use Buffer's native base64url encoding
     const credentialIdBase64 = credentialIdBuffer.toString('base64url');
 
-    // Use provided signer or generate a new one
+    // Use the provided signer or generate a new one
     const credentialSigner = this.signer ?? P256Signer.generate();
     const {x, y} = credentialSigner.getPublicKey();
 
@@ -189,6 +190,7 @@ export class VirtualAuthenticator {
         attestationObject: toBase64Url(attestationObject),
       },
       type: 'public-key',
+      clientExtensionResults: {},
     };
   }
 
@@ -272,6 +274,7 @@ export class VirtualAuthenticator {
         userHandle: toBase64Url(credential.userHandle),
       },
       type: 'public-key',
+      clientExtensionResults: {},
     };
   }
 
@@ -343,7 +346,7 @@ export class VirtualAuthenticator {
     // Add attested credential data if present (for registration)
     if (credentialId && cosePublicKey) {
       parts.push(
-        VirtualAuthenticator.AAGUID, // AAGUID (16 bytes)
+        WebauthnVirtualAuthenticator.AAGUID, // AAGUID (16 bytes)
         this.uint16BE(credentialId.length), // credential ID length (2 bytes)
         credentialId, // credential ID
         cosePublicKey, // COSE public key

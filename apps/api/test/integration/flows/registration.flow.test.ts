@@ -1,15 +1,9 @@
+import {type CredentialCreationOptions, WebauthnVirtualAuthenticator} from "@bim/test-toolkit";
 import {sql} from 'drizzle-orm';
 import type {Hono} from 'hono';
 import pg from 'pg';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import {
-  type CredentialCreationOptions,
-  type DbClient,
-  StrkDevnetContext,
-  TestApp,
-  TestDatabase,
-  VirtualAuthenticator,
-} from '../helpers';
+import {type DbClient, StrkDevnetContext, TestApp, TestDatabase,} from '../helpers';
 
 /**
  * API response type from /api/auth/register/begin
@@ -61,14 +55,14 @@ describe('Registration Flow', () => {
   let app: Hono;
   let pool: pg.Pool;
   let db: DbClient;
-  let authenticator: VirtualAuthenticator;
+  let authenticator: WebauthnVirtualAuthenticator;
   let strkContext: StrkDevnetContext;
 
   const rpId = 'localhost';
 
   beforeAll(() => {
     pool = TestDatabase.createPool();
-    authenticator = new VirtualAuthenticator();
+    authenticator = new WebauthnVirtualAuthenticator();
     strkContext = StrkDevnetContext.create();
     db = TestDatabase.getClient(pool);
     app = TestApp.createTestApp({

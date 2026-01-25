@@ -1,16 +1,9 @@
+import {type CredentialCreationOptions, WebauthnVirtualAuthenticator} from "@bim/test-toolkit";
 import type {Hono} from 'hono';
 import pg from 'pg';
 import {Account, Signer} from 'starknet';
 import {afterAll, beforeAll, describe, expect, it} from 'vitest';
-import {
-  type CredentialCreationOptions,
-  DevnetPaymasterGateway,
-  StrkDevnet,
-  StrkDevnetContext,
-  TestApp,
-  TestDatabase,
-  VirtualAuthenticator,
-} from '../helpers';
+import {DevnetPaymasterGateway, StrkDevnetContext, TestApp, TestDatabase,} from '../helpers';
 
 /**
  * API response type from /api/auth/register/begin
@@ -76,7 +69,7 @@ function toRegistrationOptions(apiResponse: BeginRegistrationResponse): Credenti
 describe('Transfer Flow', () => {
   let app: Hono;
   let pool: pg.Pool;
-  let authenticator: VirtualAuthenticator;
+  let authenticator: WebauthnVirtualAuthenticator;
   let strkContext: StrkDevnetContext;
   let paymasterGateway: DevnetPaymasterGateway;
 
@@ -164,7 +157,7 @@ describe('Transfer Flow', () => {
     // (account 0 is for funding, account 1 is used by deployment.flow.test.ts)
     await strkContext.ensureStarkSignerInitialized(2);
     // Use P256Signer for WebAuthn credential creation
-    authenticator = new VirtualAuthenticator({signer: strkContext.getP256Signer()});
+    authenticator = new WebauthnVirtualAuthenticator({signer: strkContext.getP256Signer()});
     // Get reference to paymaster gateway
     paymasterGateway = strkContext.getDevnetPaymasterGateway();
     pool = TestDatabase.createPool();
