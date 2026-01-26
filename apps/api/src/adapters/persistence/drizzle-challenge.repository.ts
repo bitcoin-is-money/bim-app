@@ -1,4 +1,4 @@
-import {AccountId, Challenge, ChallengeId, type ChallengePurpose, type ChallengeRepository,} from '@bim/domain';
+import {Challenge, ChallengeId, type ChallengePurpose, type ChallengeRepository,} from '@bim/domain';
 import {eq, lt} from 'drizzle-orm';
 import type {NodePgDatabase} from 'drizzle-orm/node-postgres';
 import * as schema from '../../../database/schema.js';
@@ -18,7 +18,6 @@ export class DrizzleChallengeRepository implements ChallengeRepository {
         id: data.id,
         challenge: data.challenge,
         purpose: data.purpose,
-        accountId: data.accountId,
         rpId: data.rpId,
         origin: data.origin,
         used: data.used,
@@ -76,7 +75,6 @@ export class DrizzleChallengeRepository implements ChallengeRepository {
       id: ChallengeId.of(record.id),
       challenge: record.challenge,
       purpose: record.purpose as ChallengePurpose,
-      accountId: record.accountId ? AccountId.of(record.accountId) : undefined,
       rpId: record.rpId ?? undefined,
       origin: record.origin ?? undefined,
       used: record.used,

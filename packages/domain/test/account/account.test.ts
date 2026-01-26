@@ -1,12 +1,15 @@
-import {Account, AccountId, CredentialId, InvalidAccountStateError, StarknetAddress} from "@bim/domain/account";
+import {Account, AccountId, CredentialId, StarknetAddress} from "@bim/domain/account";
 import {InvalidStateTransitionError} from "@bim/domain/shared";
 import {describe, expect, it} from 'vitest';
 
 describe('Account', () => {
+  const TEST_STARKNET_ADDRESS = StarknetAddress.of('0x123');
+
   const createTestAccount = (): Account => {
     return Account.create({
       id: AccountId.of('550e8400-e29b-41d4-a716-446655440000'),
       username: 'alice',
+      starknetAddress: TEST_STARKNET_ADDRESS,
       credentialId: CredentialId.of('test-credential-id'),
       publicKey: '0x1234567890abcdef',
       credentialPublicKey: 'encoded-public-key',
@@ -14,14 +17,14 @@ describe('Account', () => {
   };
 
   describe('create', () => {
-    it('creates account in pending status', () => {
+    it('creates account in pending status with starknet address', () => {
       const account = createTestAccount();
 
       expect(account.id).toBe('550e8400-e29b-41d4-a716-446655440000');
       expect(account.username).toBe('alice');
       expect(account.getStatus()).toBe('pending');
       expect(account.getSignCount()).toBe(0);
-      expect(account.getStarknetAddress()).toBeUndefined();
+      expect(account.getStarknetAddress()).toBe(TEST_STARKNET_ADDRESS);
     });
 
     it('sets createdAt and updatedAt to current time', () => {
@@ -57,26 +60,6 @@ describe('Account', () => {
       expect(account.getStatus()).toBe('deployed');
       expect(account.getSignCount()).toBe(5);
       expect(account.getStarknetAddress()).toBe(data.starknetAddress);
-    });
-  });
-
-  describe('setStarknetAddress', () => {
-    it('sets address when account is pending', () => {
-      const account = createTestAccount();
-      const address = StarknetAddress.of('0x123');
-
-      account.setStarknetAddress(address);
-
-      expect(account.getStarknetAddress()).toBe(address);
-    });
-
-    it('throws when account is not pending', () => {
-      const account = createTestAccount();
-      account.setStarknetAddress(StarknetAddress.of('0x123'));
-      account.markAsDeploying('0xtx');
-
-      expect(() => account.setStarknetAddress(StarknetAddress.of('0x456')))
-        .toThrow(InvalidAccountStateError);
     });
   });
 
@@ -159,20 +142,12 @@ describe('Account', () => {
   describe('canDeploy', () => {
     it('returns true when pending with starknet address', () => {
       const account = createTestAccount();
-      account.setStarknetAddress(StarknetAddress.of('0x123'));
 
       expect(account.canDeploy()).toBe(true);
     });
 
-    it('returns false when pending without starknet address', () => {
-      const account = createTestAccount();
-
-      expect(account.canDeploy()).toBe(false);
-    });
-
     it('returns false when not pending', () => {
       const account = createTestAccount();
-      account.setStarknetAddress(StarknetAddress.of('0x123'));
       account.markAsDeploying('0xtx');
 
       expect(account.canDeploy()).toBe(false);
@@ -182,7 +157,6 @@ describe('Account', () => {
   describe('toData', () => {
     it('exports account data for persistence', () => {
       const account = createTestAccount();
-      account.setStarknetAddress(StarknetAddress.of('0x123'));
 
       const data = account.toData();
 
@@ -190,7 +164,7 @@ describe('Account', () => {
       expect(data.username).toBe('alice');
       expect(data.status).toBe('pending');
       expect(data.signCount).toBe(0);
-      expect(data.starknetAddress).toBeDefined();
+      expect(data.starknetAddress).toBe(TEST_STARKNET_ADDRESS);
     });
   });
 });

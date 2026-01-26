@@ -1,6 +1,9 @@
+import {StarknetAddress} from "@bim/domain";
 import * as schema from "../../../../database/schema";
 
-export function createAccountData(overrides?: Partial<schema.NewAccountRecord>): schema.NewAccountRecord {
+export function createAccountData(
+  overrides?: Partial<schema.NewAccountRecord>
+): schema.NewAccountRecord {
   const id = crypto.randomUUID();
   return {
     id,
@@ -8,7 +11,7 @@ export function createAccountData(overrides?: Partial<schema.NewAccountRecord>):
     credentialId: `cred_${id}`,
     publicKey: `pubkey_${id}`,
     credentialPublicKey: null,
-    starknetAddress: null,
+    starknetAddress: StarknetAddress.of('0x123456789abcdef'),
     status: 'pending',
     deploymentTxHash: null,
     signCount: 0,

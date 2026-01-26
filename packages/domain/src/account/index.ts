@@ -1,4 +1,4 @@
 export * from './types';
 export * from './account';
-export * from './create-account.usecase';
+export * from './create-account.service';
 export * from './deploy-account.usecase';

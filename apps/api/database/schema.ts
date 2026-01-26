@@ -10,7 +10,7 @@ export const accounts = pgTable('accounts', {
   credentialId: text('credential_id').notNull().unique(),
   publicKey: text('public_key').notNull(),
   credentialPublicKey: text('credential_public_key'),
-  starknetAddress: text('starknet_address'),
+  starknetAddress: text('starknet_address').notNull(),
   status: text('status').notNull().default('pending'),
   deploymentTxHash: text('deployment_tx_hash'),
   signCount: integer('sign_count').notNull().default(0),
@@ -39,9 +39,6 @@ export const challenges = pgTable('challenges', {
   id: uuid('id').primaryKey(),
   challenge: text('challenge').notNull(),
   purpose: text('purpose').notNull(),
-  accountId: uuid('account_id').references(() => accounts.id, {
-    onDelete: 'cascade',
-  }),
   rpId: text('rp_id'),
   origin: text('origin'),
   used: boolean('used').notNull().default(false),

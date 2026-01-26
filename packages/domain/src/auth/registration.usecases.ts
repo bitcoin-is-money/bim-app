@@ -1,4 +1,11 @@
-import {Account, AccountAlreadyExistsError, AccountId, CredentialId} from '../account';
+import {
+  Account,
+  AccountAlreadyExistsError,
+  AccountId,
+  type CreateAccountService,
+  CredentialId,
+  getCreateAccountService
+} from '../account';
 import type {
   AccountRepository,
   ChallengeRepository,
@@ -129,12 +136,6 @@ export function getCompleteRegistrationUseCase(
     // Parse the account ID from input (pre-generated during beginRegistration)
     const accountId = AccountId.of(input.accountId);
 
-    // Check username availability
-    const existingAccount = await deps.accountRepository.findByUsername(input.username);
-    if (existingAccount) {
-      throw new AccountAlreadyExistsError(input.username);
-    }
-
     // Verify WebAuthn credential
     const verification = await deps.webAuthnGateway.verifyRegistration({
       expectedChallenge: challenge.challenge,
@@ -147,20 +148,14 @@ export function getCompleteRegistrationUseCase(
       throw new RegistrationFailedError('WebAuthn verification failed');
     }
 
-    // Compute deterministic Starknet address
-    const starknetAddress = await deps.starknetGateway.calculateAccountAddress({
-      publicKey: verification.starknetPublicKeyX,
-    });
-
-    // Create an account using the ID from input (matches userHandle in credential)
-    const account = Account.create({
-      id: accountId,
+    let createAccount: CreateAccountService = getCreateAccountService(deps);
+    const account = await createAccount({
+      accountId: accountId,
       username: input.username,
-      credentialId: CredentialId.of(verification.encodedCredentialId),
+      credentialId: verification.encodedCredentialId,
       publicKey: verification.starknetPublicKeyX,
       credentialPublicKey: verification.encodedCredentialPublicKey,
-    });
-    account.setStarknetAddress(starknetAddress);
+    })
 
     const session = Session.create(account.id);
 

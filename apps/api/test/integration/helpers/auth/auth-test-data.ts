@@ -22,7 +22,6 @@ export function createChallengeData(overrides?: Partial<schema.NewChallengeRecor
     id,
     challenge: `challenge_${id}`,
     purpose: 'registration',
-    accountId: null,
     rpId: 'localhost',
     origin: 'http://localhost:8080',
     used: false,
