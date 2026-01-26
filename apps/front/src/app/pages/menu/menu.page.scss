@@ -1,0 +1,23 @@
+@reference "tailwindcss";
+
+.menu-page {
+  @apply min-h-screen flex flex-col bg-neutral-900;
+
+  .menu-main {
+    @apply flex-1 p-4;
+
+    .menu-nav {
+      @apply flex flex-col gap-2;
+
+      .menu-item {
+        @apply w-full text-left px-4 py-4 text-white text-lg;
+        @apply bg-neutral-800 hover:bg-neutral-700 active:bg-neutral-600;
+        @apply rounded-lg transition-colors border-none cursor-pointer;
+
+        &--danger {
+          @apply text-red-400 hover:bg-red-900/30;
+        }
+      }
+    }
+  }
+}

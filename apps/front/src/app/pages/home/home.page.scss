@@ -4,7 +4,7 @@
   @apply min-h-screen flex flex-col bg-neutral-900;
 
   .home-header {
-    @apply relative p-4 border-b border-neutral-800;
+    @apply p-4 border-b border-neutral-800;
 
     .header-content {
       @apply flex justify-between items-center;
@@ -20,16 +20,6 @@
         .menu-icon {
           @apply w-6 h-0.5 bg-white;
         }
-      }
-    }
-
-    .menu-dropdown {
-      @apply absolute top-full right-4 mt-2 bg-neutral-800 rounded-lg shadow-lg border border-neutral-700;
-      @apply min-w-[150px] z-10;
-
-      .menu-item {
-        @apply w-full text-left px-4 py-3 text-white hover:bg-neutral-700;
-        @apply transition-colors rounded-lg;
       }
     }
   }
