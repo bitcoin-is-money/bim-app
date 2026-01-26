@@ -31,6 +31,8 @@ export class Challenge {
 
   /**
    * Creates a new challenge for registration.
+   * Note: accountId is NOT stored in registration challenges because the account doesn't exist yet.
+   * The accountId is passed through the API request/response instead.
    */
   static createForRegistration(params: {
     rpId: string;
@@ -54,9 +56,10 @@ export class Challenge {
 
   /**
    * Creates a new challenge for authentication.
+   * accountId is optional for username-less (discoverable credentials) flow.
    */
   static createForAuthentication(params: {
-    accountId: AccountId;
+    accountId?: AccountId;
     rpId: string;
     origin: string;
   }): Challenge {

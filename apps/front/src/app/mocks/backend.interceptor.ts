@@ -34,7 +34,7 @@ export const backendInterceptor: HttpInterceptorFn = (
       body as Parameters<typeof mockAuthHandler.completeRegister>[0]
     );
   } else if (url === '/api/auth/login/begin' && method === 'POST') {
-    response = mockAuthHandler.beginLogin(body as { username: string });
+    response = mockAuthHandler.beginLogin();
   } else if (url === '/api/auth/login/complete' && method === 'POST') {
     response = mockAuthHandler.completeLogin(
       body as Parameters<typeof mockAuthHandler.completeLogin>[0]

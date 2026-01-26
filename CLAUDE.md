@@ -87,11 +87,61 @@ npm run dev
 # Run front in dev mode
 npm run dev:front
 
-# Run tests
-npm test
-
 # Clean all packages
 npm run clean
+```
+
+## Testing
+
+### Test Commands
+
+```bash
+# Run ALL tests (unit + frontend)
+npm test
+
+# Run integration tests only (requires Docker for PostgreSQL & Starknet Devnet)
+npm run test:integration
+
+# Run tests for a specific workspace
+npm run test -w @bim/lib          # Unit tests for lib
+npm run test -w @bim/domain       # Unit tests for domain
+npm run test -w @bim/api          # Unit tests for api
+npm run test -w @bim/front        # Frontend tests
+
+# Run all api tests (unit + integration)
+npm run test:all -w @bim/api
+
+# Watch mode (for development)
+npm run test:watch -w @bim/api
+```
+
+### Test Structure
+
+```
+packages/lib/test/           # Unit tests for @bim/lib
+packages/domain/test/        # Unit tests for @bim/domain
+packages/test-toolkit/test/  # Unit tests for test utilities
+apps/api/test/
+├── unit/                    # Unit tests (mocked dependencies)
+└── integration/             # Integration tests (real DB, real services)
+    ├── api/                 # API endpoint tests
+    └── flows/               # Flow tests
+apps/front/src/              # Angular tests (*.test.ts alongside components)
+```
+
+### Test Rules
+
+**IMPORTANT:** When modifying code, you MUST update the corresponding tests:
+
+1. **New function/method** → Add unit tests for the new function
+2. **Modified function signature** → Update existing tests to match new signature
+3. **Modified behavior** → Update tests to verify new behavior
+4. **New API endpoint** → Add integration test in `apps/api/test/integration/`
+5. **Modified API flow** → Update integration tests in `apps/api/test/integration/flows/`
+
+**Never** submit code changes without verifying tests pass:
+```bash
+npm test && npm run test:integration
 ```
 
 ## Build

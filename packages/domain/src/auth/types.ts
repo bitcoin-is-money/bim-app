@@ -95,6 +95,7 @@ export interface WebAuthnAuthenticationOptions {
     type: 'public-key';
   }>;
   timeout?: number;
+  userVerification?: 'required' | 'preferred' | 'discouraged';
 }
 
 export interface WebAuthnRegistrationResponse {

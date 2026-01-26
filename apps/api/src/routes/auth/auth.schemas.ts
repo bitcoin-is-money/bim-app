@@ -18,6 +18,7 @@ export const BeginRegistrationSchema = z.object({
 
 export const CompleteRegistrationSchema = z.object({
   challengeId: z.string().uuid(),
+  accountId: z.string().uuid(),
   username: usernameSchema,
   credential: z.object({
     id: z.string(),
@@ -30,9 +31,7 @@ export const CompleteRegistrationSchema = z.object({
   }),
 });
 
-export const BeginAuthenticationSchema = z.object({
-  username: usernameSchema,
-});
+export const BeginAuthenticationSchema = z.object({});
 
 export const CompleteAuthenticationSchema = z.object({
   challengeId: z.string().uuid(),

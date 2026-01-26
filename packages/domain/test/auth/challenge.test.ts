@@ -22,7 +22,7 @@ describe('Challenge', () => {
       expect(challenge.purpose).toBe('registration');
       expect(challenge.rpId).toBe('localhost');
       expect(challenge.origin).toBe('http://localhost:3000');
-      expect(challenge.accountId).toBeUndefined();
+      expect(challenge.accountId).toBeUndefined(); // No accountId for registration (account doesn't exist yet)
       expect(challenge.isUsed()).toBe(false);
       expect(challenge.isExpired()).toBe(false);
       expect(challenge.challenge).toBeDefined();
@@ -52,6 +52,22 @@ describe('Challenge', () => {
 
       expect(challenge.purpose).toBe('authentication');
       expect(challenge.accountId).toBe(accountId);
+      expect(challenge.rpId).toBe('localhost');
+      expect(challenge.origin).toBe('http://localhost:3000');
+    });
+
+    it('creates authentication challenge without account ID (usernameless flow)', () => {
+      const challenge = Challenge.createForAuthentication({
+        rpId: 'localhost',
+        origin: 'http://localhost:3000',
+      });
+
+      expect(challenge.purpose).toBe('authentication');
+      expect(challenge.accountId).toBeUndefined();
+      expect(challenge.rpId).toBe('localhost');
+      expect(challenge.origin).toBe('http://localhost:3000');
+      expect(challenge.isUsed()).toBe(false);
+      expect(challenge.isExpired()).toBe(false);
     });
   });
 
@@ -67,6 +83,7 @@ describe('Challenge', () => {
       expect(reconstituted.id).toBe(original.id);
       expect(reconstituted.challenge).toBe(original.challenge);
       expect(reconstituted.purpose).toBe(original.purpose);
+      expect(reconstituted.accountId).toBe(original.accountId);
       expect(reconstituted.isUsed()).toBe(original.isUsed());
     });
   });
@@ -184,6 +201,7 @@ describe('Challenge', () => {
       expect(data.id).toBe(challenge.id);
       expect(data.challenge).toBe(challenge.challenge);
       expect(data.purpose).toBe('registration');
+      expect(data.accountId).toBeUndefined();
       expect(data.rpId).toBe('localhost');
       expect(data.origin).toBe('http://localhost:3000');
       expect(data.used).toBe(false);

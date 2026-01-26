@@ -47,6 +47,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
 
       const beginRegistration = getBeginRegistrationUseCase({
         challengeRepository: appContext.repositories.challenge,
+        idGenerator: () => AccountId.generate(),
       });
 
       const result = await beginRegistration({
@@ -59,6 +60,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
       return ctx.json({
         options: result.options,
         challengeId: result.challengeId,
+        accountId: result.accountId,
       });
     } catch (error) {
       return handleError(ctx, error);
@@ -76,11 +78,11 @@ export function createAuthRoutes(appContext: AppContext): Hono {
         sessionRepository: appContext.repositories.session,
         webAuthnGateway: appContext.gateways.webAuthn,
         starknetGateway: appContext.gateways.starknet,
-        idGenerator: () => AccountId.generate(),
       });
 
       const result = await complete({
         challengeId: input.challengeId,
+        accountId: input.accountId,
         username: input.username,
         credential: input.credential,
       });
@@ -107,16 +109,11 @@ export function createAuthRoutes(appContext: AppContext): Hono {
 
   app.post('/login/begin', async (ctx) => {
     try {
-      const body = await ctx.req.json();
-      const input = BeginAuthenticationSchema.parse(body);
-
       const begin = getBeginAuthenticationUseCase({
-        accountRepository: appContext.repositories.account,
         challengeRepository: appContext.repositories.challenge,
       });
 
       const result = await begin({
-        username: input.username,
         rpId,
         origin,
       });
