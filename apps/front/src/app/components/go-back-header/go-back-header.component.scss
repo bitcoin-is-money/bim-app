@@ -1,0 +1,18 @@
+@reference "tailwindcss";
+
+.go-back-header {
+  @apply flex items-center gap-4 p-4 border-b border-neutral-800;
+
+  .back-button {
+    @apply p-2 rounded-lg bg-transparent border-none cursor-pointer;
+    @apply hover:bg-neutral-800 transition-colors;
+
+    .back-icon {
+      @apply block text-2xl text-white leading-none;
+    }
+  }
+
+  .header-title {
+    @apply text-xl font-semibold text-white;
+  }
+}

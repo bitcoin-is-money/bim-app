@@ -17,7 +17,6 @@ import {Transaction, TransactionService} from '../../services/transaction.servic
 export class HomePage implements OnInit {
   balance = signal<Balance | null>(null);
   transactions = signal<Transaction[]>([]);
-  isMenuOpen = signal(false);
   isLoading = signal(true);
 
   constructor(
@@ -33,7 +32,7 @@ export class HomePage implements OnInit {
 
   loadData(): void {
     this.isLoading.set(true);
-    
+
     this.balanceService.getBalance().subscribe({
       next: (balance) => {
         this.balance.set(balance);
@@ -63,17 +62,8 @@ export class HomePage implements OnInit {
     return this.currentUser?.username || '';
   }
 
-  toggleMenu(): void {
-    this.isMenuOpen.set(!this.isMenuOpen());
-  }
-
-  closeMenu(): void {
-    this.isMenuOpen.set(false);
-  }
-
-  navigateToAbout(): void {
-    this.closeMenu();
-    this.router.navigate(['/about']);
+  openMenu(): void {
+    this.router.navigate(['/menu']);
   }
 
   onReceive(): void {

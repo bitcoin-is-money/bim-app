@@ -2,23 +2,15 @@
   <header class="home-header">
     <div class="header-content">
       <h2 class="greeting">Hi {{ username }}</h2>
-      <button 
+      <button
         class="menu-button"
-        (click)="toggleMenu()"
+        (click)="openMenu()"
         aria-label="Menu">
         <span class="menu-icon"></span>
         <span class="menu-icon"></span>
         <span class="menu-icon"></span>
       </button>
     </div>
-
-    @if (isMenuOpen()) {
-      <nav class="menu-dropdown">
-        <button class="menu-item" (click)="navigateToAbout()">
-          About
-        </button>
-      </nav>
-    }
   </header>
 
   <main class="home-main">

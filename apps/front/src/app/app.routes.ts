@@ -43,6 +43,11 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'menu',
+    loadComponent: () => import('./pages/menu/menu.page').then(m => m.MenuPage),
+    canActivate: [authGuard],
+  },
+  {
     path: '',
     redirectTo: '/auth',
     pathMatch: 'full',

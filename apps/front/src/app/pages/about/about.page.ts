@@ -1,18 +1,11 @@
-import {CommonModule} from '@angular/common';
 import {Component} from '@angular/core';
-import {Router} from '@angular/router';
+import {GoBackHeaderComponent} from '../../components/go-back-header/go-back-header.component';
 
 @Component({
   selector: 'app-about',
   standalone: true,
-  imports: [CommonModule],
+  imports: [GoBackHeaderComponent],
   templateUrl: './about.page.html',
   styleUrl: './about.page.scss',
 })
-export class AboutPage {
-  constructor(private readonly router: Router) {}
-
-  goBack(): void {
-    this.router.navigate(['/home']);
-  }
-}
+export class AboutPage {}
