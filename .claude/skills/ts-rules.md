@@ -406,6 +406,7 @@ try {
 - ❌ Classes for simple data (use types/interfaces)
 - ❌ `console.log` (use proper logger)
 - ❌ Barrel files with circular dependencies
+- ❌ `toPromise()` on observables (use `firstValueFrom()` or `lastValueFrom()` from RxJS)
 
 ---
 

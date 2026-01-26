@@ -2,6 +2,7 @@ import {CommonModule} from '@angular/common';
 import {Component, signal} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {Router} from '@angular/router';
+import {firstValueFrom} from 'rxjs';
 import {ButtonComponent} from "../../components/button/button.component";
 import {AuthService} from '../../services/auth.service';
 
@@ -44,7 +45,7 @@ export class AuthPage {
         return;
       }
 
-      const beginResponse = await this.authService.beginLogin(finalUsername).toPromise();
+      const beginResponse = await firstValueFrom(this.authService.beginLogin(finalUsername));
       if (!beginResponse) {
         throw new Error('Failed to initialize login');
       }
@@ -58,7 +59,7 @@ export class AuthPage {
         throw new Error('Authentication cancelled');
       }
 
-      await this.authService.completeLogin(beginResponse.challengeId, credential).toPromise();
+      await firstValueFrom(this.authService.completeLogin(beginResponse.challengeId, credential));
       this.router.navigate(['/home']);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Login failed';
@@ -80,7 +81,7 @@ export class AuthPage {
         return;
       }
 
-      const beginResponse = await this.authService.beginRegister(username).toPromise();
+      const beginResponse = await firstValueFrom(this.authService.beginRegister(username));
       if (!beginResponse) {
         throw new Error('Failed to initialize registration');
       }
@@ -95,7 +96,7 @@ export class AuthPage {
         throw new Error('Registration cancelled');
       }
 
-      await this.authService.completeRegister(beginResponse.challengeId, username, credential).toPromise();
+      await firstValueFrom(this.authService.completeRegister(beginResponse.challengeId, username, credential));
       this.router.navigate(['/home']);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Registration failed';
