@@ -17,7 +17,7 @@ export interface StoredCredential {
 export interface PendingChallenge {
   challengeId: string;
   challenge: string;
-  username: string;
+  username?: string;
   type: 'registration' | 'authentication';
   expiresAt: number;
 }
@@ -52,6 +52,16 @@ export class DataStoreMock {
 
   findCredentialById(credentialId: string): StoredCredential | undefined {
     return this.getCredentials().get(credentialId);
+  }
+
+  findCredentialByUserId(userId: string): StoredCredential | undefined {
+    const credentials = this.getCredentials();
+    for (const credential of credentials.values()) {
+      if (credential.userId === userId) {
+        return credential;
+      }
+    }
+    return undefined;
   }
 
   // Pending Challenges

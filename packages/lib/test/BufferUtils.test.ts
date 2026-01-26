@@ -84,4 +84,49 @@ describe('BufferUtils', () => {
       expect(result.every((byte) => byte === 0xff)).toBe(true);
     });
   });
+
+  describe('bytesToUuid', () => {
+    it('converts bytes to UUID string with dashes', () => {
+      const bytes = new Uint8Array([
+        0x55, 0x0e, 0x84, 0x00,
+        0xe2, 0x9b,
+        0x41, 0xd4,
+        0xa7, 0x16,
+        0x44, 0x66, 0x55, 0x44, 0x00, 0x00
+      ]);
+      const result = BufferUtils.bytesToUuid(bytes);
+
+      expect(result).toBe('550e8400-e29b-41d4-a716-446655440000');
+    });
+
+    it('converts all zeros bytes to all zeros UUID', () => {
+      const bytes = new Uint8Array(16).fill(0);
+      const result = BufferUtils.bytesToUuid(bytes);
+
+      expect(result).toBe('00000000-0000-0000-0000-000000000000');
+    });
+
+    it('converts all ones bytes to all ones UUID', () => {
+      const bytes = new Uint8Array(16).fill(0xff);
+      const result = BufferUtils.bytesToUuid(bytes);
+
+      expect(result).toBe('ffffffff-ffff-ffff-ffff-ffffffffffff');
+    });
+
+    it('roundtrips with uuidToBytes', () => {
+      const originalUuid = '550e8400-e29b-41d4-a716-446655440000';
+      const bytes = BufferUtils.uuidToBytes(originalUuid);
+      const resultUuid = BufferUtils.bytesToUuid(bytes);
+
+      expect(resultUuid).toBe(originalUuid);
+    });
+
+    it('roundtrips random UUID', () => {
+      const randomUuid = crypto.randomUUID();
+      const bytes = BufferUtils.uuidToBytes(randomUuid);
+      const resultUuid = BufferUtils.bytesToUuid(bytes);
+
+      expect(resultUuid).toBe(randomUuid);
+    });
+  });
 });

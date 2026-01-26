@@ -23,5 +23,16 @@ export namespace BufferUtils {
     return bytes;
   }
 
+  /**
+   * Convert Uint8Array (16 bytes) back to UUID string
+   * Inserts dashes at the correct positions: 8-4-4-4-12
+   */
+  export function bytesToUuid(bytes: Uint8Array): string {
+    const hex = Array.from(bytes)
+      .map((byte) => byte.toString(16).padStart(2, '0'))
+      .join('');
+    return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;
+  }
+
 
 }

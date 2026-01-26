@@ -37,6 +37,7 @@ export interface BeginRegistrationInput {
 export interface BeginRegistrationOutput {
   options: WebAuthnRegistrationOptions;
   challengeId: string;
+  accountId: string; // Pre-generated account ID (same as options.userId) - must be passed to completeRegistration
 }
 
 export type BeginRegistrationUseCase = (input: BeginRegistrationInput) => Promise<BeginRegistrationOutput>;
@@ -44,11 +45,20 @@ export type BeginRegistrationUseCase = (input: BeginRegistrationInput) => Promis
 /**
  * Initiates WebAuthn registration by creating a challenge.
  * Returns options to pass to navigator.credentials.create().
+ *
+ * The userId returned in options will become the account ID after registration.
+ * The accountId is returned separately and must be passed to completeRegistration.
+ * This ensures the userHandle in the credential matches the account ID (required for username-less login).
  */
 export function getBeginRegistrationUseCase(
-  deps: Pick<RegistrationUseCasesDeps, 'challengeRepository'>,
+  deps: Pick<RegistrationUseCasesDeps, 'challengeRepository' | 'idGenerator'>,
 ): BeginRegistrationUseCase {
   return async (input: BeginRegistrationInput): Promise<BeginRegistrationOutput> => {
+    // Generate account ID now - this will be stored as userHandle in the credential
+    // and used as the account ID after registration completes
+    const accountId = deps.idGenerator();
+
+    // Don't store accountId in the challenge (FK constraint would fail since the account doesn't exist yet)
     const challenge = Challenge.createForRegistration({
       rpId: input.rpId,
       origin: input.origin,
@@ -61,11 +71,12 @@ export function getBeginRegistrationUseCase(
         challenge: challenge.challenge,
         rpId: input.rpId,
         rpName: input.rpName,
-        userId: crypto.randomUUID(),
+        userId: accountId, // Use the pre-generated account ID
         userName: input.username,
         timeout: 60000,
       },
       challengeId: challenge.id,
+      accountId, // Return separately so the client can pass it to completeRegistration
     };
   };
 }
@@ -76,6 +87,7 @@ export function getBeginRegistrationUseCase(
 
 export interface CompleteRegistrationInput {
   challengeId: string;
+  accountId: string; // Pre-generated account ID from beginRegistration
   username: string;
   credential: {
     id: string;
@@ -98,9 +110,12 @@ export type CompleteRegistrationUseCase = (input: CompleteRegistrationInput) => 
 /**
  * Completes WebAuthn registration after user interaction.
  * Verifies the credential, creates an account with its Starknet address, and starts a session.
+ *
+ * The accountId is passed from beginRegistration to ensure the userHandle in the credential
+ * matches the account ID (required for username-less login).
  */
 export function getCompleteRegistrationUseCase(
-  deps: RegistrationUseCasesDeps,
+  deps: Omit<RegistrationUseCasesDeps, 'idGenerator'>,
 ): CompleteRegistrationUseCase {
   return async (input: CompleteRegistrationInput): Promise<CompleteRegistrationOutput> => {
     // Validate the challenge
@@ -110,6 +125,9 @@ export function getCompleteRegistrationUseCase(
       throw new ChallengeNotFoundError(challengeId);
     }
     challenge.consume();
+
+    // Parse the account ID from input (pre-generated during beginRegistration)
+    const accountId = AccountId.of(input.accountId);
 
     // Check username availability
     const existingAccount = await deps.accountRepository.findByUsername(input.username);
@@ -134,9 +152,9 @@ export function getCompleteRegistrationUseCase(
       publicKey: verification.starknetPublicKeyX,
     });
 
-    // Create account and session
+    // Create an account using the ID from input (matches userHandle in credential)
     const account = Account.create({
-      id: deps.idGenerator(),
+      id: accountId,
       username: input.username,
       credentialId: CredentialId.of(verification.encodedCredentialId),
       publicKey: verification.starknetPublicKeyX,

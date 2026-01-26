@@ -28,24 +28,7 @@ export class AuthPage {
     this.isLoading.set(true);
 
     try {
-      const username = this.username();
-      if (!username) {
-        const promptUsername = prompt('Please enter your username');
-        if (!promptUsername) {
-          this.isLoading.set(false);
-          return;
-        }
-        this.username.set(promptUsername);
-      }
-
-      const finalUsername = this.username();
-      if (!finalUsername) {
-        this.error.set('Please enter a username');
-        this.isLoading.set(false);
-        return;
-      }
-
-      const beginResponse = await firstValueFrom(this.authService.beginLogin(finalUsername));
+      const beginResponse = await firstValueFrom(this.authService.beginLogin());
       if (!beginResponse) {
         throw new Error('Failed to initialize login');
       }
@@ -96,7 +79,7 @@ export class AuthPage {
         throw new Error('Registration cancelled');
       }
 
-      await firstValueFrom(this.authService.completeRegister(beginResponse.challengeId, username, credential));
+      await firstValueFrom(this.authService.completeRegister(beginResponse.challengeId, beginResponse.accountId, username, credential));
       this.router.navigate(['/home']);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Registration failed';

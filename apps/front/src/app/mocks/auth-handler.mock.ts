@@ -32,6 +32,23 @@ function generateChallenge(): string {
   return btoa(String.fromCharCode(...array));
 }
 
+function decodeUserHandle(base64Url: string): string {
+  // Decode base64url to bytes
+  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+  const padding = '='.repeat((4 - (base64.length % 4)) % 4);
+  const binary = atob(base64 + padding);
+  const bytes = new Uint8Array(binary.length);
+  for (let idx = 0; idx < binary.length; idx++) {
+    bytes[idx] = binary.charCodeAt(idx);
+  }
+
+  // Convert bytes to UUID format
+  const hex = Array.from(bytes)
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;
+}
+
 export class AuthHandlerMock {
   private readonly store = new DataStoreMock();
   private readonly RP_ID = 'localhost';
@@ -52,7 +69,7 @@ export class AuthHandlerMock {
 
     const challengeId = generateUUID();
     const challenge = generateChallenge();
-    const userId = generateUUID();
+    const accountId = generateUUID(); // Pre-generate account ID
 
     this.store.saveChallenge({
       challengeId,
@@ -66,11 +83,12 @@ export class AuthHandlerMock {
       status: 200,
       body: {
         challengeId,
+        accountId, // Return accountId to pass to completeRegister
         options: {
           challenge,
           rpId: this.RP_ID,
           rpName: this.RP_NAME,
-          userId,
+          userId: accountId, // Use accountId as userId for WebAuthn
           userName: username,
           timeout: 60000,
         },
@@ -81,6 +99,7 @@ export class AuthHandlerMock {
   // POST /api/auth/register/complete
   completeRegister(body: {
     challengeId: string;
+    accountId: string;
     username: string;
     credential: {
       id: string;
@@ -89,7 +108,7 @@ export class AuthHandlerMock {
       type: string;
     };
   }): HttpResponse<AuthResponse | { error: string }> {
-    const { challengeId, username, credential } = body;
+    const { challengeId, accountId, username, credential } = body;
 
     const pendingChallenge = this.store.consumeChallenge(challengeId);
     if (!pendingChallenge) {
@@ -113,19 +132,18 @@ export class AuthHandlerMock {
       });
     }
 
-    // Store credential (simplified - in real backend you'd parse attestationObject)
-    const userId = generateUUID();
+    // Store credential using the accountId passed from beginRegister
     const storedCredential: StoredCredential = {
       credentialId: credential.id,
       publicKey: credential.response.attestationObject,
-      userId,
+      userId: accountId, // Use accountId from input - same as userHandle in credential
       username,
       counter: 0,
     };
     this.store.saveCredential(storedCredential);
 
     const account: Account = {
-      id: userId,
+      id: accountId,
       username,
       starknetAddress: generateStarknetAddress(username),
       status: 'active',
@@ -139,25 +157,14 @@ export class AuthHandlerMock {
     });
   }
 
-  // POST /api/auth/login/begin
-  beginLogin(body: { username: string }): HttpResponse<BeginAuthResponse | { error: string }> {
-    const { username } = body;
-
-    const credential = this.store.findCredentialByUsername(username);
-    if (!credential) {
-      return new HttpResponse({
-        status: 404,
-        body: { error: 'User not found' },
-      });
-    }
-
+  // POST /api/auth/login/begin (usernameless - discoverable credentials)
+  beginLogin(): HttpResponse<BeginAuthResponse> {
     const challengeId = generateUUID();
     const challenge = generateChallenge();
 
     this.store.saveChallenge({
       challengeId,
       challenge,
-      username,
       type: 'authentication',
       expiresAt: Date.now() + 60000,
     });
@@ -169,12 +176,7 @@ export class AuthHandlerMock {
         options: {
           challenge,
           rpId: this.RP_ID,
-          allowCredentials: [
-            {
-              id: credential.credentialId,
-              type: 'public-key',
-            },
-          ],
+          allowCredentials: [],
           timeout: 60000,
           userVerification: 'required',
         },
@@ -182,7 +184,7 @@ export class AuthHandlerMock {
     });
   }
 
-  // POST /api/auth/login/complete
+  // POST /api/auth/login/complete (usernameless - uses userHandle to identify user)
   completeLogin(body: {
     challengeId: string;
     credential: {
@@ -221,7 +223,17 @@ export class AuthHandlerMock {
       });
     }
 
-    const storedCredential = this.store.findCredentialById(credential.id);
+    // For usernameless flow, use userHandle to find the credential
+    const userHandle = credential.response.userHandle;
+    if (!userHandle) {
+      return new HttpResponse({
+        status: 401,
+        body: { error: 'No userHandle in credential response' },
+      });
+    }
+
+    const userId = decodeUserHandle(userHandle);
+    const storedCredential = this.store.findCredentialByUserId(userId);
     if (!storedCredential) {
       return new HttpResponse({
         status: 401,

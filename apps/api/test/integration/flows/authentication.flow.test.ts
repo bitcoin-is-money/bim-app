@@ -19,6 +19,19 @@ import {type DbClient, StrkDevnetContext, TestApp, TestDatabase,} from '../helpe
 const webAuthnOrigin = 'http://localhost:8080';
 
 /**
+ * Converts UUID string to base64url encoded bytes.
+ * Required because WebAuthn expects user.id as bytes, not a raw UUID string.
+ */
+function uuidToBase64Url(uuid: string): string {
+  const hex = uuid.replaceAll('-', '');
+  const bytes = new Uint8Array(hex.length / 2);
+  for (let idx = 0; idx < hex.length; idx += 2) {
+    bytes[idx / 2] = Number.parseInt(hex.slice(idx, idx + 2), 16);
+  }
+  return Buffer.from(bytes).toString('base64url');
+}
+
+/**
  * Converts API registration options to WebauthnVirtualAuthenticator format.
  */
 function toRegistrationOptions(
@@ -31,7 +44,7 @@ function toRegistrationOptions(
       name: apiResponse.options.rpName,
     },
     user: {
-      id: apiResponse.options.userId,
+      id: uuidToBase64Url(apiResponse.options.userId), // Convert UUID to base64url bytes
       name: apiResponse.options.userName,
       displayName: apiResponse.options.userName,
     },
@@ -41,6 +54,7 @@ function toRegistrationOptions(
 
 /**
  * Converts API authentication options to WebauthnVirtualAuthenticator format.
+ * For usernameless flow, allowCredentials is empty and userHandle must be returned.
  */
 function toAuthenticationOptions(
   apiResponse: BeginAuthenticationResponse,
@@ -115,6 +129,7 @@ describe('Authentication Flow', () => {
       .request(app)
       .post('/api/auth/register/complete', {
         challengeId: beginBody.challengeId,
+        accountId: beginBody.accountId, // Pass accountId from begin to complete
         username,
         credential,
       });
@@ -131,15 +146,16 @@ describe('Authentication Flow', () => {
   }
 
   /**
-   * Helper to perform full login flow.
+   * Helper to perform full login flow (usernameless - discoverable credentials).
+   * The authenticator returns userHandle which identifies the user.
    */
-  async function loginUser(username: string): Promise<{
+  async function loginUser(): Promise<{
     beginBody: BeginAuthenticationResponse;
     completeResponse: Response;
   }> {
     const beginResponse = await TestApp
       .request(app)
-      .post('/api/auth/login/begin', {username});
+      .post('/api/auth/login/begin', {});
     const beginBody = await beginResponse.json() as BeginAuthenticationResponse;
     const assertion = await authenticator
       .getAssertion(toAuthenticationOptions(beginBody, rpId));
@@ -153,13 +169,10 @@ describe('Authentication Flow', () => {
   }
 
   describe('POST /api/auth/login/begin', () => {
-    it('returns WebAuthn authentication options for existing user', async () => {
-      const username = 'login_test_user';
-      await registerUser(username);
-
+    it('returns WebAuthn authentication options for usernameless flow', async () => {
       const response = await TestApp
         .request(app)
-        .post('/api/auth/login/begin', {username});
+        .post('/api/auth/login/begin', {});
 
       expect(response.status).toBe(200);
       const body = await response.json() as BeginAuthenticationResponse;
@@ -167,37 +180,18 @@ describe('Authentication Flow', () => {
       expect(body.challengeId).toBeDefined();
       expect(body.options.challenge).toBeDefined();
       expect(body.options.rpId).toBe(rpId);
-      expect(body.options.allowCredentials).toHaveLength(1);
-      expect(body.options.allowCredentials[0].type).toBe('public-key');
-    });
-
-    it('rejects login for non-existent user', async () => {
-      const response = await TestApp
-        .request(app)
-        .post('/api/auth/login/begin', {
-          username: 'nonexistent_user',
-        });
-
-      expect(response.status).toBe(404);
-    });
-
-    it('rejects invalid username format', async () => {
-      const response = await TestApp
-        .request(app)
-        .post('/api/auth/login/begin', {
-          username: 'ab', // Too short
-        });
-
-      expect(response.status).toBe(400);
+      // Usernameless flow: allowCredentials is empty (discoverable credentials)
+      expect(body.options.allowCredentials).toHaveLength(0);
+      expect(body.options.userVerification).toBe('required');
     });
   });
 
   describe('POST /api/auth/login/complete', () => {
-    it('authenticates user with valid WebAuthn assertion', async () => {
+    it('authenticates user with valid WebAuthn assertion (usernameless)', async () => {
       const username = 'auth_complete_user';
       await registerUser(username);
 
-      const {completeResponse} = await loginUser(username);
+      const {completeResponse} = await loginUser();
 
       expect(completeResponse.status).toBe(200);
       const body = await completeResponse.json() as CompleteAuthenticationResponse;
@@ -217,8 +211,8 @@ describe('Authentication Flow', () => {
       const username = 'signCountUser';
       const {accountId} = await registerUser(username);
 
-      async function expectSignCount(expected: number) {
-        let result = await db
+      async function expectSignCount(expected: number): Promise<void> {
+        const result = await db
           .select({signCount: schema.accounts.signCount})
           .from(schema.accounts)
           .where(eq(schema.accounts.id, accountId))
@@ -229,11 +223,11 @@ describe('Authentication Flow', () => {
       await expectSignCount(0);
 
       // First login
-      await loginUser(username);
+      await loginUser();
       await expectSignCount(1);
 
       // Second login
-      const {completeResponse} = await loginUser(username);
+      const {completeResponse} = await loginUser();
       expect(completeResponse.status).toBe(200);
       await expectSignCount(2);
     });
@@ -245,7 +239,7 @@ describe('Authentication Flow', () => {
       // Start login to get valid assertion options
       const beginResponse = await TestApp
         .request(app)
-        .post('/api/auth/login/begin', {username});
+        .post('/api/auth/login/begin', {});
       const beginBody = await beginResponse.json() as BeginAuthenticationResponse;
       const assertion = await authenticator
         .getAssertion(toAuthenticationOptions(beginBody, rpId));
@@ -267,7 +261,7 @@ describe('Authentication Flow', () => {
 
       const beginResponse = await TestApp
         .request(app)
-        .post('/api/auth/login/begin', {username});
+        .post('/api/auth/login/begin', {});
       const beginBody = await beginResponse.json() as BeginAuthenticationResponse;
       const assertion = await authenticator
         .getAssertion(toAuthenticationOptions(beginBody, rpId));
@@ -296,7 +290,7 @@ describe('Authentication Flow', () => {
     it('allows access to protected resource with valid session', async () => {
       const username = 'session_valid_user';
       await registerUser(username);
-      const {completeResponse} = await loginUser(username);
+      const {completeResponse} = await loginUser();
 
       const setCookie = completeResponse.headers.get('Set-Cookie') || '';
       const sessionMatch = /session=([^;]+)/.exec(setCookie);

@@ -36,6 +36,7 @@ export interface BeginRegisterResponse {
     timeout?: number;
   };
   challengeId: string;
+  accountId: string; // Pre-generated account ID - must be passed to completeRegister
 }
 
 export interface UserSessionResponse {
@@ -71,10 +72,8 @@ export class AuthService {
       });
   }
 
-  beginLogin(username: string): Observable<BeginAuthResponse> {
-    return this.http.post<BeginAuthResponse>(`${this.apiUrl}/login/begin`, {
-      username,
-    });
+  beginLogin(): Observable<BeginAuthResponse> {
+    return this.http.post<BeginAuthResponse>(`${this.apiUrl}/login/begin`, {});
   }
 
   beginRegister(username: string): Observable<BeginRegisterResponse> {
@@ -98,12 +97,14 @@ export class AuthService {
 
   completeRegister(
     challengeId: string,
+    accountId: string,
     username: string,
     credential: PublicKeyCredential
   ): Observable<AuthResponse> {
     const credentialJson = this.credentialToJson(credential);
     return this.http.post<AuthResponse>(`${this.apiUrl}/register/complete`, {
       challengeId,
+      accountId,
       username,
       credential: credentialJson,
     }).pipe(
@@ -168,9 +169,10 @@ export class AuthService {
   convertRegistrationOptions(options: BeginRegisterResponse['options']): PublicKeyCredentialCreationOptions {
     // In production, require platform authenticator (TouchID, FaceID, fingerprint)
     // In development, allow any authenticator (including security keys) for testing
+    // residentKey: 'required' enables discoverable credentials for usernameless login
     const authenticatorSelection: AuthenticatorSelectionCriteria = environment.production
-      ? { authenticatorAttachment: 'platform', userVerification: 'required' }
-      : { userVerification: 'preferred' };
+      ? { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'required' }
+      : { userVerification: 'preferred', residentKey: 'required' };
 
     return {
       challenge: BufferUtils.base64UrlToUint8Array(options.challenge),
