@@ -1,3 +1,8 @@
+---
+name: ts-rules
+description: Guide for TypeScript coding conventions. This skill should be used when writing TypeScript code, reviewing code quality, defining types, handling errors, or ensuring code follows project standards.
+---
+
 # TypeScript Rules
 
 Rules and conventions for writing TypeScript code in this project.
