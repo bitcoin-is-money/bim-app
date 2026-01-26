@@ -3,11 +3,21 @@ import {decode, encode} from '@stablelib/base64';
 export namespace BufferUtils {
 
   export function bufferToBase64Url(buffer: ArrayBuffer): string {
-    return encode(new Uint8Array(buffer));
+    // Encode to standard base64, then convert to base64url
+    return encode(new Uint8Array(buffer))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
   }
 
   export function base64UrlToUint8Array(base64Url: string): Uint8Array {
-    return decode(base64Url);
+    // Convert base64url to standard base64
+    const base64 = base64Url
+      .replace(/-/g, '+')
+      .replace(/_/g, '/');
+    // Add padding if needed
+    const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
+    return decode(padded);
   }
 
   /**

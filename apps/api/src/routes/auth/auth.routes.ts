@@ -265,36 +265,36 @@ function handleError(ctx: { json: (data: unknown, status: number) => Response },
 
   if (error instanceof z.ZodError) {
     return ctx.json(
-      { error: 'Validation error', details: error.errors },
+      { error: { message: 'Validation error', details: error.errors } },
       400,
     );
   }
 
   if (error instanceof AccountAlreadyExistsError) {
-    return ctx.json({error: 'Username already taken'}, 409);
+    return ctx.json({ error: { message: 'Username already taken' } }, 409);
   }
 
   if (error instanceof InvalidUsernameError) {
-    return ctx.json({error: error.message}, 400);
+    return ctx.json({ error: { message: error.message } }, 400);
   }
 
   if (error instanceof AccountNotFoundError) {
-    return ctx.json({ error: 'Account not found' }, 404);
+    return ctx.json({ error: { message: 'Account not found' } }, 404);
   }
 
   if (
     error instanceof ChallengeNotFoundError ||
     error instanceof ChallengeExpiredError
   ) {
-    return ctx.json({ error: 'Challenge expired or invalid' }, 400);
+    return ctx.json({ error: { message: 'Challenge expired or invalid' } }, 400);
   }
 
   if (
     error instanceof AuthenticationFailedError ||
     error instanceof RegistrationFailedError
   ) {
-    return ctx.json({ error: 'Authentication failed' }, 401);
+    return ctx.json({ error: { message: 'Authentication failed' } }, 401);
   }
 
-  return ctx.json({ error: 'Internal server error' }, 500);
+  return ctx.json({ error: { message: 'Internal server error' } }, 500);
 }

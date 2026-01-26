@@ -1,6 +1,6 @@
-import {HttpEvent, HttpHandlerFn, HttpInterceptorFn, HttpRequest, HttpResponse,} from '@angular/common/http';
-import {Observable, of} from 'rxjs';
-import {delay} from 'rxjs/operators';
+import {HttpErrorResponse, HttpEvent, HttpHandlerFn, HttpInterceptorFn, HttpRequest, HttpResponse,} from '@angular/common/http';
+import {Observable, of, throwError} from 'rxjs';
+import {delay, mergeMap} from 'rxjs/operators';
 import {AuthHandlerMock} from './auth-handler.mock';
 import {BalanceHandlerMock} from './balance-handler.mock';
 import {TransactionHandlerMock} from './transaction-handler.mock';
@@ -56,7 +56,21 @@ export const backendInterceptor: HttpInterceptorFn = (
   }
 
   if (response) {
-    console.log(`[MockBackend] ${method} ${url}`, { body, response: response.body });
+    console.log(`[MockBackend] ${method} ${url}`, { body, response: response.body, status: response.status });
+
+    // Convert error responses (4xx, 5xx) to HttpErrorResponse
+    if (response.status >= 400) {
+      return of(null).pipe(
+        delay(randomDelay()),
+        mergeMap(() => throwError(() => new HttpErrorResponse({
+          error: response.body,
+          status: response.status,
+          statusText: response.statusText,
+          url: url,
+        })))
+      );
+    }
+
     return of(response).pipe(delay(randomDelay()));
   }
 

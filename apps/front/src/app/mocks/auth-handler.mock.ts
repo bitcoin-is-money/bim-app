@@ -8,6 +8,10 @@ import type {
 } from '../services/auth.service';
 import {DataStoreMock, type StoredCredential} from './data-store.mock';
 
+interface ApiErrorResponse {
+  error: { message: string };
+}
+
 // Predictable test Starknet address based on username
 function generateStarknetAddress(username: string): string {
   const hash = username
@@ -28,8 +32,11 @@ function generateUUID(): string {
 function generateChallenge(): string {
   const array = new Uint8Array(32);
   crypto.getRandomValues(array);
-  // Standard base64 (not base64url) - @stablelib/base64 expects this format
-  return btoa(String.fromCharCode(...array));
+  // Convert to base64url (no padding, - instead of +, _ instead of /)
+  return btoa(String.fromCharCode(...array))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
 }
 
 function decodeUserHandle(base64Url: string): string {
@@ -55,7 +62,7 @@ export class AuthHandlerMock {
   private readonly RP_NAME = 'BIM App (Mock)';
 
   // POST /api/auth/register/begin
-  beginRegister(body: { username: string }): HttpResponse<BeginRegisterResponse | { error: string }> {
+  beginRegister(body: { username: string }): HttpResponse<BeginRegisterResponse | ApiErrorResponse> {
     const { username } = body;
 
     // Error: user already exists
@@ -63,7 +70,7 @@ export class AuthHandlerMock {
     if (existing) {
       return new HttpResponse({
         status: 409,
-        body: { error: 'User already exists' },
+        body: { error: { message: 'Username already taken' } },
       });
     }
 
@@ -107,28 +114,28 @@ export class AuthHandlerMock {
       response: { clientDataJSON: string; attestationObject: string };
       type: string;
     };
-  }): HttpResponse<AuthResponse | { error: string }> {
+  }): HttpResponse<AuthResponse | ApiErrorResponse> {
     const { challengeId, accountId, username, credential } = body;
 
     const pendingChallenge = this.store.consumeChallenge(challengeId);
     if (!pendingChallenge) {
       return new HttpResponse({
         status: 400,
-        body: { error: 'Invalid or expired challenge' },
+        body: { error: { message: 'Invalid or expired challenge' } },
       });
     }
 
     if (pendingChallenge.type !== 'registration') {
       return new HttpResponse({
         status: 400,
-        body: { error: 'Challenge type mismatch' },
+        body: { error: { message: 'Challenge type mismatch' } },
       });
     }
 
     if (pendingChallenge.expiresAt < Date.now()) {
       return new HttpResponse({
         status: 400,
-        body: { error: 'Challenge expired' },
+        body: { error: { message: 'Challenge expired' } },
       });
     }
 
@@ -198,28 +205,28 @@ export class AuthHandlerMock {
       };
       type: string;
     };
-  }): HttpResponse<AuthResponse | { error: string }> {
+  }): HttpResponse<AuthResponse | ApiErrorResponse> {
     const { challengeId, credential } = body;
 
     const pendingChallenge = this.store.consumeChallenge(challengeId);
     if (!pendingChallenge) {
       return new HttpResponse({
         status: 400,
-        body: { error: 'Invalid or expired challenge' },
+        body: { error: { message: 'Invalid or expired challenge' } },
       });
     }
 
     if (pendingChallenge.type !== 'authentication') {
       return new HttpResponse({
         status: 400,
-        body: { error: 'Challenge type mismatch' },
+        body: { error: { message: 'Challenge type mismatch' } },
       });
     }
 
     if (pendingChallenge.expiresAt < Date.now()) {
       return new HttpResponse({
         status: 400,
-        body: { error: 'Challenge expired' },
+        body: { error: { message: 'Challenge expired' } },
       });
     }
 
@@ -228,7 +235,7 @@ export class AuthHandlerMock {
     if (!userHandle) {
       return new HttpResponse({
         status: 401,
-        body: { error: 'No userHandle in credential response' },
+        body: { error: { message: 'No userHandle in credential response' } },
       });
     }
 
@@ -237,7 +244,7 @@ export class AuthHandlerMock {
     if (!storedCredential) {
       return new HttpResponse({
         status: 401,
-        body: { error: 'Invalid credential' },
+        body: { error: { message: 'Invalid credential' } },
       });
     }
 

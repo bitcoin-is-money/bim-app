@@ -1,8 +1,6 @@
 import {CommonModule} from '@angular/common';
 import {Component, signal} from '@angular/core';
 import {FormsModule} from '@angular/forms';
-import {Router} from '@angular/router';
-import {firstValueFrom} from 'rxjs';
 import {ButtonComponent} from "../../components/button/button.component";
 import {AuthService} from '../../services/auth.service';
 
@@ -15,78 +13,15 @@ import {AuthService} from '../../services/auth.service';
 })
 export class AuthPage {
   username = signal('');
-  isLoading = signal(false);
-  error = signal<string | null>(null);
 
-  constructor(
-    private readonly authService: AuthService,
-    private readonly router: Router,
-  ) {}
+  constructor(readonly authService: AuthService) {}
 
-  async onSignIn(): Promise<void> {
-    this.error.set(null);
-    this.isLoading.set(true);
-
-    try {
-      const beginResponse = await firstValueFrom(this.authService.beginLogin());
-      if (!beginResponse) {
-        throw new Error('Failed to initialize login');
-      }
-
-      const options = this.authService.convertAuthOptions(beginResponse.options);
-      const credential = await navigator.credentials.get({
-        publicKey: options,
-      }) as PublicKeyCredential | null;
-
-      if (!credential) {
-        throw new Error('Authentication cancelled');
-      }
-
-      await firstValueFrom(this.authService.completeLogin(beginResponse.challengeId, credential));
-      this.router.navigate(['/home']);
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Login failed';
-      this.error.set(errorMessage);
-    } finally {
-      this.isLoading.set(false);
-    }
+  onSignIn(): void {
+    this.authService.signIn();
   }
 
-  async onSignUp(): Promise<void> {
-    this.error.set(null);
-    this.isLoading.set(true);
-
-    try {
-      const username = this.username();
-      if (!username || username.length < 3) {
-        this.error.set('Username must be at least 3 characters');
-        this.isLoading.set(false);
-        return;
-      }
-
-      const beginResponse = await firstValueFrom(this.authService.beginRegister(username));
-      if (!beginResponse) {
-        throw new Error('Failed to initialize registration');
-      }
-
-      // Convert options for credential creation
-      const options = this.authService.convertRegistrationOptions(beginResponse.options);
-      const credential = await navigator.credentials.create({
-        publicKey: options,
-      }) as PublicKeyCredential | null;
-
-      if (!credential) {
-        throw new Error('Registration cancelled');
-      }
-
-      await firstValueFrom(this.authService.completeRegister(beginResponse.challengeId, beginResponse.accountId, username, credential));
-      this.router.navigate(['/home']);
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Registration failed';
-      this.error.set(errorMessage);
-    } finally {
-      this.isLoading.set(false);
-    }
+  onSignUp(): void {
+    this.authService.signUp(this.username());
   }
 
   updateUsername(event: Event): void {
@@ -97,5 +32,4 @@ export class AuthPage {
     }
     this.username.set(sanitized);
   }
-
 }
