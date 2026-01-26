@@ -1,11 +1,8 @@
 import {InvalidStateTransitionError} from '../shared';
 import {
-  type AccountData,
   AccountId,
   type AccountStatus,
-  type CreateAccountParams,
   CredentialId,
-  InvalidAccountStateError,
   StarknetAddress,
 } from './types';
 
@@ -29,38 +26,37 @@ import {
 export class Account {
   private status: AccountStatus;
   private deploymentTxHash?: string;
-  private starknetAddress?: StarknetAddress;
   private signCount: number;
   private updatedAt: Date;
 
   private constructor(
     readonly id: AccountId,
     readonly username: string,
+    readonly starknetAddress: StarknetAddress,
     readonly credentialId: CredentialId,
     readonly publicKey: string,
     readonly credentialPublicKey: string | undefined,
     readonly createdAt: Date,
     status: AccountStatus,
     signCount: number,
-    starknetAddress?: StarknetAddress,
     deploymentTxHash?: string,
     updatedAt?: Date,
   ) {
     this.status = status;
     this.signCount = signCount;
-    this.starknetAddress = starknetAddress;
     this.deploymentTxHash = deploymentTxHash;
     this.updatedAt = updatedAt ?? createdAt;
   }
 
   /**
-   * Creates a new Account in pending status.
+   * Creates a new Account in pending status with a computed Starknet address.
    */
   static create(params: CreateAccountParams): Account {
     const now = new Date();
     return new Account(
       params.id,
       params.username,
+      params.starknetAddress,
       params.credentialId,
       params.publicKey,
       params.credentialPublicKey,
@@ -77,13 +73,13 @@ export class Account {
     return new Account(
       data.id,
       data.username,
+      data.starknetAddress,
       data.credentialId,
       data.publicKey,
       data.credentialPublicKey,
       data.createdAt,
       data.status,
       data.signCount,
-      data.starknetAddress,
       data.deploymentTxHash,
       data.updatedAt,
     );
@@ -122,19 +118,6 @@ export class Account {
    */
   getUpdatedAt(): Date {
     return this.updatedAt;
-  }
-
-  /**
-   * Sets the computed Starknet address before deployment.
-   * Can only be called when the account is in pending status.
-   */
-  setStarknetAddress(address: StarknetAddress): void {
-    if (this.status !== 'pending') {
-      throw new InvalidAccountStateError(
-        this.status, 'set Starknet address', 'pending expected');
-    }
-    this.starknetAddress = address;
-    this.updatedAt = new Date();
   }
 
   /**
@@ -220,4 +203,27 @@ export class Account {
       updatedAt: this.updatedAt,
     };
   }
+}
+
+interface CreateAccountParams {
+  id: AccountId;
+  username: string;
+  credentialId: CredentialId;
+  publicKey: string;
+  credentialPublicKey?: string;
+  starknetAddress: StarknetAddress;
+}
+
+export interface AccountData {
+  id: AccountId;
+  username: string;
+  starknetAddress: StarknetAddress;
+  credentialId: CredentialId;
+  publicKey: string;
+  credentialPublicKey?: string;
+  status: AccountStatus;
+  deploymentTxHash?: string;
+  signCount: number;
+  createdAt: Date;
+  updatedAt: Date;
 }

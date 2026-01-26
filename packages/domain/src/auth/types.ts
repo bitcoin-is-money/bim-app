@@ -1,4 +1,4 @@
-import {AccountId} from '../account';
+import {AccountId} from "../account";
 import {DomainError, ValidationError} from '../shared';
 
 // =============================================================================
@@ -55,7 +55,6 @@ export interface ChallengeData {
   id: ChallengeId;
   challenge: string;
   purpose: ChallengePurpose;
-  accountId?: AccountId;
   rpId?: string;
   origin?: string;
   used: boolean;

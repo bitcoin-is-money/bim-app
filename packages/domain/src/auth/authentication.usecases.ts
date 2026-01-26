@@ -37,7 +37,7 @@ export interface BeginAuthenticationOutput {
 export type BeginAuthenticationUseCase = (input: BeginAuthenticationInput) => Promise<BeginAuthenticationOutput>;
 
 /**
- * Initiates WebAuthn authentication using discoverable credentials (usernameless).
+ * Initiates WebAuthn authentication using discoverable credentials (username-less).
  * Returns options to pass to navigator.credentials.get() with empty allowCredentials.
  * The authenticator will show all resident keys for this RP.
  */
@@ -94,7 +94,7 @@ export type CompleteAuthenticationUseCase = (input: CompleteAuthenticationInput)
 /**
  * Completes WebAuthn authentication after user interaction.
  * Verifies the signature, updates sign counter, and creates a session.
- * For usernameless flow, the account is looked up via userHandle (which contains the AccountId).
+ * For username-less flow, the account is looked up via userHandle (which contains the AccountId).
  */
 export function getCompleteAuthenticationUseCase(
   deps: AuthenticationUseCasesDeps
@@ -108,21 +108,13 @@ export function getCompleteAuthenticationUseCase(
     }
     challenge.consume();
 
-    // Load associated account - either from challenge or from userHandle (discoverable credentials)
-    let account: Account | undefined;
-
-    if (challenge.accountId) {
-      // Traditional flow with pre-identified account
-      account = await deps.accountRepository.findById(challenge.accountId);
-    } else {
-      // Usernameless flow: decode userHandle to get AccountId
-      const userHandle = input.credential.response.userHandle;
-      if (!userHandle) {
-        throw new AuthenticationFailedError('No userHandle in credential response');
-      }
-      const accountId = AccountId.of(decodeUserHandle(userHandle));
-      account = await deps.accountRepository.findById(accountId);
+    // Username-less flow: decode userHandle to get AccountId
+    const userHandle = input.credential.response.userHandle;
+    if (!userHandle) {
+      throw new AuthenticationFailedError('No userHandle in credential response');
     }
+    const accountId = AccountId.of(decodeUserHandle(userHandle));
+    const account = await deps.accountRepository.findById(accountId);
 
     if (!account) {
       throw new AccountNotFoundError('Account not found');

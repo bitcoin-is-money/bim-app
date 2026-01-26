@@ -108,12 +108,10 @@ export class DrizzleAccountRepository implements AccountRepository {
     return Account.fromData({
       id: AccountId.of(record.id),
       username: record.username,
+      starknetAddress: StarknetAddress.of(record.starknetAddress),
       credentialId: CredentialId.of(record.credentialId),
       publicKey: record.publicKey,
       credentialPublicKey: record.credentialPublicKey ?? undefined,
-      starknetAddress: record.starknetAddress
-        ? StarknetAddress.of(record.starknetAddress)
-        : undefined,
       status: record.status as AccountStatus,
       deploymentTxHash: record.deploymentTxHash ?? undefined,
       signCount: record.signCount,

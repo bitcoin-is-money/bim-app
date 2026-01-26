@@ -8,47 +8,43 @@ export interface CreateAccountDeps {
 }
 
 export interface CreateAccountInput {
+  accountId: AccountId;
   username: string;
   credentialId: string;
   publicKey: string;
   credentialPublicKey?: string;
 }
 
-export interface CreateAccountOutput {
-  account: Account;
-  starknetAddress: StarknetAddress;
-}
-
-export type CreateAccountUseCase = (input: CreateAccountInput) => Promise<CreateAccountOutput>;
+export type CreateAccountService = (input: CreateAccountInput) => Promise<Account>;
 
 /**
  * Creates a new account with WebAuthn credentials and computes its Starknet address.
  * The account is created in 'pending' status, ready for deployment.
  */
-export function getCreateAccountUseCase(deps: CreateAccountDeps): CreateAccountUseCase {
-  return async (input: CreateAccountInput): Promise<CreateAccountOutput> => {
+export function getCreateAccountService(deps: CreateAccountDeps): CreateAccountService {
+  return async (input: CreateAccountInput): Promise<Account> => {
     // Ensure username uniqueness
     const exists = await deps.accountRepository.existsByUsername(input.username);
     if (exists) {
       throw new AccountAlreadyExistsError(input.username);
     }
 
+    // Compute a deterministic Starknet address from the public key
+    const starknetAddress = await deps.starknetGateway.calculateAccountAddress({
+      publicKey: input.publicKey,
+    });
+
     const account = Account.create({
-      id: AccountId.generate(),
+      id: input.accountId,
       username: input.username,
+      starknetAddress: starknetAddress,
       credentialId: CredentialId.of(input.credentialId),
       publicKey: input.publicKey,
       credentialPublicKey: input.credentialPublicKey,
     });
 
-    // Compute deterministic Starknet address from public key
-    const starknetAddress = await deps.starknetGateway.calculateAccountAddress({
-      publicKey: input.publicKey,
-    });
-    account.setStarknetAddress(starknetAddress);
-
     await deps.accountRepository.save(account);
 
-    return { account, starknetAddress };
+    return account;
   };
 }

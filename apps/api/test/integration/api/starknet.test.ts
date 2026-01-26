@@ -194,26 +194,6 @@ describe('Starknet Integration', () => {
       expect(body.error).toContain('pending');
     });
 
-    it('fails to deploy account without starknet address', async () => {
-      // Create the account without the starknet address
-      const account = await accountFixture.insertAccount({
-        username: 'no_address_user',
-        publicKey: strkContext.generateTestPublicKey(),
-        starknetAddress: null, // No address
-        status: 'pending',
-      });
-
-      const session = await authFixture.insertSession(account.id);
-
-      const response = await TestApp.request(app).post(
-        '/api/account/deploy',
-        {},
-        {headers: {Cookie: `session=${session.id}`}}
-      );
-
-      expect(response.status).toBe(400);
-    });
-
     it('requires authentication to deploy', async () => {
       const response = await TestApp.request(app).post('/api/account/deploy', {});
 

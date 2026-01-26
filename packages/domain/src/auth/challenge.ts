@@ -1,4 +1,3 @@
-import {AccountId} from '../account';
 import {
   CHALLENGE_DURATION_MS,
   ChallengeAlreadyUsedError,
@@ -19,7 +18,6 @@ export class Challenge {
     readonly id: ChallengeId,
     readonly challenge: string,
     readonly purpose: ChallengePurpose,
-    readonly accountId: AccountId | undefined,
     readonly rpId: string | undefined,
     readonly origin: string | undefined,
     readonly expiresAt: Date,
@@ -31,8 +29,6 @@ export class Challenge {
 
   /**
    * Creates a new challenge for registration.
-   * Note: accountId is NOT stored in registration challenges because the account doesn't exist yet.
-   * The accountId is passed through the API request/response instead.
    */
   static createForRegistration(params: {
     rpId: string;
@@ -45,7 +41,6 @@ export class Challenge {
       ChallengeId.generate(),
       challenge,
       'registration',
-      undefined,
       params.rpId,
       params.origin,
       new Date(now.getTime() + CHALLENGE_DURATION_MS),
@@ -55,11 +50,9 @@ export class Challenge {
   }
 
   /**
-   * Creates a new challenge for authentication.
-   * accountId is optional for username-less (discoverable credentials) flow.
+   * Creates a new challenge for authentication (usernameless flow with discoverable credentials).
    */
   static createForAuthentication(params: {
-    accountId?: AccountId;
     rpId: string;
     origin: string;
   }): Challenge {
@@ -70,7 +63,6 @@ export class Challenge {
       ChallengeId.generate(),
       challenge,
       'authentication',
-      params.accountId,
       params.rpId,
       params.origin,
       new Date(now.getTime() + CHALLENGE_DURATION_MS),
@@ -87,7 +79,6 @@ export class Challenge {
       data.id,
       data.challenge,
       data.purpose,
-      data.accountId,
       data.rpId,
       data.origin,
       data.expiresAt,
@@ -144,7 +135,6 @@ export class Challenge {
       id: this.id,
       challenge: this.challenge,
       purpose: this.purpose,
-      accountId: this.accountId,
       rpId: this.rpId,
       origin: this.origin,
       used: this.used,

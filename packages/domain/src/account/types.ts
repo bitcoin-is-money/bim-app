@@ -13,14 +13,14 @@ import {DomainError, ValidationError} from '../shared';
 export type Username = string & {readonly __brand: 'Username'};
 
 export namespace Username {
-  /** Validation pattern: 3-20 chars, alphanumeric + underscore */
+  /** Validation pattern: 3-20 chars, alphanumeric and underscore */
   export const PATTERN = /^[a-zA-Z0-9_]{3,20}$/;
 
   /**
    * Creates a Username from a string.
    *
    * @param value - Raw username string
-   * @throws InvalidUsernameError if format is invalid
+   * @throws InvalidUsernameError if the format is invalid
    */
   export function of(value: string): Username {
     const trimmed = value.trim();
@@ -192,30 +192,4 @@ export class InvalidAccountStateError extends DomainError {
     const details = errorDetails ? `(${errorDetails})` : '';
     super(`Cannot ${attemptedAction} with account in '${currentStatus}' status ${details}`);
   }
-}
-
-// =============================================================================
-// DTOs
-// =============================================================================
-
-export interface CreateAccountParams {
-  id: AccountId;
-  username: string;
-  credentialId: CredentialId;
-  publicKey: string;
-  credentialPublicKey?: string;
-}
-
-export interface AccountData {
-  id: AccountId;
-  username: string;
-  credentialId: CredentialId;
-  publicKey: string;
-  credentialPublicKey?: string;
-  starknetAddress?: StarknetAddress;
-  status: AccountStatus;
-  deploymentTxHash?: string;
-  signCount: number;
-  createdAt: Date;
-  updatedAt: Date;
 }
