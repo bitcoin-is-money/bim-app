@@ -1,24 +1,24 @@
-import {HttpErrorResponse, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest} from '@angular/common/http';
-import {Injectable} from '@angular/core';
-import {catchError, Observable, throwError} from 'rxjs';
+import {HttpErrorResponse, HttpHandlerFn, HttpInterceptorFn, HttpRequest} from '@angular/common/http';
+import {inject} from '@angular/core';
+import {catchError, throwError} from 'rxjs';
 import {NotificationService} from "../services/notification.service";
 
-@Injectable()
-export class HttpNotificationInterceptor implements HttpInterceptor {
-  constructor(
-    private readonly notifications: NotificationService
-  ) {}
+export const httpNotificationInterceptor: HttpInterceptorFn = (
+  req: HttpRequest<unknown>,
+  next: HttpHandlerFn
+) => {
+  const notifications = inject(NotificationService);
 
-  intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    return next.handle(req).pipe(
-      catchError((error: HttpErrorResponse) => {
-        if (error.status >= 400 && error.status < 500) {
-          this.notifications.error(error.error?.message || 'An error occurred.');
-        } else if (error.status >= 500) {
-          this.notifications.error({message: 'Server error, please try later.'});
-        }
-        return throwError(() => error);
-      })
-    );
-  }
-}
+  return next(req).pipe(
+    catchError((error: HttpErrorResponse) => {
+      const message = error.error?.error?.message || error.message || 'An error occurred';
+      if (error.status >= 400 && error.status < 500) {
+        notifications.error({ message });
+      } else if (error.status >= 500) {
+        notifications.error({ message: 'Server error, please try later.' });
+      }
+      return throwError(() => error);
+    })
+  );
+};
+

@@ -9,17 +9,19 @@ describe('BufferUtils', () => {
       expect(result).toBe('');
     });
 
-    it('converts buffer with known bytes to base64', () => {
+    it('converts buffer with known bytes to base64url', () => {
       // "Hello" in bytes: [72, 101, 108, 108, 111]
       const bytes = new Uint8Array([72, 101, 108, 108, 111]);
       const result = BufferUtils.bufferToBase64Url(bytes.buffer);
-      expect(result).toBe('SGVsbG8=');
+      // base64url: no padding, - instead of +, _ instead of /
+      expect(result).toBe('SGVsbG8');
     });
 
     it('handles binary data correctly', () => {
       const bytes = new Uint8Array([0x00, 0xff, 0x7f, 0x80]);
       const result = BufferUtils.bufferToBase64Url(bytes.buffer);
-      expect(result).toBe('AP9/gA==');
+      // base64url: _ instead of /, no padding
+      expect(result).toBe('AP9_gA');
     });
   });
 
@@ -35,8 +37,14 @@ describe('BufferUtils', () => {
       expect(Array.from(result)).toEqual([72, 101, 108, 108, 111]);
     });
 
-    it('handles binary data correctly', () => {
+    it('handles binary data correctly (standard base64)', () => {
       const result = BufferUtils.base64UrlToUint8Array('AP9/gA==');
+      expect(Array.from(result)).toEqual([0x00, 0xff, 0x7f, 0x80]);
+    });
+
+    it('handles binary data correctly (base64url)', () => {
+      // base64url: _ instead of /, no padding
+      const result = BufferUtils.base64UrlToUint8Array('AP9_gA');
       expect(Array.from(result)).toEqual([0x00, 0xff, 0x7f, 0x80]);
     });
 

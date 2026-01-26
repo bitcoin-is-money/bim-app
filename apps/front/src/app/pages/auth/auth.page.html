@@ -11,7 +11,7 @@
         class="sign-in-button"
         variant="primary"
         (click)="onSignIn()"
-        [disabled]="isLoading()"
+        [disabled]="authService.isLoading()"
       >
         Sign In
       </app-button>
@@ -26,20 +26,17 @@
         placeholder="Choose your username"
         [value]="username()"
         (input)="updateUsername($event)"
-        [disabled]="isLoading()"
+        [disabled]="authService.isLoading()"
       />
       <app-button
         class="sign-up-button"
         variant="secondary"
         (click)="onSignUp()"
-        [disabled]="isLoading() || !username()"
+        [disabled]="authService.isLoading() || !username()"
       >
         Sign Up
       </app-button>
     </section>
-    @if (error()) {
-      <div class="error-message">{{ error() }}</div>
-    }
   </main>
   <footer>
     <img src="/tiny-logo.png" alt="Bim_Tiny_Logo" style="height:32px;"/>

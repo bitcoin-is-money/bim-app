@@ -53,7 +53,7 @@ export class NotificationService {
       ...options,
       style: {
         '--hot-toast-bg': '#c83030',
-        '--hot-toast-color': '#151515',
+        '--hot-toast-color': '#ffffff',
       },
     });
   }
