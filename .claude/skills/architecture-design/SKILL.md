@@ -1,3 +1,8 @@
+---
+name: architecture-design
+description: Guide for hexagonal architecture patterns. This skill should be used when designing domain layers, creating use cases, defining ports and adapters, or structuring code following clean architecture principles.
+---
+
 # Architecture Design
 
 Hexagonal architecture patterns, use cases, ports and adapters for this project.
