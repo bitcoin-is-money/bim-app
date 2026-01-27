@@ -1,0 +1,22 @@
+@reference "tailwindcss";
+
+.account-setup-page {
+  @apply h-screen flex flex-col items-center justify-center px-4;
+
+  h1 {
+    @apply text-2xl font-semibold text-neutral-100 mb-2 text-center;
+  }
+
+  p {
+    @apply text-neutral-400 text-center mb-8;
+  }
+
+  .spinner-container {
+    width: 20vw;
+    aspect-ratio: 1;
+  }
+
+  .error-message {
+    @apply text-red-400;
+  }
+}

@@ -2,15 +2,17 @@ import {Injectable, TemplateRef} from '@angular/core';
 import {IconProp} from "@fortawesome/fontawesome-svg-core";
 import {HotToastService, ToastOptions} from '@ngxpert/hot-toast';
 import {Observable} from "rxjs";
+import confetti from 'canvas-confetti';
 
 const DEFAULT_OPTIONS: ToastOptions<unknown> = {
-  duration: 400000,
+  duration: 3000,
   position: 'top-center'
 }
 
 export interface NotificationData {
   message: string;
   icon?: IconProp;
+  useConfetti?: boolean
 }
 
 /**
@@ -29,7 +31,6 @@ export class NotificationService {
     this.toastTemplate = template;
   }
 
-
   success(
     data: NotificationData,
     options?: ToastOptions<unknown>
@@ -42,6 +43,13 @@ export class NotificationService {
         '--hot-toast-color': '#151515',
       },
     });
+    if (data.useConfetti) {
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: {y: 0.4}
+      });
+    }
   }
 
   error(

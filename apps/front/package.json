@@ -40,6 +40,7 @@
     "@fortawesome/free-solid-svg-icons": "^7.1.0",
     "@ngneat/overview": "7.0.0",
     "@stablelib/base64": "^2.0.1",
+    "canvas-confetti": "^1.9.4",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },
@@ -49,6 +50,7 @@
     "@angular/compiler-cli": "^21.0.0",
     "@ngxpert/hot-toast": "^6.1.0",
     "@tailwindcss/postcss": "^4.1.18",
+    "@types/canvas-confetti": "^1.9.0",
     "autoprefixer": "^10.4.23",
     "jsdom": "^27.1.0",
     "postcss": "^8.5.6",

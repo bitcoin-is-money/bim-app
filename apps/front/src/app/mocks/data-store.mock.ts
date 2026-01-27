@@ -4,6 +4,8 @@ const STORAGE_KEYS = {
   CREDENTIALS: 'mock_credentials',
   PENDING_CHALLENGES: 'mock_pending_challenges',
   CURRENT_SESSION: 'mock_current_session',
+  FAILED_ACCOUNT_DEPLOYMENT: 'mock_failed_account_deployment',
+  REGISTRATION_TIMESTAMP: 'mock_registration_timestamp',
 } as const;
 
 export interface StoredCredential {
@@ -23,6 +25,10 @@ export interface PendingChallenge {
 }
 
 export class DataStoreMock {
+
+  //  private registrationTimestamp: number | null = null;
+
+
   // Credentials
   getCredentials(): Map<string, StoredCredential> {
     const data = localStorage.getItem(STORAGE_KEYS.CREDENTIALS);
@@ -106,6 +112,25 @@ export class DataStoreMock {
     } else {
       localStorage.removeItem(STORAGE_KEYS.CURRENT_SESSION);
     }
+  }
+
+  setFailedAccountDeployment(value: boolean): void {
+    localStorage.setItem(STORAGE_KEYS.FAILED_ACCOUNT_DEPLOYMENT, value.toString());
+  }
+
+  getFailedAccountDeployment(): boolean {
+    return localStorage.getItem(STORAGE_KEYS.FAILED_ACCOUNT_DEPLOYMENT) === 'true';
+  }
+
+  setRegistrationDate(date: Date): void {
+    localStorage.setItem(STORAGE_KEYS.REGISTRATION_TIMESTAMP, date.toISOString());
+  }
+
+  getRegistrationDate(): Date | null {
+    const dateIso = localStorage.getItem(STORAGE_KEYS.REGISTRATION_TIMESTAMP);
+    return dateIso
+      ? new Date(dateIso)
+      : null;
   }
 
   // Utils

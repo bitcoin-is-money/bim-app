@@ -1,0 +1,49 @@
+import {HttpResponse} from '@angular/common/http';
+import {BalanceResponse, DeploymentStatusResponse} from "../services/account.http.service";
+import {DataStoreMock} from "./data-store.mock";
+
+const MOCK_DEPLOYMENT_DELAY_MS = 2000;
+
+export class AccountHandlerMock {
+
+  constructor(
+    private readonly store: DataStoreMock
+  ) {
+  }
+
+  // GET /api/account/deployment-status
+  getDeploymentStatus(): HttpResponse<DeploymentStatusResponse> {
+    const account = this.store.getSession();
+    if (!account) {
+      return new HttpResponse({ status: 401, body: { status: 'failed' } as DeploymentStatusResponse });
+    }
+
+    const registrationDate: Date = this.store.getRegistrationDate() ?? new Date();
+    const timeToWait = Date.now() - registrationDate.getTime();
+    if (!registrationDate || timeToWait < MOCK_DEPLOYMENT_DELAY_MS) {
+      return new HttpResponse({ status: 200, body: { status: 'deploying' } });
+    }
+
+    if (this.store.getFailedAccountDeployment()) {
+      return new HttpResponse({ status: 500, body: { status: 'failed' } });
+    }
+
+    // Deployment complete — update session account status
+    if (account.status !== 'deployed') {
+      this.store.setSession({ ...account, status: 'deployed' });
+    }
+
+    return new HttpResponse({ status: 200, body: { status: 'deployed' } });
+  }
+
+  // GET /api/account/balance
+  getBalance(): HttpResponse<BalanceResponse> {
+    return new HttpResponse({
+      status: 200,
+      body: {
+        amount: 1,
+        currency: 'BTC',
+      },
+    });
+  }
+}

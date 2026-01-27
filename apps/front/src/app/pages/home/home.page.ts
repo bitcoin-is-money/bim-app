@@ -4,8 +4,8 @@ import {Router} from '@angular/router';
 import {BalanceDisplayComponent} from '../../components/balance-display/balance-display.component';
 import {TransactionListComponent} from '../../components/transaction-list/transaction-list.component';
 import {Amount} from '../../model';
+import {AccountService} from "../../services/account.service";
 import {AuthService} from '../../services/auth.service';
-import {BalanceService} from '../../services/balance.service';
 import {Transaction, TransactionService} from '../../services/transaction.service';
 
 @Component({
@@ -22,7 +22,7 @@ export class HomePage implements OnInit {
 
   constructor(
     private readonly authService: AuthService,
-    private readonly balanceService: BalanceService,
+    private readonly accountService: AccountService,
     private readonly transactionService: TransactionService,
     private readonly router: Router
   ) {}
@@ -34,7 +34,7 @@ export class HomePage implements OnInit {
   loadData(): void {
     this.isLoading.set(true);
 
-    this.balanceService.getBalance().subscribe({
+    this.accountService.getBalance().subscribe({
       next: (balance) => {
         this.balance.set(balance);
         this.isLoading.set(false);
