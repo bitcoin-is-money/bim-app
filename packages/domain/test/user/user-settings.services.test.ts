@@ -2,15 +2,15 @@ import {AccountId} from '@bim/domain/account';
 import type {UserSettingsRepository} from '@bim/domain/ports';
 import {
   FiatCurrency,
-  getFetchUserSettingsUseCase,
-  getUpdateUserSettingsUseCase,
+  getFetchUserSettingsService,
+  getUpdateUserSettingsService,
   UnsupportedCurrencyError,
   UserSettings,
   UserSettingsId
 } from '@bim/domain/user';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
-describe('UserSettings UseCases', () => {
+describe('UserSettings Services', () => {
   const accountId = AccountId.of('550e8400-e29b-41d4-a716-446655440000');
   const settingsId = UserSettingsId.of('660e8400-e29b-41d4-a716-446655440001');
 
@@ -25,13 +25,13 @@ describe('UserSettings UseCases', () => {
     idGenerator = () => settingsId;
   });
 
-  describe('getFetchUserSettingsUseCase', () => {
+  describe('getFetchUserSettingsService', () => {
     it('returns existing settings', async () => {
       const existingSettings = UserSettings.create({id: settingsId, accountId});
       existingSettings.setFiatCurrency(FiatCurrency.of('EUR'));
       vi.mocked(mockRepository.findByAccountId).mockResolvedValue(existingSettings);
 
-      const useCase = getFetchUserSettingsUseCase({
+      const useCase = getFetchUserSettingsService({
         userSettingsRepository: mockRepository,
         idGenerator,
       });
@@ -44,7 +44,7 @@ describe('UserSettings UseCases', () => {
     it('creates default settings if none exist', async () => {
       vi.mocked(mockRepository.findByAccountId).mockResolvedValue(undefined);
 
-      const useCase = getFetchUserSettingsUseCase({
+      const useCase = getFetchUserSettingsService({
         userSettingsRepository: mockRepository,
         idGenerator,
       });
@@ -55,12 +55,12 @@ describe('UserSettings UseCases', () => {
     });
   });
 
-  describe('getUpdateUserSettingsUseCase', () => {
+  describe('getUpdateUserSettingsService', () => {
     it('updates fiat currency on existing settings', async () => {
       const existingSettings = UserSettings.create({id: settingsId, accountId});
       vi.mocked(mockRepository.findByAccountId).mockResolvedValue(existingSettings);
 
-      const useCase = getUpdateUserSettingsUseCase({
+      const useCase = getUpdateUserSettingsService({
         userSettingsRepository: mockRepository,
         idGenerator,
       });
@@ -76,7 +76,7 @@ describe('UserSettings UseCases', () => {
     it('creates settings if none exist and updates currency', async () => {
       vi.mocked(mockRepository.findByAccountId).mockResolvedValue(undefined);
 
-      const useCase = getUpdateUserSettingsUseCase({
+      const useCase = getUpdateUserSettingsService({
         userSettingsRepository: mockRepository,
         idGenerator,
       });
@@ -93,7 +93,7 @@ describe('UserSettings UseCases', () => {
       const existingSettings = UserSettings.create({id: settingsId, accountId});
       vi.mocked(mockRepository.findByAccountId).mockResolvedValue(existingSettings);
 
-      const useCase = getUpdateUserSettingsUseCase({
+      const useCase = getUpdateUserSettingsService({
         userSettingsRepository: mockRepository,
         idGenerator,
       });
@@ -108,7 +108,7 @@ describe('UserSettings UseCases', () => {
       existingSettings.setFiatCurrency(FiatCurrency.of('EUR'));
       vi.mocked(mockRepository.findByAccountId).mockResolvedValue(existingSettings);
 
-      const useCase = getUpdateUserSettingsUseCase({
+      const useCase = getUpdateUserSettingsService({
         userSettingsRepository: mockRepository,
         idGenerator,
       });

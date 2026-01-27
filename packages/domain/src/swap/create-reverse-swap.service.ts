@@ -27,13 +27,13 @@ export interface CreateStarknetToLightningOutput {
   amountSats: bigint;
 }
 
-export type CreateStarknetToLightningUseCase = (input: CreateStarknetToLightningInput) => Promise<CreateStarknetToLightningOutput>;
+export type CreateStarknetToLightningService = (input: CreateStarknetToLightningInput) => Promise<CreateStarknetToLightningOutput>;
 
 /**
  * Creates a Starknet → Lightning swap.
  * User deposits tokens on Starknet, receives payment on Lightning.
  */
-export function getCreateStarknetToLightningUseCase(deps: CreateReverseSwapDeps): CreateStarknetToLightningUseCase {
+export function getCreateStarknetToLightningService(deps: CreateReverseSwapDeps): CreateStarknetToLightningService {
   return async (input: CreateStarknetToLightningInput): Promise<CreateStarknetToLightningOutput> => {
     const invoice = LightningInvoice.of(input.invoice);
     const sourceAddress = StarknetAddress.of(input.sourceAddress);
@@ -93,13 +93,13 @@ export interface CreateStarknetToBitcoinOutput {
   depositAddress: string;
 }
 
-export type CreateStarknetToBitcoinUseCase = (input: CreateStarknetToBitcoinInput) => Promise<CreateStarknetToBitcoinOutput>;
+export type CreateStarknetToBitcoinService = (input: CreateStarknetToBitcoinInput) => Promise<CreateStarknetToBitcoinOutput>;
 
 /**
  * Creates a Starknet → Bitcoin swap.
  * User deposits tokens on Starknet, receives BTC on-chain.
  */
-export function getCreateStarknetToBitcoinUseCase(deps: CreateReverseSwapDeps): CreateStarknetToBitcoinUseCase {
+export function getCreateStarknetToBitcoinService(deps: CreateReverseSwapDeps): CreateStarknetToBitcoinService {
   return async (input: CreateStarknetToBitcoinInput): Promise<CreateStarknetToBitcoinOutput> => {
     const destinationAddress = BitcoinAddress.of(input.destinationAddress);
     const sourceAddress = StarknetAddress.of(input.sourceAddress);

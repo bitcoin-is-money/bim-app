@@ -1,8 +1,8 @@
 import {
   Account,
   FiatCurrency,
-  getFetchUserSettingsUseCase,
-  getUpdateUserSettingsUseCase,
+  getFetchUserSettingsService,
+  getUpdateUserSettingsService,
   UnsupportedCurrencyError,
   UserSettingsId,
 } from '@bim/domain';
@@ -28,7 +28,7 @@ export function createUserRoutes(appContext: AppContext): AuthenticatedHono {
     try {
       const account: Account = ctx.get('account');
 
-      const fetchSettings = getFetchUserSettingsUseCase({
+      const fetchSettings = getFetchUserSettingsService({
         userSettingsRepository: appContext.repositories.userSettings,
         idGenerator: UserSettingsId.generate,
       });
@@ -53,7 +53,7 @@ export function createUserRoutes(appContext: AppContext): AuthenticatedHono {
       const account: Account = ctx.get('account');
       const body = await ctx.req.json();
 
-      const updateSettings = getUpdateUserSettingsUseCase({
+      const updateSettings = getUpdateUserSettingsService({
         userSettingsRepository: appContext.repositories.userSettings,
         idGenerator: UserSettingsId.generate,
       });

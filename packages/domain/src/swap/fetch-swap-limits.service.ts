@@ -13,12 +13,12 @@ export interface FetchSwapLimitsOutput {
   limits: SwapLimits;
 }
 
-export type FetchSwapLimitsUseCase = (input: FetchSwapLimitsInput) => Promise<FetchSwapLimitsOutput>;
+export type FetchSwapLimitsService = (input: FetchSwapLimitsInput) => Promise<FetchSwapLimitsOutput>;
 
 /**
  * Fetches min/max amounts and fees for a given swap direction.
  */
-export function getFetchSwapLimitsUseCase(deps: FetchSwapLimitsDeps): FetchSwapLimitsUseCase {
+export function getFetchSwapLimitsService(deps: FetchSwapLimitsDeps): FetchSwapLimitsService {
   return async (input: FetchSwapLimitsInput): Promise<FetchSwapLimitsOutput> => {
     let limits: SwapLimits;
 

@@ -5,12 +5,12 @@ import {
   AuthenticationFailedError,
   ChallengeExpiredError,
   ChallengeNotFoundError,
-  getBeginAuthenticationUseCase,
-  getBeginRegistrationUseCase,
-  getCompleteAuthenticationUseCase,
-  getCompleteRegistrationUseCase,
-  getLogoutUseCase,
-  getValidateSessionUseCase,
+  getBeginAuthenticationService,
+  getBeginRegistrationService,
+  getCompleteAuthenticationService,
+  getCompleteRegistrationService,
+  getLogoutService,
+  getValidateSessionService,
   InvalidSessionIdError,
   InvalidUsernameError,
   RegistrationFailedError,
@@ -45,7 +45,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
       const body = await ctx.req.json();
       const input = BeginRegistrationSchema.parse(body);
 
-      const beginRegistration = getBeginRegistrationUseCase({
+      const beginRegistration = getBeginRegistrationService({
         challengeRepository: appContext.repositories.challenge,
         idGenerator: () => AccountId.generate(),
       });
@@ -72,7 +72,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
       const body = await ctx.req.json();
       const input = CompleteRegistrationSchema.parse(body);
 
-      const complete = getCompleteRegistrationUseCase({
+      const complete = getCompleteRegistrationService({
         accountRepository: appContext.repositories.account,
         challengeRepository: appContext.repositories.challenge,
         sessionRepository: appContext.repositories.session,
@@ -109,7 +109,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
 
   app.post('/login/begin', async (ctx) => {
     try {
-      const begin = getBeginAuthenticationUseCase({
+      const begin = getBeginAuthenticationService({
         challengeRepository: appContext.repositories.challenge,
       });
 
@@ -132,7 +132,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
       const body = await ctx.req.json();
       const input = CompleteAuthenticationSchema.parse(body);
 
-      const complete = getCompleteAuthenticationUseCase({
+      const complete = getCompleteAuthenticationService({
         accountRepository: appContext.repositories.account,
         challengeRepository: appContext.repositories.challenge,
         sessionRepository: appContext.repositories.session,
@@ -171,7 +171,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
         return ctx.json({ authenticated: false }, 401);
       }
 
-      const validate = getValidateSessionUseCase({
+      const validate = getValidateSessionService({
         sessionRepository: appContext.repositories.session,
         accountRepository: appContext.repositories.account,
       });
@@ -204,7 +204,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
     try {
       const sessionId = getSessionId(ctx);
       if (sessionId) {
-        const logout = getLogoutUseCase({
+        const logout = getLogoutService({
           sessionRepository: appContext.repositories.session,
         });
         await logout({ sessionId });

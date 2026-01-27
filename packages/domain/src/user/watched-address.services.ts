@@ -12,7 +12,7 @@ import {WatchedAddress} from './watched-address';
 // Shared Dependencies
 // =============================================================================
 
-export interface WatchedAddressUseCasesDeps {
+export interface WatchedAddressServicesDeps {
   watchedAddressRepository: WatchedAddressRepository;
   idGenerator: () => WatchedAddressId;
 }
@@ -29,16 +29,16 @@ export interface FetchWatchedAddressesOutput {
   addresses: WatchedAddress[];
 }
 
-export type FetchWatchedAddressesUseCase = (
+export type FetchWatchedAddressesService = (
   input: FetchWatchedAddressesInput,
 ) => Promise<FetchWatchedAddressesOutput>;
 
 /**
  * Fetches all watched addresses for an account.
  */
-export function getFetchWatchedAddressesUseCase(
-  deps: Pick<WatchedAddressUseCasesDeps, 'watchedAddressRepository'>,
-): FetchWatchedAddressesUseCase {
+export function getFetchWatchedAddressesService(
+  deps: Pick<WatchedAddressServicesDeps, 'watchedAddressRepository'>,
+): FetchWatchedAddressesService {
   return async (input: FetchWatchedAddressesInput): Promise<FetchWatchedAddressesOutput> => {
     const accountId = AccountId.of(input.accountId);
     const addresses = await deps.watchedAddressRepository.findByAccountId(accountId);
@@ -60,16 +60,16 @@ export interface RegisterWatchedAddressOutput {
   address: WatchedAddress;
 }
 
-export type RegisterWatchedAddressUseCase = (
+export type RegisterWatchedAddressService = (
   input: RegisterWatchedAddressInput,
 ) => Promise<RegisterWatchedAddressOutput>;
 
 /**
  * Registers a new Starknet address for watching.
  */
-export function getRegisterWatchedAddressUseCase(
-  deps: WatchedAddressUseCasesDeps,
-): RegisterWatchedAddressUseCase {
+export function getRegisterWatchedAddressService(
+  deps: WatchedAddressServicesDeps,
+): RegisterWatchedAddressService {
   return async (input: RegisterWatchedAddressInput): Promise<RegisterWatchedAddressOutput> => {
     const accountId = AccountId.of(input.accountId);
     const starknetAddress = StarknetAddress.of(input.starknetAddress);
@@ -105,16 +105,16 @@ export interface DeactivateWatchedAddressOutput {
   address: WatchedAddress;
 }
 
-export type DeactivateWatchedAddressUseCase = (
+export type DeactivateWatchedAddressService = (
   input: DeactivateWatchedAddressInput,
 ) => Promise<DeactivateWatchedAddressOutput>;
 
 /**
  * Deactivates a watched address (stops tracking).
  */
-export function getDeactivateWatchedAddressUseCase(
-  deps: Pick<WatchedAddressUseCasesDeps, 'watchedAddressRepository'>,
-): DeactivateWatchedAddressUseCase {
+export function getDeactivateWatchedAddressService(
+  deps: Pick<WatchedAddressServicesDeps, 'watchedAddressRepository'>,
+): DeactivateWatchedAddressService {
   return async (input: DeactivateWatchedAddressInput): Promise<DeactivateWatchedAddressOutput> => {
     const addressId = WatchedAddressId.of(input.addressId);
 

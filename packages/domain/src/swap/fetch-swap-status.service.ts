@@ -18,13 +18,13 @@ export interface FetchSwapStatusOutput {
   txHash?: string;
 }
 
-export type FetchSwapStatusUseCase = (input: FetchSwapStatusInput) => Promise<FetchSwapStatusOutput>;
+export type FetchSwapStatusService = (input: FetchSwapStatusInput) => Promise<FetchSwapStatusOutput>;
 
 /**
  * Fetches the current status of a swap.
  * Syncs with Atomiq if the swap is not in a terminal state.
  */
-export function getFetchSwapStatusUseCase(deps: FetchSwapStatusDeps): FetchSwapStatusUseCase {
+export function getFetchSwapStatusService(deps: FetchSwapStatusDeps): FetchSwapStatusService {
   return async (input: FetchSwapStatusInput): Promise<FetchSwapStatusOutput> => {
     const swapId = SwapId.of(input.swapId);
 

@@ -18,13 +18,13 @@ export interface CreateLightningSwapOutput {
   invoice: string;
 }
 
-export type CreateLightningSwapUseCase = (input: CreateLightningSwapInput) => Promise<CreateLightningSwapOutput>;
+export type CreateLightningSwapService = (input: CreateLightningSwapInput) => Promise<CreateLightningSwapOutput>;
 
 /**
  * Creates a Lightning → Starknet swap.
  * User pays a Lightning invoice, receives tokens on Starknet.
  */
-export function getCreateLightningSwapUseCase(deps: CreateLightningSwapDeps): CreateLightningSwapUseCase {
+export function getCreateLightningSwapService(deps: CreateLightningSwapDeps): CreateLightningSwapService {
   return async (input: CreateLightningSwapInput): Promise<CreateLightningSwapOutput> => {
     const destinationAddress = StarknetAddress.of(input.destinationAddress);
 
