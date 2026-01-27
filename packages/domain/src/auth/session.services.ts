@@ -7,7 +7,7 @@ import {SessionId, SessionNotFoundError} from './types';
 // Shared Dependencies
 // =============================================================================
 
-export interface SessionUseCasesDeps {
+export interface SessionServicesDeps {
   sessionRepository: SessionRepository;
   accountRepository: AccountRepository;
 }
@@ -29,8 +29,8 @@ export interface ValidateSessionOutput {
  * Validates an active session and returns the associated account.
  * Use this for protected routes to verify user authentication.
  */
-export function getValidateSessionUseCase(
-  deps: SessionUseCasesDeps,
+export function getValidateSessionService(
+  deps: SessionServicesDeps,
 ) {
   return async (input: ValidateSessionInput): Promise<ValidateSessionOutput> => {
     const sessionId = SessionId.of(input.sessionId);
@@ -64,8 +64,8 @@ export interface LogoutInput {
 /**
  * Invalidates a session (logout).
  */
-export function getLogoutUseCase(
-  deps: Pick<SessionUseCasesDeps, 'sessionRepository'>,
+export function getLogoutService(
+  deps: Pick<SessionServicesDeps, 'sessionRepository'>,
 ) {
   return async (input: LogoutInput): Promise<void> => {
     const sessionId = SessionId.of(input.sessionId);

@@ -1,5 +1,5 @@
 import {
-  getValidateSessionUseCase,
+  getValidateSessionService,
   InvalidSessionIdError,
   SessionExpiredError,
   SessionNotFoundError,
@@ -27,7 +27,7 @@ export function getSessionId(
  * and sets the account/session in context.
  */
 export function createAuthMiddleware(appContext: AppContext) {
-  const validateSession = getValidateSessionUseCase({
+  const validateSession = getValidateSessionService({
     sessionRepository: appContext.repositories.session,
     accountRepository: appContext.repositories.account,
   });

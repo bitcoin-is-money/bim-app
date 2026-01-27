@@ -17,13 +17,13 @@ export interface DeployAccountOutput {
   txHash: string;
 }
 
-export type DeployAccountUseCase = (input: DeployAccountInput) => Promise<DeployAccountOutput>;
+export type DeployAccountService = (input: DeployAccountInput) => Promise<DeployAccountOutput>;
 
 /**
  * Deploys an account's smart contract to Starknet via the AVNU paymaster (gasless).
  * Transitions the account from 'pending' → 'deploying' → 'deployed' (or 'failed').
  */
-export function getDeployAccountUseCase(deps: DeployAccountDeps): DeployAccountUseCase {
+export function getDeployAccountService(deps: DeployAccountDeps): DeployAccountService {
   return async (input: DeployAccountInput): Promise<DeployAccountOutput> => {
     const account = await deps.accountRepository.findById(input.accountId);
     if (!account) {

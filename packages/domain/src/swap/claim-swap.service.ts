@@ -16,13 +16,13 @@ export interface ClaimSwapOutput {
   txHash: string;
 }
 
-export type ClaimSwapUseCase = (input: ClaimSwapInput) => Promise<ClaimSwapOutput>;
+export type ClaimSwapService = (input: ClaimSwapInput) => Promise<ClaimSwapOutput>;
 
 /**
  * Claims a swap after payment has been received.
  * Triggers the final transfer to the destination address.
  */
-export function getClaimSwapUseCase(deps: ClaimSwapDeps): ClaimSwapUseCase {
+export function getClaimSwapService(deps: ClaimSwapDeps): ClaimSwapService {
   return async (input: ClaimSwapInput): Promise<ClaimSwapOutput> => {
     const swapId = SwapId.of(input.swapId);
 

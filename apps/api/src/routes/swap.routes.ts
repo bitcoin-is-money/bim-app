@@ -1,12 +1,12 @@
 import {
-  getClaimSwapUseCase,
-  getCreateBitcoinSwapUseCase,
-  getCreateLightningSwapUseCase,
-  getCreateStarknetToBitcoinUseCase,
-  getCreateStarknetToLightningUseCase,
-  getFetchSwapLimitsUseCase,
-  getFetchSwapStatusUseCase,
-  getValidateSessionUseCase,
+  getClaimSwapService,
+  getCreateBitcoinSwapService,
+  getCreateLightningSwapService,
+  getCreateStarknetToBitcoinService,
+  getCreateStarknetToLightningService,
+  getFetchSwapLimitsService,
+  getFetchSwapStatusService,
+  getValidateSessionService,
   InvalidSwapStateError,
   SessionExpiredError,
   SessionNotFoundError,
@@ -70,7 +70,7 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
     try {
       const direction = SwapDirectionSchema.parse(ctx.req.param('direction'));
 
-      const fetchSwapLimits = getFetchSwapLimitsUseCase({
+      const fetchSwapLimits = getFetchSwapLimitsService({
         atomiqGateway: appContext.gateways.atomiq,
       });
 
@@ -95,7 +95,7 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
       const body = await ctx.req.json();
       const input = CreateLightningSwapSchema.parse(body);
 
-      const createSwap = getCreateLightningSwapUseCase({
+      const createSwap = getCreateLightningSwapService({
         swapRepository: appContext.repositories.swap,
         atomiqGateway: appContext.gateways.atomiq,
       });
@@ -125,7 +125,7 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
       const body = await ctx.req.json();
       const input = CreateBitcoinSwapSchema.parse(body);
 
-      const createSwap = getCreateBitcoinSwapUseCase({
+      const createSwap = getCreateBitcoinSwapService({
         swapRepository: appContext.repositories.swap,
         atomiqGateway: appContext.gateways.atomiq,
       });
@@ -156,7 +156,7 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
       const body = await ctx.req.json();
       const input = CreateStarknetToLightningSchema.parse(body);
 
-      const createSwap = getCreateStarknetToLightningUseCase({
+      const createSwap = getCreateStarknetToLightningService({
         swapRepository: appContext.repositories.swap,
         atomiqGateway: appContext.gateways.atomiq,
       });
@@ -186,7 +186,7 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
       const body = await ctx.req.json();
       const input = CreateStarknetToBitcoinSchema.parse(body);
 
-      const createSwap = getCreateStarknetToBitcoinUseCase({
+      const createSwap = getCreateStarknetToBitcoinService({
         swapRepository: appContext.repositories.swap,
         atomiqGateway: appContext.gateways.atomiq,
       });
@@ -216,7 +216,7 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
     try {
       const swapId = ctx.req.param('swapId');
 
-      const fetchSwapStatus = getFetchSwapStatusUseCase({
+      const fetchSwapStatus = getFetchSwapStatusService({
         swapRepository: appContext.repositories.swap,
         atomiqGateway: appContext.gateways.atomiq,
       });
@@ -246,7 +246,7 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
     try {
       const swapId = ctx.req.param('swapId');
 
-      const claimSwap = getClaimSwapUseCase({
+      const claimSwap = getClaimSwapService({
         swapRepository: appContext.repositories.swap,
         atomiqGateway: appContext.gateways.atomiq,
       });

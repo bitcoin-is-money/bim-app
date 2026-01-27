@@ -1,6 +1,6 @@
 import {
   Account,
-  getFetchTransactionsUseCase,
+  getFetchTransactionsService,
 } from '@bim/domain';
 import {Hono} from 'hono';
 import type {AppContext} from "../app-context";
@@ -30,7 +30,7 @@ export function createTransactionRoutes(appContext: AppContext): AuthenticatedHo
       const limit = limitParam ? Number.parseInt(limitParam, 10) : 50;
       const offset = offsetParam ? Number.parseInt(offsetParam, 10) : 0;
 
-      const fetchTransactions = getFetchTransactionsUseCase({
+      const fetchTransactions = getFetchTransactionsService({
         transactionRepository: appContext.repositories.transaction,
         watchedAddressRepository: appContext.repositories.watchedAddress,
       });

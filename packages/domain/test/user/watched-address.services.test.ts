@@ -1,9 +1,9 @@
 import {AccountId, StarknetAddress} from '@bim/domain/account';
 import type {WatchedAddressRepository} from '@bim/domain/ports';
 import {
-  getDeactivateWatchedAddressUseCase,
-  getFetchWatchedAddressesUseCase,
-  getRegisterWatchedAddressUseCase,
+  getDeactivateWatchedAddressService,
+  getFetchWatchedAddressesService,
+  getRegisterWatchedAddressService,
   WatchedAddress,
   WatchedAddressAlreadyExistsError,
   WatchedAddressId,
@@ -11,7 +11,7 @@ import {
 } from '@bim/domain/user';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
-describe('WatchedAddress UseCases', () => {
+describe('WatchedAddress Services', () => {
   const accountId = AccountId.of('550e8400-e29b-41d4-a716-446655440000');
   const addressId = WatchedAddressId.of('660e8400-e29b-41d4-a716-446655440001');
   const starknetAddress = StarknetAddress.of('0x123');
@@ -30,7 +30,7 @@ describe('WatchedAddress UseCases', () => {
     idGenerator = () => addressId;
   });
 
-  describe('getFetchWatchedAddressesUseCase', () => {
+  describe('getFetchWatchedAddressesService', () => {
     it('returns addresses for account', async () => {
       const address1 = WatchedAddress.create({
         id: addressId,
@@ -46,7 +46,7 @@ describe('WatchedAddress UseCases', () => {
       });
       vi.mocked(mockRepository.findByAccountId).mockResolvedValue([address1, address2]);
 
-      const useCase = getFetchWatchedAddressesUseCase({
+      const useCase = getFetchWatchedAddressesService({
         watchedAddressRepository: mockRepository,
       });
       const result = await useCase({accountId: accountId});
@@ -59,7 +59,7 @@ describe('WatchedAddress UseCases', () => {
     it('returns empty array if no addresses', async () => {
       vi.mocked(mockRepository.findByAccountId).mockResolvedValue([]);
 
-      const useCase = getFetchWatchedAddressesUseCase({
+      const useCase = getFetchWatchedAddressesService({
         watchedAddressRepository: mockRepository,
       });
       const result = await useCase({accountId: accountId});
@@ -68,11 +68,11 @@ describe('WatchedAddress UseCases', () => {
     });
   });
 
-  describe('getRegisterWatchedAddressUseCase', () => {
+  describe('getRegisterWatchedAddressService', () => {
     it('registers new address', async () => {
       vi.mocked(mockRepository.findByStarknetAddress).mockResolvedValue(undefined);
 
-      const useCase = getRegisterWatchedAddressUseCase({
+      const useCase = getRegisterWatchedAddressService({
         watchedAddressRepository: mockRepository,
         idGenerator,
       });
@@ -96,7 +96,7 @@ describe('WatchedAddress UseCases', () => {
       });
       vi.mocked(mockRepository.findByStarknetAddress).mockResolvedValue(existingAddress);
 
-      const useCase = getRegisterWatchedAddressUseCase({
+      const useCase = getRegisterWatchedAddressService({
         watchedAddressRepository: mockRepository,
         idGenerator,
       });
@@ -111,7 +111,7 @@ describe('WatchedAddress UseCases', () => {
     });
   });
 
-  describe('getDeactivateWatchedAddressUseCase', () => {
+  describe('getDeactivateWatchedAddressService', () => {
     it('deactivates existing address', async () => {
       const address = WatchedAddress.create({
         id: addressId,
@@ -121,7 +121,7 @@ describe('WatchedAddress UseCases', () => {
       });
       vi.mocked(mockRepository.findById).mockResolvedValue(address);
 
-      const useCase = getDeactivateWatchedAddressUseCase({
+      const useCase = getDeactivateWatchedAddressService({
         watchedAddressRepository: mockRepository,
       });
       const result = await useCase({addressId: addressId});
@@ -133,7 +133,7 @@ describe('WatchedAddress UseCases', () => {
     it('throws if address not found', async () => {
       vi.mocked(mockRepository.findById).mockResolvedValue(undefined);
 
-      const useCase = getDeactivateWatchedAddressUseCase({
+      const useCase = getDeactivateWatchedAddressService({
         watchedAddressRepository: mockRepository,
       });
 

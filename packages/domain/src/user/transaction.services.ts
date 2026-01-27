@@ -7,7 +7,7 @@ import {WatchedAddressId, WatchedAddressNotFoundError} from './types';
 // Shared Dependencies
 // =============================================================================
 
-export interface TransactionUseCasesDeps {
+export interface TransactionServicesDeps {
   transactionRepository: TransactionRepository;
   watchedAddressRepository: WatchedAddressRepository;
 }
@@ -27,16 +27,16 @@ export interface FetchTransactionsOutput {
   total: number;
 }
 
-export type FetchTransactionsUseCase = (
+export type FetchTransactionsService = (
   input: FetchTransactionsInput,
 ) => Promise<FetchTransactionsOutput>;
 
 /**
  * Fetches transactions for all addresses of an account.
  */
-export function getFetchTransactionsUseCase(
-  deps: TransactionUseCasesDeps,
-): FetchTransactionsUseCase {
+export function getFetchTransactionsService(
+  deps: TransactionServicesDeps,
+): FetchTransactionsService {
   return async (input: FetchTransactionsInput): Promise<FetchTransactionsOutput> => {
     const accountId = AccountId.of(input.accountId);
     const limit = input.limit ?? 50;
@@ -89,16 +89,16 @@ export interface FetchTransactionsForAddressOutput {
   total: number;
 }
 
-export type FetchTransactionsForAddressUseCase = (
+export type FetchTransactionsForAddressService = (
   input: FetchTransactionsForAddressInput,
 ) => Promise<FetchTransactionsForAddressOutput>;
 
 /**
  * Fetches transactions for a specific watched address.
  */
-export function getFetchTransactionsForAddressUseCase(
-  deps: Pick<TransactionUseCasesDeps, 'transactionRepository' | 'watchedAddressRepository'>,
-): FetchTransactionsForAddressUseCase {
+export function getFetchTransactionsForAddressService(
+  deps: Pick<TransactionServicesDeps, 'transactionRepository' | 'watchedAddressRepository'>,
+): FetchTransactionsForAddressService {
   return async (
     input: FetchTransactionsForAddressInput,
   ): Promise<FetchTransactionsForAddressOutput> => {

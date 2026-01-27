@@ -3,7 +3,7 @@ import {
   AccountId,
   AccountNotFoundError,
   type DeployAccountOutput,
-  getDeployAccountUseCase,
+  getDeployAccountService,
   InvalidAccountStateError,
 } from '@bim/domain';
 import {Hono} from 'hono';
@@ -45,7 +45,7 @@ export function createAccountRoutes(appContext: AppContext): AuthenticatedHono {
     try {
       const account: Account = ctx.get('account');
 
-      const deployAccount = getDeployAccountUseCase({
+      const deployAccount = getDeployAccountService({
         accountRepository: appContext.repositories.account,
         starknetGateway: appContext.gateways.starknet,
         paymasterGateway: appContext.gateways.paymaster,

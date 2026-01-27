@@ -21,7 +21,7 @@ import {ChallengeId, ChallengeNotFoundError, RegistrationFailedError, type WebAu
 // Shared Dependencies
 // =============================================================================
 
-export interface RegistrationUseCasesDeps {
+export interface RegistrationServicesDeps {
   accountRepository: AccountRepository;
   challengeRepository: ChallengeRepository;
   sessionRepository: SessionRepository;
@@ -47,7 +47,7 @@ export interface BeginRegistrationOutput {
   accountId: string; // Pre-generated account ID (same as options.userId) - must be passed to completeRegistration
 }
 
-export type BeginRegistrationUseCase = (input: BeginRegistrationInput) => Promise<BeginRegistrationOutput>;
+export type BeginRegistrationService = (input: BeginRegistrationInput) => Promise<BeginRegistrationOutput>;
 
 /**
  * Initiates WebAuthn registration by creating a challenge.
@@ -57,9 +57,9 @@ export type BeginRegistrationUseCase = (input: BeginRegistrationInput) => Promis
  * The accountId is returned separately and must be passed to completeRegistration.
  * This ensures the userHandle in the credential matches the account ID (required for username-less login).
  */
-export function getBeginRegistrationUseCase(
-  deps: Pick<RegistrationUseCasesDeps, 'challengeRepository' | 'idGenerator'>,
-): BeginRegistrationUseCase {
+export function getBeginRegistrationService(
+  deps: Pick<RegistrationServicesDeps, 'challengeRepository' | 'idGenerator'>,
+): BeginRegistrationService {
   return async (input: BeginRegistrationInput): Promise<BeginRegistrationOutput> => {
     // Generate account ID now - this will be stored as userHandle in the credential
     // and used as the account ID after registration completes
@@ -112,7 +112,7 @@ export interface CompleteRegistrationOutput {
   session: Session;
 }
 
-export type CompleteRegistrationUseCase = (input: CompleteRegistrationInput) => Promise<CompleteRegistrationOutput>;
+export type CompleteRegistrationService = (input: CompleteRegistrationInput) => Promise<CompleteRegistrationOutput>;
 
 /**
  * Completes WebAuthn registration after user interaction.
@@ -121,9 +121,9 @@ export type CompleteRegistrationUseCase = (input: CompleteRegistrationInput) => 
  * The accountId is passed from beginRegistration to ensure the userHandle in the credential
  * matches the account ID (required for username-less login).
  */
-export function getCompleteRegistrationUseCase(
-  deps: Omit<RegistrationUseCasesDeps, 'idGenerator'>,
-): CompleteRegistrationUseCase {
+export function getCompleteRegistrationService(
+  deps: Omit<RegistrationServicesDeps, 'idGenerator'>,
+): CompleteRegistrationService {
   return async (input: CompleteRegistrationInput): Promise<CompleteRegistrationOutput> => {
     // Validate the challenge
     const challengeId = ChallengeId.of(input.challengeId);

@@ -1,8 +1,8 @@
 import {AccountId, StarknetAddress} from '@bim/domain/account';
 import type {TransactionRepository, WatchedAddressRepository} from '@bim/domain/ports';
 import {
-  getFetchTransactionsForAddressUseCase,
-  getFetchTransactionsUseCase,
+  getFetchTransactionsForAddressService,
+  getFetchTransactionsService,
   Transaction,
   TransactionHash,
   TransactionId,
@@ -12,7 +12,7 @@ import {
 } from '@bim/domain/user';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
-describe('Transaction UseCases', () => {
+describe('Transaction Services', () => {
   const accountId = AccountId.of('550e8400-e29b-41d4-a716-446655440000');
   const addressId1 = WatchedAddressId.of('660e8400-e29b-41d4-a716-446655440001');
   const addressId2 = WatchedAddressId.of('770e8400-e29b-41d4-a716-446655440002');
@@ -60,7 +60,7 @@ describe('Transaction UseCases', () => {
     };
   });
 
-  describe('getFetchTransactionsUseCase', () => {
+  describe('getFetchTransactionsService', () => {
     it('returns transactions for all account addresses', async () => {
       const address1 = WatchedAddress.create({
         id: addressId1,
@@ -94,7 +94,7 @@ describe('Transaction UseCases', () => {
         .mockResolvedValueOnce(1)
         .mockResolvedValueOnce(1);
 
-      const useCase = getFetchTransactionsUseCase({
+      const useCase = getFetchTransactionsService({
         transactionRepository: mockTransactionRepo,
         watchedAddressRepository: mockAddressRepo,
       });
@@ -111,7 +111,7 @@ describe('Transaction UseCases', () => {
     it('returns empty result if no addresses', async () => {
       vi.mocked(mockAddressRepo.findByAccountId).mockResolvedValue([]);
 
-      const useCase = getFetchTransactionsUseCase({
+      const useCase = getFetchTransactionsService({
         transactionRepository: mockTransactionRepo,
         watchedAddressRepository: mockAddressRepo,
       });
@@ -133,7 +133,7 @@ describe('Transaction UseCases', () => {
       vi.mocked(mockTransactionRepo.findByWatchedAddressId).mockResolvedValue([]);
       vi.mocked(mockTransactionRepo.countByWatchedAddressId).mockResolvedValue(0);
 
-      const useCase = getFetchTransactionsUseCase({
+      const useCase = getFetchTransactionsService({
         transactionRepository: mockTransactionRepo,
         watchedAddressRepository: mockAddressRepo,
       });
@@ -146,7 +146,7 @@ describe('Transaction UseCases', () => {
     });
   });
 
-  describe('getFetchTransactionsForAddressUseCase', () => {
+  describe('getFetchTransactionsForAddressService', () => {
     it('returns transactions for specific address', async () => {
       const address = WatchedAddress.create({
         id: addressId1,
@@ -164,7 +164,7 @@ describe('Transaction UseCases', () => {
       vi.mocked(mockTransactionRepo.findByWatchedAddressId).mockResolvedValue([tx]);
       vi.mocked(mockTransactionRepo.countByWatchedAddressId).mockResolvedValue(1);
 
-      const useCase = getFetchTransactionsForAddressUseCase({
+      const useCase = getFetchTransactionsForAddressService({
         transactionRepository: mockTransactionRepo,
         watchedAddressRepository: mockAddressRepo,
       });
@@ -177,7 +177,7 @@ describe('Transaction UseCases', () => {
     it('throws if address not found', async () => {
       vi.mocked(mockAddressRepo.findById).mockResolvedValue(undefined);
 
-      const useCase = getFetchTransactionsForAddressUseCase({
+      const useCase = getFetchTransactionsForAddressService({
         transactionRepository: mockTransactionRepo,
         watchedAddressRepository: mockAddressRepo,
       });
@@ -199,7 +199,7 @@ describe('Transaction UseCases', () => {
       vi.mocked(mockTransactionRepo.findByWatchedAddressId).mockResolvedValue([]);
       vi.mocked(mockTransactionRepo.countByWatchedAddressId).mockResolvedValue(0);
 
-      const useCase = getFetchTransactionsForAddressUseCase({
+      const useCase = getFetchTransactionsForAddressService({
         transactionRepository: mockTransactionRepo,
         watchedAddressRepository: mockAddressRepo,
       });

@@ -13,7 +13,7 @@ import {
 // Shared Dependencies
 // =============================================================================
 
-export interface AuthenticationUseCasesDeps {
+export interface AuthenticationServicesDeps {
   accountRepository: AccountRepository;
   challengeRepository: ChallengeRepository;
   sessionRepository: SessionRepository;
@@ -34,16 +34,16 @@ export interface BeginAuthenticationOutput {
   challengeId: string;
 }
 
-export type BeginAuthenticationUseCase = (input: BeginAuthenticationInput) => Promise<BeginAuthenticationOutput>;
+export type BeginAuthenticationService = (input: BeginAuthenticationInput) => Promise<BeginAuthenticationOutput>;
 
 /**
  * Initiates WebAuthn authentication using discoverable credentials (username-less).
  * Returns options to pass to navigator.credentials.get() with empty allowCredentials.
  * The authenticator will show all resident keys for this RP.
  */
-export function getBeginAuthenticationUseCase(
-  deps: Pick<AuthenticationUseCasesDeps, 'challengeRepository'>,
-): BeginAuthenticationUseCase {
+export function getBeginAuthenticationService(
+  deps: Pick<AuthenticationServicesDeps, 'challengeRepository'>,
+): BeginAuthenticationService {
   return async (input: BeginAuthenticationInput): Promise<BeginAuthenticationOutput> => {
     const challenge = Challenge.createForAuthentication({
       rpId: input.rpId,
@@ -89,16 +89,16 @@ export interface CompleteAuthenticationOutput {
   session: Session;
 }
 
-export type CompleteAuthenticationUseCase = (input: CompleteAuthenticationInput) => Promise<CompleteAuthenticationOutput>;
+export type CompleteAuthenticationService = (input: CompleteAuthenticationInput) => Promise<CompleteAuthenticationOutput>;
 
 /**
  * Completes WebAuthn authentication after user interaction.
  * Verifies the signature, updates sign counter, and creates a session.
  * For username-less flow, the account is looked up via userHandle (which contains the AccountId).
  */
-export function getCompleteAuthenticationUseCase(
-  deps: AuthenticationUseCasesDeps
-): CompleteAuthenticationUseCase {
+export function getCompleteAuthenticationService(
+  deps: AuthenticationServicesDeps
+): CompleteAuthenticationService {
   return async (input: CompleteAuthenticationInput): Promise<CompleteAuthenticationOutput> => {
     // Validate the challenge
     const challengeId = ChallengeId.of(input.challengeId);

@@ -7,7 +7,7 @@ import {UserSettings} from './user-settings';
 // Shared Dependencies
 // =============================================================================
 
-export interface UserSettingsUseCasesDeps {
+export interface UserSettingsServicesDeps {
   userSettingsRepository: UserSettingsRepository;
   idGenerator: () => UserSettingsId;
 }
@@ -24,7 +24,7 @@ export interface FetchUserSettingsOutput {
   settings: UserSettings;
 }
 
-export type FetchUserSettingsUseCase = (
+export type FetchUserSettingsService = (
   input: FetchUserSettingsInput,
 ) => Promise<FetchUserSettingsOutput>;
 
@@ -32,9 +32,9 @@ export type FetchUserSettingsUseCase = (
  * Fetches user settings for an account.
  * Creates default settings if none exist.
  */
-export function getFetchUserSettingsUseCase(
-  deps: UserSettingsUseCasesDeps,
-): FetchUserSettingsUseCase {
+export function getFetchUserSettingsService(
+  deps: UserSettingsServicesDeps,
+): FetchUserSettingsService {
   return async (input: FetchUserSettingsInput): Promise<FetchUserSettingsOutput> => {
     const accountId = AccountId.of(input.accountId);
 
@@ -66,16 +66,16 @@ export interface UpdateUserSettingsOutput {
   settings: UserSettings;
 }
 
-export type UpdateUserSettingsUseCase = (
+export type UpdateUserSettingsService = (
   input: UpdateUserSettingsInput,
 ) => Promise<UpdateUserSettingsOutput>;
 
 /**
  * Updates user settings for an account.
  */
-export function getUpdateUserSettingsUseCase(
-  deps: UserSettingsUseCasesDeps,
-): UpdateUserSettingsUseCase {
+export function getUpdateUserSettingsService(
+  deps: UserSettingsServicesDeps,
+): UpdateUserSettingsService {
   return async (input: UpdateUserSettingsInput): Promise<UpdateUserSettingsOutput> => {
     const accountId = AccountId.of(input.accountId);
 

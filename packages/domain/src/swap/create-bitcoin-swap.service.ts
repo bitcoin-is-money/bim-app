@@ -19,13 +19,13 @@ export interface CreateBitcoinSwapOutput {
   bip21Uri: string;
 }
 
-export type CreateBitcoinSwapUseCase = (input: CreateBitcoinSwapInput) => Promise<CreateBitcoinSwapOutput>;
+export type CreateBitcoinSwapService = (input: CreateBitcoinSwapInput) => Promise<CreateBitcoinSwapOutput>;
 
 /**
  * Creates a Bitcoin → Starknet swap.
  * User sends BTC to a deposit address, receives tokens on Starknet.
  */
-export function getCreateBitcoinSwapUseCase(deps: CreateBitcoinSwapDeps): CreateBitcoinSwapUseCase {
+export function getCreateBitcoinSwapService(deps: CreateBitcoinSwapDeps): CreateBitcoinSwapService {
   return async (input: CreateBitcoinSwapInput): Promise<CreateBitcoinSwapOutput> => {
     const destinationAddress = StarknetAddress.of(input.destinationAddress);
 
