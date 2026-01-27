@@ -1,4 +1,4 @@
-import type {Account} from '../services/auth.service';
+import type {Account} from '../model';
 
 const STORAGE_KEYS = {
   CREDENTIALS: 'mock_credentials',

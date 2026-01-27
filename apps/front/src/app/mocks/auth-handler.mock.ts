@@ -1,6 +1,6 @@
 import {HttpResponse} from '@angular/common/http';
+import {Account} from "../model";
 import type {
-  Account,
   AuthResponse,
   BeginAuthResponse,
   BeginRegisterResponse,

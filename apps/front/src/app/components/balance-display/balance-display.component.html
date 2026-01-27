@@ -1,5 +1,10 @@
 <div class="balance-display">
-  AMOUNT:
-  <div class="balance-amount">{{ amount() | number:'1.2-2' }}</div>
-  <div class="balance-currency">{{ currency() }}</div>
+  <div class="balance-amount-container">
+    <div class="balance-amount">{{ displayedAmount().value | number:'1.2-8' }}</div>
+  </div>
+  <app-currency-display
+    [currency]="displayedAmount().currency"
+    size="large"
+    (currencyChange)="onCurrencyChange($event)">
+  </app-currency-display>
 </div>

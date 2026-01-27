@@ -1,13 +1,31 @@
 @reference "tailwindcss";
 
 .balance-display {
-  @apply bg-neutral-800 rounded-lg p-6 border border-neutral-700;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  gap: 20px;
 
-  .balance-amount {
-    @apply text-4xl font-bold text-white mb-2;
+  .balance-amount-container {
+    @apply rounded-lg p-10;
+    --bg-color: theme('colors.neutral.800');
+    --border-top: theme('colors.amber.600');
+    --border-bottom: theme('colors.amber.400');
+    display: flex;
+    justify-content: center;
+    border: 2px solid transparent;
+    background:
+      linear-gradient(var(--bg-color), var(--bg-color)) padding-box,
+      linear-gradient(to bottom, var(--border-top), var(--border-bottom)) border-box;
+
+    .balance-amount {
+      align-self: center;
+      @apply text-4xl font-bold text-white mb-2;
+    }
   }
 
-  .balance-currency {
-    @apply text-lg text-neutral-400;
+  app-currency-display {
+    align-self: center;
   }
 }
+

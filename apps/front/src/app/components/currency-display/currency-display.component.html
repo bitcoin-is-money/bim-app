@@ -1,0 +1,7 @@
+<button
+  class="currency-display"
+  [class.currency-display--large]="size() === 'large'"
+  (click)="onClick()"
+  type="button">
+  {{ currency() }}
+</button>

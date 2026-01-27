@@ -11,10 +11,10 @@ export function createBalanceRoutes(appContext: AppContext): AuthenticatedHono {
   app.get('/', async (ctx) => {
     try {
       // TODO: Implement real balance retrieval from the account
-      // For now, return mocked data
+      // For now, return mocked data (amount in SAT)
       return ctx.json({
-        amount: 1250.50,
-        currency: 'USD',
+        amount: 125050000,
+        currency: 'SAT',
       });
     } catch (error) {
       console.error('Balance error:', error);

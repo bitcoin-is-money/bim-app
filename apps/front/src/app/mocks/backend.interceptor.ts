@@ -3,10 +3,12 @@ import {Observable, of, throwError} from 'rxjs';
 import {delay, mergeMap} from 'rxjs/operators';
 import {AuthHandlerMock} from './auth-handler.mock';
 import {BalanceHandlerMock} from './balance-handler.mock';
+import {PricesHandlerMock} from './prices-handler.mock';
 import {TransactionHandlerMock} from './transaction-handler.mock';
 
 const mockAuthHandler = new AuthHandlerMock();
 const mockBalanceHandler = new BalanceHandlerMock();
+const mockPricesHandler = new PricesHandlerMock();
 const mockTransactionHandler = new TransactionHandlerMock();
 
 function randomDelay(): number {
@@ -48,6 +50,11 @@ export const backendInterceptor: HttpInterceptorFn = (
   // Balance routes
   else if (url === '/api/balance' && method === 'GET') {
     response = mockBalanceHandler.getBalance();
+  }
+
+  // Prices routes
+  else if (url === '/api/prices' && method === 'GET') {
+    response = mockPricesHandler.getPrices();
   }
 
   // Transaction routes
