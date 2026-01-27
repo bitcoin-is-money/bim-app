@@ -25,34 +25,16 @@
   }
 
   .home-main {
-    @apply flex-1 p-4 space-y-6 overflow-y-auto;
+    @apply flex flex-col flex-1 overflow-y-auto;
 
     .loading {
       @apply text-center text-neutral-400 py-8;
     }
 
-    .transactions {
-      @apply mt-6;
-
-      .transactions-title {
-        @apply text-lg font-semibold text-white mb-4;
-      }
+    .transaction-container {
+      @apply flex-1 bg-neutral-800 p-4;
     }
 
-    .empty-transaction {
-      @apply flex items-center justify-center py-12;
-      flex-direction: column;
-
-      .empty-transaction-text {
-        @apply text-neutral-400 text-2xl;
-        text-align: center;
-      }
-
-      .empty-transaction-steps {
-        @apply text-neutral-200 text-xl;
-      }
-
-    }
   }
 
   .home-footer {

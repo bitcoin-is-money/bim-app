@@ -1,6 +1,6 @@
 import {CommonModule, DatePipe} from '@angular/common';
 import {Component, input} from '@angular/core';
-import {Transaction} from '../../services/transaction.service';
+import {Transaction} from "../../../../services/transaction.http.service";
 
 @Component({
   selector: 'app-transaction-list',

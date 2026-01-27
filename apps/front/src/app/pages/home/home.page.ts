@@ -1,8 +1,9 @@
 import {CommonModule} from '@angular/common';
 import {Component, computed, inject, OnInit, signal} from '@angular/core';
 import {Router} from '@angular/router';
-import {BalanceDisplayComponent} from '../../components/balance-display/balance-display.component';
-import {TransactionListComponent} from '../../components/transaction-list/transaction-list.component';
+import {BalanceDisplayComponent} from './components/balance-display/balance-display.component';
+import {TransactionListComponent} from './components/transaction-list/transaction-list.component';
+import {EmptyTransactionComponent} from './components/empty-transaction/empty-transaction.component';
 import {Amount} from '../../model';
 import {AccountService} from "../../services/account.service";
 import {AuthService} from '../../services/auth.service';
@@ -11,7 +12,7 @@ import {Transaction, TransactionService} from '../../services/transaction.servic
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, BalanceDisplayComponent, TransactionListComponent],
+  imports: [CommonModule, BalanceDisplayComponent, TransactionListComponent, EmptyTransactionComponent],
   templateUrl: './home.page.html',
   styleUrl: './home.page.scss',
 })

@@ -1,8 +1,8 @@
 import {CommonModule} from '@angular/common';
-import {Component, computed, input, signal} from '@angular/core';
-import {Amount, Currency} from '../../model';
-import {CurrencyService} from '../../services/currency.service';
-import {CurrencyDisplayComponent} from '../currency-display/currency-display.component';
+import {Component, computed, inject, input, signal} from '@angular/core';
+import {CurrencyDisplayComponent} from "../../../../components/currency-display/currency-display.component";
+import {Amount, Currency} from "../../../../model";
+import {CurrencyService} from "../../../../services/currency.service";
 
 @Component({
   selector: 'app-balance-display',
@@ -12,23 +12,22 @@ import {CurrencyDisplayComponent} from '../currency-display/currency-display.com
   styleUrl: './balance-display.component.scss',
 })
 export class BalanceDisplayComponent {
-  /** Original amount with its currency */
-  originalAmount = input<Amount>(Amount.zero());
+
+  private readonly currencyService: CurrencyService = inject(CurrencyService);
 
   /** Target currency selected by user */
   private readonly targetCurrency = signal<Currency>('USD');
 
+  /** Original amount with its currency */
+  readonly originalAmount = input<Amount>(Amount.zero());
+
   /** Amount converted to displayed currency */
-  displayedAmount = computed(() => {
+  readonly displayedAmount = computed(() => {
     return this.currencyService.convert(
       this.originalAmount(),
       this.targetCurrency()
     );
   });
-
-  constructor(
-    private readonly currencyService: CurrencyService
-  ) {}
 
   onCurrencyChange(newCurrency: Currency): void {
     this.targetCurrency.set(newCurrency);
