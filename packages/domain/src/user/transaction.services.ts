@@ -39,7 +39,7 @@ export function getFetchTransactionsService(
 ): FetchTransactionsService {
   return async (input: FetchTransactionsInput): Promise<FetchTransactionsOutput> => {
     const accountId = AccountId.of(input.accountId);
-    const limit = input.limit ?? 50;
+    const limit = input.limit ?? 10;
     const offset = input.offset ?? 0;
 
     // Get all watched addresses for this account
@@ -103,7 +103,7 @@ export function getFetchTransactionsForAddressService(
     input: FetchTransactionsForAddressInput,
   ): Promise<FetchTransactionsForAddressOutput> => {
     const addressId = WatchedAddressId.of(input.addressId);
-    const limit = input.limit ?? 50;
+    const limit = input.limit ?? 10;
     const offset = input.offset ?? 0;
 
     // Verify address exists

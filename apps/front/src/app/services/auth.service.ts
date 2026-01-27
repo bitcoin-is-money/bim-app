@@ -22,6 +22,7 @@ export type {AuthResponse, BeginAuthResponse, BeginRegisterResponse, UserSession
 export class AuthService {
   currentUser = signal<Account | null>(null);
   isLoading = signal(false);
+  isNewUser = signal(false);
 
   constructor(
     private readonly httpService: AuthHttpService,
@@ -73,6 +74,7 @@ export class AuthService {
         credential
       ));
 
+      this.isNewUser.set(true);
       await this.router.navigate(['/account-setup']);
     } catch (error) {
       // HTTP errors are already handled by the interceptor

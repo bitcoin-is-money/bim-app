@@ -21,7 +21,8 @@ export const backendInterceptor: HttpInterceptorFn = (
   req: HttpRequest<unknown>,
   next: HttpHandlerFn
 ): Observable<HttpEvent<unknown>> => {
-  const { url, method, body } = req;
+  const url = req.urlWithParams;
+  const { method, body } = req;
 
   // Only intercept /api/ requests
   if (!url.startsWith('/api/')) {
@@ -62,8 +63,8 @@ export const backendInterceptor: HttpInterceptorFn = (
   }
 
   // Transaction routes
-  else if (url === '/api/transactions' && method === 'GET') {
-    response = mockTransactionHandler.getTransactions();
+  else if (url.startsWith('/api/transactions') && method === 'GET') {
+    response = mockTransactionHandler.getTransactions(req);
   }
 
   if (response) {

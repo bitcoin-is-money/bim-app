@@ -141,7 +141,7 @@ describe('Transaction Services', () => {
 
       expect(mockTransactionRepo.findByWatchedAddressId).toHaveBeenCalledWith(
         addressId1,
-        {limit: 50, offset: 0},
+        {limit: 10, offset: 0},
       );
     });
   });

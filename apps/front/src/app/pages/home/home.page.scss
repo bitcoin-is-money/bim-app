@@ -1,7 +1,7 @@
 @reference "tailwindcss";
 
 .home-page {
-  @apply min-h-screen flex flex-col bg-neutral-900;
+  @apply h-screen flex flex-col bg-neutral-900;
 
   .home-header {
     @apply p-4 border-b border-neutral-800;
@@ -25,14 +25,18 @@
   }
 
   .home-main {
-    @apply flex flex-col flex-1 overflow-y-auto;
+    @apply flex flex-col flex-1 overflow-hidden;
 
     .loading {
       @apply text-center text-neutral-400 py-8;
     }
 
     .transaction-container {
-      @apply flex-1 bg-neutral-800 p-4;
+      @apply flex-1 bg-neutral-800 p-4 overflow-y-auto;
+    }
+
+    .loading-more {
+      @apply flex justify-center py-4 h-12;
     }
 
   }
