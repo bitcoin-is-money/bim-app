@@ -1,0 +1,14 @@
+@reference "tailwindcss";
+
+.empty-transaction {
+  @apply flex flex-col items-center justify-center py-12;
+
+  .empty-transaction-text {
+    @apply text-neutral-400 text-2xl;
+    text-align: center;
+  }
+
+  .empty-transaction-steps {
+    @apply text-neutral-200 text-xl;
+  }
+}

@@ -10,7 +10,7 @@
       @apply flex items-start gap-3;
 
       .transaction-bullet {
-        @apply w-2 h-2 rounded-full bg-neutral-500 mt-2 flex-shrink-0;
+        @apply w-3 h-3 rounded-full bg-neutral-400 self-center;
       }
 
       .transaction-info {
