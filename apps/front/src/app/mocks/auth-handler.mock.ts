@@ -8,6 +8,13 @@ import type {
 } from '../services/auth.service';
 import {DataStoreMock, type StoredCredential} from './data-store.mock';
 
+// If the registered username contains this string, the account deployment will mock a failed deployment
+const ERROR_DEPLOY_USERNAME = 'errorDeploy';
+
+// If the registered username contains this string, the account will have no transaction
+const EMPTY_TRANSACTION_USERNAME = 'empty';
+
+
 interface ApiErrorResponse {
   error: { message: string };
 }
@@ -162,7 +169,8 @@ export class AuthHandlerMock {
 
     this.store.setSession(account);
     this.store.setRegistrationDate(new Date());
-    this.store.setFailedAccountDeployment(username.includes('error'))
+    this.store.setFailedAccountDeployment(username.includes(ERROR_DEPLOY_USERNAME))
+    this.store.setEmptyTransaction(username.includes(EMPTY_TRANSACTION_USERNAME))
 
     return new HttpResponse({
       status: 200,

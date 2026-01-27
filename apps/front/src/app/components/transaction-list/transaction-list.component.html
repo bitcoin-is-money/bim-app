@@ -1,5 +1,4 @@
 <div class="transaction-list">
-    TRANSACTIONS :
   @for (transaction of transactions(); track transaction.id) {
     <div class="transaction-item">
       <div class="transaction-content">
@@ -8,7 +7,7 @@
           <div class="transaction-label">{{ transaction.name }}</div>
           <div class="transaction-date">{{ transaction.date | date:'short' }}</div>
         </div>
-        <div 
+        <div
           class="transaction-amount"
           [class.credit]="isCredit(transaction.amount)"
           [class.debit]="!isCredit(transaction.amount)">

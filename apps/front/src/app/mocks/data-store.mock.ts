@@ -1,10 +1,13 @@
 import type {Account} from '../model';
 
+// username contains "error" => erro
+
 const STORAGE_KEYS = {
   CREDENTIALS: 'mock_credentials',
   PENDING_CHALLENGES: 'mock_pending_challenges',
   CURRENT_SESSION: 'mock_current_session',
   FAILED_ACCOUNT_DEPLOYMENT: 'mock_failed_account_deployment',
+  EMPTY_TRANSACTION: 'mock_empty_transaction',
   REGISTRATION_TIMESTAMP: 'mock_registration_timestamp',
 } as const;
 
@@ -118,9 +121,18 @@ export class DataStoreMock {
     localStorage.setItem(STORAGE_KEYS.FAILED_ACCOUNT_DEPLOYMENT, value.toString());
   }
 
-  getFailedAccountDeployment(): boolean {
+  shouldFailAccountDeployment(): boolean {
     return localStorage.getItem(STORAGE_KEYS.FAILED_ACCOUNT_DEPLOYMENT) === 'true';
   }
+
+  setEmptyTransaction(value: boolean): void {
+    localStorage.setItem(STORAGE_KEYS.EMPTY_TRANSACTION, value.toString());
+  }
+
+  hasNoTransaction(): boolean {
+    return localStorage.getItem(STORAGE_KEYS.EMPTY_TRANSACTION) === 'true';
+  }
+
 
   setRegistrationDate(date: Date): void {
     localStorage.setItem(STORAGE_KEYS.REGISTRATION_TIMESTAMP, date.toISOString());

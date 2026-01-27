@@ -11,7 +11,7 @@ const store = new DataStoreMock();
 const mockAuthHandler = new AuthHandlerMock(store);
 const mockAccountHandler = new AccountHandlerMock(store);
 const mockPricesHandler = new PricesHandlerMock();
-const mockTransactionHandler = new TransactionHandlerMock();
+const mockTransactionHandler = new TransactionHandlerMock(store);
 
 function randomDelay(): number {
   return 100 + Math.random() * 400; // 100-500ms
