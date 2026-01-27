@@ -1,25 +1,18 @@
-import {HttpClient} from '@angular/common/http';
 import {Injectable} from '@angular/core';
 import {map, Observable} from 'rxjs';
-import {Amount, Currency} from '../model';
-
-interface BalanceResponse {
-  amount: number;
-  currency: Currency;
-}
+import {Amount} from '../model';
+import {BalanceHttpService} from './balance.http.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class BalanceService {
-  private readonly apiUrl = '/api/balance';
-
   constructor(
-    private readonly http: HttpClient
+    private readonly httpService: BalanceHttpService
   ) {}
 
   getBalance(): Observable<Amount> {
-    return this.http.get<BalanceResponse>(this.apiUrl).pipe(
+    return this.httpService.getBalance().pipe(
       map((response) => Amount.of(response.amount, response.currency))
     );
   }

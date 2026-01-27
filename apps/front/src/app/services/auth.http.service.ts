@@ -1,0 +1,75 @@
+import {HttpClient} from '@angular/common/http';
+import {Injectable} from '@angular/core';
+import {Observable} from 'rxjs';
+import {Account} from '../model';
+
+export interface AuthResponse {
+  account: Account;
+}
+
+export interface BeginAuthResponse {
+  options: {
+    challenge: string;
+    rpId: string;
+    allowCredentials?: Array<{ id: string; type: string }>;
+    timeout?: number;
+    userVerification?: string;
+  };
+  challengeId: string;
+}
+
+export interface BeginRegisterResponse {
+  options: {
+    challenge: string;
+    rpId: string;
+    rpName: string;
+    userId: string;
+    userName: string;
+    timeout?: number;
+  };
+  challengeId: string;
+  accountId: string; // Pre-generated account ID - must be passed to completeRegister
+}
+
+export interface UserSessionResponse {
+  authenticated: boolean;
+  account?: Account
+}
+
+@Injectable({
+  providedIn: 'root',
+})
+export class AuthHttpService {
+  private readonly apiUrl = '/api/auth';
+
+  constructor(private readonly http: HttpClient) {}
+
+  beginRegister(username: string): Observable<BeginRegisterResponse> {
+    return this.http.post<BeginRegisterResponse>(`${this.apiUrl}/register/begin`, {username});
+  }
+
+  completeRegister(body: {
+    challengeId: string;
+    accountId: string;
+    username: string;
+    credential: unknown;
+  }): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/register/complete`, body);
+  }
+
+  beginLogin(): Observable<BeginAuthResponse> {
+    return this.http.post<BeginAuthResponse>(`${this.apiUrl}/login/begin`, {});
+  }
+
+  completeLogin(body: {challengeId: string; credential: unknown}): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/login/complete`, body);
+  }
+
+  getSession(): Observable<UserSessionResponse> {
+    return this.http.get<UserSessionResponse>(`${this.apiUrl}/session`);
+  }
+
+  logout(): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/logout`, {});
+  }
+}

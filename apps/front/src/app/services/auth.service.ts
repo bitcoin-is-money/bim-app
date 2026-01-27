@@ -1,55 +1,30 @@
-import {HttpClient, HttpErrorResponse} from '@angular/common/http';
+import {HttpErrorResponse} from '@angular/common/http';
 import {Injectable, signal} from '@angular/core';
 import {Router} from '@angular/router';
 import {BufferUtils} from "@bim/lib/BufferUtils";
 import {catchError, firstValueFrom, map, Observable} from 'rxjs';
 import {environment} from '../../environments/environment';
 import {Account} from "../model";
+import {
+  AuthHttpService,
+  AuthResponse,
+  BeginAuthResponse,
+  BeginRegisterResponse,
+  UserSessionResponse,
+} from './auth.http.service';
 import {NotificationService} from './notification.service';
 
-export interface AuthResponse {
-  account: Account;
-}
-
-export interface BeginAuthResponse {
-  options: {
-    challenge: string;
-    rpId: string;
-    allowCredentials?: Array<{ id: string; type: string }>;
-    timeout?: number;
-    userVerification?: string;
-  };
-  challengeId: string;
-}
-
-export interface BeginRegisterResponse {
-  options: {
-    challenge: string;
-    rpId: string;
-    rpName: string;
-    userId: string;
-    userName: string;
-    timeout?: number;
-  };
-  challengeId: string;
-  accountId: string; // Pre-generated account ID - must be passed to completeRegister
-}
-
-export interface UserSessionResponse {
-  authenticated: boolean;
-  account?: Account
-}
+export type {AuthResponse, BeginAuthResponse, BeginRegisterResponse, UserSessionResponse};
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-  private readonly apiUrl = '/api/auth';
   currentUser = signal<Account | null>(null);
   isLoading = signal(false);
 
   constructor(
-    private readonly http: HttpClient,
+    private readonly httpService: AuthHttpService,
     private readonly router: Router,
     private readonly notifications: NotificationService,
   ) {
@@ -81,7 +56,7 @@ export class AuthService {
 
     this.isLoading.set(true);
     try {
-      const beginResponse = await firstValueFrom(this.beginRegister(username));
+      const beginResponse = await firstValueFrom(this.httpService.beginRegister(username));
 
       const options = this.convertRegistrationOptions(beginResponse.options);
       const credential = await navigator.credentials.create({ publicKey: options }) as PublicKeyCredential | null;
@@ -126,7 +101,7 @@ export class AuthService {
 
     this.isLoading.set(true);
     try {
-      const beginResponse = await firstValueFrom(this.beginLogin());
+      const beginResponse = await firstValueFrom(this.httpService.beginLogin());
 
       const options = this.convertAuthOptions(beginResponse.options);
       const credential = await navigator.credentials.get({ publicKey: options }) as PublicKeyCredential | null;
@@ -155,7 +130,7 @@ export class AuthService {
    * Logs out the current user and navigates to auth page.
    */
   async signOut(): Promise<void> {
-    await firstValueFrom(this.http.post<void>(`${this.apiUrl}/logout`, {}));
+    await firstValueFrom(this.httpService.logout());
     this.currentUser.set(null);
     await this.router.navigate(['/auth']);
   }
@@ -165,8 +140,8 @@ export class AuthService {
   // ===========================================================================
 
   private loadCurrentUser(): void {
-    this.http
-      .get<UserSessionResponse>(`${this.apiUrl}/session`)
+    this.httpService
+      .getSession()
       .pipe(
         catchError(() => {
           return [{ authenticated: false }];
@@ -181,19 +156,9 @@ export class AuthService {
       });
   }
 
-  private beginLogin(): Observable<BeginAuthResponse> {
-    return this.http.post<BeginAuthResponse>(`${this.apiUrl}/login/begin`, {});
-  }
-
-  private beginRegister(username: string): Observable<BeginRegisterResponse> {
-    return this.http.post<BeginRegisterResponse>(`${this.apiUrl}/register/begin`, {
-      username,
-    });
-  }
-
   private completeLogin(challengeId: string, credential: PublicKeyCredential): Observable<AuthResponse> {
     const credentialJson = this.credentialToJson(credential);
-    return this.http.post<AuthResponse>(`${this.apiUrl}/login/complete`, {
+    return this.httpService.completeLogin({
       challengeId,
       credential: credentialJson,
     }).pipe(
@@ -211,7 +176,7 @@ export class AuthService {
     credential: PublicKeyCredential
   ): Observable<AuthResponse> {
     const credentialJson = this.credentialToJson(credential);
-    return this.http.post<AuthResponse>(`${this.apiUrl}/register/complete`, {
+    return this.httpService.completeRegister({
       challengeId,
       accountId,
       username,

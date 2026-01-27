@@ -1,23 +1,16 @@
-import {HttpClient} from '@angular/common/http';
 import {Injectable} from '@angular/core';
 import {Observable} from 'rxjs';
+import {Transaction, TransactionHttpService} from './transaction.http.service';
 
-export interface Transaction {
-  id: string;
-  date: string;
-  name: string;
-  amount: number; // positive for credit, negative for debit
-}
+export type {Transaction} from './transaction.http.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class TransactionService {
-  private readonly apiUrl = '/api/transactions';
-
-  constructor(private http: HttpClient) {}
+  constructor(private readonly httpService: TransactionHttpService) {}
 
   getTransactions(): Observable<Transaction[]> {
-    return this.http.get<Transaction[]>(this.apiUrl);
+    return this.httpService.getTransactions();
   }
 }

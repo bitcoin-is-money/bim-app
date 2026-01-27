@@ -1,6 +1,6 @@
 import {Injectable, OnDestroy, signal} from '@angular/core';
-import {HttpClient} from '@angular/common/http';
 import {Amount, ConversionRates, Currency} from "../model";
+import {CurrencyHttpService} from './currency.http.service';
 
 const REFRESH_INTERVAL_MS = 60_000;
 
@@ -14,7 +14,7 @@ export class CurrencyService implements OnDestroy {
   readonly rates = this._rates.asReadonly();
 
   constructor(
-    private readonly http: HttpClient
+    private readonly httpService: CurrencyHttpService
   ) {
     this.fetchRates();
     this.startAutoRefresh();
@@ -25,7 +25,7 @@ export class CurrencyService implements OnDestroy {
   }
 
   fetchRates(): void {
-    this.http.get<ConversionRates>('/api/prices').subscribe({
+    this.httpService.fetchRates().subscribe({
       next: (rates) => this._rates.set(rates)
     });
   }
