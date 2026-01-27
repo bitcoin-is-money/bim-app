@@ -1,18 +1,4 @@
-<ng-template #notifTemplate let-notif>
-<!--  <div class="flex gap-x-2 w-full h-[56px] items-center relative px-4">-->
-<!--    <div class="flex items-center justify-center text-xl">-->
-<!--      <span class="drop-shadow-md">-->
-<!--        <span class="bell-animation"> 🔔 </span>-->
-<!--      </span>-->
-<!--    </div>-->
-
-<!--    <div class="font-medium">{{ notif.getToast().data.message }} sssss</div>-->
-
-<!--    <div-->
-<!--      class="absolute left-0 bottom-0 right-0 h-1 bg-blue-500 rounded-b shrink-line-animation"-->
-<!--      [style.&#45;&#45;shrink-line-animation-duration]="notif.getToast().duration + 'ms'"-->
-<!--    ></div>-->
-<!--  </div>-->
+<ng-template #notificationTemplate let-notif>
   <section>
     {{ notif.getToast().data.message }}
   </section>

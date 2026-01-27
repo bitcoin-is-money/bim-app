@@ -2,12 +2,14 @@ import {HttpErrorResponse, HttpEvent, HttpHandlerFn, HttpInterceptorFn, HttpRequ
 import {Observable, of, throwError} from 'rxjs';
 import {delay, mergeMap} from 'rxjs/operators';
 import {AuthHandlerMock} from './auth-handler.mock';
-import {BalanceHandlerMock} from './balance-handler.mock';
+import {AccountHandlerMock} from './account-handler.mock';
+import {DataStoreMock} from "./data-store.mock";
 import {PricesHandlerMock} from './prices-handler.mock';
 import {TransactionHandlerMock} from './transaction-handler.mock';
 
-const mockAuthHandler = new AuthHandlerMock();
-const mockBalanceHandler = new BalanceHandlerMock();
+const store = new DataStoreMock();
+const mockAuthHandler = new AuthHandlerMock(store);
+const mockAccountHandler = new AccountHandlerMock(store);
 const mockPricesHandler = new PricesHandlerMock();
 const mockTransactionHandler = new TransactionHandlerMock();
 
@@ -47,9 +49,11 @@ export const backendInterceptor: HttpInterceptorFn = (
     response = mockAuthHandler.logout();
   }
 
-  // Balance routes
-  else if (url === '/api/balance' && method === 'GET') {
-    response = mockBalanceHandler.getBalance();
+  // Account routes
+  else if (url === '/api/account/deployment-status' && method === 'GET') {
+    response = mockAccountHandler.getDeploymentStatus();
+  } else if (url === '/api/account/balance' && method === 'GET') {
+    response = mockAccountHandler.getBalance();
   }
 
   // Prices routes

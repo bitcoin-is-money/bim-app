@@ -11,7 +11,7 @@ import {NotificationService} from "../../services/notification.service";
 })
 export class NotificationHostComponent implements AfterViewInit {
 
-  @ViewChild('notifTemplate') notifTemplate!: TemplateRef<any>;
+  @ViewChild('notificationTemplate') notifTemplate!: TemplateRef<any>;
 
   constructor(
     private readonly notificationService: NotificationService
@@ -22,5 +22,3 @@ export class NotificationHostComponent implements AfterViewInit {
   }
 
 }
-
-// <app-base-notification [message]="message" [icon]="['fas', 'qrcode']" />

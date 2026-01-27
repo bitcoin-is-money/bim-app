@@ -57,9 +57,13 @@ function decodeUserHandle(base64Url: string): string {
 }
 
 export class AuthHandlerMock {
-  private readonly store = new DataStoreMock();
   private readonly RP_ID = 'localhost';
   private readonly RP_NAME = 'BIM App (Mock)';
+
+  constructor(
+    private readonly store: DataStoreMock
+  ) {
+  }
 
   // POST /api/auth/register/begin
   beginRegister(body: { username: string }): HttpResponse<BeginRegisterResponse | ApiErrorResponse> {
@@ -153,10 +157,12 @@ export class AuthHandlerMock {
       id: accountId,
       username,
       starknetAddress: generateStarknetAddress(username),
-      status: 'active',
+      status: 'pending',
     };
 
     this.store.setSession(account);
+    this.store.setRegistrationDate(new Date());
+    this.store.setFailedAccountDeployment(username.includes('error'))
 
     return new HttpResponse({
       status: 200,
@@ -164,7 +170,7 @@ export class AuthHandlerMock {
     });
   }
 
-  // POST /api/auth/login/begin (usernameless - discoverable credentials)
+  // POST /api/auth/login/begin (username-less - discoverable credentials)
   beginLogin(): HttpResponse<BeginAuthResponse> {
     const challengeId = generateUUID();
     const challenge = generateChallenge();
@@ -230,7 +236,7 @@ export class AuthHandlerMock {
       });
     }
 
-    // For usernameless flow, use userHandle to find the credential
+    // For username-less flow, use userHandle to find the credential
     const userHandle = credential.response.userHandle;
     if (!userHandle) {
       return new HttpResponse({

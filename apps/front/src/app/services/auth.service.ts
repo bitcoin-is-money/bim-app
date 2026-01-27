@@ -41,7 +41,7 @@ export class AuthService {
    * 2. Begins registration (gets WebAuthn challenge)
    * 3. Creates credential via WebAuthn
    * 4. Completes registration
-   * 5. Navigates to home on success
+   * 5. Navigates to the account-setup page
    *
    * HTTP errors are handled by the HTTP interceptor (notifications).
    * Other errors (validation, WebAuthn) are handled here.
@@ -73,7 +73,7 @@ export class AuthService {
         credential
       ));
 
-      await this.router.navigate(['/home']);
+      await this.router.navigate(['/account-setup']);
     } catch (error) {
       // HTTP errors are already handled by the interceptor
       // Only handle non-HTTP errors here
@@ -87,11 +87,11 @@ export class AuthService {
   }
 
   /**
-   * Handles the complete sign-in flow (usernameless/discoverable credentials):
+   * Handles the complete sign-in flow (username-less/discoverable credentials):
    * 1. Begins authentication (gets WebAuthn challenge)
    * 2. Gets credential via WebAuthn (user selects from available passkeys)
    * 3. Completes authentication
-   * 4. Navigates to home on success
+   * 4. Navigates to the home page on success
    *
    * HTTP errors are handled by the HTTP interceptor (notifications).
    * Other errors (WebAuthn) are handled here.
@@ -127,7 +127,7 @@ export class AuthService {
   }
 
   /**
-   * Logs out the current user and navigates to auth page.
+   * Logs out the current user and navigates to the auth page.
    */
   async signOut(): Promise<void> {
     await firstValueFrom(this.httpService.logout());
