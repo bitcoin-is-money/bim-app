@@ -27,7 +27,7 @@ export function createTransactionRoutes(appContext: AppContext): AuthenticatedHo
       // Parse pagination parameters
       const limitParam = ctx.req.query('limit');
       const offsetParam = ctx.req.query('offset');
-      const limit = limitParam ? Number.parseInt(limitParam, 10) : 50;
+      const limit = limitParam ? Number.parseInt(limitParam, 10) : 10;
       const offset = offsetParam ? Number.parseInt(offsetParam, 10) : 0;
 
       const fetchTransactions = getFetchTransactionsService({

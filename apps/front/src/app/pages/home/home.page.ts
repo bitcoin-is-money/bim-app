@@ -4,15 +4,16 @@ import {Router} from '@angular/router';
 import {BalanceDisplayComponent} from './components/balance-display/balance-display.component';
 import {TransactionListComponent} from './components/transaction-list/transaction-list.component';
 import {EmptyTransactionComponent} from './components/empty-transaction/empty-transaction.component';
+import {SpinnerComponent} from '../../components/spinner/spinner.component';
 import {Amount} from '../../model';
 import {AccountService} from "../../services/account.service";
 import {AuthService} from '../../services/auth.service';
-import {Transaction, TransactionService} from '../../services/transaction.service';
+import {TransactionService} from '../../services/transaction.service';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, BalanceDisplayComponent, TransactionListComponent, EmptyTransactionComponent],
+  imports: [CommonModule, BalanceDisplayComponent, TransactionListComponent, EmptyTransactionComponent, SpinnerComponent],
   templateUrl: './home.page.html',
   styleUrl: './home.page.scss',
 })
@@ -20,13 +21,13 @@ export class HomePage implements OnInit {
 
   private readonly authService = inject(AuthService);
   private readonly accountService = inject(AccountService);
-  private readonly transactionService = inject(TransactionService);
+  readonly transactionService = inject(TransactionService);
   private readonly router = inject(Router);
 
   balance = signal<Amount | undefined>(undefined);
-  transactions = signal<Transaction[] | undefined>(undefined);
+
   isLoading = computed(() => {
-    return this.balance() == undefined || this.transactions() == undefined;
+    return this.balance() == undefined;
   });
 
   ngOnInit(): void {
@@ -43,14 +44,21 @@ export class HomePage implements OnInit {
       },
     });
 
-    this.transactionService.getTransactions().subscribe({
-      next: (transactions) => {
-        this.transactions.set(transactions);
-      },
-      error: (err) => {
-        console.error('Error loading transactions:', err);
-      },
-    });
+    if (this.authService.isNewUser()) {
+      this.authService.isNewUser.set(false);
+      this.transactionService.setEmpty();
+    } else {
+      this.transactionService.loadFirst();
+    }
+  }
+
+  onScroll(event: Event): void {
+    const element = event.target as HTMLElement;
+    const threshold = 100;
+    const reachedBottom = element.scrollHeight - element.scrollTop - element.clientHeight < threshold;
+    if (reachedBottom) {
+      this.transactionService.loadMore();
+    }
   }
 
   get currentUser() {

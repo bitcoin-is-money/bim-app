@@ -18,13 +18,16 @@
       <div class="loading">Loading...</div>
     } @else {
       <app-balance-display [originalAmount]="balance()!" />
-      <section class="transaction-container">
-        @if (transactions()!.length === 0) {
+      <section class="transaction-container" (scroll)="onScroll($event)">
+        @if (transactionService.transactions() === undefined) {
+          <div class="loading-more"><app-spinner /></div>
+        } @else if (transactionService.isEmpty()) {
           <app-empty-transaction />
         } @else {
-          <section class="transactions">
-            <app-transaction-list [transactions]="transactions()!"></app-transaction-list>
-          </section>
+          <app-transaction-list [transactions]="transactionService.transactions()!"></app-transaction-list>
+          @if (transactionService.isLoadingMore()) {
+            <div class="loading-more"><app-spinner /></div>
+          }
         }
       </section>
     }

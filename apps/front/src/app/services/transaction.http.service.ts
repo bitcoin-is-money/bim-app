@@ -1,4 +1,4 @@
-import {HttpClient} from '@angular/common/http';
+import {HttpClient, HttpParams} from '@angular/common/http';
 import {Injectable} from '@angular/core';
 import {Observable} from 'rxjs';
 
@@ -9,6 +9,13 @@ export interface Transaction {
   amount: number; // positive for credit, negative for debit
 }
 
+export interface PaginatedTransactions {
+  transactions: Transaction[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -17,7 +24,10 @@ export class TransactionHttpService {
 
   constructor(private readonly http: HttpClient) {}
 
-  getTransactions(): Observable<Transaction[]> {
-    return this.http.get<Transaction[]>(this.apiUrl);
+  getTransactions(limit: number, offset: number): Observable<PaginatedTransactions> {
+    const params = new HttpParams()
+      .set('limit', limit.toString())
+      .set('offset', offset.toString());
+    return this.http.get<PaginatedTransactions>(this.apiUrl, {params});
   }
 }
