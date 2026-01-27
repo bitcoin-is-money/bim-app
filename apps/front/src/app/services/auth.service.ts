@@ -4,14 +4,8 @@ import {Router} from '@angular/router';
 import {BufferUtils} from "@bim/lib/BufferUtils";
 import {catchError, firstValueFrom, map, Observable} from 'rxjs';
 import {environment} from '../../environments/environment';
+import {Account} from "../model";
 import {NotificationService} from './notification.service';
-
-export interface Account {
-  id: string;
-  username: string;
-  starknetAddress: string;
-  status: string;
-}
 
 export interface AuthResponse {
   account: Account;
@@ -276,7 +270,7 @@ export class AuthService {
   private convertRegistrationOptions(options: BeginRegisterResponse['options']): PublicKeyCredentialCreationOptions {
     // In production, require platform authenticator (TouchID, FaceID, fingerprint)
     // In development, allow any authenticator (including security keys) for testing
-    // residentKey: 'required' enables discoverable credentials for usernameless login
+    // residentKey: 'required' enables discoverable credentials for username-less login
     const authenticatorSelection: AuthenticatorSelectionCriteria = environment.production
       ? { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'required' }
       : { userVerification: 'preferred', residentKey: 'required' };

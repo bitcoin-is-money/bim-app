@@ -1,0 +1,12 @@
+@reference "tailwindcss";
+
+.currency-display {
+  @apply text-lg font-bold text-amber-500;
+  @apply bg-transparent border-none cursor-pointer;
+  @apply hover:text-amber-400 active:text-amber-600;
+  @apply transition-colors;
+
+  &--large {
+    @apply text-5xl;
+  }
+}

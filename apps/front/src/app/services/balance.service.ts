@@ -1,10 +1,11 @@
 import {HttpClient} from '@angular/common/http';
 import {Injectable} from '@angular/core';
-import {Observable} from 'rxjs';
+import {map, Observable} from 'rxjs';
+import {Amount, Currency} from '../model';
 
-export interface Balance {
+interface BalanceResponse {
   amount: number;
-  currency: 'USD' | 'BTC';
+  currency: Currency;
 }
 
 @Injectable({
@@ -13,9 +14,13 @@ export interface Balance {
 export class BalanceService {
   private readonly apiUrl = '/api/balance';
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private readonly http: HttpClient
+  ) {}
 
-  getBalance(): Observable<Balance> {
-    return this.http.get<Balance>(this.apiUrl);
+  getBalance(): Observable<Amount> {
+    return this.http.get<BalanceResponse>(this.apiUrl).pipe(
+      map((response) => Amount.of(response.amount, response.currency))
+    );
   }
 }

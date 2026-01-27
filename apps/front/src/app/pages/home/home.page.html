@@ -18,10 +18,7 @@
       <div class="loading">Loading...</div>
     } @else {
       @if (balance()) {
-        <app-balance-display
-          [amount]="balance()!.amount"
-          [currency]="balance()!.currency">
-        </app-balance-display>
+        <app-balance-display [originalAmount]="balance()!"></app-balance-display>
       }
 
       <div class="transactions-section">

@@ -3,8 +3,9 @@ import {Component, OnInit, signal} from '@angular/core';
 import {Router} from '@angular/router';
 import {BalanceDisplayComponent} from '../../components/balance-display/balance-display.component';
 import {TransactionListComponent} from '../../components/transaction-list/transaction-list.component';
+import {Amount} from '../../model';
 import {AuthService} from '../../services/auth.service';
-import {Balance, BalanceService} from '../../services/balance.service';
+import {BalanceService} from '../../services/balance.service';
 import {Transaction, TransactionService} from '../../services/transaction.service';
 
 @Component({
@@ -15,7 +16,7 @@ import {Transaction, TransactionService} from '../../services/transaction.servic
   styleUrl: './home.page.scss',
 })
 export class HomePage implements OnInit {
-  balance = signal<Balance | null>(null);
+  balance = signal<Amount | null>(null);
   transactions = signal<Transaction[]>([]);
   isLoading = signal(true);
 
