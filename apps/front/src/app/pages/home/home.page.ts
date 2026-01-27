@@ -1,5 +1,5 @@
 import {CommonModule} from '@angular/common';
-import {Component, OnInit, signal} from '@angular/core';
+import {Component, computed, inject, OnInit, signal} from '@angular/core';
 import {Router} from '@angular/router';
 import {BalanceDisplayComponent} from '../../components/balance-display/balance-display.component';
 import {TransactionListComponent} from '../../components/transaction-list/transaction-list.component';
@@ -16,32 +16,29 @@ import {Transaction, TransactionService} from '../../services/transaction.servic
   styleUrl: './home.page.scss',
 })
 export class HomePage implements OnInit {
-  balance = signal<Amount | null>(null);
-  transactions = signal<Transaction[]>([]);
-  isLoading = signal(true);
 
-  constructor(
-    private readonly authService: AuthService,
-    private readonly accountService: AccountService,
-    private readonly transactionService: TransactionService,
-    private readonly router: Router
-  ) {}
+  private readonly authService = inject(AuthService);
+  private readonly accountService = inject(AccountService);
+  private readonly transactionService = inject(TransactionService);
+  private readonly router = inject(Router);
+
+  balance = signal<Amount | undefined>(undefined);
+  transactions = signal<Transaction[] | undefined>(undefined);
+  isLoading = computed(() => {
+    return this.balance() == undefined || this.transactions() == undefined;
+  });
 
   ngOnInit(): void {
     this.loadData();
   }
 
   loadData(): void {
-    this.isLoading.set(true);
-
     this.accountService.getBalance().subscribe({
       next: (balance) => {
         this.balance.set(balance);
-        this.isLoading.set(false);
       },
       error: (err) => {
         console.error('Error loading balance:', err);
-        this.isLoading.set(false);
       },
     });
 

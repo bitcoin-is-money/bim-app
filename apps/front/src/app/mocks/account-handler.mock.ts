@@ -24,7 +24,7 @@ export class AccountHandlerMock {
       return new HttpResponse({ status: 200, body: { status: 'deploying' } });
     }
 
-    if (this.store.getFailedAccountDeployment()) {
+    if (this.store.shouldFailAccountDeployment()) {
       return new HttpResponse({ status: 500, body: { status: 'failed' } });
     }
 
@@ -38,12 +38,12 @@ export class AccountHandlerMock {
 
   // GET /api/account/balance
   getBalance(): HttpResponse<BalanceResponse> {
+    const balance: BalanceResponse = this.store.hasNoTransaction()
+      ? { amount: 0, currency: 'BTC' }
+      : { amount: 1, currency: 'BTC' };
     return new HttpResponse({
       status: 200,
-      body: {
-        amount: 1,
-        currency: 'BTC',
-      },
+      body: balance
     });
   }
 }
