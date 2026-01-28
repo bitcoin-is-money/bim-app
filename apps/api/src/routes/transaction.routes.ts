@@ -20,13 +20,13 @@ export function createTransactionRoutes(appContext: AppContext): AuthenticatedHo
   // Get Transactions
   // ---------------------------------------------------------------------------
 
-  app.get('/', async (ctx) => {
+  app.get('/', async (honoCtx) => {
     try {
-      const account: Account = ctx.get('account');
+      const account: Account = honoCtx.get('account');
 
       // Parse pagination parameters
-      const limitParam = ctx.req.query('limit');
-      const offsetParam = ctx.req.query('offset');
+      const limitParam = honoCtx.req.query('limit');
+      const offsetParam = honoCtx.req.query('offset');
       const limit = limitParam ? Number.parseInt(limitParam, 10) : 10;
       const offset = offsetParam ? Number.parseInt(offsetParam, 10) : 0;
 
@@ -41,7 +41,7 @@ export function createTransactionRoutes(appContext: AppContext): AuthenticatedHo
         offset,
       });
 
-      return ctx.json({
+      return honoCtx.json({
         transactions: result.transactions.map((tx) => ({
           id: tx.id,
           transactionHash: tx.transactionHash,
@@ -60,7 +60,7 @@ export function createTransactionRoutes(appContext: AppContext): AuthenticatedHo
       });
     } catch (error) {
       console.error('Transaction error:', error);
-      return ctx.json({error: 'Internal server error'}, 500);
+      return honoCtx.json({error: 'Internal server error'}, 500);
     }
   });
 

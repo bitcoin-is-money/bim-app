@@ -1,12 +1,12 @@
 import {Hono} from 'hono';
 
-export function createPricesRoutes(): Hono {
+export function createCurrencyRoutes(): Hono {
   const app = new Hono();
 
-  app.get('/', async (ctx) => {
+  app.get('/prices', async (honoCtx) => {
     // TODO: Implement real price fetching from external API
     // For now, return mocked data
-    return ctx.json({
+    return honoCtx.json({
       BTC_USD: 97000,
     });
   });

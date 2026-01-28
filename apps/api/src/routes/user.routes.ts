@@ -24,9 +24,9 @@ export function createUserRoutes(appContext: AppContext): AuthenticatedHono {
   // Get User Settings
   // ---------------------------------------------------------------------------
 
-  app.get('/settings', async (ctx) => {
+  app.get('/settings', async (honoCtx) => {
     try {
-      const account: Account = ctx.get('account');
+      const account: Account = honoCtx.get('account');
 
       const fetchSettings = getFetchUserSettingsService({
         userSettingsRepository: appContext.repositories.userSettings,
@@ -35,12 +35,12 @@ export function createUserRoutes(appContext: AppContext): AuthenticatedHono {
 
       const result = await fetchSettings({accountId: account.id});
 
-      return ctx.json({
+      return honoCtx.json({
         fiatCurrency: result.settings.getFiatCurrency(),
         supportedCurrencies: FiatCurrency.getSupportedCurrencies(),
       });
     } catch (error) {
-      return handleError(ctx, error);
+      return handleError(honoCtx, error);
     }
   });
 
@@ -48,10 +48,10 @@ export function createUserRoutes(appContext: AppContext): AuthenticatedHono {
   // Update User Settings
   // ---------------------------------------------------------------------------
 
-  app.put('/settings', async (ctx) => {
+  app.put('/settings', async (honoCtx) => {
     try {
-      const account: Account = ctx.get('account');
-      const body = await ctx.req.json();
+      const account: Account = honoCtx.get('account');
+      const body = await honoCtx.req.json();
 
       const updateSettings = getUpdateUserSettingsService({
         userSettingsRepository: appContext.repositories.userSettings,
@@ -63,12 +63,12 @@ export function createUserRoutes(appContext: AppContext): AuthenticatedHono {
         fiatCurrency: body.fiatCurrency,
       });
 
-      return ctx.json({
+      return honoCtx.json({
         fiatCurrency: result.settings.getFiatCurrency(),
         supportedCurrencies: FiatCurrency.getSupportedCurrencies(),
       });
     } catch (error) {
-      return handleError(ctx, error);
+      return handleError(honoCtx, error);
     }
   });
 
@@ -80,14 +80,14 @@ export function createUserRoutes(appContext: AppContext): AuthenticatedHono {
 // =============================================================================
 
 function handleError(
-  ctx: {json: (data: unknown, status: number) => Response},
+  honoCtx: {json: (data: unknown, status: number) => Response},
   error: unknown
 ): Response {
   console.error('User settings error:', error);
 
   if (error instanceof UnsupportedCurrencyError) {
-    return ctx.json({error: error.message}, 400);
+    return honoCtx.json({error: error.message}, 400);
   }
 
-  return ctx.json({error: 'Internal server error'}, 500);
+  return honoCtx.json({error: 'Internal server error'}, 500);
 }

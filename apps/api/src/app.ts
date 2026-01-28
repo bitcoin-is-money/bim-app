@@ -8,9 +8,8 @@ import {getDb} from './db';
 import {
   createAccountRoutes,
   createAuthRoutes,
-  createBalanceRoutes,
   createHealthRoutes,
-  createPricesRoutes,
+  createCurrencyRoutes,
   createSwapRoutes,
   createTransactionRoutes,
   createUserRoutes,
@@ -57,8 +56,7 @@ export function createApp(options: CreateAppOptions = {}): Hono {
   app.route('/api/user', createUserRoutes(context));
   app.route('/api/swap', createSwapRoutes(context));
   app.route('/api/health', createHealthRoutes());
-  app.route('/api/balance', createBalanceRoutes(context));
-  app.route('/api/prices', createPricesRoutes());
+  app.route('/api/currency', createCurrencyRoutes());
   app.route('/api/transactions', createTransactionRoutes(context));
 
   // Serve static files (frontend) - skip for tests

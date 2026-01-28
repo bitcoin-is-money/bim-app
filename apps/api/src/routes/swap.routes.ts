@@ -66,9 +66,9 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
   // Get Swap Limits
   // ---------------------------------------------------------------------------
 
-  app.get('/limits/:direction', async (ctx) => {
+  app.get('/limits/:direction', async (honoCtx) => {
     try {
-      const direction = SwapDirectionSchema.parse(ctx.req.param('direction'));
+      const direction = SwapDirectionSchema.parse(honoCtx.req.param('direction'));
 
       const fetchSwapLimits = getFetchSwapLimitsService({
         atomiqGateway: appContext.gateways.atomiq,
@@ -76,13 +76,13 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
 
       const result = await fetchSwapLimits({ direction });
 
-      return ctx.json({
+      return honoCtx.json({
         minSats: result.limits.minSats.toString(),
         maxSats: result.limits.maxSats.toString(),
         feePercent: result.limits.feePercent,
       });
     } catch (error) {
-      return handleError(ctx, error);
+      return handleError(honoCtx, error);
     }
   });
 
@@ -90,9 +90,9 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
   // Create Lightning → Starknet Swap
   // ---------------------------------------------------------------------------
 
-  app.post('/lightning-to-starknet', async (ctx) => {
+  app.post('/lightning-to-starknet', async (honoCtx) => {
     try {
-      const body = await ctx.req.json();
+      const body = await honoCtx.req.json();
       const input = CreateLightningSwapSchema.parse(body);
 
       const createSwap = getCreateLightningSwapService({
@@ -105,14 +105,14 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
         destinationAddress: input.destinationAddress,
       });
 
-      return ctx.json({
+      return honoCtx.json({
         swapId: result.swap.id,
         invoice: result.invoice,
         amountSats: result.swap.amountSats.toString(),
         expiresAt: result.swap.expiresAt.toISOString(),
       });
     } catch (error) {
-      return handleError(ctx, error);
+      return handleError(honoCtx, error);
     }
   });
 
@@ -120,9 +120,9 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
   // Create Bitcoin → Starknet Swap
   // ---------------------------------------------------------------------------
 
-  app.post('/bitcoin-to-starknet', async (ctx) => {
+  app.post('/bitcoin-to-starknet', async (honoCtx) => {
     try {
-      const body = await ctx.req.json();
+      const body = await honoCtx.req.json();
       const input = CreateBitcoinSwapSchema.parse(body);
 
       const createSwap = getCreateBitcoinSwapService({
@@ -135,7 +135,7 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
         destinationAddress: input.destinationAddress,
       });
 
-      return ctx.json({
+      return honoCtx.json({
         swapId: result.swap.id,
         depositAddress: result.depositAddress,
         bip21Uri: result.bip21Uri,
@@ -143,7 +143,7 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
         expiresAt: result.swap.expiresAt.toISOString(),
       });
     } catch (error) {
-      return handleError(ctx, error);
+      return handleError(honoCtx, error);
     }
   });
 
@@ -151,9 +151,9 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
   // Create Starknet → Lightning Swap
   // ---------------------------------------------------------------------------
 
-  app.post('/starknet-to-lightning', async (ctx) => {
+  app.post('/starknet-to-lightning', async (honoCtx) => {
     try {
-      const body = await ctx.req.json();
+      const body = await honoCtx.req.json();
       const input = CreateStarknetToLightningSchema.parse(body);
 
       const createSwap = getCreateStarknetToLightningService({
@@ -166,14 +166,14 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
         sourceAddress: input.sourceAddress,
       });
 
-      return ctx.json({
+      return honoCtx.json({
         swapId: result.swap.id,
         depositAddress: result.depositAddress,
         amountSats: result.amountSats.toString(),
         expiresAt: result.swap.expiresAt.toISOString(),
       });
     } catch (error) {
-      return handleError(ctx, error);
+      return handleError(honoCtx, error);
     }
   });
 
@@ -181,9 +181,9 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
   // Create Starknet → Bitcoin Swap
   // ---------------------------------------------------------------------------
 
-  app.post('/starknet-to-bitcoin', async (ctx) => {
+  app.post('/starknet-to-bitcoin', async (honoCtx) => {
     try {
-      const body = await ctx.req.json();
+      const body = await honoCtx.req.json();
       const input = CreateStarknetToBitcoinSchema.parse(body);
 
       const createSwap = getCreateStarknetToBitcoinService({
@@ -197,14 +197,14 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
         sourceAddress: input.sourceAddress,
       });
 
-      return ctx.json({
+      return honoCtx.json({
         swapId: result.swap.id,
         depositAddress: result.depositAddress,
         amountSats: result.swap.amountSats.toString(),
         expiresAt: result.swap.expiresAt.toISOString(),
       });
     } catch (error) {
-      return handleError(ctx, error);
+      return handleError(honoCtx, error);
     }
   });
 
@@ -212,9 +212,9 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
   // Get Swap Status
   // ---------------------------------------------------------------------------
 
-  app.get('/status/:swapId', async (ctx) => {
+  app.get('/status/:swapId', async (honoCtx) => {
     try {
-      const swapId = ctx.req.param('swapId');
+      const swapId = honoCtx.req.param('swapId');
 
       const fetchSwapStatus = getFetchSwapStatusService({
         swapRepository: appContext.repositories.swap,
@@ -223,7 +223,7 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
 
       const result = await fetchSwapStatus({ swapId });
 
-      return ctx.json({
+      return honoCtx.json({
         swapId: result.swap.id,
         direction: result.swap.direction,
         status: result.status,
@@ -234,7 +234,7 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
         expiresAt: result.swap.expiresAt.toISOString(),
       });
     } catch (error) {
-      return handleError(ctx, error);
+      return handleError(honoCtx, error);
     }
   });
 
@@ -242,9 +242,9 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
   // Claim Swap
   // ---------------------------------------------------------------------------
 
-  app.post('/claim/:swapId', async (ctx) => {
+  app.post('/claim/:swapId', async (honoCtx) => {
     try {
-      const swapId = ctx.req.param('swapId');
+      const swapId = honoCtx.req.param('swapId');
 
       const claimSwap = getClaimSwapService({
         swapRepository: appContext.repositories.swap,
@@ -253,13 +253,13 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
 
       const result = await claimSwap({ swapId });
 
-      return ctx.json({
+      return honoCtx.json({
         swapId: result.swap.id,
         txHash: result.txHash,
         status: result.swap.getStatus(),
       });
     } catch (error) {
-      return handleError(ctx, error);
+      return handleError(honoCtx, error);
     }
   });
 
@@ -270,30 +270,30 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
 // Helpers
 // =============================================================================
 
-function getSessionId(ctx: { req: { header: (name: string) => string | undefined } }): string | undefined {
-  const cookie = ctx.req.header('Cookie');
+function getSessionId(honoCtx: { req: { header: (name: string) => string | undefined } }): string | undefined {
+  const cookie = honoCtx.req.header('Cookie');
   if (!cookie) return undefined;
 
   const match = /session=([^;]+)/.exec(cookie);
   return match?.[1];
 }
 
-function handleError(ctx: { json: (data: unknown, status: number) => Response }, error: unknown): Response {
+function handleError(honoCtx: { json: (data: unknown, status: number) => Response }, error: unknown): Response {
   console.error('Swap error:', error);
 
   if (error instanceof z.ZodError) {
-    return ctx.json(
+    return honoCtx.json(
       { error: 'Validation error', details: error.errors },
       400,
     );
   }
 
   if (error instanceof SwapNotFoundError) {
-    return ctx.json({ error: 'Swap not found' }, 404);
+    return honoCtx.json({ error: 'Swap not found' }, 404);
   }
 
   if (error instanceof SwapAmountError) {
-    return ctx.json(
+    return honoCtx.json(
       {
         error: 'Amount out of range',
         min: error.min.toString(),
@@ -304,16 +304,16 @@ function handleError(ctx: { json: (data: unknown, status: number) => Response },
   }
 
   if (error instanceof SwapCreationError) {
-    return ctx.json({ error: error.message }, 400);
+    return honoCtx.json({ error: error.message }, 400);
   }
 
   if (error instanceof SwapClaimError) {
-    return ctx.json({ error: error.message }, 400);
+    return honoCtx.json({ error: error.message }, 400);
   }
 
   if (error instanceof InvalidSwapStateError) {
-    return ctx.json({ error: error.message }, 400);
+    return honoCtx.json({ error: error.message }, 400);
   }
 
-  return ctx.json({ error: 'Internal server error' }, 500);
+  return honoCtx.json({ error: 'Internal server error' }, 500);
 }

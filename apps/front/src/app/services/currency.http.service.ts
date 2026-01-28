@@ -7,7 +7,7 @@ import {ConversionRates} from '../model';
   providedIn: 'root',
 })
 export class CurrencyHttpService {
-  private readonly apiUrl = '/api/prices';
+  private readonly apiUrl = '/api/currency/prices';
 
   constructor(private readonly http: HttpClient) {}
 
