@@ -1,20 +1,21 @@
 import {CommonModule} from '@angular/common';
-import {Component, signal} from '@angular/core';
+import {Component, inject, signal} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {ButtonComponent} from "../../components/button/button.component";
+import {LogoFooterComponent} from "../../components/logo-footer/logo-footer.component";
 import {AuthService} from '../../services/auth.service';
 
 @Component({
   selector: 'app-auth',
   standalone: true,
-  imports: [CommonModule, FormsModule, ButtonComponent],
+  imports: [CommonModule, FormsModule, ButtonComponent, LogoFooterComponent],
   templateUrl: './auth.page.html',
   styleUrl: './auth.page.scss',
 })
 export class AuthPage {
-  username = signal('');
+  readonly authService: AuthService = inject(AuthService);
 
-  constructor(readonly authService: AuthService) {}
+  username = signal('');
 
   onSignIn(): void {
     this.authService.signIn();

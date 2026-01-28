@@ -1,4 +1,5 @@
 import {HttpResponse} from '@angular/common/http';
+import {WebauthnUserHandleDecoder} from "@bim/lib/auth";
 import {Account} from "../model";
 import type {
   AuthResponse,
@@ -44,23 +45,6 @@ function generateChallenge(): string {
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
     .replace(/=+$/, '');
-}
-
-function decodeUserHandle(base64Url: string): string {
-  // Decode base64url to bytes
-  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-  const padding = '='.repeat((4 - (base64.length % 4)) % 4);
-  const binary = atob(base64 + padding);
-  const bytes = new Uint8Array(binary.length);
-  for (let idx = 0; idx < binary.length; idx++) {
-    bytes[idx] = binary.charCodeAt(idx);
-  }
-
-  // Convert bytes to UUID format
-  const hex = Array.from(bytes)
-    .map((byte) => byte.toString(16).padStart(2, '0'))
-    .join('');
-  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;
 }
 
 export class AuthHandlerMock {
@@ -253,7 +237,7 @@ export class AuthHandlerMock {
       });
     }
 
-    const userId = decodeUserHandle(userHandle);
+    const userId = WebauthnUserHandleDecoder.decodeToUuid(userHandle);
     const storedCredential = this.store.findCredentialByUserId(userId);
     if (!storedCredential) {
       return new HttpResponse({

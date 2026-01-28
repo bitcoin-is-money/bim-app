@@ -3,7 +3,7 @@ import {Component, Input} from '@angular/core';
 import {FaIconComponent} from "@fortawesome/angular-fontawesome";
 import {IconProp} from "@fortawesome/fontawesome-svg-core";
 
-export type ButtonVariant = 'primary' | 'secondary' | 'transparent';
+export type ButtonVariant = 'primary' | 'secondary' | 'big' | 'transparent';
 
 @Component({
   selector: 'app-button',

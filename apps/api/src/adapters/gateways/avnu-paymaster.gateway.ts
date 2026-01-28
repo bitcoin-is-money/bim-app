@@ -1,11 +1,12 @@
+import type {StarknetAddress} from "@bim/domain/account";
 import type {
   DeployTransaction,
   PaymasterGateway,
   PaymasterResult,
   PaymasterTransaction,
-  StarknetTransaction,
-} from '@bim/domain';
-import {ExternalServiceError, StarknetAddress} from '@bim/domain';
+  StarknetTransaction
+} from "@bim/domain/ports";
+import {ExternalServiceError} from "@bim/domain/shared";
 
 /**
  * Configuration for AVNU Paymaster gateway.

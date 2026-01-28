@@ -41,6 +41,25 @@ export interface StarknetGateway {
    * Estimates the fee for a transaction.
    */
   estimateFee(transaction: StarknetTransaction): Promise<bigint>;
+
+  /**
+   * Executes a multicall transaction from the given account.
+   * The adapter handles signing (WebAuthn / paymaster) and submission.
+   */
+  executeCalls(params: {
+    senderAddress: StarknetAddress;
+    calls: readonly StarknetCall[];
+  }): Promise<{txHash: string}>;
+}
+
+/**
+ * Generic Starknet contract call.
+ * Compatible with ERC-20 transfer calls and any other entrypoint.
+ */
+export interface StarknetCall {
+  readonly contractAddress: string;
+  readonly entrypoint: string;
+  readonly calldata: readonly string[];
 }
 
 export interface DeployTransaction {

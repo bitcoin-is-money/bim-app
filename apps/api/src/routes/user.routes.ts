@@ -1,11 +1,5 @@
-import {
-  Account,
-  FiatCurrency,
-  getFetchUserSettingsService,
-  getUpdateUserSettingsService,
-  UnsupportedCurrencyError,
-  UserSettingsId,
-} from '@bim/domain';
+import {Account} from '@bim/domain/account';
+import {FiatCurrency, UnsupportedCurrencyError} from "@bim/domain/user";
 import {Hono} from 'hono';
 import type {AppContext} from "../app-context";
 import {createAuthMiddleware} from '../middleware/auth.middleware';
@@ -20,6 +14,9 @@ export function createUserRoutes(appContext: AppContext): AuthenticatedHono {
 
   app.use('*', createAuthMiddleware(appContext));
 
+  // Service from AppContext (initialized once at startup)
+  const {userSettings: userSettingsService} = appContext.services;
+
   // ---------------------------------------------------------------------------
   // Get User Settings
   // ---------------------------------------------------------------------------
@@ -28,12 +25,7 @@ export function createUserRoutes(appContext: AppContext): AuthenticatedHono {
     try {
       const account: Account = honoCtx.get('account');
 
-      const fetchSettings = getFetchUserSettingsService({
-        userSettingsRepository: appContext.repositories.userSettings,
-        idGenerator: UserSettingsId.generate,
-      });
-
-      const result = await fetchSettings({accountId: account.id});
+      const result = await userSettingsService.fetch({accountId: account.id});
 
       return honoCtx.json({
         fiatCurrency: result.settings.getFiatCurrency(),
@@ -53,12 +45,7 @@ export function createUserRoutes(appContext: AppContext): AuthenticatedHono {
       const account: Account = honoCtx.get('account');
       const body = await honoCtx.req.json();
 
-      const updateSettings = getUpdateUserSettingsService({
-        userSettingsRepository: appContext.repositories.userSettings,
-        idGenerator: UserSettingsId.generate,
-      });
-
-      const result = await updateSettings({
+      const result = await userSettingsService.update({
         accountId: account.id,
         fiatCurrency: body.fiatCurrency,
       });

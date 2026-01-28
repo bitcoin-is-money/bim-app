@@ -1,5 +1,5 @@
 import {StarknetAddress} from '../account';
-import {DomainError, ValidationError} from '../shared';
+import {Amount, DomainError, ValidationError} from '../shared';
 
 // =============================================================================
 // Branded Types
@@ -25,6 +25,7 @@ export namespace SwapId {
 
 /**
  * Lightning Network invoice (BOLT11 format).
+ * BOLT-11: https://github.com/lightning/bolts/blob/master/11-payment-encoding.md
  */
 export type LightningInvoice = string & { readonly __brand: 'LightningInvoice' };
 
@@ -33,7 +34,7 @@ export namespace LightningInvoice {
 
   export function of(value: string): LightningInvoice {
     const trimmed = value.trim().toLowerCase();
-    if (!INVOICE_REGEX.test(trimmed)) {
+    if (!LightningInvoice.isValid(trimmed)) {
       throw new InvalidLightningInvoiceError(value);
     }
     return trimmed as LightningInvoice;
@@ -59,11 +60,7 @@ export namespace BitcoinAddress {
 
   export function of(value: string): BitcoinAddress {
     const trimmed = value.trim();
-    if (
-      !BECH32_REGEX.test(trimmed) &&
-      !LEGACY_REGEX.test(trimmed) &&
-      !TESTNET_LEGACY_REGEX.test(trimmed)
-    ) {
+    if (!BitcoinAddress.isValid(trimmed)) {
       throw new InvalidBitcoinAddressError(value);
     }
     return trimmed as BitcoinAddress;
@@ -140,7 +137,7 @@ export interface SwapData {
 
 export interface CreateLightningToStarknetParams {
   id: SwapId;
-  amountSats: bigint;
+  amount: Amount;
   destinationAddress: StarknetAddress;
   invoice: string;
   expiresAt: Date;
@@ -148,7 +145,7 @@ export interface CreateLightningToStarknetParams {
 
 export interface CreateBitcoinToStarknetParams {
   id: SwapId;
-  amountSats: bigint;
+  amount: Amount;
   destinationAddress: StarknetAddress;
   depositAddress: string;
   expiresAt: Date;
@@ -156,7 +153,7 @@ export interface CreateBitcoinToStarknetParams {
 
 export interface CreateStarknetToLightningParams {
   id: SwapId;
-  amountSats: bigint;
+  amount: Amount;
   sourceAddress: StarknetAddress;
   invoice: LightningInvoice;
   depositAddress: string;
@@ -165,7 +162,7 @@ export interface CreateStarknetToLightningParams {
 
 export interface CreateStarknetToBitcoinParams {
   id: SwapId;
-  amountSats: bigint;
+  amount: Amount;
   sourceAddress: StarknetAddress;
   destinationAddress: BitcoinAddress;
   depositAddress: string;
@@ -221,11 +218,11 @@ export class InvalidSwapStateError extends DomainError {
 
 export class SwapAmountError extends DomainError {
   constructor(
-    readonly amount: bigint,
-    readonly min: bigint,
-    readonly max: bigint,
+    readonly amount: Amount,
+    readonly min: Amount,
+    readonly max: Amount,
   ) {
-    super(`Amount ${amount} sats is outside limits [${min}, ${max}]`);
+    super(`Amount ${amount.getSat()} sats is outside limits [${min.getSat()}, ${max.getSat()}]`);
   }
 }
 

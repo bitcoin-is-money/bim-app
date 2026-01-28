@@ -4,8 +4,9 @@ import type {
   PaymasterResult,
   PaymasterTransaction,
   StarknetTransaction,
-} from '@bim/domain';
-import {ExternalServiceError, StarknetAddress} from '@bim/domain';
+} from '@bim/domain/ports';
+import {StarknetAddress} from '@bim/domain/account';
+import {ExternalServiceError} from "@bim/domain/shared";
 import {Account, CallData, hash, RpcProvider, Signer} from 'starknet';
 import type {StarkSigner} from './crypto/stark-signer';
 

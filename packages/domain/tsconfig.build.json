@@ -1,7 +1,9 @@
 {
   "extends": "./../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "outDir": "dist",
+    "rootDir": "src",   // Avoid src directory in dist directory
+    "paths": {}         // Force to use internal dependencies from node_modules
   },
   "include": ["src/**/*"]
 }

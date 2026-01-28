@@ -4,13 +4,13 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+    "./auth":  {
+      "types": "./dist/auth/index.d.ts",
+      "import": "./dist/auth/index.js"
     },
-    "./*": {
-      "types": "./dist/*.d.ts",
-      "import": "./dist/*.js"
+    "./encoding":  {
+      "types": "./dist/encoding/index.d.ts",
+      "import": "./dist/encoding/index.js"
     }
   },
   "scripts": {

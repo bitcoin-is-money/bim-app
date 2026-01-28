@@ -4,7 +4,7 @@ import type {
   VerifyAuthenticationParams,
   VerifyRegistrationParams,
   WebAuthnGateway,
-} from '@bim/domain';
+} from '@bim/domain/ports';
 import {type Uint8Array_, verifyAuthenticationResponse, verifyRegistrationResponse,} from '@simplewebauthn/server';
 import {cose, decodeCredentialPublicKey,} from '@simplewebauthn/server/helpers';
 

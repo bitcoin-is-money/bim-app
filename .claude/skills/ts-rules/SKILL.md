@@ -412,6 +412,7 @@ try {
 - ❌ `console.log` (use proper logger)
 - ❌ Barrel files with circular dependencies
 - ❌ `toPromise()` on observables (use `firstValueFrom()` or `lastValueFrom()` from RxJS)
+- ❌ `string.replace(/pattern/g, ...)` for global replacements (use `string.replaceAll()` instead)
 
 ---
 

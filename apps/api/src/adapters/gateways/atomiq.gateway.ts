@@ -2,16 +2,18 @@ import {StarknetInitializer} from '@atomiqlabs/chain-starknet';
 import type {MultichainSwapperOptions} from '@atomiqlabs/sdk';
 import {BitcoinNetwork, Swapper, SwapperFactory} from '@atomiqlabs/sdk';
 import {SqliteStorageManager, SqliteUnifiedStorage} from '@atomiqlabs/storage-sqlite';
+import {StarknetAddress} from "@bim/domain/account";
 import type {
   AtomiqGateway,
   AtomiqReverseSwapResult,
   AtomiqSwapResult,
   AtomiqSwapStatus,
   ClaimResult,
-  SwapLimits,
   UnsignedClaimTransactions
-} from '@bim/domain';
-import {BitcoinAddress, ExternalServiceError, LightningInvoice, StarknetAddress, SwapId,} from '@bim/domain';
+} from '@bim/domain/ports';
+import {ExternalServiceError} from "@bim/domain/shared";
+import type {SwapLimits} from "@bim/domain/swap";
+import {BitcoinAddress, LightningInvoice, SwapId} from '@bim/domain/swap';
 
 /**
  * Configuration for Atomiq gateway.

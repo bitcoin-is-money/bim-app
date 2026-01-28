@@ -9,3 +9,4 @@ export * from './starknet.gateway';
 export * from './paymaster.gateway';
 export * from './webauthn.gateway';
 export * from './atomiq.gateway';
+export * from './lightning.decoder';

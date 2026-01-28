@@ -1,10 +1,7 @@
 {
   "extends": "./../../tsconfig.base.json",
   "compilerOptions": {
-    "noEmit": true,
-//    "paths": {
-//      "@bim/domain/*" : ["*"]
-//    }
+    "noEmit": true
   },
   "include": ["src/**/*", "test/**/*"]
 }

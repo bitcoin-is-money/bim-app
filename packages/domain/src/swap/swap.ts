@@ -1,4 +1,4 @@
-import {InvalidStateTransitionError} from '../shared';
+import {Amount, InvalidStateTransitionError} from '../shared';
 import {
   type CreateBitcoinToStarknetParams,
   type CreateLightningToStarknetParams,
@@ -28,7 +28,7 @@ export class Swap {
   private constructor(
     readonly id: SwapId,
     readonly direction: SwapDirection,
-    readonly amountSats: bigint,
+    readonly amount: Amount,
     readonly destinationAddress: string,
     readonly sourceAddress: string | undefined,
     readonly invoice: string | undefined,
@@ -53,7 +53,7 @@ export class Swap {
     return new Swap(
       params.id,
       'lightning_to_starknet',
-      params.amountSats,
+      params.amount,
       params.destinationAddress,
       undefined,
       params.invoice,
@@ -73,7 +73,7 @@ export class Swap {
     return new Swap(
       params.id,
       'bitcoin_to_starknet',
-      params.amountSats,
+      params.amount,
       params.destinationAddress,
       undefined,
       undefined,
@@ -93,7 +93,7 @@ export class Swap {
     return new Swap(
       params.id,
       'starknet_to_lightning',
-      params.amountSats,
+      params.amount,
       params.invoice, // destination is the LN invoice
       params.sourceAddress,
       params.invoice,
@@ -113,7 +113,7 @@ export class Swap {
     return new Swap(
       params.id,
       'starknet_to_bitcoin',
-      params.amountSats,
+      params.amount,
       params.destinationAddress,
       params.sourceAddress,
       undefined,
@@ -131,7 +131,7 @@ export class Swap {
     return new Swap(
       data.id,
       data.direction,
-      data.amountSats,
+      Amount.ofSatoshi(data.amountSats),
       data.destinationAddress,
       data.sourceAddress,
       data.invoice,
@@ -320,7 +320,7 @@ export class Swap {
     return {
       id: this.id,
       direction: this.direction,
-      amountSats: this.amountSats,
+      amountSats: this.amount.getSat(),
       destinationAddress: this.destinationAddress,
       sourceAddress: this.sourceAddress,
       state: this.state,

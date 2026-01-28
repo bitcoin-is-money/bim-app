@@ -31,13 +31,14 @@
     "deepmerge": "^4.3.1",
     "drizzle-orm": "^0.38.0",
     "hono": "^4.6.0",
+    "light-bolt11-decoder": "^3.2.0",
     "pg": "^8.13.0",
     "starknet": "^9.3.0",
     "zod": "^3.24.0"
   },
   "devDependencies": {
-    "@testcontainers/postgresql": "^11.11.0",
     "@bim/test-toolkit": "*",
+    "@testcontainers/postgresql": "^11.11.0",
     "@types/node": "^25.0.9",
     "@types/pg": "^8.11.6",
     "drizzle-kit": "^0.30.0",

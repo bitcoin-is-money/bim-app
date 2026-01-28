@@ -1,5 +1,13 @@
-import type {DeployTransaction, StarknetGateway, StarknetTransaction, TransactionReceipt,} from '@bim/domain';
-import {ExternalServiceError, StarknetAddress} from '@bim/domain';
+import {StarknetAddress} from "@bim/domain/account";
+import type {
+  DeployTransaction,
+  PaymasterGateway,
+  StarknetCall,
+  StarknetGateway,
+  StarknetTransaction,
+  TransactionReceipt,
+} from "@bim/domain/ports";
+import {ExternalServiceError} from "@bim/domain/shared";
 import {CallData, hash, RpcProvider} from 'starknet';
 
 /**
@@ -18,7 +26,8 @@ export class StarknetRpcGateway implements StarknetGateway {
   private readonly provider: RpcProvider;
 
   constructor(
-    private readonly config: StarknetGatewayConfig
+    private readonly config: StarknetGatewayConfig,
+    private readonly paymasterGateway: PaymasterGateway,
   ) {
     this.provider = new RpcProvider({ nodeUrl: config.rpcUrl });
   }
@@ -162,5 +171,56 @@ export class StarknetRpcGateway implements StarknetGateway {
         `Failed to estimate fee: ${error}`,
       );
     }
+  }
+
+  async executeCalls(params: {
+    senderAddress: StarknetAddress;
+    calls: readonly StarknetCall[];
+  }): Promise<{txHash: string}> {
+    try {
+      const calldata = this.encodeMulticall(params.calls);
+
+      const transaction: StarknetTransaction = {
+        type: 'INVOKE',
+        contractAddress: params.senderAddress.toString(),
+        callData: calldata,
+      };
+
+      const result = await this.paymasterGateway.executeTransaction({
+        transaction,
+        accountAddress: params.senderAddress,
+      });
+
+      if (!result.success) {
+        throw new Error('Transaction execution failed');
+      }
+
+      return {txHash: result.txHash};
+    } catch (error) {
+      if (error instanceof ExternalServiceError) throw error;
+      throw new ExternalServiceError(
+        'Starknet',
+        `Failed to execute calls: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  /**
+   * Encodes an array of calls into Cairo 1 __execute__ calldata format:
+   * [num_calls, to_0, selector_0, data_0_len, ...data_0, to_1, selector_1, ...]
+   */
+  private encodeMulticall(calls: readonly StarknetCall[]): string[] {
+    const encoded: string[] = [String(calls.length)];
+
+    for (const call of calls) {
+      encoded.push(call.contractAddress);
+      encoded.push(hash.getSelectorFromName(call.entrypoint));
+      encoded.push(String(call.calldata.length));
+      for (const datum of call.calldata) {
+        encoded.push(datum);
+      }
+    }
+
+    return encoded;
   }
 }

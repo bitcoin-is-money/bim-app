@@ -79,7 +79,6 @@ export class HomePage implements OnInit {
   }
 
   onPay(): void {
-    // TODO: implement later
-    console.log('Pay clicked');
+    this.router.navigate(['/pay']);
   }
 }
