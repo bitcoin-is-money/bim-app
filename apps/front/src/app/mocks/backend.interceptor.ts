@@ -51,14 +51,16 @@ export const backendInterceptor: HttpInterceptorFn = (
   }
 
   // Account routes
-  else if (url === '/api/account/deployment-status' && method === 'GET') {
+  else if (url === '/api/account/deploy' && method === 'POST') {
+    response = mockAccountHandler.deploy();
+  } else if (url === '/api/account/deployment-status' && method === 'GET') {
     response = mockAccountHandler.getDeploymentStatus();
   } else if (url === '/api/account/balance' && method === 'GET') {
     response = mockAccountHandler.getBalance();
   }
 
   // Prices routes
-  else if (url === '/api/prices' && method === 'GET') {
+  else if (url === '/api/currency/prices' && method === 'GET') {
     response = mockPricesHandler.getPrices();
   }
 

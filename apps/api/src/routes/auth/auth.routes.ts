@@ -72,7 +72,6 @@ export function createAuthRoutes(appContext: AppContext): Hono {
         challengeRepository: appContext.repositories.challenge,
         sessionRepository: appContext.repositories.session,
         webAuthnGateway: appContext.gateways.webAuthn,
-        starknetGateway: appContext.gateways.starknet,
       });
 
       const result = await complete({
@@ -89,7 +88,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
         account: {
           id: result.account.id,
           username: result.account.username,
-          starknetAddress: result.account.getStarknetAddress(),
+          starknetAddress: result.account.getStarknetAddress() ?? null,
           status: result.account.getStatus(),
         },
       });
@@ -146,7 +145,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
         account: {
           id: result.account.id,
           username: result.account.username,
-          starknetAddress: result.account.getStarknetAddress(),
+          starknetAddress: result.account.getStarknetAddress() ?? null,
           status: result.account.getStatus(),
         },
       });
@@ -178,7 +177,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
         account: {
           id: result.account.id,
           username: result.account.username,
-          starknetAddress: result.account.getStarknetAddress(),
+          starknetAddress: result.account.getStarknetAddress() ?? null,
           status: result.account.getStatus(),
         },
       });

@@ -10,7 +10,6 @@ import type {
   AccountRepository,
   ChallengeRepository,
   SessionRepository,
-  StarknetGateway,
   WebAuthnGateway
 } from '../ports';
 import {Challenge} from './challenge';
@@ -26,7 +25,6 @@ export interface RegistrationServicesDeps {
   challengeRepository: ChallengeRepository;
   sessionRepository: SessionRepository;
   webAuthnGateway: WebAuthnGateway;
-  starknetGateway: StarknetGateway;
   idGenerator: () => AccountId;
 }
 
@@ -116,7 +114,8 @@ export type CompleteRegistrationService = (input: CompleteRegistrationInput) => 
 
 /**
  * Completes WebAuthn registration after user interaction.
- * Verifies the credential, creates an account with its Starknet address, and starts a session.
+ * Verifies the credential, creates an account, and starts a session.
+ * The Starknet address will be computed during deployment.
  *
  * The accountId is passed from beginRegistration to ensure the userHandle in the credential
  * matches the account ID (required for username-less login).

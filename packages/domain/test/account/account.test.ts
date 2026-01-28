@@ -9,7 +9,6 @@ describe('Account', () => {
     return Account.create({
       id: AccountId.of('550e8400-e29b-41d4-a716-446655440000'),
       username: 'alice',
-      starknetAddress: TEST_STARKNET_ADDRESS,
       credentialId: CredentialId.of('test-credential-id'),
       publicKey: '0x1234567890abcdef',
       credentialPublicKey: 'encoded-public-key',
@@ -17,14 +16,14 @@ describe('Account', () => {
   };
 
   describe('create', () => {
-    it('creates account in pending status with starknet address', () => {
+    it('creates account in pending status without starknet address', () => {
       const account = createTestAccount();
 
       expect(account.id).toBe('550e8400-e29b-41d4-a716-446655440000');
       expect(account.username).toBe('alice');
       expect(account.getStatus()).toBe('pending');
       expect(account.getSignCount()).toBe(0);
-      expect(account.getStarknetAddress()).toBe(TEST_STARKNET_ADDRESS);
+      expect(account.getStarknetAddress()).toBeUndefined();
     });
 
     it('sets createdAt and updatedAt to current time', () => {
@@ -64,20 +63,21 @@ describe('Account', () => {
   });
 
   describe('markAsDeploying', () => {
-    it('transitions from pending to deploying', () => {
+    it('transitions from pending to deploying with starknet address', () => {
       const account = createTestAccount();
 
-      account.markAsDeploying('0xtxhash');
+      account.markAsDeploying(TEST_STARKNET_ADDRESS, '0xtxhash');
 
       expect(account.getStatus()).toBe('deploying');
+      expect(account.getStarknetAddress()).toBe(TEST_STARKNET_ADDRESS);
       expect(account.getDeploymentTxHash()).toBe('0xtxhash');
     });
 
     it('throws when not in pending status', () => {
       const account = createTestAccount();
-      account.markAsDeploying('0xtx1');
+      account.markAsDeploying(TEST_STARKNET_ADDRESS, '0xtx1');
 
-      expect(() => account.markAsDeploying('0xtx2'))
+      expect(() => account.markAsDeploying(TEST_STARKNET_ADDRESS, '0xtx2'))
         .toThrow(InvalidStateTransitionError);
     });
   });
@@ -85,7 +85,7 @@ describe('Account', () => {
   describe('markAsDeployed', () => {
     it('transitions from deploying to deployed', () => {
       const account = createTestAccount();
-      account.markAsDeploying('0xtx');
+      account.markAsDeploying(TEST_STARKNET_ADDRESS, '0xtx');
 
       account.markAsDeployed();
 
@@ -104,7 +104,7 @@ describe('Account', () => {
   describe('markAsFailed', () => {
     it('transitions from deploying to failed', () => {
       const account = createTestAccount();
-      account.markAsDeploying('0xtx');
+      account.markAsDeploying(TEST_STARKNET_ADDRESS, '0xtx');
 
       account.markAsFailed();
 
@@ -140,7 +140,7 @@ describe('Account', () => {
   });
 
   describe('canDeploy', () => {
-    it('returns true when pending with starknet address', () => {
+    it('returns true when pending', () => {
       const account = createTestAccount();
 
       expect(account.canDeploy()).toBe(true);
@@ -148,7 +148,7 @@ describe('Account', () => {
 
     it('returns false when not pending', () => {
       const account = createTestAccount();
-      account.markAsDeploying('0xtx');
+      account.markAsDeploying(TEST_STARKNET_ADDRESS, '0xtx');
 
       expect(account.canDeploy()).toBe(false);
     });
@@ -164,7 +164,7 @@ describe('Account', () => {
       expect(data.username).toBe('alice');
       expect(data.status).toBe('pending');
       expect(data.signCount).toBe(0);
-      expect(data.starknetAddress).toBe(TEST_STARKNET_ADDRESS);
+      expect(data.starknetAddress).toBeUndefined();
     });
   });
 });

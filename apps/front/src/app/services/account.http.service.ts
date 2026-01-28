@@ -1,15 +1,29 @@
 import {HttpClient} from '@angular/common/http';
 import {Injectable} from '@angular/core';
 import {Observable} from 'rxjs';
-import type {Currency} from "../model";
 
 export interface DeploymentStatusResponse {
   status: 'pending' | 'deploying' | 'deployed' | 'failed';
 }
 
+export interface DeployAccountResponse {
+  txHash: string;
+  status: string;
+  starknetAddress: string;
+}
+
+export interface TokenBalance {
+  token: string;
+  amount: string;
+  decimals: number;
+}
+
 export interface BalanceResponse {
-  amount: number;
-  currency: Currency;
+  wbtcBalance: {
+    symbol: string;
+    amount: string;
+    decimals: number;
+  };
 }
 
 @Injectable({
@@ -29,4 +43,7 @@ export class AccountHttpService {
     return this.http.get<DeploymentStatusResponse>('/api/account/deployment-status');
   }
 
+  deploy(sync: boolean = false): Observable<DeployAccountResponse> {
+    return this.http.post<DeployAccountResponse>('/api/account/deploy', { sync });
+  }
 }

@@ -52,7 +52,7 @@ interface AccountMeResponse {
  */
 interface DeploymentStatusResponse {
   status: string;
-  txHash: string | undefined;
+  txHash: string | null;
   isDeployed: boolean;
 }
 
@@ -182,7 +182,8 @@ describe('Account Deployment Flow', () => {
 
       // Verify account state from registration response
       expect(account.status).toBe('pending');
-      expect(account.starknetAddress).toMatch(/^0x[0-9a-fA-F]{64}$/);
+      // Starknet address is null until deployment
+      expect(account.starknetAddress).toBeNull();
 
       const response = await TestApp
         .request(app)
@@ -196,8 +197,8 @@ describe('Account Deployment Flow', () => {
       expect(body.id).toBe(account.id);
       expect(body.username).toBe(username);
       expect(body.status).toBe('pending');
-      expect(body.starknetAddress).toMatch(/^0x[0-9a-fA-F]{64}$/);
-      expect(body.deploymentTxHash).toBeUndefined();
+      expect(body.starknetAddress).toBeNull();
+      expect(body.deploymentTxHash).toBeNull();
       expect(body.createdAt).toBeDefined();
     });
 
@@ -234,7 +235,7 @@ describe('Account Deployment Flow', () => {
       const body = await response.json() as DeploymentStatusResponse;
 
       expect(body.status).toBe('pending');
-      expect(body.txHash).toBeUndefined();
+      expect(body.txHash).toBeNull();
       expect(body.isDeployed).toBe(false);
     });
 
@@ -260,9 +261,9 @@ describe('Account Deployment Flow', () => {
       const username = 'deploy_test';
       const {sessionCookie, account} = await registerUser(username);
 
-      // Verify the account is pending before deployment
+      // Verify the account is pending before deployment (no starknet address yet)
       expect(account.status).toBe('pending');
-      expect(account.starknetAddress).toBeDefined();
+      expect(account.starknetAddress).toBeNull();
 
       // Trigger deployment
       const deployResponse = await TestApp
@@ -275,7 +276,11 @@ describe('Account Deployment Flow', () => {
       const deployBody = await deployResponse.json() as {
         txHash: string;
         status: string;
+        starknetAddress: string;
       };
+
+      // Starknet address should now be computed
+      expect(deployBody.starknetAddress).toMatch(/^0x[0-9a-fA-F]{64}$/);
 
       expect(deployBody.txHash).toMatch(/^0x[0-9a-fA-F]+$/);
       expect(deployBody.status).toBe('deploying');
@@ -327,19 +332,19 @@ describe('Account Deployment Flow', () => {
 
   describe('Account State Transitions', () => {
 
-    it('account has computed Starknet address after registration', async () => {
+    it('account has no Starknet address after registration', async () => {
       const username = 'address_test';
       const {account} = await registerUser(username);
 
-      // Starknet address should be computed at registration
-      expect(account.starknetAddress).toBeDefined();
-      expect(account.starknetAddress).toMatch(/^0x[0-9a-fA-F]{64}$/);
-
-      // Verify the address can be used to check deployment status (should be not deployed)
-      const isDeployed = await strkContext.isAccountDeployed(
-        await strkContext.calculateAccountAddress(account.starknetAddress!),
-      );
-      expect(isDeployed).toBe(false);
+      // Starknet address should NOT be computed at registration
+      expect(account.starknetAddress).toBeNull();
+      expect(account.status).toBe('pending');
     });
+
+    // NOTE: The test "deploys account to Starknet devnet" above already verifies
+    // that starknetAddress is computed and returned during deployment.
+    // We can't run multiple deployment tests with the same P256 signer because
+    // they would all compute the same Starknet address, and the devnet would
+    // reject deploying the same address twice.
   });
 });

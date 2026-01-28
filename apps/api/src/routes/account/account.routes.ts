@@ -4,12 +4,21 @@ import {
   AccountNotFoundError,
   type DeployAccountOutput,
   getDeployAccountService,
+  getGetBalanceService,
   InvalidAccountStateError,
 } from '@bim/domain';
 import {Hono} from 'hono';
+import type {TypedResponse} from 'hono';
 import type {AppContext} from "../../app-context";
 import {createAuthMiddleware} from '../../middleware/auth.middleware';
 import type {AuthenticatedHono} from '../../types.js';
+import type {
+  DeployAccountRequest,
+  DeployAccountResponse,
+  GetAccountResponse,
+  GetBalanceResponse,
+  GetDeploymentStatusResponse,
+} from './account.types';
 
 // =============================================================================
 // Routes
@@ -24,15 +33,15 @@ export function createAccountRoutes(appCtx: AppContext): AuthenticatedHono {
   // Get Current Account
   // ---------------------------------------------------------------------------
 
-  app.get('/me', (honoCtx) => {
+  app.get('/me', (honoCtx): TypedResponse<GetAccountResponse> => {
     const account: Account = honoCtx.get('account');
 
-    return honoCtx.json({
+    return honoCtx.json<GetAccountResponse>({
       id: account.id,
       username: account.username,
-      starknetAddress: account.getStarknetAddress(),
+      starknetAddress: account.getStarknetAddress() ?? null,
       status: account.getStatus(),
-      deploymentTxHash: account.getDeploymentTxHash(),
+      deploymentTxHash: account.getDeploymentTxHash() ?? null,
       createdAt: account.createdAt.toISOString(),
     });
   });
@@ -41,9 +50,11 @@ export function createAccountRoutes(appCtx: AppContext): AuthenticatedHono {
   // Deploy Account
   // ---------------------------------------------------------------------------
 
-  app.post('/deploy', async (honoCtx) => {
+  app.post('/deploy', async (honoCtx): Promise<TypedResponse<DeployAccountResponse> | Response> => {
     try {
       const account: Account = honoCtx.get('account');
+      const body: DeployAccountRequest = await honoCtx.req.json().catch(() => ({}));
+      const sync = body.sync === true;
 
       const deployAccount = getDeployAccountService({
         accountRepository: appCtx.repositories.account,
@@ -53,11 +64,13 @@ export function createAccountRoutes(appCtx: AppContext): AuthenticatedHono {
 
       const result: DeployAccountOutput = await deployAccount({
         accountId: AccountId.of(account.id),
+        sync,
       });
 
-      return honoCtx.json({
+      return honoCtx.json<DeployAccountResponse>({
         txHash: result.txHash,
         status: result.account.getStatus(),
+        starknetAddress: result.account.getStarknetAddress()!,
       });
     } catch (error) {
       return handleError(honoCtx, error);
@@ -68,7 +81,7 @@ export function createAccountRoutes(appCtx: AppContext): AuthenticatedHono {
   // Get Deployment Status
   // ---------------------------------------------------------------------------
 
-  app.get('/deployment-status', async (honoCtx) => {
+  app.get('/deployment-status', async (honoCtx): Promise<TypedResponse<GetDeploymentStatusResponse> | Response> => {
     const account: Account = honoCtx.get('account');
 
     // Reload account to get the latest status
@@ -80,25 +93,27 @@ export function createAccountRoutes(appCtx: AppContext): AuthenticatedHono {
       return honoCtx.json({ error: 'Account not found' }, 404);
     }
 
-    return honoCtx.json({
+    return honoCtx.json<GetDeploymentStatusResponse>({
       status: freshAccount.getStatus(),
-      txHash: freshAccount.getDeploymentTxHash(),
+      txHash: freshAccount.getDeploymentTxHash() ?? null,
       isDeployed: freshAccount.isDeployed(),
     });
   });
 
-
-  app.get('/balance', async (honoCtx) => {
+  app.get('/balance', async (honoCtx): Promise<TypedResponse<GetBalanceResponse> | Response> => {
     try {
-      // TODO: Implement real balance retrieval from the account
-      // For now, return mocked data (amount in SAT)
-      return honoCtx.json({
-        amount: 125050000,
-        currency: 'SAT',
+      const account: Account = honoCtx.get('account');
+
+      const getBalance = getGetBalanceService({
+        accountRepository: appCtx.repositories.account,
+        starknetGateway: appCtx.gateways.starknet,
       });
+
+      const result = await getBalance({ accountId: account.id });
+
+      return honoCtx.json<GetBalanceResponse>(result);
     } catch (error) {
-      console.error('Balance error:', error);
-      return honoCtx.json({error: 'Internal server error'}, 500);
+      return handleError(honoCtx, error);
     }
   });
 

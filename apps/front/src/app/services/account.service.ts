@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {map, Observable} from 'rxjs';
 import {Amount} from "../model";
-import {AccountHttpService, DeploymentStatusResponse} from './account.http.service';
+import {AccountHttpService, DeployAccountResponse, DeploymentStatusResponse} from './account.http.service';
 
 @Injectable({
   providedIn: 'root',
@@ -16,11 +16,18 @@ export class AccountService {
     return this.httpService
       .getBalance()
       .pipe(
-        map((response) => Amount.of(response.amount, response.currency))
+        map((response) => {
+          const sats = Number(response.wbtcBalance.amount);
+          return Amount.of(sats, 'SAT');
+        })
       );
   }
 
   getDeploymentStatus(): Observable<DeploymentStatusResponse> {
     return this.httpService.getDeploymentStatus();
+  }
+
+  deploy(sync: boolean = false): Observable<DeployAccountResponse> {
+    return this.httpService.deploy(sync);
   }
 }

@@ -27,8 +27,27 @@ export class AccountSetupPage implements OnInit {
   private pollTimer: ReturnType<typeof setInterval> | null = null;
 
   ngOnInit(): void {
-    this.startPolling();
+    this.triggerDeployment();
     this.destroyRef.onDestroy(() => this.stopPolling());
+  }
+
+  private triggerDeployment(): void {
+    this.accountService.deploy(false).subscribe({
+      next: () => {
+        // Deployment started, begin polling for status
+        this.startPolling();
+      },
+      error: (err) => {
+        // Check if account is already deploying or deployed (not an error)
+        if (err.status === 400) {
+          // Account may already be deploying, start polling anyway
+          this.startPolling();
+        } else {
+          this.failed.set(true);
+          this.errorMessage.set('Failed to start account deployment');
+        }
+      },
+    });
   }
 
   goBack(): void {
