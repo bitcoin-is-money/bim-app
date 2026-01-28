@@ -22,6 +22,11 @@ export const ETH_TOKEN_ADDRESS = '0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c
  */
 export const STRK_TOKEN_ADDRESS = '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d';
 
+/**
+ * WBTC token address on Starknet Sepolia.
+ */
+export const WBTC_TOKEN_ADDRESS = '0x00abbd7d98ad664568f204d6e1af6e02d6a5c55eb4e83c9fbbfc3ed8514efc09';
+
 export class StrkDevnetContext {
 
   private readonly devnetProvider: RpcProvider;
@@ -38,6 +43,9 @@ export class StrkDevnetContext {
     this.starknetGateway = new StarknetRpcGateway({
       rpcUrl: this.devnetUrl,
       accountClassHash: DEVNET_ACCOUNT_CLASS_HASH,
+      tokenAddresses: {
+        WBTC: WBTC_TOKEN_ADDRESS,
+      },
     });
 
     // Use shared P256Signer for WebAuthn credential testing

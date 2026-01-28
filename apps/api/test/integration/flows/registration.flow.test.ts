@@ -174,8 +174,8 @@ describe('Registration Flow', () => {
       const setCookie = completeResponse.headers.get('Set-Cookie');
       expect(setCookie).toContain('session=');
 
-      // Verify Starknet address is a valid 66-char hex string
-      expect(body.account.starknetAddress).toMatch(/^0x[0-9a-fA-F]{64}$/);
+      // Starknet address is null after registration (computed during deployment)
+      expect(body.account.starknetAddress).toBeNull();
     });
 
     it('rejects duplicate username', async () => {

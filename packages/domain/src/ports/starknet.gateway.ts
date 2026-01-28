@@ -34,7 +34,7 @@ export interface StarknetGateway {
    */
   getBalance(params: {
     address: StarknetAddress;
-    tokenAddress: string;
+    token: string;
   }): Promise<bigint>;
 
   /**

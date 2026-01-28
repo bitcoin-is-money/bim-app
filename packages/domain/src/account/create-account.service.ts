@@ -1,10 +1,9 @@
-import type {AccountRepository, StarknetGateway} from '../ports';
+import type {AccountRepository} from '../ports';
 import {Account} from './account';
-import {AccountAlreadyExistsError, AccountId, CredentialId, StarknetAddress,} from './types';
+import {AccountAlreadyExistsError, AccountId, CredentialId} from './types';
 
 export interface CreateAccountDeps {
   accountRepository: AccountRepository;
-  starknetGateway: StarknetGateway;
 }
 
 export interface CreateAccountInput {
@@ -18,8 +17,9 @@ export interface CreateAccountInput {
 export type CreateAccountService = (input: CreateAccountInput) => Promise<Account>;
 
 /**
- * Creates a new account with WebAuthn credentials and computes its Starknet address.
+ * Creates a new account with WebAuthn credentials.
  * The account is created in 'pending' status, ready for deployment.
+ * Starknet address will be computed during deployment.
  */
 export function getCreateAccountService(deps: CreateAccountDeps): CreateAccountService {
   return async (input: CreateAccountInput): Promise<Account> => {
@@ -29,15 +29,9 @@ export function getCreateAccountService(deps: CreateAccountDeps): CreateAccountS
       throw new AccountAlreadyExistsError(input.username);
     }
 
-    // Compute a deterministic Starknet address from the public key
-    const starknetAddress = await deps.starknetGateway.calculateAccountAddress({
-      publicKey: input.publicKey,
-    });
-
     const account = Account.create({
       id: input.accountId,
       username: input.username,
-      starknetAddress: starknetAddress,
       credentialId: CredentialId.of(input.credentialId),
       publicKey: input.publicKey,
       credentialPublicKey: input.credentialPublicKey,

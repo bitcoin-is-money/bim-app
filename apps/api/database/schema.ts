@@ -10,7 +10,7 @@ export const accounts = pgTable('accounts', {
   credentialId: text('credential_id').notNull().unique(),
   publicKey: text('public_key').notNull(),
   credentialPublicKey: text('credential_public_key'),
-  starknetAddress: text('starknet_address').notNull(),
+  starknetAddress: text('starknet_address'),
   status: text('status').notNull().default('pending'),
   deploymentTxHash: text('deployment_tx_hash'),
   signCount: integer('sign_count').notNull().default(0),

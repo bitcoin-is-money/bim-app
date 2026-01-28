@@ -97,6 +97,7 @@ export namespace AppContext {
         starknet: new StarknetRpcGateway({
           rpcUrl: config.starknetRpcUrl,
           accountClassHash: config.accountClassHash,
+          tokenAddresses: { WBTC: config.wbtcTokenAddress },
         }),
         paymaster: new AvnuPaymasterGateway({
           apiUrl: config.avnuApiUrl,

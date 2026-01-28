@@ -18,13 +18,14 @@ import {
  * of the corresponding Starknet smart contract.
  *
  * Lifecycle:
- * - pending: Account created in DB, Starknet address computed, awaiting deployment
- * - deploying: Deployment transaction submitted to Starknet
+ * - pending: Account created in DB, awaiting deployment
+ * - deploying: Deployment transaction submitted to Starknet, address computed
  * - deployed: Smart contract successfully deployed on Starknet, the account is fully operational
  * - failed: Deployment transaction failed
  */
 export class Account {
   private status: AccountStatus;
+  private starknetAddress?: StarknetAddress;
   private deploymentTxHash?: string;
   private signCount: number;
   private updatedAt: Date;
@@ -32,31 +33,31 @@ export class Account {
   private constructor(
     readonly id: AccountId,
     readonly username: string,
-    readonly starknetAddress: StarknetAddress,
     readonly credentialId: CredentialId,
     readonly publicKey: string,
     readonly credentialPublicKey: string | undefined,
     readonly createdAt: Date,
     status: AccountStatus,
     signCount: number,
+    starknetAddress?: StarknetAddress,
     deploymentTxHash?: string,
     updatedAt?: Date,
   ) {
     this.status = status;
     this.signCount = signCount;
+    this.starknetAddress = starknetAddress;
     this.deploymentTxHash = deploymentTxHash;
     this.updatedAt = updatedAt ?? createdAt;
   }
 
   /**
-   * Creates a new Account in pending status with a computed Starknet address.
+   * Creates a new Account in pending status (no Starknet address yet).
    */
   static create(params: CreateAccountParams): Account {
     const now = new Date();
     return new Account(
       params.id,
       params.username,
-      params.starknetAddress,
       params.credentialId,
       params.publicKey,
       params.credentialPublicKey,
@@ -73,13 +74,13 @@ export class Account {
     return new Account(
       data.id,
       data.username,
-      data.starknetAddress,
       data.credentialId,
       data.publicKey,
       data.credentialPublicKey,
       data.createdAt,
       data.status,
       data.signCount,
+      data.starknetAddress,
       data.deploymentTxHash,
       data.updatedAt,
     );
@@ -121,14 +122,15 @@ export class Account {
   }
 
   /**
-   * Marks the account as deploying with the given transaction hash.
+   * Marks the account as deploying with the computed address and transaction hash.
    * Can only be called when the account is in pending status.
    */
-  markAsDeploying(txHash: string): void {
+  markAsDeploying(starknetAddress: StarknetAddress, txHash: string): void {
     if (this.status !== 'pending') {
       throw new InvalidStateTransitionError(this.status, 'deploying');
     }
     this.status = 'deploying';
+    this.starknetAddress = starknetAddress;
     this.deploymentTxHash = txHash;
     this.updatedAt = new Date();
   }
@@ -182,7 +184,7 @@ export class Account {
    * Checks if the account can be deployed.
    */
   canDeploy(): boolean {
-    return this.status === 'pending' && this.starknetAddress !== undefined;
+    return this.status === 'pending';
   }
 
   /**
@@ -211,16 +213,15 @@ interface CreateAccountParams {
   credentialId: CredentialId;
   publicKey: string;
   credentialPublicKey?: string;
-  starknetAddress: StarknetAddress;
 }
 
 export interface AccountData {
   id: AccountId;
   username: string;
-  starknetAddress: StarknetAddress;
   credentialId: CredentialId;
   publicKey: string;
   credentialPublicKey?: string;
+  starknetAddress?: StarknetAddress;
   status: AccountStatus;
   deploymentTxHash?: string;
   signCount: number;

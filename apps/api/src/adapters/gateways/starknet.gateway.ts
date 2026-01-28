@@ -8,6 +8,7 @@ import {CallData, hash, RpcProvider} from 'starknet';
 export interface StarknetGatewayConfig {
   rpcUrl: string;
   accountClassHash: string;
+  tokenAddresses: Record<string, string>;
 }
 
 /**
@@ -108,11 +109,19 @@ export class StarknetRpcGateway implements StarknetGateway {
 
   async getBalance(params: {
     address: StarknetAddress;
-    tokenAddress: string;
+    token: string;
   }): Promise<bigint> {
+    const tokenAddress = this.config.tokenAddresses[params.token];
+    if (!tokenAddress) {
+      throw new ExternalServiceError(
+        'Starknet',
+        `Unknown token: ${params.token}`,
+      );
+    }
+
     try {
       const result = await this.provider.callContract({
-        contractAddress: params.tokenAddress,
+        contractAddress: tokenAddress,
         entrypoint: 'balanceOf',
         calldata: [params.address.toString()],
       });

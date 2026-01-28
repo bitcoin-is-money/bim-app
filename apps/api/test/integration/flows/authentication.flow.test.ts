@@ -203,8 +203,8 @@ describe('Authentication Flow', () => {
       const setCookie = completeResponse.headers.get('Set-Cookie');
       expect(setCookie).toContain('session=');
 
-      // Verify the account has a Starknet address
-      expect(body.account.starknetAddress).toMatch(/^0x[0-9a-fA-F]{64}$/);
+      // Starknet address is null until deployment
+      expect(body.account.starknetAddress).toBeNull();
     });
 
     it('increments sign count after successful authentication', async () => {

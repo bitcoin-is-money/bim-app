@@ -1,4 +1,3 @@
-import {StarknetAddress} from "@bim/domain";
 import * as schema from "../../../../database/schema";
 
 export function createAccountData(
@@ -11,7 +10,7 @@ export function createAccountData(
     credentialId: `cred_${id}`,
     publicKey: `pubkey_${id}`,
     credentialPublicKey: null,
-    starknetAddress: StarknetAddress.of('0x123456789abcdef'),
+    starknetAddress: null,
     status: 'pending',
     deploymentTxHash: null,
     signCount: 0,

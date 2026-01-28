@@ -1,5 +1,5 @@
 import {HttpResponse} from '@angular/common/http';
-import {BalanceResponse, DeploymentStatusResponse} from "../services/account.http.service";
+import {BalanceResponse, DeployAccountResponse, DeploymentStatusResponse} from "../services/account.http.service";
 import {DataStoreMock} from "./data-store.mock";
 
 const MOCK_DEPLOYMENT_DELAY_MS = 2000;
@@ -15,35 +15,61 @@ export class AccountHandlerMock {
   getDeploymentStatus(): HttpResponse<DeploymentStatusResponse> {
     const account = this.store.getSession();
     if (!account) {
-      return new HttpResponse({ status: 401, body: { status: 'failed' } as DeploymentStatusResponse });
+      return new HttpResponse({status: 401, body: {status: 'failed'} as DeploymentStatusResponse});
     }
 
     const registrationDate: Date = this.store.getRegistrationDate() ?? new Date();
     const timeToWait = Date.now() - registrationDate.getTime();
     if (!registrationDate || timeToWait < MOCK_DEPLOYMENT_DELAY_MS) {
-      return new HttpResponse({ status: 200, body: { status: 'deploying' } });
+      return new HttpResponse({status: 200, body: {status: 'deploying'}});
     }
 
     if (this.store.shouldFailAccountDeployment()) {
-      return new HttpResponse({ status: 500, body: { status: 'failed' } });
+      return new HttpResponse({status: 500, body: {status: 'failed'}});
     }
 
     // Deployment complete — update session account status
     if (account.status !== 'deployed') {
-      this.store.setSession({ ...account, status: 'deployed' });
+      this.store.setSession({...account, status: 'deployed'});
     }
 
-    return new HttpResponse({ status: 200, body: { status: 'deployed' } });
+    return new HttpResponse({status: 200, body: {status: 'deployed'}});
   }
 
   // GET /api/account/balance
   getBalance(): HttpResponse<BalanceResponse> {
-    const balance: BalanceResponse = this.store.hasNoTransaction()
-      ? { amount: 0, currency: 'BTC' }
-      : { amount: 1, currency: 'BTC' };
+    const amount: string = this.store.hasNoTransaction() ? '0' : '125050000';
     return new HttpResponse({
       status: 200,
-      body: balance
+      body: {
+        wbtcBalance: {
+          symbol: 'WBTC',
+          amount: amount,
+          decimals: 8
+        }
+      },
+    });
+  }
+
+  // POST /api/account/deploy
+  deploy(): HttpResponse<DeployAccountResponse> {
+    const account = this.store.getSession();
+    if (!account) {
+      return new HttpResponse({status: 401});
+    }
+
+    // Update account status to deploying and set registration date for polling
+    const starknetAddress = '0x' + '1'.repeat(64);
+    this.store.setSession({...account, status: 'deploying', starknetAddress});
+    this.store.setRegistrationDate(new Date());
+
+    return new HttpResponse({
+      status: 200,
+      body: {
+        txHash: '0x' + 'abc123'.repeat(10),
+        status: 'deploying',
+        starknetAddress,
+      },
     });
   }
 }
