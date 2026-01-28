@@ -20,12 +20,7 @@ import {
 import {Hono} from 'hono';
 import {z} from 'zod';
 import type {AppContext} from "../../app-context";
-import {
-  BeginAuthenticationSchema,
-  BeginRegistrationSchema,
-  CompleteAuthenticationSchema,
-  CompleteRegistrationSchema
-} from "./auth.schemas";
+import {BeginRegistrationSchema, CompleteAuthenticationSchema, CompleteRegistrationSchema} from "./auth.schemas";
 
 // =============================================================================
 // Routes
@@ -40,9 +35,9 @@ export function createAuthRoutes(appContext: AppContext): Hono {
   // Registration
   // ---------------------------------------------------------------------------
 
-  app.post('/register/begin', async (ctx) => {
+  app.post('/register/begin', async (honoCtx) => {
     try {
-      const body = await ctx.req.json();
+      const body = await honoCtx.req.json();
       const input = BeginRegistrationSchema.parse(body);
 
       const beginRegistration = getBeginRegistrationService({
@@ -57,19 +52,19 @@ export function createAuthRoutes(appContext: AppContext): Hono {
         origin,
       });
 
-      return ctx.json({
+      return honoCtx.json({
         options: result.options,
         challengeId: result.challengeId,
         accountId: result.accountId,
       });
     } catch (error) {
-      return handleError(ctx, error);
+      return handleError(honoCtx, error);
     }
   });
 
-  app.post('/register/complete', async (ctx) => {
+  app.post('/register/complete', async (honoCtx) => {
     try {
-      const body = await ctx.req.json();
+      const body = await honoCtx.req.json();
       const input = CompleteRegistrationSchema.parse(body);
 
       const complete = getCompleteRegistrationService({
@@ -88,9 +83,9 @@ export function createAuthRoutes(appContext: AppContext): Hono {
       });
 
       // Set session cookie
-      setCookie(ctx, result.session.id);
+      setCookie(honoCtx, result.session.id);
 
-      return ctx.json({
+      return honoCtx.json({
         account: {
           id: result.account.id,
           username: result.account.username,
@@ -99,7 +94,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
         },
       });
     } catch (error) {
-      return handleError(ctx, error);
+      return handleError(honoCtx, error);
     }
   });
 
@@ -107,9 +102,9 @@ export function createAuthRoutes(appContext: AppContext): Hono {
   // Authentication
   // ---------------------------------------------------------------------------
 
-  app.post('/login/begin', async (ctx) => {
+  app.post('/login/begin', async (honoCtx) => {
     try {
-      const begin = getBeginAuthenticationService({
+       const begin = getBeginAuthenticationService({
         challengeRepository: appContext.repositories.challenge,
       });
 
@@ -118,18 +113,18 @@ export function createAuthRoutes(appContext: AppContext): Hono {
         origin,
       });
 
-      return ctx.json({
+      return honoCtx.json({
         options: result.options,
         challengeId: result.challengeId,
       });
     } catch (error) {
-      return handleError(ctx, error);
+      return handleError(honoCtx, error);
     }
   });
 
-  app.post('/login/complete', async (ctx) => {
+  app.post('/login/complete', async (honoCtx) => {
     try {
-      const body = await ctx.req.json();
+      const body = await honoCtx.req.json();
       const input = CompleteAuthenticationSchema.parse(body);
 
       const complete = getCompleteAuthenticationService({
@@ -145,9 +140,9 @@ export function createAuthRoutes(appContext: AppContext): Hono {
       });
 
       // Set session cookie
-      setCookie(ctx, result.session.id);
+      setCookie(honoCtx, result.session.id);
 
-      return ctx.json({
+      return honoCtx.json({
         account: {
           id: result.account.id,
           username: result.account.username,
@@ -156,7 +151,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
         },
       });
     } catch (error) {
-      return handleError(ctx, error);
+      return handleError(honoCtx, error);
     }
   });
 
@@ -164,11 +159,11 @@ export function createAuthRoutes(appContext: AppContext): Hono {
   // Session
   // ---------------------------------------------------------------------------
 
-  app.get('/session', async (ctx) => {
+  app.get('/session', async (honoCtx) => {
     try {
-      const sessionId = getSessionId(ctx);
+      const sessionId = getSessionId(honoCtx);
       if (!sessionId) {
-        return ctx.json({ authenticated: false }, 401);
+        return honoCtx.json({ authenticated: false }, 401);
       }
 
       const validate = getValidateSessionService({
@@ -178,7 +173,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
 
       const result = await validate({ sessionId });
 
-      return ctx.json({
+      return honoCtx.json({
         authenticated: true,
         account: {
           id: result.account.id,
@@ -193,16 +188,16 @@ export function createAuthRoutes(appContext: AppContext): Hono {
         error instanceof SessionNotFoundError ||
         error instanceof InvalidSessionIdError
       ) {
-        clearCookie(ctx);
-        return ctx.json({ authenticated: false }, 401);
+        clearCookie(honoCtx);
+        return honoCtx.json({ authenticated: false }, 401);
       }
-      return handleError(ctx, error);
+      return handleError(honoCtx, error);
     }
   });
 
-  app.post('/logout', async (ctx) => {
+  app.post('/logout', async (honoCtx) => {
     try {
-      const sessionId = getSessionId(ctx);
+      const sessionId = getSessionId(honoCtx);
       if (sessionId) {
         const logout = getLogoutService({
           sessionRepository: appContext.repositories.session,
@@ -210,12 +205,12 @@ export function createAuthRoutes(appContext: AppContext): Hono {
         await logout({ sessionId });
       }
 
-      clearCookie(ctx);
-      return ctx.json({ success: true });
+      clearCookie(honoCtx);
+      return honoCtx.json({ success: true });
     } catch (error) {
       console.error("Logout error :", error);
-      clearCookie(ctx);
-      return ctx.json({ success: true });
+      clearCookie(honoCtx);
+      return honoCtx.json({ success: true });
     }
   });
   return app;
@@ -225,15 +220,15 @@ export function createAuthRoutes(appContext: AppContext): Hono {
 // Helpers
 // =============================================================================
 
-function getSessionId(ctx: { req: { header: (name: string) => string | undefined } }): string | undefined {
-  const cookie = ctx.req.header('Cookie');
+function getSessionId(honoCtx: { req: { header: (name: string) => string | undefined } }): string | undefined {
+  const cookie = honoCtx.req.header('Cookie');
   if (!cookie) return undefined;
 
   const match = /session=([^;]+)/.exec(cookie);
   return match?.[1];
 }
 
-function setCookie(c: { header: (name: string, value: string) => void }, sessionId: string): void {
+function setCookie(honoCtx: { header: (name: string, value: string) => void }, sessionId: string): void {
   const isProduction = process.env.NODE_ENV === 'production';
   const maxAge = 7 * 24 * 60 * 60; // 7 days
 
@@ -248,14 +243,14 @@ function setCookie(c: { header: (name: string, value: string) => void }, session
     .filter(Boolean)
     .join('; ');
 
-  c.header('Set-Cookie', cookie);
+  honoCtx.header('Set-Cookie', cookie);
 }
 
-function clearCookie(ctx: { header: (name: string, value: string) => void }): void {
-  ctx.header('Set-Cookie', 'session=; Path=/; Max-Age=0; HttpOnly; SameSite=Strict');
+function clearCookie(honoCtx: { header: (name: string, value: string) => void }): void {
+  honoCtx.header('Set-Cookie', 'session=; Path=/; Max-Age=0; HttpOnly; SameSite=Strict');
 }
 
-function handleError(ctx: { json: (data: unknown, status: number) => Response }, error: unknown): Response {
+function handleError(honoCtx: { json: (data: unknown, status: number) => Response }, error: unknown): Response {
   // Log error safely - some error objects (like ZodError) can cause console.error to throw
   try {
     console.error('Auth error:', error);
@@ -264,37 +259,37 @@ function handleError(ctx: { json: (data: unknown, status: number) => Response },
   }
 
   if (error instanceof z.ZodError) {
-    return ctx.json(
+    return honoCtx.json(
       { error: { message: 'Validation error', details: error.errors } },
       400,
     );
   }
 
   if (error instanceof AccountAlreadyExistsError) {
-    return ctx.json({ error: { message: 'Username already taken' } }, 409);
+    return honoCtx.json({ error: { message: 'Username already taken' } }, 409);
   }
 
   if (error instanceof InvalidUsernameError) {
-    return ctx.json({ error: { message: error.message } }, 400);
+    return honoCtx.json({ error: { message: error.message } }, 400);
   }
 
   if (error instanceof AccountNotFoundError) {
-    return ctx.json({ error: { message: 'Account not found' } }, 404);
+    return honoCtx.json({ error: { message: 'Account not found' } }, 404);
   }
 
   if (
     error instanceof ChallengeNotFoundError ||
     error instanceof ChallengeExpiredError
   ) {
-    return ctx.json({ error: { message: 'Challenge expired or invalid' } }, 400);
+    return honoCtx.json({ error: { message: 'Challenge expired or invalid' } }, 400);
   }
 
   if (
     error instanceof AuthenticationFailedError ||
     error instanceof RegistrationFailedError
   ) {
-    return ctx.json({ error: { message: 'Authentication failed' } }, 401);
+    return honoCtx.json({ error: { message: 'Authentication failed' } }, 401);
   }
 
-  return ctx.json({ error: { message: 'Internal server error' } }, 500);
+  return honoCtx.json({ error: { message: 'Internal server error' } }, 500);
 }

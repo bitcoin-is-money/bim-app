@@ -31,7 +31,7 @@ export const CompleteRegistrationSchema = z.object({
   }),
 });
 
-export const BeginAuthenticationSchema = z.object({});
+//export const BeginAuthenticationSchema = z.object({});
 
 export const CompleteAuthenticationSchema = z.object({
   challengeId: z.string().uuid(),
