@@ -1,0 +1,10 @@
+@reference "tailwindcss";
+
+.pay-page {
+  @apply h-screen flex flex-col overflow-hidden;
+
+  main {
+    @apply flex-1 flex flex-col justify-center px-4 pb-30 gap-10 m-10;
+
+  }
+}

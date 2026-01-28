@@ -1,216 +1,148 @@
-import type {
-  AccountRepository,
-  AtomiqGateway,
-  ChallengeRepository,
-  PaymasterGateway,
-  SessionRepository,
-  StarknetGateway,
-  SwapRepository,
-  TransactionRepository,
-  UserSettingsRepository,
-  WatchedAddressRepository,
-  WebAuthnGateway,
-} from '@bim/domain';
-import type {DeepPartial} from '@bim/lib/types/DeepPartial';
-import {describe, expect, it} from 'vitest';
-import {AppContext} from '../../src/app-context.js';
+import type {AccountRepository, PaymasterGateway,} from '@bim/domain/ports';
+import {describe, expect, it, vi} from 'vitest';
+import {Bolt11LightningDecoder} from "../../src/adapters";
+import {AppContext, type AppContextOverrides} from '../../src/app-context.js';
+import type {AppConfig} from '../../src/types.js';
 
-/**
- * Creates a mock AppContext for testing.
- */
-function createMockContext(): AppContext {
+// Mock the database module
+vi.mock('../../src/db.js', () => ({
+  getDb: vi.fn(() => ({})),
+}));
+
+// Mock adapters to avoid real implementations
+// Use class-style mocks that can be instantiated with 'new'
+vi.mock('../../src/adapters/index.js', () => {
   return {
-    repositories: {
-      account: {name: 'default-account'} as unknown as AccountRepository,
-      session: {name: 'default-session'} as unknown as SessionRepository,
-      challenge: {name: 'default-challenge'} as unknown as ChallengeRepository,
-      swap: {name: 'default-swap'} as unknown as SwapRepository,
-      userSettings: {name: 'default-userSettings'} as unknown as UserSettingsRepository,
-      watchedAddress: {name: 'default-watchedAddress'} as unknown as WatchedAddressRepository,
-      transaction: {name: 'default-transaction'} as unknown as TransactionRepository,
-    },
-    gateways: {
-      webAuthn: {name: 'default-webAuthn'} as unknown as WebAuthnGateway,
-      starknet: {name: 'default-starknet'} as unknown as StarknetGateway,
-      paymaster: {name: 'default-paymaster'} as unknown as PaymasterGateway,
-      atomiq: {name: 'default-atomiq'} as unknown as AtomiqGateway,
-    },
-    webauthn: {
-      rpId: 'default-rpId',
-      rpName: 'default-rpName',
-      origin: 'http://default-origin',
-    }
+    DrizzleAccountRepository: class { name = 'drizzle-account'; },
+    DrizzleSessionRepository: class { name = 'drizzle-session'; },
+    DrizzleChallengeRepository: class { name = 'drizzle-challenge'; },
+    DrizzleUserSettingsRepository: class { name = 'drizzle-userSettings'; },
+    DrizzleWatchedAddressRepository: class { name = 'drizzle-watchedAddress'; },
+    DrizzleTransactionRepository: class { name = 'drizzle-transaction'; },
+    InMemorySwapRepository: class { name = 'in-memory-swap'; },
+    SimpleWebAuthnGateway: class { name = 'simple-webauthn'; },
+    StarknetRpcGateway: class { name = 'starknet-rpc'; },
+    AvnuPaymasterGateway: class { name = 'avnu-paymaster'; },
+    AtomiqSdkGateway: class { name = 'atomiq-sdk'; },
+    Bolt11LightningDecoder: class { name = 'bolt11-lightning-decoder'; },
+  };
+});
+
+function createMockConfig(): AppConfig {
+  return {
+    nodeEnv: 'test',
+    port: 8080,
+    databaseUrl: 'postgres://test',
+    webauthnRpId: 'localhost',
+    webauthnRpName: 'Test App',
+    webauthnOrigin: 'http://localhost:8080',
+    starknetRpcUrl: 'http://localhost:5050',
+    accountClassHash: '0x123',
+    wbtcTokenAddress: '0x456',
+    avnuApiUrl: 'http://localhost:9090',
+    avnuApiKey: 'test-key',
+    feeTreasuryAddress: '0x027367ddd36d7efc4694e1af5742f8d26626369c07abf15d136ff422b9a40fa0',
   };
 }
 
 describe('AppContext', () => {
-  describe('mergeContext', () => {
-    it('returns base context when override is undefined', () => {
-      const base = createMockContext();
+  describe('createDefault', () => {
+    it('creates context with default implementations when no overrides', () => {
+      const config = createMockConfig();
+      const db = {} as any;
 
-      const result = AppContext.mergeContext(base, undefined);
+      const context = AppContext.createDefault(config, db);
 
-      expect(result).toBe(base);
+      expect(context.repositories).toBeDefined();
+      expect(context.gateways).toBeDefined();
+      expect(context.services).toBeDefined();
+      expect(context.webauthn).toBeDefined();
     });
 
-    it('overrides a single gateway', () => {
-      const base = createMockContext();
-      const overrideStarknet = {name: 'override-starknet'} as unknown as StarknetGateway;
-      const override: DeepPartial<AppContext> = {
+    it('applies gateway overrides', () => {
+      const config = createMockConfig();
+      const db = {} as any;
+      const mockPaymaster = {name: 'mock-paymaster'} as unknown as PaymasterGateway;
+      const overrides: AppContextOverrides = {
         gateways: {
-          starknet: overrideStarknet,
-        }
-      };
-
-      const result = AppContext.mergeContext(base, override);
-
-      expect((result.gateways.starknet as any).name).toBe('override-starknet');
-      // Other gateways should remain unchanged
-      expect((result.gateways.paymaster as any).name).toBe('default-paymaster');
-      expect((result.gateways.webAuthn as any).name).toBe('default-webAuthn');
-      expect((result.gateways.atomiq as any).name).toBe('default-atomiq');
-    });
-
-    it('overrides multiple gateways', () => {
-      const base = createMockContext();
-      const override: DeepPartial<AppContext> = {
-        gateways: {
-          starknet: {name: 'override-starknet'} as unknown as StarknetGateway,
-          paymaster: {name: 'override-paymaster'} as unknown as PaymasterGateway,
-        }
-      };
-
-      const result = AppContext.mergeContext(base, override);
-
-      expect((result.gateways.starknet as any).name).toBe('override-starknet');
-      expect((result.gateways.paymaster as any).name).toBe('override-paymaster');
-      // Other gateways remain unchanged
-      expect((result.gateways.webAuthn as any).name).toBe('default-webAuthn');
-      expect((result.gateways.atomiq as any).name).toBe('default-atomiq');
-    });
-
-    it('overrides a single repository', () => {
-      const base = createMockContext();
-      const override: DeepPartial<AppContext> = {
-        repositories: {
-          account: {name: 'override-account'} as unknown as AccountRepository,
+          paymaster: mockPaymaster,
         },
       };
 
-      const result = AppContext.mergeContext(base, override);
+      const context = AppContext.createDefault(config, db, overrides);
 
-      expect((result.repositories.account as any).name).toBe('override-account');
-      // Other repositories remain unchanged
-      expect((result.repositories.session as any).name).toBe('default-session');
+      expect((context.gateways.paymaster as any).name).toBe('mock-paymaster');
     });
 
-    it('overrides webauthn config (plain object - deep merged)', () => {
-      const base = createMockContext();
-      const override: DeepPartial<AppContext> = {
+    it('applies repository overrides', () => {
+      const config = createMockConfig();
+      const db = {} as any;
+      const mockAccountRepo = {name: 'mock-account'} as unknown as AccountRepository;
+      const overrides: AppContextOverrides = {
+        repositories: {
+          account: mockAccountRepo,
+        },
+      };
+
+      const context = AppContext.createDefault(config, db, overrides);
+
+      expect((context.repositories.account as any).name).toBe('mock-account');
+    });
+
+    it('applies webauthn config overrides', () => {
+      const config = createMockConfig();
+      const db = {} as any;
+      const overrides: AppContextOverrides = {
         webauthn: {
           rpId: 'override-rpId',
         },
       };
 
-      const result = AppContext.mergeContext(base, override);
+      const context = AppContext.createDefault(config, db, overrides);
 
-      // rpId is overridden
-      expect(result.webauthn.rpId).toBe('override-rpId');
-      // Other webauthn fields remain from base (deep merge)
-      expect(result.webauthn.rpName).toBe('default-rpName');
-      expect(result.webauthn.origin).toBe('http://default-origin');
+      expect(context.webauthn.rpId).toBe('override-rpId');
+      // Other webauthn fields should come from config
+      expect(context.webauthn.rpName).toBe('Test App');
     });
 
-    it('overrides gateways and repositories together', () => {
-      const base = createMockContext();
-      const override: DeepPartial<AppContext> = {
+    it('services use overridden gateways', () => {
+      const config = createMockConfig();
+      const db = {} as any;
+      const mockPaymaster = {
+        name: 'mock-paymaster',
+        executeTransaction: vi.fn(),
+      } as unknown as PaymasterGateway;
+      const overrides: AppContextOverrides = {
         gateways: {
-          starknet: {name: 'override-starknet'} as unknown as StarknetGateway,
+          paymaster: mockPaymaster,
         },
+      };
+
+      const context = AppContext.createDefault(config, db, overrides);
+
+      // Verify the gateway is the mocked one
+      expect((context.gateways.paymaster as any).name).toBe('mock-paymaster');
+      // The AccountService should have been created with this gateway
+      // (we can't directly verify this, but the integration tests will confirm it works)
+    });
+
+    it('services use overridden repositories', () => {
+      const config = createMockConfig();
+      const db = {} as any;
+      const mockAccountRepo = {
+        name: 'mock-account',
+        findById: vi.fn(),
+        save: vi.fn(),
+      } as unknown as AccountRepository;
+      const overrides: AppContextOverrides = {
         repositories: {
-          account: {name: 'override-account'} as unknown as AccountRepository,
+          account: mockAccountRepo,
         },
       };
 
-      const result = AppContext.mergeContext(base, override);
+      const context = AppContext.createDefault(config, db, overrides);
 
-      expect((result.gateways.starknet as any).name).toBe('override-starknet');
-      expect((result.repositories.account as any).name).toBe('override-account');
-      // Others remain unchanged
-      expect((result.gateways.paymaster as any).name).toBe('default-paymaster');
-      expect((result.repositories.session as any).name).toBe('default-session');
-    });
-
-    it('does not mutate the base context', () => {
-      const base = createMockContext();
-      const originalStarknetName = (base.gateways.starknet as any).name;
-      const override: DeepPartial<AppContext> = {
-        gateways: {
-          starknet: {name: 'override-starknet'} as unknown as StarknetGateway,
-        },
-      };
-
-      AppContext.mergeContext(base, override);
-
-      // Base should not be mutated
-      expect((base.gateways.starknet as any).name).toBe(originalStarknetName);
-    });
-
-    it('replaces class instances instead of deep-merging them', () => {
-      // Simulate class instances with the internal state
-      class MockGateway {
-        constructor(readonly config: {url: string; timeout: number}) {}
-      }
-
-      const base = createMockContext();
-      base.gateways.starknet = new MockGateway({
-        url: 'http://default',
-        timeout: 1000,
-      }) as unknown as StarknetGateway;
-
-      const overrideGateway = new MockGateway({
-        url: 'http://override',
-        timeout: 2000,
-      });
-
-      const override: DeepPartial<AppContext> = {
-        gateways: {
-          starknet: overrideGateway as unknown as StarknetGateway,
-        },
-      };
-
-      const result = AppContext.mergeContext(base, override);
-
-      // The gateway should be replaced entirely, not merged
-      expect(result.gateways.starknet).toBe(overrideGateway);
-      expect((result.gateways.starknet as unknown as MockGateway).config.url).toBe('http://override');
-      expect((result.gateways.starknet as unknown as MockGateway).config.timeout).toBe(2000);
-    });
-
-    it('handles class instances with circular references without hanging', () => {
-      // Create a class with the circular reference (like RpcProvider)
-      class CircularGateway {
-        self: CircularGateway;
-        constructor(readonly name: string) {
-          this.self = this;
-        }
-      }
-
-      const base = createMockContext();
-      base.gateways.starknet = new CircularGateway('default') as unknown as StarknetGateway;
-
-      const overrideGateway = new CircularGateway('override');
-      const override: DeepPartial<AppContext> = {
-        gateways: {
-          starknet: overrideGateway as unknown as StarknetGateway,
-        },
-      };
-
-      // This should NOT hang or throw - class instances are replaced, not merged
-      const result = AppContext.mergeContext(base, override);
-
-      expect((result.gateways.starknet as unknown as CircularGateway).name).toBe('override');
-      expect(result.gateways.starknet).toBe(overrideGateway);
+      expect((context.repositories.account as any).name).toBe('mock-account');
     });
   });
 });

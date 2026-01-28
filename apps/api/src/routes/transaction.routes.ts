@@ -1,7 +1,4 @@
-import {
-  Account,
-  getFetchTransactionsService,
-} from '@bim/domain';
+import {Account} from '@bim/domain/account';
 import {Hono} from 'hono';
 import type {AppContext} from "../app-context";
 import {createAuthMiddleware} from '../middleware/auth.middleware';
@@ -15,6 +12,9 @@ export function createTransactionRoutes(appContext: AppContext): AuthenticatedHo
   const app: AuthenticatedHono = new Hono();
 
   app.use('*', createAuthMiddleware(appContext));
+
+  // Service from AppContext (initialized once at startup)
+  const {transaction: transactionService} = appContext.services;
 
   // ---------------------------------------------------------------------------
   // Get Transactions
@@ -30,12 +30,7 @@ export function createTransactionRoutes(appContext: AppContext): AuthenticatedHo
       const limit = limitParam ? Number.parseInt(limitParam, 10) : 10;
       const offset = offsetParam ? Number.parseInt(offsetParam, 10) : 0;
 
-      const fetchTransactions = getFetchTransactionsService({
-        transactionRepository: appContext.repositories.transaction,
-        watchedAddressRepository: appContext.repositories.watchedAddress,
-      });
-
-      const result = await fetchTransactions({
+      const result = await transactionService.fetchForAccount({
         accountId: account.id,
         limit,
         offset,

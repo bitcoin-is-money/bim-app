@@ -1,5 +1,6 @@
-import {StarknetAddress} from '@bim/domain';
-import {type CredentialCreationOptions, WebauthnVirtualAuthenticator} from "@bim/test-toolkit";
+import {StarknetAddress} from '@bim/domain/account';
+import {UuidCodec} from '@bim/lib/encoding';
+import {type CredentialCreationOptions, WebauthnVirtualAuthenticator} from "@bim/test-toolkit/auth";
 import {eq} from 'drizzle-orm';
 import type {Hono} from 'hono';
 import pg from 'pg';
@@ -59,18 +60,6 @@ interface DeploymentStatusResponse {
 // The expected origin matches WEBAUTHN_ORIGIN env var set in test-app.ts
 const webAuthnOrigin = 'http://localhost:8080';
 
-/**
- * Converts UUID string to base64url encoded bytes.
- * Required because WebAuthn expects user.id as bytes, not a raw UUID string.
- */
-function uuidToBase64Url(uuid: string): string {
-  const hex = uuid.replaceAll('-', '');
-  const bytes = new Uint8Array(hex.length / 2);
-  for (let idx = 0; idx < hex.length; idx += 2) {
-    bytes[idx / 2] = Number.parseInt(hex.slice(idx, idx + 2), 16);
-  }
-  return Buffer.from(bytes).toString('base64url');
-}
 
 /**
  * Converts API registration options to VirtualAuthenticator format.
@@ -83,7 +72,7 @@ function toRegistrationOptions(apiResponse: BeginRegistrationResponse): Credenti
       name: apiResponse.options.rpName,
     },
     user: {
-      id: uuidToBase64Url(apiResponse.options.userId), // Convert UUID to base64url bytes
+      id: UuidCodec.toBase64Url(apiResponse.options.userId), // Convert UUID to base64url bytes
       name: apiResponse.options.userName,
       displayName: apiResponse.options.userName,
     },

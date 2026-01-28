@@ -1,5 +1,5 @@
-import {WebauthnVirtualAuthenticator} from '@bim/test-toolkit/auth/webauthn-virtual-authenticator';
-import {P256Signer} from '@bim/test-toolkit/crypto/p256-signer';
+import {WebauthnVirtualAuthenticator} from '@bim/test-toolkit/auth';
+import {P256Signer} from '@bim/test-toolkit/crypto';
 import {isoBase64URL} from '@simplewebauthn/server/helpers';
 import {beforeEach, describe, expect, it} from 'vitest';
 import {SimpleWebAuthnGateway} from "../../../../src/adapters";

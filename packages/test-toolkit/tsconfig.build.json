@@ -2,11 +2,8 @@
   "extends": "./../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": "src",
-    "moduleResolution": "NodeNext",
-    "module": "NodeNext",
-    "declaration": true,
-    "declarationMap": true
+    "rootDir": "src",   // Avoid src directory in dist directory
+    "paths": {}         // Force to use internal dependencies from node_modules
   },
   "include": ["src/**/*"]
 }

@@ -345,3 +345,9 @@ Before writing custom code, evaluate:
 - When existing solutions are inadequate
 
 > Every line of custom code is a liability that needs maintenance, testing, and documentation.
+
+### No Test-Only Methods in Production Code
+
+**Rule:** Never generate methods in domain/application code that are only used by tests.
+
+If a method is not called by the application, it should not exist in production code. Test-specific utilities belong in test helpers (`test/helpers/`).

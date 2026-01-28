@@ -1,22 +1,13 @@
+import {AccountAlreadyExistsError, AccountNotFoundError, InvalidUsernameError} from "@bim/domain/account";
 import {
-  AccountAlreadyExistsError,
-  AccountId,
-  AccountNotFoundError,
   AuthenticationFailedError,
   ChallengeExpiredError,
   ChallengeNotFoundError,
-  getBeginAuthenticationService,
-  getBeginRegistrationService,
-  getCompleteAuthenticationService,
-  getCompleteRegistrationService,
-  getLogoutService,
-  getValidateSessionService,
   InvalidSessionIdError,
-  InvalidUsernameError,
   RegistrationFailedError,
   SessionExpiredError,
-  SessionNotFoundError,
-} from '@bim/domain';
+  SessionNotFoundError
+} from "@bim/domain/auth";
 import {Hono} from 'hono';
 import {z} from 'zod';
 import type {AppContext} from "../../app-context";
@@ -29,7 +20,8 @@ import {BeginRegistrationSchema, CompleteAuthenticationSchema, CompleteRegistrat
 export function createAuthRoutes(appContext: AppContext): Hono {
   const app = new Hono();
 
-  const { rpId, rpName, origin } = appContext.webauthn;
+  // Services from AppContext (initialized once at startup)
+  const {auth: authService, session: sessionService} = appContext.services;
 
   // ---------------------------------------------------------------------------
   // Registration
@@ -40,16 +32,8 @@ export function createAuthRoutes(appContext: AppContext): Hono {
       const body = await honoCtx.req.json();
       const input = BeginRegistrationSchema.parse(body);
 
-      const beginRegistration = getBeginRegistrationService({
-        challengeRepository: appContext.repositories.challenge,
-        idGenerator: () => AccountId.generate(),
-      });
-
-      const result = await beginRegistration({
+      const result = await authService.beginRegistration({
         username: input.username,
-        rpId,
-        rpName,
-        origin,
       });
 
       return honoCtx.json({
@@ -67,14 +51,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
       const body = await honoCtx.req.json();
       const input = CompleteRegistrationSchema.parse(body);
 
-      const complete = getCompleteRegistrationService({
-        accountRepository: appContext.repositories.account,
-        challengeRepository: appContext.repositories.challenge,
-        sessionRepository: appContext.repositories.session,
-        webAuthnGateway: appContext.gateways.webAuthn,
-      });
-
-      const result = await complete({
+      const result = await authService.completeRegistration({
         challengeId: input.challengeId,
         accountId: input.accountId,
         username: input.username,
@@ -103,14 +80,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
 
   app.post('/login/begin', async (honoCtx) => {
     try {
-       const begin = getBeginAuthenticationService({
-        challengeRepository: appContext.repositories.challenge,
-      });
-
-      const result = await begin({
-        rpId,
-        origin,
-      });
+      const result = await authService.beginAuthentication();
 
       return honoCtx.json({
         options: result.options,
@@ -126,14 +96,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
       const body = await honoCtx.req.json();
       const input = CompleteAuthenticationSchema.parse(body);
 
-      const complete = getCompleteAuthenticationService({
-        accountRepository: appContext.repositories.account,
-        challengeRepository: appContext.repositories.challenge,
-        sessionRepository: appContext.repositories.session,
-        webAuthnGateway: appContext.gateways.webAuthn,
-      });
-
-      const result = await complete({
+      const result = await authService.completeAuthentication({
         challengeId: input.challengeId,
         credential: input.credential,
       });
@@ -162,15 +125,10 @@ export function createAuthRoutes(appContext: AppContext): Hono {
     try {
       const sessionId = getSessionId(honoCtx);
       if (!sessionId) {
-        return honoCtx.json({ authenticated: false }, 401);
+        return honoCtx.json({authenticated: false}, 401);
       }
 
-      const validate = getValidateSessionService({
-        sessionRepository: appContext.repositories.session,
-        accountRepository: appContext.repositories.account,
-      });
-
-      const result = await validate({ sessionId });
+      const result = await sessionService.validate({sessionId});
 
       return honoCtx.json({
         authenticated: true,
@@ -188,7 +146,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
         error instanceof InvalidSessionIdError
       ) {
         clearCookie(honoCtx);
-        return honoCtx.json({ authenticated: false }, 401);
+        return honoCtx.json({authenticated: false}, 401);
       }
       return handleError(honoCtx, error);
     }
@@ -198,20 +156,18 @@ export function createAuthRoutes(appContext: AppContext): Hono {
     try {
       const sessionId = getSessionId(honoCtx);
       if (sessionId) {
-        const logout = getLogoutService({
-          sessionRepository: appContext.repositories.session,
-        });
-        await logout({ sessionId });
+        await sessionService.invalidate({sessionId});
       }
 
       clearCookie(honoCtx);
-      return honoCtx.json({ success: true });
+      return honoCtx.json({success: true});
     } catch (error) {
-      console.error("Logout error :", error);
+      console.error('Logout error:', error);
       clearCookie(honoCtx);
-      return honoCtx.json({ success: true });
+      return honoCtx.json({success: true});
     }
   });
+
   return app;
 }
 

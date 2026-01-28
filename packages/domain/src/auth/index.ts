@@ -1,6 +1,5 @@
 export * from './types';
 export * from './challenge';
 export * from './session';
-export * from './registration.services';
-export * from './authentication.services';
-export * from './session.services';
+export {AuthService, type AuthServiceDeps, type WebAuthnConfig} from './auth.service';
+export {SessionService, type SessionServiceDeps} from './session.service';

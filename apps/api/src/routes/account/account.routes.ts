@@ -1,14 +1,6 @@
-import {
-  Account,
-  AccountId,
-  AccountNotFoundError,
-  type DeployAccountOutput,
-  getDeployAccountService,
-  getGetBalanceService,
-  InvalidAccountStateError,
-} from '@bim/domain';
-import {Hono} from 'hono';
+import {Account, AccountId, AccountNotFoundError, InvalidAccountStateError,} from '@bim/domain/account';
 import type {TypedResponse} from 'hono';
+import {Hono} from 'hono';
 import type {AppContext} from "../../app-context";
 import {createAuthMiddleware} from '../../middleware/auth.middleware';
 import type {AuthenticatedHono} from '../../types.js';
@@ -28,6 +20,9 @@ export function createAccountRoutes(appCtx: AppContext): AuthenticatedHono {
   const app: AuthenticatedHono = new Hono();
 
   app.use('*', createAuthMiddleware(appCtx));
+
+  // Service from AppContext (initialized once at startup)
+  const {account: accountService} = appCtx.services;
 
   // ---------------------------------------------------------------------------
   // Get Current Account
@@ -56,13 +51,7 @@ export function createAccountRoutes(appCtx: AppContext): AuthenticatedHono {
       const body: DeployAccountRequest = await honoCtx.req.json().catch(() => ({}));
       const sync = body.sync === true;
 
-      const deployAccount = getDeployAccountService({
-        accountRepository: appCtx.repositories.account,
-        starknetGateway: appCtx.gateways.starknet,
-        paymasterGateway: appCtx.gateways.paymaster,
-      });
-
-      const result: DeployAccountOutput = await deployAccount({
+      const result = await accountService.deploy({
         accountId: AccountId.of(account.id),
         sync,
       });
@@ -104,12 +93,7 @@ export function createAccountRoutes(appCtx: AppContext): AuthenticatedHono {
     try {
       const account: Account = honoCtx.get('account');
 
-      const getBalance = getGetBalanceService({
-        accountRepository: appCtx.repositories.account,
-        starknetGateway: appCtx.gateways.starknet,
-      });
-
-      const result = await getBalance({ accountId: account.id });
+      const result = await accountService.getBalance({ accountId: account.id });
 
       return honoCtx.json<GetBalanceResponse>(result);
     } catch (error) {

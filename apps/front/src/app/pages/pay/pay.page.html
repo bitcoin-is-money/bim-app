@@ -1,0 +1,25 @@
+<div class="pay-page">
+  <app-go-back-header title="Choose your paiment method"></app-go-back-header>
+
+  <main class="pay-main">
+    <app-button
+      class="sign-in-button"
+      variant="big"
+      [icon]="['fas', 'qrcode']"
+      (click)="scanQRCode()"
+    >
+      Scan a QR Code
+    </app-button>
+    <app-button
+      class="sign-in-button"
+      variant="big"
+      [icon]="['fas', 'paste']"
+      (click)="pasteFromClipboard()"
+    >
+      Paste from clipboard
+    </app-button>
+
+  </main>
+  <app-logo-footer />
+</div>
+

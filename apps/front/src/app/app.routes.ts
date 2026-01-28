@@ -6,7 +6,7 @@ const authGuard = () => {
   const authService = inject(AuthService);
   const router = inject(Router);
   const user = authService.currentUser();
-  
+
   if (!user) {
     router.navigate(['/auth']);
     return false;
@@ -18,7 +18,7 @@ const guestGuard = () => {
   const authService = inject(AuthService);
   const router = inject(Router);
   const user = authService.currentUser();
-  
+
   if (user) {
     router.navigate(['/home']);
     return false;
@@ -50,6 +50,11 @@ export const routes: Routes = [
   {
     path: 'menu',
     loadComponent: () => import('./pages/menu/menu.page').then(m => m.MenuPage),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'pay',
+    loadComponent: () => import('./pages/pay/pay.page').then(m => m.PayPage),
     canActivate: [authGuard],
   },
   {

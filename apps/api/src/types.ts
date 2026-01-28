@@ -1,4 +1,5 @@
-import {Account, Session,} from '@bim/domain';
+import {Account} from '@bim/domain/account';
+import {Session} from '@bim/domain/auth';
 import type {Hono} from 'hono';
 
 /**
@@ -13,6 +14,7 @@ export interface AppConfig {
   wbtcTokenAddress: string;
   avnuApiUrl: string;
   avnuApiKey: string;
+  feeTreasuryAddress: string;
   webauthnRpId: string;
   webauthnRpName: string;
   webauthnOrigin: string;
@@ -55,6 +57,7 @@ export function loadConfig(): AppConfig {
     wbtcTokenAddress: optional('WBTC_TOKEN_ADDRESS', DEFAULT_WBTC_ADDRESS),
     avnuApiUrl: optional('AVNU_API_URL', 'https://starknet.api.avnu.fi'),
     avnuApiKey: optional('AVNU_API_KEY', ''),
+    feeTreasuryAddress: required('FEE_TREASURY_ADDRESS'),
     webauthnRpId: optional('WEBAUTHN_RP_ID', 'localhost'),
     webauthnRpName: optional('WEBAUTHN_RP_NAME', 'BIM'),
     webauthnOrigin: optional('WEBAUTHN_ORIGIN', 'http://localhost:8080'),

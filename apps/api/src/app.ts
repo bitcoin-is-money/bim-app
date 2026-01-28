@@ -1,15 +1,14 @@
-import type {DeepPartial} from "@bim/lib/types/DeepPartial";
 import {serveStatic} from '@hono/node-server/serve-static';
 import {Hono} from 'hono';
 import {cors} from 'hono/cors';
 import {logger} from 'hono/logger';
-import {AppContext} from "./app-context";
+import {AppContext, type AppContextOverrides} from "./app-context";
 import {getDb} from './db';
 import {
   createAccountRoutes,
   createAuthRoutes,
-  createHealthRoutes,
   createCurrencyRoutes,
+  createHealthRoutes,
   createSwapRoutes,
   createTransactionRoutes,
   createUserRoutes,
@@ -18,7 +17,7 @@ import {type AppConfig, loadConfig} from './types';
 
 export interface CreateAppOptions {
   config?: Partial<AppConfig>;
-  context?: DeepPartial<AppContext>;
+  context?: AppContextOverrides;
   skipStaticFiles?: boolean;
   skipLogger?: boolean;
 }
@@ -30,9 +29,7 @@ export interface CreateAppOptions {
 export function createApp(options: CreateAppOptions = {}): Hono {
   const config = {...loadConfig(), ...options.config};
   const db = getDb();
-  const context = AppContext.mergeContext(
-    AppContext.createDefault(config, db),
-    options.context);
+  const context = AppContext.createDefault(config, db, options.context);
   const app = new Hono();
 
   // Middleware

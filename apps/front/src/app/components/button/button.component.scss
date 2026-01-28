@@ -33,6 +33,23 @@
   @apply disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
+/* ---------- Big ---------- */
+
+.btn-big {
+  @apply bg-neutral-800
+    border-2 border-neutral-800
+    text-neutral-200 text-xl
+    py-8;
+
+  //@apply hover:bg-neutral-100 hover:text-neutral-700;
+  //@apply active:bg-neutral-100 hover:text-neutral-700;
+  //@apply disabled:opacity-50 disabled:cursor-not-allowed;
+
+  .btn-icon {
+    font-size: 150%;
+  }
+}
+
 /* ---------- Transparent ---------- */
 
 .btn-transparent {

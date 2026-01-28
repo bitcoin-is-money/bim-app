@@ -1,10 +1,4 @@
-import {
-  getValidateSessionService,
-  InvalidSessionIdError,
-  SessionExpiredError,
-  SessionNotFoundError,
-  type ValidateSessionOutput,
-} from '@bim/domain';
+import {InvalidSessionIdError, SessionExpiredError, SessionNotFoundError} from "@bim/domain/auth";
 import type {Context, Next} from 'hono';
 import type {AppContext} from '../app-context';
 import type {AuthenticatedContext} from '../types';
@@ -27,10 +21,7 @@ export function getSessionId(
  * and sets the account/session in context.
  */
 export function createAuthMiddleware(appContext: AppContext) {
-  const validateSession = getValidateSessionService({
-    sessionRepository: appContext.repositories.session,
-    accountRepository: appContext.repositories.account,
-  });
+  const {session: sessionService} = appContext.services;
 
   return async (
     ctx: Context<{Variables: AuthenticatedContext}>,
@@ -42,7 +33,7 @@ export function createAuthMiddleware(appContext: AppContext) {
     }
 
     try {
-      const result: ValidateSessionOutput = await validateSession({sessionId});
+      const result = await sessionService.validate({sessionId});
       ctx.set('account', result.account);
       ctx.set('session', result.session);
       await next();

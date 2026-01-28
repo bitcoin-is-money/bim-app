@@ -1,7 +1,8 @@
 import {HttpErrorResponse} from '@angular/common/http';
 import {Injectable, signal} from '@angular/core';
 import {Router} from '@angular/router';
-import {BufferUtils} from "@bim/lib/BufferUtils";
+import {Base64Url} from "@bim/lib/encoding";
+import {UuidCodec} from "@bim/lib/encoding";
 import {catchError, firstValueFrom, map, Observable} from 'rxjs';
 import {environment} from '../../environments/environment';
 import {Account} from "../model";
@@ -197,24 +198,24 @@ export class AuthService {
     if ('attestationObject' in response) {
       // Registration
       return {
-        id: BufferUtils.bufferToBase64Url(credential.rawId),
-        rawId: BufferUtils.bufferToBase64Url(credential.rawId),
+        id: Base64Url.encode(credential.rawId),
+        rawId: Base64Url.encode(credential.rawId),
         response: {
-          clientDataJSON: BufferUtils.bufferToBase64Url(response.clientDataJSON),
-          attestationObject: BufferUtils.bufferToBase64Url(response.attestationObject),
+          clientDataJSON: Base64Url.encode(response.clientDataJSON),
+          attestationObject: Base64Url.encode(response.attestationObject),
         },
         type: credential.type,
       };
     } else {
       // Authentication
       return {
-        id: BufferUtils.bufferToBase64Url(credential.rawId),
-        rawId: BufferUtils.bufferToBase64Url(credential.rawId),
+        id: Base64Url.encode(credential.rawId),
+        rawId: Base64Url.encode(credential.rawId),
         response: {
-          clientDataJSON: BufferUtils.bufferToBase64Url(response.clientDataJSON),
-          authenticatorData: BufferUtils.bufferToBase64Url(response.authenticatorData),
-          signature: BufferUtils.bufferToBase64Url(response.signature),
-          userHandle: response.userHandle ? BufferUtils.bufferToBase64Url(response.userHandle) : undefined,
+          clientDataJSON: Base64Url.encode(response.clientDataJSON),
+          authenticatorData: Base64Url.encode(response.authenticatorData),
+          signature: Base64Url.encode(response.signature),
+          userHandle: response.userHandle ? Base64Url.encode(response.userHandle) : undefined,
         },
         type: credential.type,
       };
@@ -223,10 +224,10 @@ export class AuthService {
 
   private convertAuthOptions(options: BeginAuthResponse['options']): PublicKeyCredentialRequestOptions {
     return {
-      challenge: BufferUtils.base64UrlToUint8Array(options.challenge),
+      challenge: Base64Url.decode(options.challenge),
       rpId: options.rpId,
       allowCredentials: options.allowCredentials?.map((cred) => ({
-        id: BufferUtils.base64UrlToUint8Array(cred.id),
+        id: Base64Url.decode(cred.id),
         type: cred.type as PublicKeyCredentialType,
       })),
       timeout: options.timeout || 60000,
@@ -243,13 +244,13 @@ export class AuthService {
       : { userVerification: 'preferred', residentKey: 'required' };
 
     return {
-      challenge: BufferUtils.base64UrlToUint8Array(options.challenge),
+      challenge: Base64Url.decode(options.challenge),
       rp: {
         id: options.rpId,
         name: options.rpName,
       },
       user: {
-        id: BufferUtils.uuidToBytes(options.userId),
+        id: UuidCodec.toBytes(options.userId),
         name: options.userName,
         displayName: options.userName,
       },

@@ -4,14 +4,14 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    },
-    "./*": {
-      "types": "./dist/*.d.ts",
-      "import": "./dist/*.js"
-    }
+    "./account": { "types": "./dist/account/index.d.ts", "import": "./dist/account/index.js" },
+    "./auth":    { "types": "./dist/auth/index.d.ts",    "import": "./dist/auth/index.js" },
+    "./fee":     { "types": "./dist/fee/index.d.ts",     "import": "./dist/fee/index.js" },
+    "./payment": { "types": "./dist/payment/index.d.ts", "import": "./dist/payment/index.js" },
+    "./ports":   { "types": "./dist/ports/index.d.ts",   "import": "./dist/ports/index.js" },
+    "./shared":  { "types": "./dist/shared/index.d.ts",  "import": "./dist/shared/index.js" },
+    "./swap":    { "types": "./dist/swap/index.d.ts",    "import": "./dist/swap/index.js" },
+    "./user":    { "types": "./dist/user/index.d.ts",    "import": "./dist/user/index.js" }
   },
   "scripts": {
     "clean": "rm -rf dist",

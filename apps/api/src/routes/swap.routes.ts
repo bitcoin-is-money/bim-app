@@ -1,20 +1,11 @@
+import {Amount} from '@bim/domain/shared';
 import {
-  getClaimSwapService,
-  getCreateBitcoinSwapService,
-  getCreateLightningSwapService,
-  getCreateStarknetToBitcoinService,
-  getCreateStarknetToLightningService,
-  getFetchSwapLimitsService,
-  getFetchSwapStatusService,
-  getValidateSessionService,
   InvalidSwapStateError,
-  SessionExpiredError,
-  SessionNotFoundError,
   SwapAmountError,
   SwapClaimError,
   SwapCreationError,
   SwapNotFoundError,
-} from '@bim/domain';
+} from '@bim/domain/swap';
 import {Hono} from 'hono';
 import {z} from 'zod';
 import type {AppContext} from "../app-context";
@@ -62,6 +53,9 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
 
   app.use('*', createAuthMiddleware(appContext));
 
+  // Service from AppContext (initialized once at startup)
+  const {swap: swapService} = appContext.services;
+
   // ---------------------------------------------------------------------------
   // Get Swap Limits
   // ---------------------------------------------------------------------------
@@ -70,11 +64,7 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
     try {
       const direction = SwapDirectionSchema.parse(honoCtx.req.param('direction'));
 
-      const fetchSwapLimits = getFetchSwapLimitsService({
-        atomiqGateway: appContext.gateways.atomiq,
-      });
-
-      const result = await fetchSwapLimits({ direction });
+      const result = await swapService.fetchLimits({ direction });
 
       return honoCtx.json({
         minSats: result.limits.minSats.toString(),
@@ -95,20 +85,15 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
       const body = await honoCtx.req.json();
       const input = CreateLightningSwapSchema.parse(body);
 
-      const createSwap = getCreateLightningSwapService({
-        swapRepository: appContext.repositories.swap,
-        atomiqGateway: appContext.gateways.atomiq,
-      });
-
-      const result = await createSwap({
-        amountSats: input.amountSats,
+      const result = await swapService.createLightningToStarknet({
+        amount: Amount.ofSatoshi(input.amountSats),
         destinationAddress: input.destinationAddress,
       });
 
       return honoCtx.json({
         swapId: result.swap.id,
         invoice: result.invoice,
-        amountSats: result.swap.amountSats.toString(),
+        amountSats: result.swap.amount.toSatString(),
         expiresAt: result.swap.expiresAt.toISOString(),
       });
     } catch (error) {
@@ -125,13 +110,8 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
       const body = await honoCtx.req.json();
       const input = CreateBitcoinSwapSchema.parse(body);
 
-      const createSwap = getCreateBitcoinSwapService({
-        swapRepository: appContext.repositories.swap,
-        atomiqGateway: appContext.gateways.atomiq,
-      });
-
-      const result = await createSwap({
-        amountSats: input.amountSats,
+      const result = await swapService.createBitcoinToStarknet({
+        amount: Amount.ofSatoshi(input.amountSats),
         destinationAddress: input.destinationAddress,
       });
 
@@ -139,7 +119,7 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
         swapId: result.swap.id,
         depositAddress: result.depositAddress,
         bip21Uri: result.bip21Uri,
-        amountSats: result.swap.amountSats.toString(),
+        amountSats: result.swap.amount.toSatString(),
         expiresAt: result.swap.expiresAt.toISOString(),
       });
     } catch (error) {
@@ -156,12 +136,7 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
       const body = await honoCtx.req.json();
       const input = CreateStarknetToLightningSchema.parse(body);
 
-      const createSwap = getCreateStarknetToLightningService({
-        swapRepository: appContext.repositories.swap,
-        atomiqGateway: appContext.gateways.atomiq,
-      });
-
-      const result = await createSwap({
+      const result = await swapService.createStarknetToLightning({
         invoice: input.invoice,
         sourceAddress: input.sourceAddress,
       });
@@ -169,7 +144,7 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
       return honoCtx.json({
         swapId: result.swap.id,
         depositAddress: result.depositAddress,
-        amountSats: result.amountSats.toString(),
+        amountSats: result.amount.toSatString(),
         expiresAt: result.swap.expiresAt.toISOString(),
       });
     } catch (error) {
@@ -186,13 +161,8 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
       const body = await honoCtx.req.json();
       const input = CreateStarknetToBitcoinSchema.parse(body);
 
-      const createSwap = getCreateStarknetToBitcoinService({
-        swapRepository: appContext.repositories.swap,
-        atomiqGateway: appContext.gateways.atomiq,
-      });
-
-      const result = await createSwap({
-        amountSats: input.amountSats,
+      const result = await swapService.createStarknetToBitcoin({
+        amount: Amount.ofSatoshi(input.amountSats),
         destinationAddress: input.destinationAddress,
         sourceAddress: input.sourceAddress,
       });
@@ -200,7 +170,7 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
       return honoCtx.json({
         swapId: result.swap.id,
         depositAddress: result.depositAddress,
-        amountSats: result.swap.amountSats.toString(),
+        amountSats: result.swap.amount.toSatString(),
         expiresAt: result.swap.expiresAt.toISOString(),
       });
     } catch (error) {
@@ -216,12 +186,7 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
     try {
       const swapId = honoCtx.req.param('swapId');
 
-      const fetchSwapStatus = getFetchSwapStatusService({
-        swapRepository: appContext.repositories.swap,
-        atomiqGateway: appContext.gateways.atomiq,
-      });
-
-      const result = await fetchSwapStatus({ swapId });
+      const result = await swapService.fetchStatus({ swapId });
 
       return honoCtx.json({
         swapId: result.swap.id,
@@ -229,7 +194,7 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
         status: result.status,
         progress: result.progress,
         txHash: result.txHash,
-        amountSats: result.swap.amountSats.toString(),
+        amountSats: result.swap.amount.toSatString(),
         destinationAddress: result.swap.destinationAddress,
         expiresAt: result.swap.expiresAt.toISOString(),
       });
@@ -246,12 +211,7 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
     try {
       const swapId = honoCtx.req.param('swapId');
 
-      const claimSwap = getClaimSwapService({
-        swapRepository: appContext.repositories.swap,
-        atomiqGateway: appContext.gateways.atomiq,
-      });
-
-      const result = await claimSwap({ swapId });
+      const result = await swapService.claim({ swapId });
 
       return honoCtx.json({
         swapId: result.swap.id,
@@ -269,14 +229,6 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
 // =============================================================================
 // Helpers
 // =============================================================================
-
-function getSessionId(honoCtx: { req: { header: (name: string) => string | undefined } }): string | undefined {
-  const cookie = honoCtx.req.header('Cookie');
-  if (!cookie) return undefined;
-
-  const match = /session=([^;]+)/.exec(cookie);
-  return match?.[1];
-}
 
 function handleError(honoCtx: { json: (data: unknown, status: number) => Response }, error: unknown): Response {
   console.error('Swap error:', error);
@@ -296,8 +248,8 @@ function handleError(honoCtx: { json: (data: unknown, status: number) => Respons
     return honoCtx.json(
       {
         error: 'Amount out of range',
-        min: error.min.toString(),
-        max: error.max.toString(),
+        min: error.min.toSatString(),
+        max: error.max.toSatString(),
       },
       400,
     );

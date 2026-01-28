@@ -1,5 +1,5 @@
-import {StarknetAddress} from '@bim/domain';
-import {P256Signer} from "@bim/test-toolkit";
+import {StarknetAddress} from '@bim/domain/account';
+import {P256Signer} from "@bim/test-toolkit/crypto";
 import {Account, RpcProvider, Signer} from 'starknet';
 import {StarknetRpcGateway} from '../../../src/adapters';
 import {StarkSigner} from './crypto';
@@ -40,20 +40,23 @@ export class StrkDevnetContext {
   private constructor() {
     this.devnetUrl = StrkDevnet.getDevnetUrl();
     this.devnetProvider = new RpcProvider({nodeUrl: this.devnetUrl});
-    this.starknetGateway = new StarknetRpcGateway({
-      rpcUrl: this.devnetUrl,
-      accountClassHash: DEVNET_ACCOUNT_CLASS_HASH,
-      tokenAddresses: {
-        WBTC: WBTC_TOKEN_ADDRESS,
-      },
-    });
-
-    // Use shared P256Signer for WebAuthn credential testing
-    this.p256Signer = P256Signer.generate();
-
     // Create the paymaster gateway without StarkSigner initially
     // It will be updated when ensureStarkSignerInitialized is called
     this.paymasterGateway = new DevnetPaymasterGateway(this.devnetUrl);
+
+    this.starknetGateway = new StarknetRpcGateway(
+      {
+        rpcUrl: this.devnetUrl,
+        accountClassHash: DEVNET_ACCOUNT_CLASS_HASH,
+        tokenAddresses: {
+          WBTC: WBTC_TOKEN_ADDRESS,
+        },
+      },
+      this.paymasterGateway,
+    );
+
+    // Use shared P256Signer for WebAuthn credential testing
+    this.p256Signer = P256Signer.generate();
   }
 
   static create(): StrkDevnetContext {
@@ -384,6 +387,43 @@ export class StrkDevnetContext {
     const low = BigInt(result[0] || '0');
     const high = BigInt(result[1] || '0');
     return low + (high << 128n);
+  }
+
+  /**
+   * Executes a multicall transaction on Starknet.
+   *
+   * This is a generic infrastructure method that executes an array of calls
+   * in a single transaction. Business logic (like fee calculation) should be
+   * handled by domain services, not here.
+   *
+   * @param from - Source Account instance
+   * @param calls - Array of Starknet calls to execute
+   * @param skipFeeEstimation - If true, uses explicit resourceBounds (faster)
+   * @returns Transaction hash
+   */
+  async executeMulticall(
+    from: Account,
+    calls: ReadonlyArray<{
+      readonly contractAddress: string;
+      readonly entrypoint: string;
+      readonly calldata: readonly string[];
+    }>,
+    skipFeeEstimation = true,
+  ): Promise<string> {
+    const options = skipFeeEstimation
+      ? {resourceBounds: StrkDevnetContext.DEVNET_RESOURCE_BOUNDS}
+      : undefined;
+
+    // Convert readonly array to mutable for starknet.js compatibility
+    const mutableCalls = calls.map((call) => ({
+      contractAddress: call.contractAddress,
+      entrypoint: call.entrypoint,
+      calldata: [...call.calldata],
+    }));
+
+    const result = await from.execute(mutableCalls, options);
+    await this.devnetProvider.waitForTransaction(result.transaction_hash);
+    return result.transaction_hash;
   }
 
 }

@@ -1,4 +1,4 @@
-import {Username} from "@bim/domain";
+import {Username} from "@bim/domain/account";
 import {z} from 'zod';
 
 // =============================================================================

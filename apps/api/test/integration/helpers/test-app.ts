@@ -19,6 +19,7 @@ export namespace TestApp {
     process.env.WEBAUTHN_RP_ID ??= 'localhost';
     process.env.WEBAUTHN_RP_NAME ??= 'BIM Test';
     process.env.WEBAUTHN_ORIGIN ??= 'http://localhost:8080';
+    process.env.FEE_TREASURY_ADDRESS ??= '0x027367ddd36d7efc4694e1af5742f8d26626369c07abf15d136ff422b9a40fa0';
     process.env.NODE_ENV ??= 'test';
   }
 

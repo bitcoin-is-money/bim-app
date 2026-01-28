@@ -133,6 +133,16 @@ describe('StarknetAddress', () => {
       expect(() => StarknetAddress.of('123')).toThrow(InvalidStarknetAddressError); // no 0x prefix
       expect(() => StarknetAddress.of('0xGGG')).toThrow(InvalidStarknetAddressError); // invalid hex
     });
+
+    it('throws InvalidStarknetAddressError for zero address', () => {
+      expect(() => StarknetAddress.of('0x0')).toThrow(InvalidStarknetAddressError);
+    });
+
+    it('throws InvalidStarknetAddressError for value >= felt252 prime', () => {
+      // Stark field prime = 2^251 + 17 * 2^192 + 1
+      const overflowHex = '0x' + 'f'.repeat(64);
+      expect(() => StarknetAddress.of(overflowHex)).toThrow(InvalidStarknetAddressError);
+    });
   });
 
   describe('isValid', () => {
@@ -144,6 +154,14 @@ describe('StarknetAddress', () => {
     it('returns false for invalid addresses', () => {
       expect(StarknetAddress.isValid('123')).toBe(false);
       expect(StarknetAddress.isValid('0xGGG')).toBe(false);
+    });
+
+    it('returns false for zero address', () => {
+      expect(StarknetAddress.isValid('0x0')).toBe(false);
+    });
+
+    it('returns false for value >= felt252 prime', () => {
+      expect(StarknetAddress.isValid('0x' + 'f'.repeat(64))).toBe(false);
     });
   });
 });

@@ -1,4 +1,5 @@
-import {Swap, type SwapDirection, SwapId, type SwapRepository, type SwapStatus,} from '@bim/domain';
+import type {SwapRepository} from "@bim/domain/ports";
+import {Swap, type SwapDirection, SwapId, type SwapStatus} from '@bim/domain/swap';
 
 /**
  * In-memory implementation of SwapRepository.
