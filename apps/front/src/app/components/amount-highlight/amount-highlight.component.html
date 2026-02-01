@@ -1,0 +1,15 @@
+<div class="amount-container">
+  @if (displayedAmount(); as amount) {
+    <div class="amount-value">{{ amount.value | number:'1.2-8' }}</div>
+  } @else {
+    <div class="amount-value">-</div>
+  }
+</div>
+@if (displayedAmount(); as amount) {
+  <app-currency-display
+    [currency]="amount.currency"
+    size="large"
+    (currencyChange)="onCurrencyChange($event)">
+  </app-currency-display>
+}
+

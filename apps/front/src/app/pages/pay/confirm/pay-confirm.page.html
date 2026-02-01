@@ -1,0 +1,42 @@
+<div class="pay-confirm-page">
+  <app-go-back-header title="Confirm payment"></app-go-back-header>
+
+  <main class="pay-confirm-main">
+    @if (payment(); as p) {
+      <div class="payment-details">
+        <app-network-logo [network]="payment()!.network" style="height:48px"/>
+        <app-amount-highlight [originalAmount]="amount()"/>
+        <div class="payment-fields">
+          <app-field
+            label="To"
+            [title]="destination()"
+            [value]="shortDestination()"
+            [monospace]="true"
+          />
+          <app-field
+            [editable]="true"
+            [value]="p.description"
+          />
+          <app-amount-field
+            [amount]="150"
+            currency="SAT"
+            label="Fee"
+          />
+        </div>
+        <app-button
+          class="confirm-button"
+          [icon]="['fas', 'location-arrow']"
+          variant="tertiary"
+          (click)="confirm()"
+        >
+          Confirm
+        </app-button>
+      </div>
+
+    } @else {
+      <p class="no-payment">No payment data. Please scan a QR code first.</p>
+    }
+  </main>
+
+  <app-logo-footer/>
+</div>

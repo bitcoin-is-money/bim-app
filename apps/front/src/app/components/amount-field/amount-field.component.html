@@ -1,0 +1,15 @@
+<app-field
+  [value]="formattedAmount()"
+  [editable]="editable()"
+  [label]="label()"
+  placeholder="0"
+  (valueChange)="onValueChange($event)">
+
+  @if (currencyToggle()) {
+    <app-currency-display
+      [currency]="currency()"
+      (currencyChange)="onCurrencyChange($event)" />
+  } @else {
+    <span class="currency-label">{{ currency() }}</span>
+  }
+</app-field>

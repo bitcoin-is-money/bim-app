@@ -58,6 +58,11 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'pay/confirm',
+    loadComponent: () => import('./pages/pay/confirm/pay-confirm.page').then(m => m.PayConfirmPage),
+    canActivate: [authGuard],
+  },
+  {
     path: '',
     redirectTo: '/auth',
     pathMatch: 'full',

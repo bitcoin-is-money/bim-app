@@ -5,6 +5,33 @@
 
   main {
     @apply flex-1 flex flex-col justify-center px-4 pb-30 gap-10 m-10;
-
   }
+}
+
+.scanner-overlay {
+  @apply fixed inset-0 z-50 bg-black flex items-center justify-center;
+}
+
+.scanner-header {
+  @apply absolute top-0 right-0 p-4 z-10;
+}
+
+.scanner-close {
+  @apply text-white text-2xl w-10 h-10 flex items-center justify-center rounded-full bg-white/20;
+}
+
+.qr-reader {
+  @apply w-full;
+}
+
+.scanner-error {
+  @apply absolute inset-0 flex flex-col items-center justify-center bg-black/90 text-white text-center p-6 gap-4;
+
+  p {
+    @apply text-gray-300;
+  }
+}
+
+.scanner-retry {
+  @apply px-6 py-2 bg-white/20 text-white rounded-lg;
 }
