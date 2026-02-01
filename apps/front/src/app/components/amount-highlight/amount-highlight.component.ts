@@ -1,17 +1,17 @@
 import {CommonModule} from '@angular/common';
 import {Component, computed, inject, input, signal} from '@angular/core';
-import {CurrencyDisplayComponent} from "../../../../components/currency-display/currency-display.component";
-import {Amount, Currency} from "../../../../model";
-import {CurrencyService} from "../../../../services/currency.service";
+import {CurrencyDisplayComponent} from '../currency-display/currency-display.component';
+import {Amount, Currency} from '../../model';
+import {CurrencyService} from '../../services/currency.service';
 
 @Component({
-  selector: 'app-balance-display',
+  selector: 'app-amount-highlight',
   standalone: true,
   imports: [CommonModule, CurrencyDisplayComponent],
-  templateUrl: './balance-display.component.html',
-  styleUrl: './balance-display.component.scss',
+  templateUrl: './amount-highlight.component.html',
+  styleUrl: './amount-highlight.component.scss',
 })
-export class BalanceDisplayComponent {
+export class AmountHighlightComponent {
 
   private readonly currencyService: CurrencyService = inject(CurrencyService);
 

@@ -1,0 +1,9 @@
+@reference "tailwindcss";
+
+:host {
+  @apply block w-full;
+}
+
+.currency-label {
+  @apply text-sm text-neutral-500 font-medium;
+}

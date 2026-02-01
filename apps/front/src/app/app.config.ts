@@ -7,7 +7,7 @@ import {environment} from '../environments/environment';
 import {registerIcons} from "../icons";
 import {routes} from './app.routes';
 import {httpNotificationInterceptor} from "./interceptor/http-notification.interceptor";
-import {backendInterceptor} from './mocks';
+import {backendInterceptor} from './mocks/backend.interceptor';
 
 // Interceptors run in order: first intercepts request first, but catches errors last
 // So: httpNotificationInterceptor catches errors from backendInterceptor

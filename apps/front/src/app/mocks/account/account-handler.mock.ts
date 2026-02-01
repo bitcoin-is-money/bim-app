@@ -1,6 +1,6 @@
 import {HttpResponse} from '@angular/common/http';
-import {BalanceResponse, DeployAccountResponse, DeploymentStatusResponse} from "../services/account.http.service";
-import {DataStoreMock} from "./data-store.mock";
+import {BalanceResponse, DeployAccountResponse, DeploymentStatusResponse} from "../../services/account.http.service";
+import {DataStoreMock} from "./../data-store.mock";
 
 const MOCK_DEPLOYMENT_DELAY_MS = 2000;
 
@@ -24,7 +24,7 @@ export class AccountHandlerMock {
       return new HttpResponse({status: 200, body: {status: 'deploying'}});
     }
 
-    if (this.store.shouldFailAccountDeployment()) {
+    if (!this.store.getMockUserProfile().deployAccountSuccess) {
       return new HttpResponse({status: 500, body: {status: 'failed'}});
     }
 
@@ -38,7 +38,7 @@ export class AccountHandlerMock {
 
   // GET /api/account/balance
   getBalance(): HttpResponse<BalanceResponse> {
-    const amount: string = this.store.hasNoTransaction() ? '0' : '125050000';
+    const amount: string = this.store.getMockUserProfile().balance;
     return new HttpResponse({
       status: 200,
       body: {

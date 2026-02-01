@@ -1,19 +1,14 @@
 import {HttpResponse} from '@angular/common/http';
 import {WebauthnUserHandleDecoder} from "@bim/lib/auth";
-import {Account} from "../model";
+import {Account} from "../../model";
 import type {
   AuthResponse,
   BeginAuthResponse,
   BeginRegisterResponse,
   UserSessionResponse,
-} from '../services/auth.service';
-import {DataStoreMock, type StoredCredential} from './data-store.mock';
-
-// If the registered username contains this string, the account deployment will mock a failed deployment
-const ERROR_DEPLOY_USERNAME = 'errorDeploy';
-
-// If the registered username contains this string, the account will have no transaction
-const EMPTY_TRANSACTION_USERNAME = 'empty';
+} from '../../services/auth.service';
+import {DataStoreMock, type StoredCredential} from './../data-store.mock';
+import {getMockUser} from './../mock-users';
 
 
 interface ApiErrorResponse {
@@ -153,8 +148,7 @@ export class AuthHandlerMock {
 
     this.store.setSession(account);
     this.store.setRegistrationDate(new Date());
-    this.store.setFailedAccountDeployment(username.includes(ERROR_DEPLOY_USERNAME))
-    this.store.setEmptyTransaction(username.includes(EMPTY_TRANSACTION_USERNAME))
+    this.store.setMockUserProfile(getMockUser(username));
 
     return new HttpResponse({
       status: 200,

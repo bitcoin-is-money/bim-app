@@ -1,0 +1,30 @@
+@reference "tailwindcss";
+
+:host {
+  @apply block w-full;;
+}
+
+.field {
+  @apply flex items-center gap-3 px-4 py-3 rounded-xl bg-neutral-900;
+
+  .field-label {
+    @apply text-sm text-neutral-500 whitespace-nowrap;
+  }
+
+  .field-icon {
+    @apply text-neutral-500 text-sm;
+  }
+
+  .field-input {
+    @apply flex-1 min-w-0 bg-transparent text-neutral-300 outline-none placeholder-neutral-600 text-sm;
+    text-align: center;
+  }
+
+  .field-text {
+    @apply flex flex-1 min-w-0 text-neutral-300 text-sm truncate justify-center;
+  }
+
+  .field-suffix {
+    @apply text-sm text-neutral-500 font-medium whitespace-nowrap;
+  }
+}

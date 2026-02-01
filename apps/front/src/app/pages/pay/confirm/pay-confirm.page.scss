@@ -1,0 +1,25 @@
+@reference "tailwindcss";
+
+.pay-confirm-page {
+  @apply h-screen flex flex-col overflow-hidden;
+
+  .pay-confirm-main {
+    @apply flex-1 flex flex-col justify-start px-4 pt-8;
+  }
+
+  .payment-details {
+    @apply flex flex-col items-center gap-10;
+  }
+
+  .payment-fields {
+    @apply flex flex-col w-full gap-2 px-4;
+  }
+
+  .confirm-button {
+    @apply w-full;
+  }
+
+  .no-payment {
+    @apply text-center text-gray-400;
+  }
+}

@@ -1,0 +1,27 @@
+<div class="field">
+  @if (label(); as lbl) {
+    <span class="field-label">{{ lbl }}</span>
+  } @else if (icon(); as icn) {
+    <fa-icon [icon]="icn" class="field-icon" />
+  } @else if (editable()) {
+    <fa-icon [icon]="faPen" class="field-icon" />
+  }
+
+  @if (editable()) {
+    <input
+      type="text"
+      class="field-input"
+      [class.font-mono]="monospace()"
+      [value]="value()"
+      [placeholder]="placeholder()"
+      (input)="onInput($event)" />
+  } @else {
+    <span class="field-text" [class.font-mono]="monospace()">{{ value() }}</span>
+  }
+
+  <ng-content />
+
+  @if (suffix(); as sfx) {
+    <span class="field-suffix">{{ sfx }}</span>
+  }
+</div>

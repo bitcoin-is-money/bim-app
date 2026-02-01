@@ -1,13 +1,11 @@
 import type {Account} from '../model';
-
-// username contains "error" => erro
+import {DEFAULT_MOCK_USER, type MockUserProfile} from './mock-users';
 
 const STORAGE_KEYS = {
   CREDENTIALS: 'mock_credentials',
   PENDING_CHALLENGES: 'mock_pending_challenges',
   CURRENT_SESSION: 'mock_current_session',
-  FAILED_ACCOUNT_DEPLOYMENT: 'mock_failed_account_deployment',
-  EMPTY_TRANSACTION: 'mock_empty_transaction',
+  MOCK_USER_PROFILE: 'mock_user_profile',
   REGISTRATION_TIMESTAMP: 'mock_registration_timestamp',
 } as const;
 
@@ -28,9 +26,6 @@ export interface PendingChallenge {
 }
 
 export class DataStoreMock {
-
-  //  private registrationTimestamp: number | null = null;
-
 
   // Credentials
   getCredentials(): Map<string, StoredCredential> {
@@ -117,32 +112,24 @@ export class DataStoreMock {
     }
   }
 
-  setFailedAccountDeployment(value: boolean): void {
-    localStorage.setItem(STORAGE_KEYS.FAILED_ACCOUNT_DEPLOYMENT, value.toString());
+  // Mock User Profile
+  setMockUserProfile(profile: MockUserProfile): void {
+    localStorage.setItem(STORAGE_KEYS.MOCK_USER_PROFILE, JSON.stringify(profile));
   }
 
-  shouldFailAccountDeployment(): boolean {
-    return localStorage.getItem(STORAGE_KEYS.FAILED_ACCOUNT_DEPLOYMENT) === 'true';
+  getMockUserProfile(): MockUserProfile {
+    const data = localStorage.getItem(STORAGE_KEYS.MOCK_USER_PROFILE);
+    return data ? JSON.parse(data) : DEFAULT_MOCK_USER;
   }
 
-  setEmptyTransaction(value: boolean): void {
-    localStorage.setItem(STORAGE_KEYS.EMPTY_TRANSACTION, value.toString());
-  }
-
-  hasNoTransaction(): boolean {
-    return localStorage.getItem(STORAGE_KEYS.EMPTY_TRANSACTION) === 'true';
-  }
-
-
+  // Registration timestamp
   setRegistrationDate(date: Date): void {
     localStorage.setItem(STORAGE_KEYS.REGISTRATION_TIMESTAMP, date.toISOString());
   }
 
   getRegistrationDate(): Date | null {
     const dateIso = localStorage.getItem(STORAGE_KEYS.REGISTRATION_TIMESTAMP);
-    return dateIso
-      ? new Date(dateIso)
-      : null;
+    return dateIso ? new Date(dateIso) : null;
   }
 
   // Utils
@@ -150,5 +137,6 @@ export class DataStoreMock {
     localStorage.removeItem(STORAGE_KEYS.CREDENTIALS);
     localStorage.removeItem(STORAGE_KEYS.PENDING_CHALLENGES);
     localStorage.removeItem(STORAGE_KEYS.CURRENT_SESSION);
+    localStorage.removeItem(STORAGE_KEYS.MOCK_USER_PROFILE);
   }
 }

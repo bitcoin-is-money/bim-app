@@ -33,6 +33,18 @@
   @apply disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
+/* ---------- Tertiary ---------- */
+
+.btn-tertiary {
+  @apply bg-white rounded-full
+  border-2 border-neutral-100
+  text-neutral-900;
+
+  @apply hover:bg-neutral-200 hover:text-neutral-900;
+  @apply active:bg-neutral-200 hover:text-neutral-900;
+  @apply disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
 /* ---------- Big ---------- */
 
 .btn-big {
@@ -40,10 +52,6 @@
     border-2 border-neutral-800
     text-neutral-200 text-xl
     py-8;
-
-  //@apply hover:bg-neutral-100 hover:text-neutral-700;
-  //@apply active:bg-neutral-100 hover:text-neutral-700;
-  //@apply disabled:opacity-50 disabled:cursor-not-allowed;
 
   .btn-icon {
     font-size: 150%;

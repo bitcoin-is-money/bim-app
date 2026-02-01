@@ -1,7 +1,7 @@
 @reference "tailwindcss";
 
 .empty-transaction {
-  @apply flex flex-col items-center justify-center py-12;
+  @apply flex flex-col items-center justify-center;
 
   .empty-transaction-text {
     @apply text-neutral-400 text-2xl;

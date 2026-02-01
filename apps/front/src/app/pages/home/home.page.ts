@@ -1,7 +1,7 @@
 import {CommonModule} from '@angular/common';
 import {Component, inject, OnInit} from '@angular/core';
 import {Router} from '@angular/router';
-import {BalanceDisplayComponent} from './components/balance-display/balance-display.component';
+import {AmountHighlightComponent} from '../../components/amount-highlight/amount-highlight.component';
 import {TransactionListComponent} from './components/transaction-list/transaction-list.component';
 import {EmptyTransactionComponent} from './components/empty-transaction/empty-transaction.component';
 import {SpinnerComponent} from '../../components/spinner/spinner.component';
@@ -12,7 +12,7 @@ import {TransactionService} from '../../services/transaction.service';
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, BalanceDisplayComponent, TransactionListComponent, EmptyTransactionComponent, SpinnerComponent],
+  imports: [CommonModule, AmountHighlightComponent, TransactionListComponent, EmptyTransactionComponent, SpinnerComponent],
   templateUrl: './home.page.html',
   styleUrl: './home.page.scss',
 })

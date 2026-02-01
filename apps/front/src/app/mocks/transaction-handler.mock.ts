@@ -38,7 +38,7 @@ export class TransactionHandlerMock {
   }
 
   getTransactions(req: HttpRequest<unknown>): HttpResponse<PaginatedTransactions> {
-    if (this.store.hasNoTransaction()) {
+    if (!this.store.getMockUserProfile().hasTransactions) {
       return new HttpResponse({
         status: 200,
         body: {transactions: [], total: 0, limit: 10, offset: 0},
