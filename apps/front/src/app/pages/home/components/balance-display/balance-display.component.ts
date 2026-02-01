@@ -18,15 +18,15 @@ export class BalanceDisplayComponent {
   /** Target currency selected by user */
   private readonly targetCurrency = signal<Currency>('USD');
 
-  /** Original amount with its currency */
-  readonly originalAmount = input<Amount>(Amount.zero());
+  /** Original amount with its currency (undefined while loading) */
+  readonly originalAmount = input<Amount | undefined>(undefined);
 
-  /** Amount converted to displayed currency */
+  /** Amount converted to displayed currency, undefined if the original is undefined */
   readonly displayedAmount = computed(() => {
-    return this.currencyService.convert(
-      this.originalAmount(),
-      this.targetCurrency()
-    );
+    const amount = this.originalAmount();
+    if (amount === undefined)
+      return undefined;
+    return this.currencyService.convert(amount, this.targetCurrency());
   });
 
   onCurrencyChange(newCurrency: Currency): void {
