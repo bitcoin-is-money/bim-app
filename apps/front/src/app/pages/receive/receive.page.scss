@@ -1,0 +1,108 @@
+@reference "tailwindcss";
+
+.receive-page {
+  @apply h-screen flex flex-col overflow-hidden;
+}
+
+.receive-main {
+  @apply flex-1 flex flex-col items-center gap-6 px-4 pt-4 pb-6 overflow-y-auto;
+}
+
+/* ---- Network selector ---- */
+
+.network-selector {
+  @apply flex flex-col items-center gap-2;
+}
+
+.swipe-zone {
+  @apply w-full flex flex-col items-center overflow-hidden;
+  touch-action: pan-y;
+}
+
+.swipe-content {
+  @apply w-full flex flex-col items-center gap-6;
+}
+
+/* ---- Slide animations ---- */
+
+.slide-out-left {
+  animation: outLeft 150ms ease-in forwards;
+}
+
+.slide-out-right {
+  animation: outRight 150ms ease-in forwards;
+}
+
+.slide-in-from-right {
+  animation: inFromRight 150ms ease-out forwards;
+}
+
+.slide-in-from-left {
+  animation: inFromLeft 150ms ease-out forwards;
+}
+
+@keyframes outLeft {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(-60px); opacity: 0; }
+}
+
+@keyframes outRight {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(60px); opacity: 0; }
+}
+
+@keyframes inFromRight {
+  from { transform: translateX(60px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes inFromLeft {
+  from { transform: translateX(-60px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* ---- Dots ---- */
+
+.carousel-dots {
+  @apply flex justify-center gap-2 my-4;
+}
+
+.dot {
+  @apply w-2 h-2 rounded-full bg-neutral-600 transition-colors cursor-pointer;
+  border: none;
+  padding: 0;
+}
+
+.dot-active {
+  @apply bg-amber-500;
+}
+
+/* ---- QR code ---- */
+
+.qr-container {
+  @apply flex items-center justify-center my-2;
+
+  .qr-image {
+    @apply w-56 h-56 rounded-xl;
+  }
+
+  .qr-placeholder {
+    @apply w-56 h-56 rounded-xl bg-neutral-800 flex items-center justify-center;
+
+    p {
+      @apply text-neutral-500 text-sm text-center px-4;
+    }
+  }
+}
+
+/* ---- Fields ---- */
+
+.fields {
+  @apply w-full flex flex-col gap-2;
+}
+
+/* ---- Action buttons ---- */
+
+.action-buttons {
+  @apply w-full flex flex-col gap-3;
+}
