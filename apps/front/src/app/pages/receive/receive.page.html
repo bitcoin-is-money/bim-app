@@ -1,0 +1,76 @@
+<div class="receive-page">
+  <app-go-back-header title="Receive"></app-go-back-header>
+
+  <main class="receive-main">
+    <!-- Swipeable zone: logo + dots + QR -->
+    <div class="swipe-zone"
+         (touchstart)="onTouchStart($event)"
+         (touchend)="onTouchEnd($event)">
+
+      <!-- Logo (animated) -->
+      <div [class]="'swipe-content ' + animationSlideClass()">
+        <app-network-logo [network]="selectedNetwork()" style="height:48px"/>
+      </div>
+
+      <!-- Dots (fixed) -->
+      <div class="carousel-dots">
+        @for (network of networks; track network; let i = $index) {
+          <button
+            class="dot"
+            [class.dot-active]="activeNetworkIndex() === i"
+            (click)="scrollToIndex(i)"
+            [attr.aria-label]="'Go to ' + network">
+          </button>
+        }
+      </div>
+
+      <!-- QR code (animated) -->
+      <div [class]="'swipe-content ' + animationSlideClass()">
+        <div class="qr-container">
+          @if (qrImageUrl(); as url) {
+            <img [src]="url" alt="QR Code" class="qr-image"/>
+          } @else {
+            <div class="qr-placeholder">
+              <p>{{ qrPlaceholderMessage() }}</p>
+            </div>
+          }
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Amount & Description -->
+    <div class="fields">
+      <app-amount-field
+        [(amount)]="amount"
+        [editable]="true"
+        [currencyToggle]="true"/>
+      <app-field
+        [value]="description()"
+        [editable]="true"
+        placeholder="Optional description"
+        (valueChange)="onDescriptionChange($event)"/>
+    </div>
+
+    <!-- Action buttons -->
+    <div class="action-buttons">
+      @if (showCreateInvoice()) {
+        <app-button
+          variant="primary"
+          [icon]="['fas', 'qrcode']"
+          [disabled]="amount().value === 0">
+          Create Invoice
+        </app-button>
+      }
+      <app-button
+        variant="tertiary"
+        [icon]="['fas', 'share-nodes']"
+        [disabled]="!qrData()"
+        (click)="share()">
+        Share
+      </app-button>
+
+    </div>
+  </main>
+  <app-logo-footer />
+</div>

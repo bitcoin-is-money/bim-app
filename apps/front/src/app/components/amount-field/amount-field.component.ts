@@ -25,7 +25,9 @@ export class AmountFieldComponent {
 
   onValueChange(value: string): void {
     const parsed = Number.parseFloat(value);
-    if (!Number.isNaN(parsed)) {
+    if (Number.isNaN(parsed)) {
+      this.amount.set(Amount.of(0, this.amount().currency));
+    } else {
       this.amount.set(Amount.of(parsed, this.amount().currency));
     }
   }

@@ -60,8 +60,7 @@ export class HomePage implements OnInit {
   }
 
   onReceive(): void {
-    // TODO: implement later
-    console.log('Receive clicked');
+    this.router.navigate(['/receive']);
   }
 
   onPay(): void {
