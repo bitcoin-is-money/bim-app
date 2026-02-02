@@ -1,7 +1,7 @@
 import {CommonModule} from '@angular/common';
-import {Component, computed, inject, input, signal} from '@angular/core';
+import {Component, computed, inject, input} from '@angular/core';
 import {CurrencyDisplayComponent} from '../currency-display/currency-display.component';
-import {Amount, Currency} from '../../model';
+import {Amount} from '../../model';
 import {CurrencyService} from '../../services/currency.service';
 
 @Component({
@@ -15,9 +15,6 @@ export class AmountHighlightComponent {
 
   private readonly currencyService: CurrencyService = inject(CurrencyService);
 
-  /** Target currency selected by user */
-  private readonly targetCurrency = signal<Currency>('USD');
-
   /** Original amount with its currency (undefined while loading) */
   readonly originalAmount = input<Amount | undefined>(undefined);
 
@@ -26,10 +23,6 @@ export class AmountHighlightComponent {
     const amount = this.originalAmount();
     if (amount === undefined)
       return undefined;
-    return this.currencyService.convert(amount, this.targetCurrency());
+    return this.currencyService.convert(amount, this.currencyService.currentCurrency());
   });
-
-  onCurrencyChange(newCurrency: Currency): void {
-    this.targetCurrency.set(newCurrency);
-  }
 }
