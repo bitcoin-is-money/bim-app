@@ -7,9 +7,8 @@
 
   @if (currencyToggle()) {
     <app-currency-display
-      [currency]="currency()"
-      (currencyChange)="onCurrencyChange($event)" />
+      [currency]="amount().currency" />
   } @else {
-    <span class="currency-label">{{ currency() }}</span>
+    <span class="currency-label">{{ amount().currency }}</span>
   }
 </app-field>

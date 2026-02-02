@@ -1,5 +1,5 @@
 import {Component, computed, input, model} from '@angular/core';
-import {Currency} from '../../model';
+import {Amount} from '../../model';
 import {CurrencyDisplayComponent} from '../currency-display/currency-display.component';
 import {FieldComponent} from '../field/field.component';
 
@@ -11,28 +11,22 @@ import {FieldComponent} from '../field/field.component';
   styleUrl: './amount-field.component.scss',
 })
 export class AmountFieldComponent {
-  readonly amount = model<number>(0);
-  readonly currency = model<Currency>('SAT');
+  readonly amount = model<Amount>(Amount.zero());
   readonly editable = input(false);
   readonly label = input<string | undefined>();
   readonly currencyToggle = input(false);
 
   readonly formattedAmount = computed(() => {
-    const val = this.amount();
-    const curr = this.currency();
-    if (curr === 'BTC') return val.toFixed(8);
-    if (curr === 'USD') return val.toFixed(2);
-    return String(Math.round(val));
+    const { value, currency } = this.amount();
+    if (currency === 'BTC') return value.toFixed(8);
+    if (currency === 'USD') return value.toFixed(2);
+    return String(Math.round(value));
   });
 
   onValueChange(value: string): void {
-    const parsed = parseFloat(value);
-    if (!isNaN(parsed)) {
-      this.amount.set(parsed);
+    const parsed = Number.parseFloat(value);
+    if (!Number.isNaN(parsed)) {
+      this.amount.set(Amount.of(parsed, this.amount().currency));
     }
-  }
-
-  onCurrencyChange(currency: Currency): void {
-    this.currency.set(currency);
   }
 }

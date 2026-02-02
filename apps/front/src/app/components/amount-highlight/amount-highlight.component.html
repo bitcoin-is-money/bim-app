@@ -8,8 +8,7 @@
 @if (displayedAmount(); as amount) {
   <app-currency-display
     [currency]="amount.currency"
-    size="large"
-    (currencyChange)="onCurrencyChange($event)">
+    size="large">
   </app-currency-display>
 }
 

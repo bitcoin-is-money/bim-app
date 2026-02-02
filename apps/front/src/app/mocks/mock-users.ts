@@ -57,8 +57,8 @@ export const MOCK_USERS: MockUserProfile[] = [
     balance: '0',
     paymentParseResult: {
       network: 'starknet',
-      amount: {value: 0, currency: 'SAT'},
-      fee: {value: 0, currency: 'SAT'},
+      amount: {value: 1_000, currency: 'SAT'},
+      fee: {value: 1, currency: 'SAT'},
       description: 'Zero amount',
       address: '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d',
       tokenAddress: '0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac',

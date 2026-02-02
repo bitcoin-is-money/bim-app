@@ -18,8 +18,7 @@
             [value]="p.description"
           />
           <app-amount-field
-            [amount]="p.fee.value"
-            [currency]="p.fee.currency"
+            [amount]="computedFee()!"
             label="Fee"
           />
         </div>

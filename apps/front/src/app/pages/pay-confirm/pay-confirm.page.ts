@@ -7,7 +7,10 @@ import {ButtonComponent} from '../../components/button/button.component';
 import {GoBackHeaderComponent} from '../../components/go-back-header/go-back-header.component';
 import {LogoFooterComponent} from '../../components/logo-footer/logo-footer.component';
 import {NetworkLogoComponent} from '../../components/network-logo/network-logo.component';
+import {Amount} from "../../model";
 import {AccountService} from '../../services/account.service';
+import {CurrencyService} from '../../services/currency.service';
+import {NotificationService} from "../../services/notification.service";
 import {PaymentService} from '../../services/payment.service';
 
 @Component({
@@ -20,15 +23,30 @@ import {PaymentService} from '../../services/payment.service';
 export class PayConfirmPage {
 
   private readonly accountService = inject(AccountService);
+  private readonly currencyService = inject(CurrencyService);
   private readonly paymentService = inject(PaymentService);
+  private readonly notificationService = inject(NotificationService);
 
   payment = this.paymentService.parsedPayment;
 
-  paymentAvailable = computed(() => {
+  computedFee = computed((): Amount | undefined => {
+    const p = this.payment();
+    if (!p) return undefined;
+    return this.currencyService.convert(p.fee, this.currencyService.currentCurrency());
+  });
+
+  paymentAvailable = computed((): boolean => {
     const balance = this.accountService.balance();
     const p = this.payment();
-    if (!balance || !p) return false;
-    return balance.value >= p.amount.value + p.fee.value;
+    if (!balance || !p) {
+      return false;
+    }
+    const result: boolean = balance.value >= p.amount.value + p.fee.value;
+    if (!result) {
+      console.log('Insufficient balance', balance, p);
+      this.notificationService.error({message: 'Insufficient balance'});
+    }
+    return result;
   });
 
   confirm(): void {

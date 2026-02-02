@@ -1,4 +1,4 @@
-import {Component, inject, input, output} from '@angular/core';
+import {Component, inject, input} from '@angular/core';
 import {Currency} from '../../model';
 import {CurrencyService} from '../../services/currency.service';
 
@@ -14,13 +14,7 @@ export class CurrencyDisplayComponent {
   currency = input.required<Currency>();
   size = input<'normal' | 'large'>('normal');
 
-  currencyChange = output<Currency>();
-
   onClick(): void {
-    const currencies = this.currencyService.currencies();
-    const currentIndex = currencies.indexOf(this.currency());
-    const nextIndex = (currentIndex + 1) % currencies.length;
-    const nextCurrency = currencies[nextIndex] as Currency;
-    this.currencyChange.emit(nextCurrency);
+    this.currencyService.cycleCurrentCurrency();
   }
 }
