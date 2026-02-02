@@ -4,13 +4,13 @@
   <main class="pay-confirm-main">
     @if (payment(); as p) {
       <div class="payment-details">
-        <app-network-logo [network]="payment()!.network" style="height:48px"/>
-        <app-amount-highlight [originalAmount]="amount()"/>
+        <app-network-logo [network]="p.network" style="height:48px"/>
+        <app-amount-highlight [originalAmount]="p.amount"/>
         <div class="payment-fields">
           <app-field
             label="To"
-            [title]="destination()"
-            [value]="shortDestination()"
+            [title]="p.destination"
+            [value]="p.shortDestination"
             [monospace]="true"
           />
           <app-field
@@ -18,8 +18,8 @@
             [value]="p.description"
           />
           <app-amount-field
-            [amount]="150"
-            currency="SAT"
+            [amount]="p.fee.value"
+            [currency]="p.fee.currency"
             label="Fee"
           />
         </div>
@@ -27,9 +27,10 @@
           class="confirm-button"
           [icon]="['fas', 'location-arrow']"
           variant="tertiary"
+          [disabled]="!paymentAvailable()"
           (click)="confirm()"
         >
-          Confirm
+          Pay
         </app-button>
       </div>
 

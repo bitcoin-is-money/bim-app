@@ -186,10 +186,12 @@ export namespace AppContext {
       wbtcTokenAddress: config.wbtcTokenAddress,
     };
 
-    const erc20CallFactory = new Erc20CallFactory(FeeConfig.create({
+    const feeConfig = FeeConfig.create({
       percentage: FeeConfig.DEFAULT_PERCENTAGE,
       recipientAddress: StarknetAddress.of(config.feeTreasuryAddress),
-    }));
+    });
+
+    const erc20CallFactory = new Erc20CallFactory(feeConfig);
 
     const starknetPaymentService = new StarknetPaymentService({
       starknetGateway: gateways.starknet,
@@ -217,6 +219,7 @@ export namespace AppContext {
       lightning: lightningPaymentService,
       bitcoin: bitcoinPaymentService,
       swapService,
+      feeConfig,
     });
 
     return {

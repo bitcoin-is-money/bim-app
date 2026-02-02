@@ -7,20 +7,23 @@ export type PaymentNetwork = 'lightning' | 'bitcoin' | 'starknet';
 export type ParsePaymentResponse =
   | {
       network: 'lightning';
-      amount: { value: number; currency: string };
+      amount: { value: number; currency: 'SAT' };
+      fee: { value: number; currency: 'SAT' };
       description: string;
       invoice: string;
       expiresAt?: string;
     }
   | {
       network: 'bitcoin';
-      amount: { value: number; currency: string };
+      amount: { value: number; currency: 'SAT' };
+      fee: { value: number; currency: 'SAT' };
       description: string;
       address: string;
     }
   | {
       network: 'starknet';
-      amount: { value: number; currency: string };
+      amount: { value: number; currency: 'SAT' };
+      fee: { value: number; currency: 'SAT' };
       description: string;
       address: string;
       tokenAddress: string;
