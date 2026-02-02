@@ -1,4 +1,11 @@
-import {HttpErrorResponse, HttpEvent, HttpHandlerFn, HttpInterceptorFn, HttpRequest, HttpResponse,} from '@angular/common/http';
+import {
+  HttpErrorResponse,
+  HttpEvent,
+  HttpHandlerFn,
+  HttpInterceptorFn,
+  HttpRequest,
+  HttpResponse,
+} from '@angular/common/http';
 import {Observable, of, throwError} from 'rxjs';
 import {delay, mergeMap} from 'rxjs/operators';
 import {AuthHandlerMock} from './auth/auth-handler.mock';
@@ -15,6 +22,8 @@ const mockPricesHandler = new PricesHandlerMock();
 const mockTransactionHandler = new TransactionHandlerMock(store);
 const mockPaymentHandler = new PaymentHandlerMock(store);
 
+const paymentDelay = 3000;
+
 function randomDelay(): number {
   return 100 + Math.random() * 400; // 100-500ms
 }
@@ -24,7 +33,7 @@ export const backendInterceptor: HttpInterceptorFn = (
   next: HttpHandlerFn
 ): Observable<HttpEvent<unknown>> => {
   const url = req.urlWithParams;
-  const { method, body } = req;
+  const {method, body} = req;
 
   // Only intercept /api/ requests
   if (!url.startsWith('/api/')) {
@@ -73,11 +82,13 @@ export const backendInterceptor: HttpInterceptorFn = (
 
   // Payment routes
   else if (url === '/api/pay/parse' && method === 'POST') {
-    response = mockPaymentHandler.parse(body as {data: string});
+    response = mockPaymentHandler.parse(body as { data: string });
+  } else if (url === '/api/pay/execute' && method === 'POST') {
+    response = mockPaymentHandler.execute(body as { data: string });
   }
 
   if (response) {
-    console.log(`[MockBackend] ${method} ${url}`, { body, response: response.body, status: response.status });
+    console.log(`[MockBackend] ${method} ${url}`, {body, response: response.body, status: response.status});
 
     // Convert error responses (4xx, 5xx) to HttpErrorResponse
     if (response.status >= 400) {
@@ -92,7 +103,10 @@ export const backendInterceptor: HttpInterceptorFn = (
       );
     }
 
-    return of(response).pipe(delay(randomDelay()));
+    const delayMS = url === '/api/pay/execute' && method === 'POST'
+      ? paymentDelay
+      : randomDelay()
+    return of(response).pipe(delay(delayMS));
   }
 
   // Pass through unknown routes

@@ -90,9 +90,11 @@ export class NotificationService {
       console.warn('Toast template not registered');
       return;
     }
-    this.toast.show(this.toastTemplate, {
-      ...options,
-      data: data
+    setTimeout(() => {
+      this.toast.show(this.toastTemplate, {
+        ...options,
+        data: data
+      });
     });
   }
 

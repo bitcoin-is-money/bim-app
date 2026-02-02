@@ -1,0 +1,18 @@
+@reference "tailwindcss";
+
+.pay-success-page {
+  @apply h-screen flex flex-col overflow-hidden;
+
+  .pay-success-main {
+    @apply flex-1 flex flex-col items-center justify-center gap-6;
+  }
+
+  .success-icon {
+    @apply text-green-500;
+    font-size: 5rem;
+  }
+
+  .success-text {
+    @apply text-2xl font-semibold text-white;
+  }
+}

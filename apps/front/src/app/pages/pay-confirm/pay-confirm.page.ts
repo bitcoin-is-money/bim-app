@@ -49,7 +49,9 @@ export class PayConfirmPage {
     return result;
   });
 
+  readonly isProcessing = this.paymentService.isProcessing;
+
   confirm(): void {
-    // TODO: execute payment
+    this.paymentService.executeAndNavigate();
   }
 }

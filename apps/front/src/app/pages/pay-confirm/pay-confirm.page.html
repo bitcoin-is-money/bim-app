@@ -24,12 +24,16 @@
         </div>
         <app-button
           class="confirm-button"
-          [icon]="['fas', 'location-arrow']"
+          [icon]="isProcessing() ? ['fas', 'spinner'] : ['fas', 'location-arrow']"
           variant="tertiary"
-          [disabled]="!paymentAvailable()"
+          [disabled]="!paymentAvailable() || isProcessing()"
           (click)="confirm()"
         >
-          Pay
+          @if (isProcessing()) {
+            Processing...
+          } @else {
+            Pay
+          }
         </app-button>
       </div>
 

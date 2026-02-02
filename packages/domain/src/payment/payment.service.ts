@@ -5,8 +5,10 @@ import {FeeCalculator, type FeeConfig} from './fee';
 import type {LightningPaymentService} from './lightning-payment.service';
 import type {StarknetPaymentService} from './starknet-payment.service';
 import {
+  type ExecutePaymentInput,
   type ParsedPaymentData,
   PaymentParsingError,
+  type PaymentResult,
   type PaymentStatusResult,
   type PreparedPayment,
   UnsupportedNetworkError,
@@ -93,6 +95,53 @@ export class PaymentService {
       ? FeeCalculator.calculateFee(parsed.amount, this.deps.feeConfig.percentage)
       : Amount.zero();
     return {...parsed, fee};
+  }
+
+  // ===========================================================================
+  // EXECUTE (parse + pay)
+  // ===========================================================================
+
+  /**
+   * Execute a payment: auto-detect the network, then delegate to the
+   * appropriate sub-service's `pay()` method.
+   *
+   * @throws UnsupportedNetworkError if the input format is not recognized
+   * @throws PaymentParsingError if network-specific parsing fails
+   * @throws InvalidPaymentAmountError if amount <= 0
+   * @throws SameAddressPaymentError if sender === recipient (Starknet)
+   */
+  async execute(input: ExecutePaymentInput): Promise<PaymentResult> {
+    const parsed = this.parse(input.data);
+
+    switch (parsed.network) {
+      case 'starknet':
+        return {
+          network: 'starknet',
+          ...(await this.deps.starknet.pay({
+            senderAddress: input.senderAddress,
+            recipientAddress: parsed.address,
+            tokenAddress: parsed.tokenAddress,
+            amount: parsed.amount,
+          })),
+        };
+      case 'lightning':
+        return {
+          network: 'lightning',
+          ...(await this.deps.lightning.pay({
+            invoice: parsed.invoice,
+            senderAddress: input.senderAddress,
+          })),
+        };
+      case 'bitcoin':
+        return {
+          network: 'bitcoin',
+          ...(await this.deps.bitcoin.pay({
+            address: parsed.address,
+            amount: parsed.amount,
+            senderAddress: input.senderAddress,
+          })),
+        };
+    }
   }
 
   // ===========================================================================
