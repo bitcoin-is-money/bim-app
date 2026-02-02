@@ -63,6 +63,11 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'pay/success',
+    loadComponent: () => import('./pages/pay-success/pay-success.page').then(m => m.PaySuccessPage),
+    canActivate: [authGuard],
+  },
+  {
     path: '',
     redirectTo: '/auth',
     pathMatch: 'full',

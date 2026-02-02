@@ -41,7 +41,16 @@ export type ParsedPaymentData =
 export type PreparedPayment = ParsedPaymentData & { fee: Amount };
 
 // =============================================================================
-// PAY Inputs
+// EXECUTE Input (facade-level)
+// =============================================================================
+
+export interface ExecutePaymentInput {
+  data: string;
+  senderAddress: StarknetAddress;
+}
+
+// =============================================================================
+// PAY Inputs (network-specific)
 // =============================================================================
 
 export interface PayStarknetInput {
@@ -156,6 +165,15 @@ export interface StarknetReceiveResult {
   address: StarknetAddress;
   uri: string;
 }
+
+// =============================================================================
+// EXECUTE Result (facade-level, discriminated union)
+// =============================================================================
+
+export type PaymentResult =
+  | ({network: 'starknet'} & StarknetPaymentResult)
+  | ({network: 'lightning'} & LightningPaymentResult)
+  | ({network: 'bitcoin'} & BitcoinPaymentResult);
 
 // =============================================================================
 // STATUS

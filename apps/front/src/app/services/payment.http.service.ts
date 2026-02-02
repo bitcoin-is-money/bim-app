@@ -29,6 +29,32 @@ export type ParsePaymentResponse =
       tokenAddress: string;
     };
 
+export type ExecutePaymentResponse =
+  | {
+      network: 'starknet';
+      txHash: string;
+      amount: { value: number; currency: 'SAT' };
+      feeAmount: { value: number; currency: 'SAT' };
+      recipientAddress: string;
+      tokenAddress: string;
+    }
+  | {
+      network: 'lightning';
+      txHash: string;
+      amount: { value: number; currency: 'SAT' };
+      swapId: string;
+      invoice: string;
+      expiresAt: string;
+    }
+  | {
+      network: 'bitcoin';
+      txHash: string;
+      amount: { value: number; currency: 'SAT' };
+      swapId: string;
+      destinationAddress: string;
+      expiresAt: string;
+    };
+
 @Injectable({
   providedIn: 'root',
 })
@@ -39,5 +65,9 @@ export class PaymentHttpService {
 
   parse(data: string): Observable<ParsePaymentResponse> {
     return this.http.post<ParsePaymentResponse>(`${this.apiUrl}/parse`, {data});
+  }
+
+  execute(data: string): Observable<ExecutePaymentResponse> {
+    return this.http.post<ExecutePaymentResponse>(`${this.apiUrl}/execute`, {data});
   }
 }

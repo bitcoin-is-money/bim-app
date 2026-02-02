@@ -1,6 +1,9 @@
 import {
+  InvalidPaymentAmountError,
   PaymentParsingError,
+  type PaymentResult,
   type PreparedPayment,
+  SameAddressPaymentError,
   UnsupportedNetworkError,
 } from '@bim/domain/payment';
 import {Hono} from 'hono';
@@ -14,6 +17,10 @@ import type {AuthenticatedHono} from '../../types';
 // =============================================================================
 
 const ParsePaymentSchema = z.object({
+  data: z.string().min(1),
+});
+
+const ExecutePaymentSchema = z.object({
   data: z.string().min(1),
 });
 
@@ -40,6 +47,29 @@ export function createPayRoutes(appContext: AppContext): AuthenticatedHono {
       const prepared = paymentService.prepare(data);
 
       return honoCtx.json(serializePreparedPayment(prepared));
+    } catch (error) {
+      return handleError(honoCtx, error);
+    }
+  });
+
+  // ---------------------------------------------------------------------------
+  // Execute payment
+  // ---------------------------------------------------------------------------
+
+  app.post('/execute', async (honoCtx) => {
+    try {
+      const body = await honoCtx.req.json();
+      const {data} = ExecutePaymentSchema.parse(body);
+
+      const account = honoCtx.get('account');
+      const senderAddress = account.getStarknetAddress();
+      if (!senderAddress) {
+        return honoCtx.json({error: 'Account not deployed'}, 400);
+      }
+
+      const result = await paymentService.execute({data, senderAddress});
+
+      return honoCtx.json(serializePaymentResult(result));
     } catch (error) {
       return handleError(honoCtx, error);
     }
@@ -82,6 +112,38 @@ function serializePreparedPayment(prepared: PreparedPayment): Record<string, unk
   }
 }
 
+function serializePaymentResult(result: PaymentResult): Record<string, unknown> {
+  const base = {
+    network: result.network,
+    txHash: result.txHash,
+    amount: serializeAmount(result.amount),
+  };
+
+  switch (result.network) {
+    case 'starknet':
+      return {
+        ...base,
+        feeAmount: serializeAmount(result.feeAmount),
+        recipientAddress: result.recipientAddress.toString(),
+        tokenAddress: result.tokenAddress,
+      };
+    case 'lightning':
+      return {
+        ...base,
+        swapId: result.swapId,
+        invoice: result.invoice.toString(),
+        expiresAt: result.expiresAt.toISOString(),
+      };
+    case 'bitcoin':
+      return {
+        ...base,
+        swapId: result.swapId,
+        destinationAddress: result.destinationAddress.toString(),
+        expiresAt: result.expiresAt.toISOString(),
+      };
+  }
+}
+
 // =============================================================================
 // Error Handling
 // =============================================================================
@@ -96,6 +158,14 @@ function handleError(honoCtx: {json: (data: unknown, status: number) => Response
   }
 
   if (error instanceof PaymentParsingError) {
+    return honoCtx.json({error: error.message}, 400);
+  }
+
+  if (error instanceof InvalidPaymentAmountError) {
+    return honoCtx.json({error: error.message}, 400);
+  }
+
+  if (error instanceof SameAddressPaymentError) {
     return honoCtx.json({error: error.message}, 400);
   }
 

@@ -6,14 +6,17 @@ export interface MockUserProfile {
   hasTransactions: boolean;
   balance: string; // raw WBTC amount (8 decimals), e.g. "125050000" = 1.2505 BTC
   paymentParseResult: ParsePaymentResponse | null; // null = 400 error on parse
+  paymentExecuteSuccess: boolean;
 }
 
 export const MOCK_USERS: MockUserProfile[] = [
   {
+    // STARKNET USER - EVERYTHING OK
     username: 'alice',
     deployAccountSuccess: true,
     hasTransactions: true,
     balance: '100000000', // 1 BTC in sats
+    paymentExecuteSuccess: true,
     paymentParseResult: {
       network: 'starknet',
       amount: {value: 50_000_000, currency: 'SAT'}, // 0.5 BTC
@@ -24,10 +27,12 @@ export const MOCK_USERS: MockUserProfile[] = [
     },
   },
   {
+    // LIGHTNING USER - EVERYTHING OK
     username: 'bob',
     deployAccountSuccess: true,
     hasTransactions: true,
     balance: '125050000', // ~1.25 BTC in sats
+    paymentExecuteSuccess: true,
     paymentParseResult: {
       network: 'lightning',
       amount: {value: 500_000, currency: 'SAT'}, // 0.005 BTC
@@ -38,23 +43,27 @@ export const MOCK_USERS: MockUserProfile[] = [
     },
   },
   {
+    // BITCOIN USER - EVERYTHING OK - NO TRANSACTION YET
     username: 'charlie',
     deployAccountSuccess: true,
-    hasTransactions: true,
-    balance: '1000', // 1000 sats
+    hasTransactions: false,
+    balance: '1000000', // sats
+    paymentExecuteSuccess: true,
     paymentParseResult: {
       network: 'bitcoin',
-      amount: {value: 10_000_000, currency: 'SAT'}, // 0.1 BTC
+      amount: {value: 10_000, currency: 'SAT'}, // 0.1 BTC
       fee: {value: 0, currency: 'SAT'}, // no BIM fee on Bitcoin swaps
       description: 'Bitcoin on-chain transfer',
       address: 'bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4',
     },
   },
   {
+    // BALANCE 0 USER - UNABLE TO PAY
     username: 'eve',
     deployAccountSuccess: true,
     hasTransactions: false,
-    balance: '0',
+    balance: '0',  // sats
+    paymentExecuteSuccess: true,
     paymentParseResult: {
       network: 'starknet',
       amount: {value: 1_000, currency: 'SAT'},
@@ -65,10 +74,28 @@ export const MOCK_USERS: MockUserProfile[] = [
     },
   },
   {
+    // PAYMENT ERROR USER
+    username: 'marc',
+    deployAccountSuccess: true,
+    hasTransactions: false,
+    balance: '100000',  // sats
+    paymentExecuteSuccess: false,
+    paymentParseResult: {
+      network: 'starknet',
+      amount: {value: 1_000, currency: 'SAT'},
+      fee: {value: 1, currency: 'SAT'},
+      description: 'Zero amount',
+      address: '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d',
+      tokenAddress: '0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac',
+    },
+  },
+  {
+    // INVALID USER - UNABLE TO DEPLOY ACCOUNT
     username: 'mallory',
     deployAccountSuccess: false,
-    hasTransactions: true,
-    balance: '125050000',
+    hasTransactions: false,
+    balance: '0',
+    paymentExecuteSuccess: false,
     paymentParseResult: {
       network: 'starknet',
       amount: {value: -100_000_000, currency: 'SAT'},
@@ -77,14 +104,7 @@ export const MOCK_USERS: MockUserProfile[] = [
       address: '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d',
       tokenAddress: '0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac',
     },
-  },
-  {
-    username: 'error',
-    deployAccountSuccess: false,
-    hasTransactions: false,
-    balance: '0',
-    paymentParseResult: null,
-  },
+  }
 ];
 
 export const DEFAULT_MOCK_USER: MockUserProfile = MOCK_USERS[0]!; // alice
