@@ -3,7 +3,7 @@
 
   <main class="pay-main">
     <app-button
-      class="sign-in-button"
+      class="scan-button"
       variant="big"
       [icon]="['fas', 'qrcode']"
       (click)="scanQRCode()"
@@ -12,7 +12,7 @@
       Scan a QR Code
     </app-button>
     <app-button
-      class="sign-in-button"
+      class="parse-clipboard-button"
       variant="big"
       [icon]="['fas', 'paste']"
       (click)="pasteFromClipboard()"
