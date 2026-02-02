@@ -1,11 +1,14 @@
+import {Amount} from '../shared';
 import {LightningInvoice, type SwapId, type SwapService} from '../swap';
 import type {BitcoinPaymentService} from './bitcoin-payment.service';
+import {FeeCalculator, type FeeConfig} from './fee';
 import type {LightningPaymentService} from './lightning-payment.service';
 import type {StarknetPaymentService} from './starknet-payment.service';
 import {
   type ParsedPaymentData,
   PaymentParsingError,
   type PaymentStatusResult,
+  type PreparedPayment,
   UnsupportedNetworkError,
 } from './types';
 
@@ -18,6 +21,7 @@ export interface PaymentServiceDeps {
   lightning: LightningPaymentService;
   bitcoin: BitcoinPaymentService;
   swapService: SwapService;
+  feeConfig: FeeConfig;
 }
 
 // =============================================================================
@@ -29,6 +33,7 @@ export interface PaymentServiceDeps {
  *
  * Exposes network-specific sub-services and provides cross-cutting operations:
  * - `parse()`: auto-detects the payment network and delegates to the right sub-service
+ * - `prepare()`: parse + fee calculation (used by the API layer)
  * - `getStatus()`: polls swap status for Lightning/Bitcoin payments
  *
  * Network-specific operations are accessed via sub-service properties:
@@ -70,6 +75,24 @@ export class PaymentService {
         : new Error(String(error));
       throw new PaymentParsingError(cause);
     }
+  }
+
+  // ===========================================================================
+  // PREPARE (parse + fee calculation)
+  // ===========================================================================
+
+  /**
+   * Parse payment data and calculate the applicable fee.
+   *
+   * BIM fee is applied only to Starknet direct transfers.
+   * Lightning and Bitcoin swaps have no BIM fee (swap fees are handled by Atomiq).
+   */
+  prepare(data: string): PreparedPayment {
+    const parsed = this.parse(data);
+    const fee = parsed.network === 'starknet'
+      ? FeeCalculator.calculateFee(parsed.amount, this.deps.feeConfig.percentage)
+      : Amount.zero();
+    return {...parsed, fee};
   }
 
   // ===========================================================================

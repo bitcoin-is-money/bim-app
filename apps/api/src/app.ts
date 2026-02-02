@@ -9,6 +9,7 @@ import {
   createAuthRoutes,
   createCurrencyRoutes,
   createHealthRoutes,
+  createPayRoutes,
   createSwapRoutes,
   createTransactionRoutes,
   createUserRoutes,
@@ -51,6 +52,7 @@ export function createApp(options: CreateAppOptions = {}): Hono {
   app.route('/api/auth', createAuthRoutes(context));
   app.route('/api/account', createAccountRoutes(context));
   app.route('/api/user', createUserRoutes(context));
+  app.route('/api/pay', createPayRoutes(context));
   app.route('/api/swap', createSwapRoutes(context));
   app.route('/api/health', createHealthRoutes());
   app.route('/api/currency', createCurrencyRoutes());
