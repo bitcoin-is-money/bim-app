@@ -2,7 +2,7 @@
 
 .currency-display {
   @apply text-lg font-bold text-amber-500;
-  @apply bg-transparent border-none cursor-pointer;
+  @apply bg-transparent border-none cursor-pointer select-none;
   @apply hover:text-amber-400 active:text-amber-600;
   @apply transition-colors;
 

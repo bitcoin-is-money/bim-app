@@ -4,7 +4,7 @@
   } @else if (icon(); as icn) {
     <fa-icon [icon]="icn" class="field-icon" />
   } @else if (editable()) {
-    <fa-icon [icon]="faPen" class="field-icon" />
+    <fa-icon [icon]="['fas', 'pen']" class="field-icon" />
   }
 
   @if (editable()) {
