@@ -1,13 +1,14 @@
 <app-field
-  [value]="formattedAmount()"
+  [value]="displayValue()"
   [editable]="editable()"
+  [inputFilter]="sanitizeNumber"
   [icon]="['fas', 'coins']"
   placeholder="0"
-  (valueChange)="onValueChange($event)">
+  (valueChange)="onValueChange($event)"
+  (focusout)="onBlur()">
 
   @if (currencyToggle()) {
-    <app-currency-display
-      [currency]="amount().currency" />
+    <app-currency-display [currency]="displayCurrency()" />
   } @else {
     <span class="currency-label">{{ amount().currency }}</span>
   }
