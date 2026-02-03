@@ -1,7 +1,8 @@
 <header class="go-back-header">
   <button class="back-button" (click)="goBack()" aria-label="Go back">
     <!-- https://utf8-chartable.de/unicode-utf8-table.pl?start=11008&utf8=- -->
-    <span class="back-icon">⮪</span>
+<!--    <span class="back-icon">⮪</span>-->
+    <fa-icon class="back-icon" [icon]="['fas', 'arrow-left']" />
   </button>
   <h1 class="header-title">{{ title() }}</h1>
 </header>

@@ -1,6 +1,6 @@
 import {type StarknetAddress} from '../account';
 import {Amount, DomainError} from '../shared';
-import {type BitcoinAddress, type LightningInvoice, type SwapId, type SwapStatus} from '../swap';
+import {type BitcoinAddress, type LightningInvoice, type SwapId} from '../swap';
 
 // =============================================================================
 // Payment Network
@@ -167,6 +167,17 @@ export interface StarknetReceiveResult {
 }
 
 // =============================================================================
+// RECEIVE Input (facade-level)
+// =============================================================================
+
+export interface ReceivePaymentInput {
+  network: PaymentNetwork;
+  destinationAddress: StarknetAddress;
+  amount?: Amount;
+  tokenAddress?: string;
+}
+
+// =============================================================================
 // EXECUTE Result (facade-level, discriminated union)
 // =============================================================================
 
@@ -175,15 +186,10 @@ export type PaymentResult =
   | ({network: 'lightning'} & LightningPaymentResult)
   | ({network: 'bitcoin'} & BitcoinPaymentResult);
 
-// =============================================================================
-// STATUS
-// =============================================================================
-
-export interface PaymentStatusResult {
-  status: SwapStatus;
-  progress: number;
-  txHash?: string;
-}
+export type ReceiveResult =
+  | ({network: 'starknet'} & StarknetReceiveResult)
+  | ({network: 'lightning'} & LightningReceiveResult)
+  | ({network: 'bitcoin'} & BitcoinReceiveResult);
 
 // =============================================================================
 // Errors

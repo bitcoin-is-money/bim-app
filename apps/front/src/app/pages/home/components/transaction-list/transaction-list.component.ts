@@ -12,12 +12,9 @@ import {Transaction} from "../../../../services/transaction.http.service";
 export class TransactionListComponent {
   transactions = input.required<Transaction[]>();
 
-  isCredit(amount: number): boolean {
-    return amount > 0;
-  }
-
-  formatAmount(amount: number): string {
-    const sign = amount > 0 ? '+' : '';
-    return `${sign}${amount.toFixed(2)}`;
+  formatAmount(tx: Transaction): string {
+    const sats = Number(tx.amount);
+    const sign = tx.type === 'receive' ? '+' : '-';
+    return `${sign}${sats.toLocaleString()} sat`;
   }
 }

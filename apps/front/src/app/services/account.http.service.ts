@@ -1,9 +1,11 @@
 import {HttpClient} from '@angular/common/http';
-import {Injectable} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {Observable} from 'rxjs';
 
 export interface DeploymentStatusResponse {
   status: 'pending' | 'deploying' | 'deployed' | 'failed';
+  txHash: string | null;
+  isDeployed: boolean;
 }
 
 export interface DeployAccountResponse {
@@ -30,10 +32,7 @@ export interface BalanceResponse {
   providedIn: 'root',
 })
 export class AccountHttpService {
-  constructor(
-    private readonly http: HttpClient
-  ) {
-  }
+  private readonly http = inject(HttpClient);
 
   getBalance(): Observable<BalanceResponse> {
     return this.http.get<BalanceResponse>('/api/account/balance');

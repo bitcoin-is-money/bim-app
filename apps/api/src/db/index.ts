@@ -1,2 +1,2 @@
-export * from '../../database/schema.js';
+export * from './schema.js';
 export * from './connection.js';

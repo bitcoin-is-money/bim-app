@@ -1,5 +1,5 @@
 import {HttpClient} from '@angular/common/http';
-import {Injectable} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {Observable} from 'rxjs';
 
 export type PaymentNetwork = 'lightning' | 'bitcoin' | 'starknet';
@@ -58,10 +58,9 @@ export type ExecutePaymentResponse =
 @Injectable({
   providedIn: 'root',
 })
-export class PaymentHttpService {
-  private readonly apiUrl = '/api/pay';
-
-  constructor(private readonly http: HttpClient) {}
+export class PayHttpService {
+  private readonly apiUrl = '/api/payment/pay';
+  private readonly http = inject(HttpClient);
 
   parse(data: string): Observable<ParsePaymentResponse> {
     return this.http.post<ParsePaymentResponse>(`${this.apiUrl}/parse`, {data});

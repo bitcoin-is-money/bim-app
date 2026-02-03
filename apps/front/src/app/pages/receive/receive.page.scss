@@ -98,11 +98,11 @@
 /* ---- Fields ---- */
 
 .fields {
-  @apply w-full flex flex-col gap-2;
+  @apply w-full flex flex-col gap-2 px-4;
 }
 
 /* ---- Action buttons ---- */
 
 .action-buttons {
-  @apply w-full flex flex-col gap-3;
+  @apply w-full flex flex-col gap-3 px-4;
 }

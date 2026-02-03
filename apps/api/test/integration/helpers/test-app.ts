@@ -29,11 +29,13 @@ export namespace TestApp {
    */
   export function createTestApp(options: CreateAppOptions = {}): Hono {
     setupTestEnv();
-    return createApp({
+    const {app} = createApp({
       skipStaticFiles: true,
       skipLogger: true,
+      skipMonitor: true,
       ...options,
     });
+    return app;
   }
 
   /**

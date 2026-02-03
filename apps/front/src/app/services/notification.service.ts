@@ -1,4 +1,4 @@
-import {Injectable, TemplateRef} from '@angular/core';
+import {inject, Injectable, TemplateRef} from '@angular/core';
 import {IconProp} from "@fortawesome/fontawesome-svg-core";
 import {HotToastService, ToastOptions} from '@ngxpert/hot-toast';
 import {Observable} from "rxjs";
@@ -20,12 +20,8 @@ export interface NotificationData {
  */
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
-
+  private readonly toast = inject(HotToastService);
   private toastTemplate?: TemplateRef<unknown>;
-
-  constructor(
-    private readonly toast: HotToastService
-  ) {}
 
   registerTemplate(template: TemplateRef<unknown>) {
     this.toastTemplate = template;

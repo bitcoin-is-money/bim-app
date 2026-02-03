@@ -8,7 +8,9 @@
         [class.btn-transparent]="variant === 'transparent'"
         [disabled]="disabled"
 >
-    @if (icon) {
+    @if (loading) {
+        <app-spinner class="btn-spinner" [variant]="variant" aria-hidden="true"/>
+    } @else if (icon) {
         <fa-icon [icon]="icon" class="btn-icon" aria-hidden="true"/>
     }
     <span class="btn-label">

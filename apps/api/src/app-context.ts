@@ -1,12 +1,11 @@
 import {AccountService, StarknetAddress} from "@bim/domain/account";
 import {AuthService, SessionService} from "@bim/domain/auth";
-import {FeeConfig} from "@bim/domain/payment";
 import {
-  BitcoinPaymentService,
   Erc20CallFactory,
-  LightningPaymentService,
-  PaymentService,
-  StarknetPaymentService,
+  FeeConfig,
+  ParseService,
+  PayService,
+  ReceiveService,
 } from "@bim/domain/payment";
 import type {StarknetConfig} from "@bim/domain/shared";
 import type {
@@ -69,7 +68,8 @@ export interface AppContext {
     swap: SwapService;
     userSettings: UserSettingsService;
     transaction: TransactionService;
-    payment: PaymentService;
+    pay: PayService;
+    receive: ReceiveService;
   };
   webauthn: {
     rpId: string;
@@ -193,33 +193,23 @@ export namespace AppContext {
 
     const erc20CallFactory = new Erc20CallFactory(feeConfig);
 
-    const starknetPaymentService = new StarknetPaymentService({
-      starknetGateway: gateways.starknet,
-      starknetConfig,
-      erc20CallFactory,
-    });
-
-    const lightningPaymentService = new LightningPaymentService({
-      swapService,
-      starknetGateway: gateways.starknet,
-      starknetConfig,
-      erc20CallFactory,
+    const parseService = new ParseService({
       lightningDecoder: gateways.lightningDecoder,
-    });
-
-    const bitcoinPaymentService = new BitcoinPaymentService({
-      swapService,
-      starknetGateway: gateways.starknet,
       starknetConfig,
-      erc20CallFactory,
     });
 
-    const paymentService = new PaymentService({
-      starknet: starknetPaymentService,
-      lightning: lightningPaymentService,
-      bitcoin: bitcoinPaymentService,
+    const payService = new PayService({
+      parseService,
+      erc20CallFactory,
+      starknetGateway: gateways.starknet,
       swapService,
+      starknetConfig,
       feeConfig,
+    });
+
+    const receiveService = new ReceiveService({
+      swapService,
+      starknetConfig,
     });
 
     return {
@@ -232,7 +222,8 @@ export namespace AppContext {
         swap: swapService,
         userSettings: userSettingsService,
         transaction: transactionService,
-        payment: paymentService,
+        pay: payService,
+        receive: receiveService,
       },
       webauthn,
     };

@@ -1,5 +1,5 @@
 import {HttpResponse} from '@angular/common/http';
-import {ExecutePaymentResponse, ParsePaymentResponse} from '../../services/payment.http.service';
+import {ExecutePaymentResponse, ParsePaymentResponse} from '../../services/pay.http.service';
 import {DataStoreMock} from './../data-store.mock';
 
 export class PaymentHandlerMock {

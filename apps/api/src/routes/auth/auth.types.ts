@@ -9,7 +9,7 @@ export interface BeginRegistrationResponse {
     rpName: string;
     userId: string;
     userName: string;
-    timeout: number;
+    timeout?: number;
   };
   challengeId: string;
   accountId: string; // Pre-generated account ID - must be passed to completeRegistration
@@ -34,11 +34,11 @@ export interface BeginAuthenticationResponse {
   options: {
     challenge: string;
     rpId: string;
-    allowCredentials: Array<{
+    allowCredentials?: Array<{
       id: string;
       type: 'public-key';
     }>;
-    timeout: number;
+    timeout?: number;
     userVerification?: 'required' | 'preferred' | 'discouraged';
   };
   challengeId: string;
@@ -49,3 +49,23 @@ export interface BeginAuthenticationResponse {
  * (same as registration)
  */
 export type CompleteAuthenticationResponse = CompleteRegistrationResponse;
+
+/**
+ * API response type from GET /api/auth/session (authenticated)
+ */
+export interface SessionResponse {
+  authenticated: true;
+  account: {
+    id: string;
+    username: string;
+    starknetAddress: string | null;
+    status: string;
+  };
+}
+
+/**
+ * API response type from POST /api/auth/logout
+ */
+export interface LogoutResponse {
+  success: true;
+}

@@ -1,5 +1,5 @@
 import {HttpClient} from '@angular/common/http';
-import {Injectable} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {Observable} from 'rxjs';
 import {Account} from '../model';
 
@@ -41,8 +41,7 @@ export interface UserSessionResponse {
 })
 export class AuthHttpService {
   private readonly apiUrl = '/api/auth';
-
-  constructor(private readonly http: HttpClient) {}
+  private readonly http = inject(HttpClient);
 
   beginRegister(username: string): Observable<BeginRegisterResponse> {
     return this.http.post<BeginRegisterResponse>(`${this.apiUrl}/register/begin`, {username});

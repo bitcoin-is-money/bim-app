@@ -1,8 +1,9 @@
 import {Account} from '@bim/domain/account';
 import {Hono} from 'hono';
-import type {AppContext} from "../app-context";
-import {createAuthMiddleware} from '../middleware/auth.middleware';
-import type {AuthenticatedHono} from '../types.js';
+import type {TypedResponse} from 'hono';
+import type {AppContext} from "../../../app-context";
+import type {AuthenticatedHono} from '../../../types.js';
+import type {GetTransactionsResponse} from './transaction.types';
 
 // =============================================================================
 // Routes
@@ -11,8 +12,6 @@ import type {AuthenticatedHono} from '../types.js';
 export function createTransactionRoutes(appContext: AppContext): AuthenticatedHono {
   const app: AuthenticatedHono = new Hono();
 
-  app.use('*', createAuthMiddleware(appContext));
-
   // Service from AppContext (initialized once at startup)
   const {transaction: transactionService} = appContext.services;
 
@@ -20,7 +19,7 @@ export function createTransactionRoutes(appContext: AppContext): AuthenticatedHo
   // Get Transactions
   // ---------------------------------------------------------------------------
 
-  app.get('/', async (honoCtx) => {
+  app.get('/', async (honoCtx): Promise<TypedResponse<GetTransactionsResponse> | Response> => {
     try {
       const account: Account = honoCtx.get('account');
 
@@ -36,7 +35,7 @@ export function createTransactionRoutes(appContext: AppContext): AuthenticatedHo
         offset,
       });
 
-      return honoCtx.json({
+      return honoCtx.json<GetTransactionsResponse>({
         transactions: result.transactions.map((tx) => ({
           id: tx.id,
           transactionHash: tx.transactionHash,
@@ -61,4 +60,3 @@ export function createTransactionRoutes(appContext: AppContext): AuthenticatedHo
 
   return app;
 }
-

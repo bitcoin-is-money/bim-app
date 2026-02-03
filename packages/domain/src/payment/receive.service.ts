@@ -1,0 +1,105 @@
+import type {StarknetAddress} from '../account';
+import {Amount, type StarknetConfig} from '../shared';
+import {BitcoinAddress, LightningInvoice, type SwapService} from '../swap';
+import {
+  InvalidPaymentAmountError,
+  type ReceivePaymentInput,
+  type ReceiveResult,
+} from './types';
+
+// =============================================================================
+// Dependencies
+// =============================================================================
+
+export interface ReceiveServiceDeps {
+  swapService: SwapService;
+  starknetConfig: StarknetConfig;
+}
+
+// =============================================================================
+// Service Class
+// =============================================================================
+
+/**
+ * Receive service — handles incoming payments (receive).
+ *
+ * For Lightning and Bitcoin, creates a swap (invoice or deposit address).
+ * For Starknet, returns the user's address + a starknet: URI.
+ */
+export class ReceiveService {
+  constructor(private readonly deps: ReceiveServiceDeps) {}
+
+  /**
+   * Create a receive request for the given network.
+   *
+   * @throws InvalidPaymentAmountError if amount <= 0
+   * @throws SwapAmountError if amount is outside swap limits
+   * @throws SwapCreationError if invoice/address generation fails
+   */
+  async receive(input: ReceivePaymentInput): Promise<ReceiveResult> {
+    if (!input.amount || !input.amount.isPositive()) {
+      throw new InvalidPaymentAmountError(input.network, input.amount?.getSat() ?? 0n);
+    }
+
+    switch (input.network) {
+      case 'starknet':
+        return {network: 'starknet', ...this.receiveStarknet(input.destinationAddress, input.amount, input.tokenAddress)};
+      case 'lightning':
+        return {network: 'lightning', ...(await this.receiveLightning(input.destinationAddress, input.amount))};
+      case 'bitcoin':
+        return {network: 'bitcoin', ...(await this.receiveBitcoin(input.destinationAddress, input.amount))};
+    }
+  }
+
+  // ===========================================================================
+  // Starknet — generate starknet: URI
+  // ===========================================================================
+
+  private receiveStarknet(address: StarknetAddress, amount?: Amount, tokenAddress?: string) {
+    const token = tokenAddress ?? this.deps.starknetConfig.wbtcTokenAddress;
+
+    let uri = `starknet:${address}`;
+    if (amount) {
+      uri += `?amount=${amount.toSatString()}&token=${token}`;
+    }
+
+    return {address, uri};
+  }
+
+  // ===========================================================================
+  // Lightning — Lightning → Starknet swap (returns invoice)
+  // ===========================================================================
+
+  private async receiveLightning(destinationAddress: StarknetAddress, amount: Amount) {
+    const result = await this.deps.swapService.createLightningToStarknet({
+      amount,
+      destinationAddress,
+    });
+
+    return {
+      swapId: result.swap.id,
+      invoice: LightningInvoice.of(result.invoice),
+      amount,
+      expiresAt: result.swap.expiresAt,
+    };
+  }
+
+  // ===========================================================================
+  // Bitcoin — Bitcoin → Starknet swap (returns deposit address)
+  // ===========================================================================
+
+  private async receiveBitcoin(destinationAddress: StarknetAddress, amount: Amount) {
+    const result = await this.deps.swapService.createBitcoinToStarknet({
+      amount,
+      destinationAddress,
+    });
+
+    return {
+      swapId: result.swap.id,
+      depositAddress: BitcoinAddress.of(result.depositAddress),
+      bip21Uri: result.bip21Uri,
+      amount,
+      expiresAt: result.swap.expiresAt,
+    };
+  }
+}

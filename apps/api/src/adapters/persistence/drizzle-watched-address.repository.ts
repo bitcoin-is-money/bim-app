@@ -3,7 +3,7 @@ import type {WatchedAddressRepository} from "@bim/domain/ports";
 import {type AddressType, WatchedAddress, WatchedAddressId} from "@bim/domain/user";
 import {eq} from 'drizzle-orm';
 import type {NodePgDatabase} from 'drizzle-orm/node-postgres';
-import * as schema from '../../../database/schema.js';
+import * as schema from '../../db/schema.js';
 
 /**
  * Drizzle-based implementation of WatchedAddressRepository.

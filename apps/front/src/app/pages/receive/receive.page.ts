@@ -10,6 +10,7 @@ import {Amount} from '../../model';
 import {AuthService} from '../../services/auth.service';
 import {CurrencyService} from '../../services/currency.service';
 import {NotificationService} from '../../services/notification.service';
+import {ReceiveService} from '../../services/receive.service';
 
 type PaymentNetwork = 'starknet' | 'lightning' | 'bitcoin';
 
@@ -35,6 +36,7 @@ export class ReceivePage {
   private readonly authService = inject(AuthService);
   private readonly currencyService = inject(CurrencyService);
   private readonly notifications = inject(NotificationService);
+  private readonly receiveService = inject(ReceiveService);
   readonly networks = NETWORKS;
   private animating = false;
   private touchStartX = 0;
@@ -95,6 +97,9 @@ export class ReceivePage {
     return '';
   });
 
+  readonly isCreatingInvoice = this.receiveService.isLoading;
+  readonly invoiceCreated = computed(() => this.receiveService.invoice() !== null);
+
   readonly showCreateInvoice = computed(() => {
     return this.selectedNetwork() !== 'starknet';
   });
@@ -133,9 +138,32 @@ export class ReceivePage {
           break;
       }
     });
+
+    effect(() => {
+      const invoice = this.receiveService.invoice();
+      if (!invoice) return;
+
+      let data: string;
+      switch (invoice.network) {
+        case 'starknet':
+          data = invoice.uri;
+          break;
+        case 'lightning':
+          data = invoice.invoice;
+          break;
+        case 'bitcoin':
+          data = invoice.bip21Uri;
+          break;
+      }
+
+      this.qrData.set(data);
+      QRCode.toDataURL(data, {
+        width: 256,
+        margin: 2,
+        color: {dark: '#000000', light: '#ffffff'},
+      }).then(url => this.qrImageUrl.set(url));
+    });
   }
-
-
 
   prevNetwork(): void {
     const i = this.activeNetworkIndex();
@@ -159,6 +187,13 @@ export class ReceivePage {
   ): void {
     if (this.animating) return;
     this.animating = true;
+
+    if (this.invoiceCreated()) {
+      this.amount.set(Amount.zero());
+      this.description.set('');
+      this.receiveService.reset();
+    }
+
     this.animationSlideClass.set(goLeft ? 'slide-out-left' : 'slide-out-right');
     setTimeout(() => {
       this.activeNetworkIndex.set(newIndex);
@@ -183,6 +218,14 @@ export class ReceivePage {
     if (Math.abs(dx) < 30) return;
     if (dx < 0) this.nextNetwork();
     else this.prevNetwork();
+  }
+
+  createInvoice(): void {
+    const network = this.selectedNetwork();
+    if (network === 'starknet') return;
+
+    const satAmount = this.currencyService.convert(this.amount(), 'SAT');
+    this.receiveService.createInvoice(network, Math.round(satAmount.value));
   }
 
   async share(): Promise<void> {

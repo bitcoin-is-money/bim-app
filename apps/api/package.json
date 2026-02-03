@@ -16,10 +16,10 @@
     "test:integration": "vitest run --config vitest.config.integration.ts",
     "test:all": "npm run test && npm run test:integration",
     "copy:front": "cp -r ../front/dist/frontend/browser/browser/* ./public/",
-    "db:generate": "drizzle-kit generate --config database/drizzle.config.ts",
-    "db:migrate": "drizzle-kit migrate --config database/drizzle.config.ts",
-    "db:push": "drizzle-kit push --config database/drizzle.config.ts",
-    "db:studio": "drizzle-kit studio --config database/drizzle.config.ts"
+    "db:generate": "drizzle-kit generate --config drizzle.config.ts",
+    "db:migrate": "drizzle-kit migrate --config drizzle.config.ts",
+    "db:push": "drizzle-kit push --config drizzle.config.ts",
+    "db:studio": "drizzle-kit studio --config drizzle.config.ts"
   },
   "dependencies": {
     "@atomiqlabs/chain-starknet": "^7.0.25",

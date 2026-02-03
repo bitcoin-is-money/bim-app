@@ -1,4 +1,4 @@
-import type {ParsePaymentResponse, PaymentNetwork} from '../services/payment.http.service';
+import type {ParsePaymentResponse, PaymentNetwork} from '../services/pay.http.service';
 import {Amount} from './amount';
 
 export class ParsedPayment {

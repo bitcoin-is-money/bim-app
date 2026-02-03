@@ -14,6 +14,7 @@ import {DataStoreMock} from "./data-store.mock";
 import {PricesHandlerMock} from './prices-handler.mock';
 import {TransactionHandlerMock} from './transaction-handler.mock';
 import {PaymentHandlerMock} from './payment/payment-handler.mock';
+import {ReceiveHandlerMock} from './receive/receive-handler.mock';
 
 const store = new DataStoreMock();
 const mockAuthHandler = new AuthHandlerMock(store);
@@ -21,8 +22,10 @@ const mockAccountHandler = new AccountHandlerMock(store);
 const mockPricesHandler = new PricesHandlerMock();
 const mockTransactionHandler = new TransactionHandlerMock(store);
 const mockPaymentHandler = new PaymentHandlerMock(store);
+const mockReceiveHandler = new ReceiveHandlerMock(store);
 
-const paymentDelay = 3000;
+const payDelay = 3000;
+const receiveDelay = 3000;
 
 function randomDelay(): number {
   return 100 + Math.random() * 400; // 100-500ms
@@ -34,6 +37,7 @@ export const backendInterceptor: HttpInterceptorFn = (
 ): Observable<HttpEvent<unknown>> => {
   const url = req.urlWithParams;
   const {method, body} = req;
+  let httpFakeDelay = randomDelay();
 
   // Only intercept /api/ requests
   if (!url.startsWith('/api/')) {
@@ -76,15 +80,19 @@ export const backendInterceptor: HttpInterceptorFn = (
   }
 
   // Transaction routes
-  else if (url.startsWith('/api/transactions') && method === 'GET') {
+  else if (url.startsWith('/api/user/transactions') && method === 'GET') {
     response = mockTransactionHandler.getTransactions(req);
   }
 
   // Payment routes
-  else if (url === '/api/pay/parse' && method === 'POST') {
+  else if (url === '/api/payment/pay/parse' && method === 'POST') {
     response = mockPaymentHandler.parse(body as { data: string });
-  } else if (url === '/api/pay/execute' && method === 'POST') {
+  } else if (url === '/api/payment/pay/execute' && method === 'POST') {
     response = mockPaymentHandler.execute(body as { data: string });
+    httpFakeDelay = payDelay;
+  } else if (url === '/api/payment/receive' && method === 'POST') {
+    response = mockReceiveHandler.createInvoice(body as Parameters<typeof mockReceiveHandler.createInvoice>[0]);
+    httpFakeDelay = receiveDelay;
   }
 
   if (response) {
@@ -102,11 +110,7 @@ export const backendInterceptor: HttpInterceptorFn = (
         })))
       );
     }
-
-    const delayMS = url === '/api/pay/execute' && method === 'POST'
-      ? paymentDelay
-      : randomDelay()
-    return of(response).pipe(delay(delayMS));
+    return of(response).pipe(delay(httpFakeDelay));
   }
 
   // Pass through unknown routes

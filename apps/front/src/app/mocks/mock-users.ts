@@ -1,4 +1,4 @@
-import {ParsePaymentResponse} from '../services/payment.http.service';
+import {ParsePaymentResponse} from '../services/pay.http.service';
 
 export interface MockUserProfile {
   username: string;
@@ -7,6 +7,7 @@ export interface MockUserProfile {
   balance: string; // raw WBTC amount (8 decimals), e.g. "125050000" = 1.2505 BTC
   paymentParseResult: ParsePaymentResponse | null; // null = 400 error on parse
   paymentExecuteSuccess: boolean;
+  receiveInvoiceSuccess: boolean;
 }
 
 export const MOCK_USERS: MockUserProfile[] = [
@@ -17,6 +18,7 @@ export const MOCK_USERS: MockUserProfile[] = [
     hasTransactions: true,
     balance: '100000000', // 1 BTC in sats
     paymentExecuteSuccess: true,
+    receiveInvoiceSuccess: true,
     paymentParseResult: {
       network: 'starknet',
       amount: {value: 50_000_000, currency: 'SAT'}, // 0.5 BTC
@@ -33,6 +35,7 @@ export const MOCK_USERS: MockUserProfile[] = [
     hasTransactions: true,
     balance: '125050000', // ~1.25 BTC in sats
     paymentExecuteSuccess: true,
+    receiveInvoiceSuccess: true,
     paymentParseResult: {
       network: 'lightning',
       amount: {value: 500_000, currency: 'SAT'}, // 0.005 BTC
@@ -49,6 +52,7 @@ export const MOCK_USERS: MockUserProfile[] = [
     hasTransactions: false,
     balance: '1000000', // sats
     paymentExecuteSuccess: true,
+    receiveInvoiceSuccess: true,
     paymentParseResult: {
       network: 'bitcoin',
       amount: {value: 10_000, currency: 'SAT'}, // 0.1 BTC
@@ -64,6 +68,7 @@ export const MOCK_USERS: MockUserProfile[] = [
     hasTransactions: false,
     balance: '0',  // sats
     paymentExecuteSuccess: true,
+    receiveInvoiceSuccess: true,
     paymentParseResult: {
       network: 'starknet',
       amount: {value: 1_000, currency: 'SAT'},
@@ -80,6 +85,7 @@ export const MOCK_USERS: MockUserProfile[] = [
     hasTransactions: false,
     balance: '100000',  // sats
     paymentExecuteSuccess: false,
+    receiveInvoiceSuccess: false,
     paymentParseResult: {
       network: 'starknet',
       amount: {value: 1_000, currency: 'SAT'},
@@ -96,6 +102,7 @@ export const MOCK_USERS: MockUserProfile[] = [
     hasTransactions: false,
     balance: '0',
     paymentExecuteSuccess: false,
+    receiveInvoiceSuccess: false,
     paymentParseResult: {
       network: 'starknet',
       amount: {value: -100_000_000, currency: 'SAT'},

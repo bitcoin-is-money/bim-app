@@ -6,7 +6,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import pg from 'pg';
-import * as schema from "../../../database/schema";
+import * as schema from "../../../src/db/schema";
 
 export type DbClient = NodePgDatabase<typeof schema>;
 
@@ -15,9 +15,8 @@ export type DbClient = NodePgDatabase<typeof schema>;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const apiPath = path.resolve(__dirname, '../../..');
 const projectPath = path.resolve(apiPath, '../..');
-const migrationsFolder: string = path.resolve(__dirname, '../../database/drizzle');
-const databaseDir = path.resolve(apiPath, 'database');
-const configPath = path.join(databaseDir, 'drizzle.config.ts');
+const migrationsFolder: string = path.resolve(apiPath, 'drizzle');
+const configPath = path.join(apiPath, 'drizzle.config.ts');
 const tsx = path.resolve(projectPath, 'node_modules/.bin/tsx');
 const drizzleKit = path.resolve(projectPath, 'node_modules/drizzle-kit/bin.cjs');
 
@@ -108,7 +107,7 @@ export class TestDatabase {
 
   /**
    * Push the Drizzle schema directly to the database using drizzle-kit API.
-   * This uses the schema defined in database/schema.ts as the single source of truth.
+   * This uses the schema defined in src/db/schema.ts as the single source of truth.
    *
    * Drizzle Kit doesn't work well with ESM via ts-node, so we use tsx to execute its CJS entry point.
    * This avoids "require is not defined in ES module scope" errors.
@@ -123,7 +122,7 @@ export class TestDatabase {
   private pushSchema(connectionString: string): void {
     const cmd = `${tsx} ${drizzleKit} push --force --config ${configPath}`;
     execSync(cmd, {
-      cwd: databaseDir,
+      cwd: apiPath,
       env: {...process.env, DATABASE_URL: connectionString},
       stdio: 'pipe',
     });
