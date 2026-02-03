@@ -1,4 +1,4 @@
-import * as schema from "../../../../database/schema";
+import * as schema from "../../../../src/db/schema";
 
 export function createSessionData(
   accountId: string,

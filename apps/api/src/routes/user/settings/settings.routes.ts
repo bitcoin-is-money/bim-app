@@ -1,18 +1,17 @@
 import {Account} from '@bim/domain/account';
 import {FiatCurrency, UnsupportedCurrencyError} from "@bim/domain/user";
 import {Hono} from 'hono';
-import type {AppContext} from "../app-context";
-import {createAuthMiddleware} from '../middleware/auth.middleware';
-import type {AuthenticatedHono} from '../types.js';
+import type {TypedResponse} from 'hono';
+import type {AppContext} from '../../../app-context';
+import type {AuthenticatedHono} from '../../../types.js';
+import type {GetSettingsResponse, UpdateSettingsResponse} from './settings.types';
 
 // =============================================================================
 // Routes
 // =============================================================================
 
-export function createUserRoutes(appContext: AppContext): AuthenticatedHono {
+export function createSettingsRoutes(appContext: AppContext): AuthenticatedHono {
   const app: AuthenticatedHono = new Hono();
-
-  app.use('*', createAuthMiddleware(appContext));
 
   // Service from AppContext (initialized once at startup)
   const {userSettings: userSettingsService} = appContext.services;
@@ -21,13 +20,13 @@ export function createUserRoutes(appContext: AppContext): AuthenticatedHono {
   // Get User Settings
   // ---------------------------------------------------------------------------
 
-  app.get('/settings', async (honoCtx) => {
+  app.get('/', async (honoCtx): Promise<TypedResponse<GetSettingsResponse> | Response> => {
     try {
       const account: Account = honoCtx.get('account');
 
       const result = await userSettingsService.fetch({accountId: account.id});
 
-      return honoCtx.json({
+      return honoCtx.json<GetSettingsResponse>({
         fiatCurrency: result.settings.getFiatCurrency(),
         supportedCurrencies: FiatCurrency.getSupportedCurrencies(),
       });
@@ -40,7 +39,7 @@ export function createUserRoutes(appContext: AppContext): AuthenticatedHono {
   // Update User Settings
   // ---------------------------------------------------------------------------
 
-  app.put('/settings', async (honoCtx) => {
+  app.put('/', async (honoCtx): Promise<TypedResponse<UpdateSettingsResponse> | Response> => {
     try {
       const account: Account = honoCtx.get('account');
       const body = await honoCtx.req.json();
@@ -50,7 +49,7 @@ export function createUserRoutes(appContext: AppContext): AuthenticatedHono {
         fiatCurrency: body.fiatCurrency,
       });
 
-      return honoCtx.json({
+      return honoCtx.json<UpdateSettingsResponse>({
         fiatCurrency: result.settings.getFiatCurrency(),
         supportedCurrencies: FiatCurrency.getSupportedCurrencies(),
       });

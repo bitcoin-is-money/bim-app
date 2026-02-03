@@ -9,9 +9,18 @@ import {
   SessionNotFoundError
 } from "@bim/domain/auth";
 import {Hono} from 'hono';
+import type {TypedResponse} from 'hono';
 import {z} from 'zod';
 import type {AppContext} from "../../app-context";
 import {BeginRegistrationSchema, CompleteAuthenticationSchema, CompleteRegistrationSchema} from "./auth.schemas";
+import type {
+  BeginAuthenticationResponse,
+  BeginRegistrationResponse,
+  CompleteAuthenticationResponse,
+  CompleteRegistrationResponse,
+  LogoutResponse,
+  SessionResponse,
+} from './auth.types';
 
 // =============================================================================
 // Routes
@@ -27,7 +36,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
   // Registration
   // ---------------------------------------------------------------------------
 
-  app.post('/register/begin', async (honoCtx) => {
+  app.post('/register/begin', async (honoCtx): Promise<TypedResponse<BeginRegistrationResponse> | Response> => {
     try {
       const body = await honoCtx.req.json();
       const input = BeginRegistrationSchema.parse(body);
@@ -36,7 +45,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
         username: input.username,
       });
 
-      return honoCtx.json({
+      return honoCtx.json<BeginRegistrationResponse>({
         options: result.options,
         challengeId: result.challengeId,
         accountId: result.accountId,
@@ -46,7 +55,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
     }
   });
 
-  app.post('/register/complete', async (honoCtx) => {
+  app.post('/register/complete', async (honoCtx): Promise<TypedResponse<CompleteRegistrationResponse> | Response> => {
     try {
       const body = await honoCtx.req.json();
       const input = CompleteRegistrationSchema.parse(body);
@@ -61,7 +70,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
       // Set session cookie
       setCookie(honoCtx, result.session.id);
 
-      return honoCtx.json({
+      return honoCtx.json<CompleteRegistrationResponse>({
         account: {
           id: result.account.id,
           username: result.account.username,
@@ -78,11 +87,11 @@ export function createAuthRoutes(appContext: AppContext): Hono {
   // Authentication
   // ---------------------------------------------------------------------------
 
-  app.post('/login/begin', async (honoCtx) => {
+  app.post('/login/begin', async (honoCtx): Promise<TypedResponse<BeginAuthenticationResponse> | Response> => {
     try {
       const result = await authService.beginAuthentication();
 
-      return honoCtx.json({
+      return honoCtx.json<BeginAuthenticationResponse>({
         options: result.options,
         challengeId: result.challengeId,
       });
@@ -91,7 +100,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
     }
   });
 
-  app.post('/login/complete', async (honoCtx) => {
+  app.post('/login/complete', async (honoCtx): Promise<TypedResponse<CompleteAuthenticationResponse> | Response> => {
     try {
       const body = await honoCtx.req.json();
       const input = CompleteAuthenticationSchema.parse(body);
@@ -104,7 +113,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
       // Set session cookie
       setCookie(honoCtx, result.session.id);
 
-      return honoCtx.json({
+      return honoCtx.json<CompleteAuthenticationResponse>({
         account: {
           id: result.account.id,
           username: result.account.username,
@@ -121,7 +130,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
   // Session
   // ---------------------------------------------------------------------------
 
-  app.get('/session', async (honoCtx) => {
+  app.get('/session', async (honoCtx): Promise<TypedResponse<SessionResponse> | Response> => {
     try {
       const sessionId = getSessionId(honoCtx);
       if (!sessionId) {
@@ -130,7 +139,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
 
       const result = await sessionService.validate({sessionId});
 
-      return honoCtx.json({
+      return honoCtx.json<SessionResponse>({
         authenticated: true,
         account: {
           id: result.account.id,
@@ -152,7 +161,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
     }
   });
 
-  app.post('/logout', async (honoCtx) => {
+  app.post('/logout', async (honoCtx): Promise<TypedResponse<LogoutResponse>> => {
     try {
       const sessionId = getSessionId(honoCtx);
       if (sessionId) {
@@ -160,11 +169,11 @@ export function createAuthRoutes(appContext: AppContext): Hono {
       }
 
       clearCookie(honoCtx);
-      return honoCtx.json({success: true});
+      return honoCtx.json<LogoutResponse>({success: true});
     } catch (error) {
       console.error('Logout error:', error);
       clearCookie(honoCtx);
-      return honoCtx.json({success: true});
+      return honoCtx.json<LogoutResponse>({success: true});
     }
   });
 

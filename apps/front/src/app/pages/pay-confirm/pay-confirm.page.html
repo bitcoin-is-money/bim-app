@@ -24,8 +24,8 @@
         </div>
         <app-button
           class="confirm-button"
-          [icon]="isProcessing() ? ['fas', 'spinner'] : ['fas', 'location-arrow']"
           variant="tertiary"
+          [loading]="isProcessing()"
           [disabled]="!paymentAvailable() || isProcessing()"
           (click)="confirm()"
         >

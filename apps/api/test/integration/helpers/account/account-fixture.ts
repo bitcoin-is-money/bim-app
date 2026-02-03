@@ -1,4 +1,4 @@
-import * as schema from "../../../../database/schema";
+import * as schema from "../../../../src/db/schema";
 import type {DbClient} from "../test-database";
 import {DbFixture} from "./../db-fixture";
 import {createAccountData} from "./account-test-data";

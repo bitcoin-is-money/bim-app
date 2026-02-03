@@ -544,36 +544,56 @@ Backend checks account.status
 - [x] WebAuthn authentication flow
 - [x] Session management
 - [x] Username validation (stricter regex via `Username` domain type)
+- [x] Integration tests (registration + authentication flows)
 
-### Phase 2: User & Account
-- [x] User settings entity + use cases (Fetch, Update)
-- [x] Transaction entity + use cases (Fetch, FetchForAddress)
-- [ ] `GET /api/account` - account info with balances
-- [ ] `GET /api/user/settings` + `PUT /api/user/settings`
-- [ ] `GET /api/user/transactions` (paginated)
+### Phase 2: Account & User ✅
+- [x] Account entity + service (status tracking, Starknet address, balances)
+- [x] User settings entity + service (fetch, update)
+- [x] Transaction entity + service (paginated)
+- [x] WatchedAddress entity + service
+- [x] Account API endpoints (me, balance, deploy, deployment-status)
+- [x] User API endpoints (settings, transactions)
+- [x] Starknet RPC gateway + AVNU paymaster gateway
+- [x] Integration tests (account, deployment flow)
 
-### Phase 3: Receive Payments
-- [ ] `POST /api/receive` - create receive request
-- [ ] `GET /api/receive/:id` - poll status
-- [ ] Atomiq gateway (create swap, check status)
-- [ ] Background job: monitor incoming payments
+### Phase 3: Receive Payments ✅
+- [x] `POST /api/payment/receive` (lightning, bitcoin, starknet)
+- [x] Receive service + Swap service (domain)
+- [x] Atomiq SDK gateway
+- [x] Bolt11 Lightning decoder
+- [x] Swap monitor (background polling + auto-claim)
+- [x] Frontend receive page with QR display
 
-### Phase 4: Pay
-- [ ] `POST /api/pay/parse` - decode QR codes (Lightning/Bitcoin/Starknet)
-- [ ] `POST /api/pay/execute` - execute payment with WebAuthn
-- [ ] `GET /api/pay/:id` - poll payment status
-- [ ] AVNU gateway (paymaster for auto-deployment)
-- [ ] Starknet gateway (sign & submit transactions)
+### Phase 4: Pay ✅
+- [x] `POST /api/payment/pay/parse` (Lightning, Bitcoin, Starknet)
+- [x] `POST /api/payment/pay/execute` (with auto-deployment)
+- [x] Parse service, Pay service, ERC20 call factory, fee calculator
+- [x] Swap routes (limits, status, claim, SSE events)
+- [x] Frontend: pay page, confirm page, success page
 
-### Phase 5: Frontend
-- [ ] Home page (balance, account status, recent transactions)
-- [ ] Receive page (network selector, QR display)
-- [ ] Pay page (QR scanner, confirmation, status)
-- [ ] Settings page
+### Phase 5: Frontend ✅
+- [x] Auth page (register/login)
+- [x] Home page (balance, transactions)
+- [x] Account setup page (deployment)
+- [x] Receive page (network selector, QR)
+- [x] Pay page (QR scanner, confirm, success)
+- [x] Menu + About pages
+- [x] Shared components (amount, currency, buttons, spinner, notifications)
+- [x] Auth guard + guest guard
 
-### Phase 6: Production Readiness
-- [ ] `GET /api/health` - comprehensive health check
-- [ ] `GET /api/prices` - BTC/ETH/STRK prices
+### Phase 6: Remaining Work
+- [ ] Settings page (frontend UI — backend endpoints already exist)
+- [ ] Real price API integration (currently hardcoded/mocked)
+- [ ] Persistent swap repository (currently in-memory, needs Drizzle)
+- [ ] `GET /api/receive/:id` status polling (partially covered via swap status endpoint)
+- [ ] Error recovery / retry logic for failed payments
+- [ ] E2E tests for critical payment flows (receive + pay end-to-end)
+- [ ] Rate limiting on API endpoints
+- [ ] Structured logging / observability
+- [ ] Metrics endpoint (`GET /api/metrics`)
+- [ ] API documentation (OpenAPI/Swagger)
 - [ ] Webhook endpoints for external services
-- [ ] Error handling & retry logic
-- [ ] Logging & monitoring
+- [ ] UI polish / minor refinements
+- [ ] i18n
+- [ ] PWA
+- [ ] testnet + mainnet

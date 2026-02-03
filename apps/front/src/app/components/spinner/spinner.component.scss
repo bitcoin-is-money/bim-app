@@ -1,7 +1,32 @@
+@reference "tailwindcss";
+
 :host {
   display: block;
   width: 100%;
   height: 100%;
+  @apply text-amber-500;
+}
+
+// Inverted colors: spinner contrasts with button background
+
+:host(.primary) {
+  @apply text-neutral-900;  // dark on amber bg
+}
+
+:host(.secondary) {
+  @apply text-neutral-100;  // light on transparent/dark bg
+}
+
+:host(.tertiary) {
+  @apply text-neutral-900; // dark on white bg
+}
+
+:host(.big) {
+  @apply text-neutral-200; // light on dark bg
+}
+
+:host(.transparent) {
+  @apply text-neutral-100; // light on transparent bg
 }
 
 svg {

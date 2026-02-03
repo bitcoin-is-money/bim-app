@@ -21,19 +21,20 @@ export class AccountHandlerMock {
     const registrationDate: Date = this.store.getRegistrationDate() ?? new Date();
     const timeToWait = Date.now() - registrationDate.getTime();
     if (!registrationDate || timeToWait < MOCK_DEPLOYMENT_DELAY_MS) {
-      return new HttpResponse({status: 200, body: {status: 'deploying'}});
+      return new HttpResponse({status: 200, body: {status: 'deploying', txHash: null, isDeployed: false}});
     }
 
     if (!this.store.getMockUserProfile().deployAccountSuccess) {
-      return new HttpResponse({status: 500, body: {status: 'failed'}});
+      return new HttpResponse({status: 500, body: {status: 'failed', txHash: null, isDeployed: false}});
     }
 
     // Deployment complete — update session account status
+    const fakeTxHash = '0x' + 'abc123'.repeat(10);
     if (account.status !== 'deployed') {
       this.store.setSession({...account, status: 'deployed'});
     }
 
-    return new HttpResponse({status: 200, body: {status: 'deployed'}});
+    return new HttpResponse({status: 200, body: {status: 'deployed', txHash: fakeTxHash, isDeployed: true}});
   }
 
   // GET /api/account/balance

@@ -430,6 +430,18 @@ export class SwapService {
   }
 
   // ===========================================================================
+  // Active Swaps
+  // ===========================================================================
+
+  /**
+   * Returns all non-terminal swaps (pending, paid, confirming).
+   * Used by SwapMonitor to know which swaps to check.
+   */
+  async getActiveSwaps(): Promise<Swap[]> {
+    return this.deps.swapRepository.findActive();
+  }
+
+  // ===========================================================================
   // Private Helpers
   // ===========================================================================
 
@@ -468,11 +480,19 @@ export class SwapService {
         swap.markAsFailed(atomiqStatus.error || 'Unknown error');
         await this.deps.swapRepository.save(swap);
       } else if (atomiqStatus.isExpired) {
-        swap.markAsExpired();
+        // Bitcoin deposit edge case: if the user already sent BTC on-chain
+        // and the deposit is confirmed (isPaid), do NOT mark as expired.
+        // Bitcoin transactions are irreversible — treat as paid so claim can proceed.
+        if (atomiqStatus.isPaid && swap.direction === 'bitcoin_to_starknet') {
+          swap.markAsPaid();
+        } else {
+          swap.markAsExpired();
+        }
         await this.deps.swapRepository.save(swap);
       }
     } catch {
       // Ignore sync errors - return current local state
+      console.warn(`Failed to sync swap ${swap.id} with Atomiq, ignoring.`);
     }
   }
 

@@ -2,8 +2,8 @@ import {CommonModule} from '@angular/common';
 import {Component, computed, inject} from '@angular/core';
 import {AmountFieldComponent} from '../../components/amount-field/amount-field.component';
 import {AmountHighlightComponent} from '../../components/amount-highlight/amount-highlight.component';
-import {FieldComponent} from '../../components/field/field.component';
 import {ButtonComponent} from '../../components/button/button.component';
+import {FieldComponent} from '../../components/field/field.component';
 import {GoBackHeaderComponent} from '../../components/go-back-header/go-back-header.component';
 import {LogoFooterComponent} from '../../components/logo-footer/logo-footer.component';
 import {NetworkLogoComponent} from '../../components/network-logo/network-logo.component';
@@ -11,7 +11,7 @@ import {Amount} from "../../model";
 import {AccountService} from '../../services/account.service';
 import {CurrencyService} from '../../services/currency.service';
 import {NotificationService} from "../../services/notification.service";
-import {PaymentService} from '../../services/payment.service';
+import {PayService} from '../../services/pay.service';
 
 @Component({
   selector: 'app-pay-confirm',
@@ -24,7 +24,7 @@ export class PayConfirmPage {
 
   private readonly accountService = inject(AccountService);
   private readonly currencyService = inject(CurrencyService);
-  private readonly paymentService = inject(PaymentService);
+  private readonly paymentService = inject(PayService);
   private readonly notificationService = inject(NotificationService);
 
   payment = this.paymentService.parsedPayment;

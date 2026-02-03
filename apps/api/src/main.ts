@@ -6,7 +6,7 @@ import {closeDb} from './db';
 // Server Startup
 // =============================================================================
 
-const app = createApp();
+const {app, monitor} = createApp();
 const port = Number(process.env.PORT) || 8080;
 
 console.log(`Starting server on http://localhost:${port}`);
@@ -17,19 +17,24 @@ const server = serve({
   port,
 });
 
-// Graceful shutdown
-process.on('SIGTERM', async () => {
-  console.log('SIGTERM received, shutting down...');
-  server.close();
-  await closeDb();
-  process.exit(0);
-});
+// Start swap monitor
+if (monitor) {
+  monitor.start();
+  console.log('Swap monitor started');
+}
 
-process.on('SIGINT', async () => {
-  console.log('SIGINT received, shutting down...');
+// Graceful shutdown
+async function shutdown(signal: string): Promise<void> {
+  console.log(`${signal} received, shutting down...`);
+  if (monitor) {
+    await monitor.stop();
+  }
   server.close();
   await closeDb();
   process.exit(0);
-});
+}
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
 
 console.log(`Server running on http://localhost:${port}`);

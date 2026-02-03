@@ -1,4 +1,4 @@
-import * as schema from "../../../../database/schema";
+import * as schema from "../../../../src/db/schema";
 
 /**
  * Creates a test user settings record

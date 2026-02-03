@@ -6,7 +6,7 @@ import {ButtonComponent} from '../../components/button/button.component';
 import {GoBackHeaderComponent} from '../../components/go-back-header/go-back-header.component';
 import {LogoFooterComponent} from '../../components/logo-footer/logo-footer.component';
 import {NotificationService} from '../../services/notification.service';
-import {PaymentService} from '../../services/payment.service';
+import {PayService} from '../../services/pay.service';
 import {environment} from '../../../environments/environment';
 
 @Component({
@@ -18,7 +18,7 @@ import {environment} from '../../../environments/environment';
 })
 export class PayPage implements OnDestroy {
 
-  private readonly paymentService = inject(PaymentService);
+  private readonly paymentService = inject(PayService);
   private readonly notifications = inject(NotificationService);
 
   private scanner: Html5Qrcode | null = null;

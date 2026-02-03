@@ -5,7 +5,7 @@ import {eq} from 'drizzle-orm';
 import type {Hono} from 'hono';
 import pg from 'pg';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import * as schema from '../../../database/schema';
+import * as schema from '../../../src/db/schema';
 import {type DbClient, DevnetPaymasterGateway, StrkDevnetContext, TestApp, TestDatabase,} from '../helpers';
 
 /**

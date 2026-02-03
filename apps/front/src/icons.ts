@@ -1,6 +1,7 @@
 import {FaIconLibrary} from '@fortawesome/angular-fontawesome';
 import {faGithub} from '@fortawesome/free-brands-svg-icons';
 import {
+  faArrowLeft,
   faCircleCheck,
   faCoins,
   faFileInvoice,
@@ -21,6 +22,7 @@ export function registerIcons(library: FaIconLibrary): void {
     faCircleCheck,
     faShareNodes,
     faFileInvoice,
-    faCoins
+    faCoins,
+    faArrowLeft
   );
 }

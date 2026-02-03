@@ -1,5 +1,5 @@
 import {HttpClient} from '@angular/common/http';
-import {Injectable} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {Observable} from 'rxjs';
 import {ConversionRates} from '../model';
 
@@ -8,8 +8,7 @@ import {ConversionRates} from '../model';
 })
 export class CurrencyHttpService {
   private readonly apiUrl = '/api/currency/prices';
-
-  constructor(private readonly http: HttpClient) {}
+  private readonly http = inject(HttpClient);
 
   fetchRates(): Observable<ConversionRates> {
     return this.http.get<ConversionRates>(this.apiUrl);

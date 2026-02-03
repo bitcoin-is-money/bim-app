@@ -1,17 +1,17 @@
 import {CommonModule, Location} from '@angular/common';
-import {Component, input} from '@angular/core';
+import {Component, inject, input} from '@angular/core';
+import {FaIconComponent} from "@fortawesome/angular-fontawesome";
 
 @Component({
   selector: 'app-go-back-header',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FaIconComponent],
   templateUrl: './go-back-header.component.html',
   styleUrl: './go-back-header.component.scss',
 })
 export class GoBackHeaderComponent {
+  private readonly location = inject(Location);
   title = input.required<string>();
-
-  constructor(private readonly location: Location) {}
 
   goBack(): void {
     this.location.back();

@@ -2,14 +2,14 @@ import {inject, Injectable, signal} from '@angular/core';
 import {Router} from '@angular/router';
 import {ParsedPayment} from '../model';
 import {NotificationService} from './notification.service';
-import {PaymentHttpService} from './payment.http.service';
+import {PayHttpService} from './pay.http.service';
 
 
 @Injectable({
   providedIn: 'root',
 })
-export class PaymentService {
-  private readonly httpService: PaymentHttpService = inject(PaymentHttpService);
+export class PayService {
+  private readonly httpService: PayHttpService = inject(PayHttpService);
   private readonly router: Router = inject(Router);
   private readonly notificationService: NotificationService = inject(NotificationService);
 
