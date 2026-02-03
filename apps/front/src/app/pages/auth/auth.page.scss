@@ -33,7 +33,7 @@
     }
 
     .divider {
-      @apply flex items-center gap-4 my-4 text-neutral-400 text-sm;
+      @apply flex items-center gap-4 my-4 text-neutral-400 text-base;
 
       &::before,
       &::after {
