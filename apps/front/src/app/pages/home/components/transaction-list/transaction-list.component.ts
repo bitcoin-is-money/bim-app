@@ -1,6 +1,6 @@
 import {CommonModule, DatePipe} from '@angular/common';
 import {Component, input} from '@angular/core';
-import {Transaction} from "../../../../services/transaction.http.service";
+import {DisplayedTransaction} from '../../../../services/transaction.service';
 
 @Component({
   selector: 'app-transaction-list',
@@ -10,11 +10,5 @@ import {Transaction} from "../../../../services/transaction.http.service";
   styleUrl: './transaction-list.component.scss',
 })
 export class TransactionListComponent {
-  transactions = input.required<Transaction[]>();
-
-  formatAmount(tx: Transaction): string {
-    const sats = Number(tx.amount);
-    const sign = tx.type === 'receive' ? '+' : '-';
-    return `${sign}${sats.toLocaleString()} sat`;
-  }
+  transactions = input.required<DisplayedTransaction[]>();
 }

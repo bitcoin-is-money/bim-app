@@ -16,12 +16,12 @@
   <main class="home-main">
     <app-amount-highlight [originalAmount]="accountService.balance()" />
     <section class="transaction-container" (scroll)="onScroll($event)">
-      @if (transactionService.transactions() === undefined) {
+      @if (transactionService.displayedTransactions() === undefined) {
         <div class="loading-more"><app-spinner /></div>
       } @else if (transactionService.isEmpty()) {
         <app-empty-transaction />
       } @else {
-        <app-transaction-list [transactions]="transactionService.transactions()!"></app-transaction-list>
+        <app-transaction-list [transactions]="transactionService.displayedTransactions()!"></app-transaction-list>
         @if (transactionService.isLoadingMore()) {
           <div class="loading-more"><app-spinner /></div>
         }

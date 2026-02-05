@@ -14,7 +14,7 @@
 }
 
 :host(.secondary) {
-  @apply text-neutral-100;  // light on transparent/dark bg
+  @apply text-amber-500;  // light on transparent/dark bg
 }
 
 :host(.tertiary) {
