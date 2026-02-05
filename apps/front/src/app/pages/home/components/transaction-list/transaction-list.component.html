@@ -1,17 +1,17 @@
 <div class="transaction-list">
-  @for (transaction of transactions(); track transaction.id) {
+  @for (transaction of transactions(); track transaction.original.id) {
     <div class="transaction-item">
       <div class="transaction-content">
         <div class="transaction-bullet"></div>
         <div class="transaction-info">
-          <div class="transaction-label">{{ transaction.type }}</div>
-          <div class="transaction-date">{{ transaction.timestamp | date:'short' }}</div>
+          <div class="transaction-label">{{ transaction.original.type }}</div>
+          <div class="transaction-date">{{ transaction.original.timestamp | date:'short' }}</div>
         </div>
         <div
           class="transaction-amount"
-          [class.credit]="transaction.type === 'receive'"
-          [class.debit]="transaction.type === 'send'">
-          {{ formatAmount(transaction) }}
+          [class.credit]="transaction.original.type === 'receive'"
+          [class.debit]="transaction.original.type === 'send'">
+          {{ transaction.formattedAmount }}
         </div>
       </div>
     </div>

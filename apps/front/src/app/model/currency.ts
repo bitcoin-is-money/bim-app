@@ -16,4 +16,13 @@ export namespace Currency {
       case 'SAT': return 0;
     }
   }
+
+  /** Returns the symbol for a currency */
+  export function symbol(currency: Currency): string {
+    switch (currency) {
+      case 'BTC': return '₿';
+      case 'USD': return '$';
+      case 'SAT': return 'sat';
+    }
+  }
 }

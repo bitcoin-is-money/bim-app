@@ -2,8 +2,16 @@ import {computed, inject, Injectable, signal} from '@angular/core';
 import {delay} from 'rxjs';
 import {TransactionHttpService} from './transaction.http.service';
 import type {Transaction} from './transaction.http.service';
+import {CurrencyService} from './currency.service';
+import {Amount, ConversionRates, Currency} from '../model';
 
 export type {Transaction} from './transaction.http.service';
+
+export interface DisplayedTransaction {
+  original: Transaction;
+  formattedAmount: string;
+  currency: Currency;
+}
 
 const PAGE_SIZE = 10;
 
@@ -13,17 +21,44 @@ const PAGE_SIZE = 10;
 export class TransactionService {
 
   private readonly httpService: TransactionHttpService = inject(TransactionHttpService);
+  private readonly currencyService: CurrencyService = inject(CurrencyService);
   private readonly _transactions = signal<Transaction[] | undefined>(undefined);
   private readonly _hasMore = signal(true);
   private readonly _isLoadingMore = signal(false);
   private offset = 0;
 
-  readonly transactions = this._transactions.asReadonly();
-  readonly hasMore = this._hasMore.asReadonly();
   readonly isLoadingMore = this._isLoadingMore.asReadonly();
+
   readonly isEmpty = computed(() => {
     return this._transactions()?.length === 0;
   });
+
+  readonly displayedTransactions = computed(() => {
+    const txs = this._transactions();
+    if (!txs) return undefined;
+
+    const currency = this.currencyService.currentCurrency();
+    const rates = this.currencyService.rates();
+
+    return txs.map(tx => this.toDisplayed(tx, currency, rates));
+  });
+
+  private toDisplayed(
+    tx: Transaction,
+    currency: Currency,
+    rates: ConversionRates
+  ): DisplayedTransaction {
+    const sats = Number(tx.amount);
+    const sign = tx.type === 'receive' ? '+' : '-';
+    const amount = Amount.of(sats, 'SAT').convert(currency, rates);
+    const formattedAmount = `${sign}${amount.format()} ${Currency.symbol(currency)}`;
+
+    return {
+      original: tx,
+      formattedAmount,
+      currency,
+    };
+  }
 
   setEmpty(): void {
     this.offset = 0;
