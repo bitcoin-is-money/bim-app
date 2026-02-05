@@ -17,6 +17,11 @@ export class AmountFieldComponent {
   readonly amount = model<Amount>(Amount.zero());
   readonly editable = input(false);
   readonly label = input<string | undefined>();
+
+  /**
+   * When currencyToggle is true: display an amount with the currency from service
+   * Otherwise, display an amount with the currency from the original amount parameter.
+   */
   readonly currencyToggle = input(false);
 
   private editing = false;
@@ -30,12 +35,7 @@ export class AmountFieldComponent {
 
   readonly formattedAmount = computed(() => {
     const currency = this.displayCurrency();
-    const converted = this.currencyService.convert(this.amount(), currency);
-    if (currency === 'BTC')
-      return converted.value.toFixed(8);
-    if (currency === 'USD')
-      return converted.value.toFixed(2);
-    return String(Math.round(converted.value));
+    return this.currencyService.convert(this.amount(), currency).format();
   });
 
   constructor() {
@@ -47,6 +47,7 @@ export class AmountFieldComponent {
     });
   }
 
+  /** Sanitizes input to allow only digits and a single decimal point */
   readonly sanitizeNumber = (value: string): string => {
     let sanitized = value.replaceAll(/[^\d.]/g, '');
     const dotIndex = sanitized.indexOf('.');

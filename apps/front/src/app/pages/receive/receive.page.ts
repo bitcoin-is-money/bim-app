@@ -101,7 +101,9 @@ export class ReceivePage {
   readonly invoiceCreated = computed(() => this.receiveService.invoice() !== null);
 
   readonly showCreateInvoice = computed(() => {
-    return this.selectedNetwork() !== 'starknet';
+    return this.selectedNetwork() !== 'starknet'
+      && this.qrData() === undefined
+      && this.amount().isPositive();
   });
 
   constructor() {

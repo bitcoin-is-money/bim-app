@@ -12,10 +12,19 @@
   disabled:opacity-50 disabled:cursor-not-allowed w-full;
 }
 
-/* ---------- Primary ---------- */
+/* ---------- Special (Yellow) ---------- */
+
+.btn-special {
+  @apply bg-amber-500 border-2 border-amber-500 text-neutral-100;
+  @apply hover:bg-amber-600 hover:border-amber-600;
+  @apply active:bg-amber-600 active:border-amber-600;
+  @apply disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+/* ---------- Primary (white) ---------- */
 
 .btn-primary {
-  @apply bg-amber-500 border-2 border-amber-500 text-neutral-100;
+  @apply bg-neutral-100 border-2 border-neutral-100 text-neutral-900;
   @apply hover:bg-amber-600 hover:border-amber-600;
   @apply active:bg-amber-600 active:border-amber-600;
   @apply disabled:opacity-50 disabled:cursor-not-allowed;

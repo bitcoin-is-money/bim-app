@@ -1,4 +1,3 @@
-import {CommonModule} from '@angular/common';
 import {Component, computed, inject, input} from '@angular/core';
 import {CurrencyDisplayComponent} from '../currency-display/currency-display.component';
 import {Amount} from '../../model';
@@ -7,7 +6,7 @@ import {CurrencyService} from '../../services/currency.service';
 @Component({
   selector: 'app-amount-highlight',
   standalone: true,
-  imports: [CommonModule, CurrencyDisplayComponent],
+  imports: [CurrencyDisplayComponent],
   templateUrl: './amount-highlight.component.html',
   styleUrl: './amount-highlight.component.scss',
 })

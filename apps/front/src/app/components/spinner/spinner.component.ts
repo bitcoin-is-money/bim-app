@@ -1,6 +1,6 @@
 import {Component, Input} from '@angular/core';
 
-export type SpinnerVariant = 'default' | 'primary' | 'secondary' | 'tertiary' | 'big' | 'transparent';
+export type SpinnerVariant = 'default' | 'special' | 'primary' | 'secondary' | 'tertiary' | 'big' | 'transparent';
 
 @Component({
   selector: 'app-spinner',
