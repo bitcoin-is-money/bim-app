@@ -131,7 +131,7 @@ export namespace AppContext {
       ),
       paymaster: paymasterGateway,
       atomiq: new AtomiqSdkGateway({
-        network: config.nodeEnv === 'production' ? 'mainnet' : 'testnet',
+        network: config.starknetNetwork === 'mainnet' ? 'mainnet' : 'testnet',
         starknetRpcUrl: config.starknetRpcUrl,
       }),
       lightningDecoder: new Bolt11LightningDecoder(),
