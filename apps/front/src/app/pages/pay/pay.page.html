@@ -4,7 +4,8 @@
   <main class="pay-main">
     <app-button
       class="scan-button"
-      variant="big"
+      variant="contrast"
+      sizeVariant="xl"
       [icon]="['fas', 'qrcode']"
       (click)="scanQRCode()"
       [disabled]="isLoading()"
@@ -13,7 +14,8 @@
     </app-button>
     <app-button
       class="parse-clipboard-button"
-      variant="big"
+      variant="contrast"
+      sizeVariant="xl"
       [icon]="['fas', 'paste']"
       (click)="pasteFromClipboard()"
       [disabled]="isLoading()"

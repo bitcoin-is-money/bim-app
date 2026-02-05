@@ -4,7 +4,8 @@ import {FaIconComponent} from "@fortawesome/angular-fontawesome";
 import {IconProp} from "@fortawesome/fontawesome-svg-core";
 import {SpinnerComponent} from '../spinner/spinner.component';
 
-export type ButtonVariant = 'special' | 'primary' | 'secondary' | 'tertiary' | 'big' | 'transparent';
+export type StyleButtonVariant = 'special' | 'primary' | 'secondary' | 'tertiary' | 'contrast' | 'transparent';
+export type ButtonSizeVariant = 'base' | 'lg' | 'xl';
 
 @Component({
   selector: 'app-button',
@@ -14,7 +15,8 @@ export type ButtonVariant = 'special' | 'primary' | 'secondary' | 'tertiary' | '
   styleUrls: ['./button.component.scss'],
 })
 export class ButtonComponent {
-  @Input({ required: true }) variant!: ButtonVariant;
+  @Input({ required: true }) variant!: StyleButtonVariant;
+  @Input() sizeVariant: ButtonSizeVariant = 'base';
   @Input() icon?: IconProp;
   @Input() disabled = false;
   @Input() loading = false;

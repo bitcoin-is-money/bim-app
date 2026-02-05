@@ -16,8 +16,8 @@
 
 .btn-special {
   @apply bg-amber-500 border-2 border-amber-500 text-neutral-100;
-  @apply hover:bg-amber-600 hover:border-amber-600;
-  @apply active:bg-amber-600 active:border-amber-600;
+  @apply enabled:hover:bg-amber-600 enabled:hover:border-amber-600;
+  @apply enabled:active:bg-amber-600 enabled:active:border-amber-600;
   @apply disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
@@ -25,8 +25,8 @@
 
 .btn-primary {
   @apply bg-neutral-100 border-2 border-neutral-100 text-neutral-900;
-  @apply hover:bg-amber-600 hover:border-amber-600;
-  @apply active:bg-amber-600 active:border-amber-600;
+  @apply enabled:hover:bg-amber-600 enabled:hover:border-amber-600;
+  @apply enabled:active:bg-amber-600 enabled:active:border-amber-600;
   @apply disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
@@ -37,8 +37,8 @@
   border-2 border-neutral-100
   text-neutral-100;
 
-  @apply hover:bg-neutral-200 hover:text-neutral-900;
-  @apply active:bg-neutral-200 hover:text-neutral-900;
+  @apply enabled:hover:bg-neutral-200 enabled:hover:text-neutral-900;
+  @apply enabled:active:bg-neutral-200 enabled:active:text-neutral-900;
   @apply disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
@@ -49,14 +49,14 @@
   border-2 border-neutral-100
   text-neutral-900;
 
-  @apply hover:bg-neutral-200 hover:text-neutral-900;
-  @apply active:bg-neutral-200 hover:text-neutral-900;
+  @apply enabled:hover:bg-neutral-200 enabled:hover:text-neutral-900;
+  @apply enabled:active:bg-neutral-200 enabled:active:text-neutral-900;
   @apply disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
-/* ---------- Big ---------- */
+/* ---------- Contrast ---------- */
 
-.btn-big {
+.btn-contrast {
   @apply bg-neutral-800
     border-2 border-neutral-800
     text-neutral-200 text-xl
@@ -86,4 +86,14 @@
   display: inline-flex;
   width: 1.25em;
   height: 1.25em;
+}
+
+/* ---------- Sizes ---------- */
+
+.btn-size-lg {
+  @apply text-lg;
+}
+
+.btn-size-xl {
+  @apply text-xl;
 }
