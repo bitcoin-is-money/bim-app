@@ -30,11 +30,24 @@
   </main>
 
   <footer class="home-footer">
-    <button class="footer-button" (click)="onReceive()">
+    <app-button
+      [icon]="['fas', 'qrcode']"
+      class="footer-button"
+      variant="transparent"
+      sizeVariant="lg"
+      (click)="onReceive()"
+    >
       Receive
-    </button>
-    <button class="footer-button" (click)="onPay()">
+    </app-button>
+    <div class="footer-divider"></div>
+    <app-button
+      [icon]="['fas', 'location-arrow']"
+      class="footer-button"
+      variant="transparent"
+      sizeVariant="lg"
+      (click)="onPay()"
+    >
       Pay
-    </button>
+    </app-button>
   </footer>
 </div>

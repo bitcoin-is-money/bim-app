@@ -4,7 +4,6 @@ import {
   faArrowLeft,
   faCircleCheck,
   faCoins,
-  faFileInvoice,
   faLocationArrow,
   faPaste,
   faPen,
@@ -14,15 +13,14 @@ import {
 
 export function registerIcons(library: FaIconLibrary): void {
   library.addIcons(
-    faGithub,
-    faPen,
-    faQrcode,
-    faPaste,
-    faLocationArrow,
-    faCircleCheck,
-    faShareNodes,
-    faFileInvoice,
-    faCoins,
-    faArrowLeft
+    faGithub,         // Github: 'fas', 'github'
+    faPen,            // Editable field: 'fas', 'pen'
+    faQrcode,         // QRCode: 'fas', 'qrcode'
+    faPaste,          // Clipboard: 'fas', 'paste'
+    faLocationArrow,  // Pay: 'fas', 'location-arrow'
+    faCircleCheck,    // Payment success: 'fas', 'circle-check'
+    faShareNodes,     // Share: 'fas', 'share-nodes'
+    faCoins,          // Money: 'fas', 'coins'
+    faArrowLeft       // back: 'fas', 'arrow-left'
   );
 }

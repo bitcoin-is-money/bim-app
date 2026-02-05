@@ -5,8 +5,10 @@
         [class.btn-primary]="variant === 'primary'"
         [class.btn-secondary]="variant === 'secondary'"
         [class.btn-tertiary]="variant === 'tertiary'"
-        [class.btn-big]="variant === 'big'"
+        [class.btn-contrast]="variant === 'contrast'"
         [class.btn-transparent]="variant === 'transparent'"
+        [class.btn-size-lg]="sizeVariant === 'lg'"
+        [class.btn-size-xl]="sizeVariant === 'xl'"
         [disabled]="disabled"
 >
     @if (loading) {

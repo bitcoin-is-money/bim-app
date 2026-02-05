@@ -26,6 +26,7 @@
         <app-button
           class="confirm-button"
           variant="tertiary"
+          [icon]="['fas', 'location-arrow']"
           [loading]="isProcessing()"
           [disabled]="!paymentAvailable() || isProcessing()"
           (click)="confirm()"

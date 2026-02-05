@@ -58,6 +58,7 @@
         <app-button
           variant="primary"
           [icon]="['fas', 'qrcode']"
+          [disabled]="isCreatingInvoice()"
           [loading]="isCreatingInvoice()"
           (click)="createInvoice()">
           Create Invoice
