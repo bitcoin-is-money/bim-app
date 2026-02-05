@@ -21,6 +21,20 @@ export class Amount {
     return Amount.of(this.value, this.currency);
   }
 
+  /** Returns the formatted value as a string with appropriate decimal places */
+  format(): string {
+    const decimals = Currency.decimals(this.currency);
+    return new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    }).format(this.value);
+  }
+
+  isPositive(): boolean {
+    return this.value > 0;
+  }
+
+
   convert(
     targetCurrency: Currency,
     rates: ConversionRates

@@ -58,21 +58,20 @@
         <app-button
           variant="primary"
           [icon]="['fas', 'qrcode']"
-          [disabled]="amount().value === 0 || isCreatingInvoice()"
           [loading]="isCreatingInvoice()"
-          [style.visibility]="invoiceCreated() ? 'hidden' : 'visible'"
           (click)="createInvoice()">
           Create Invoice
         </app-button>
       }
-      <app-button
-        variant="tertiary"
-        [icon]="['fas', 'share-nodes']"
-        [disabled]="!qrData()"
-        (click)="share()">
-        Share
-      </app-button>
-
+      @if (qrData()) {
+        <app-button
+          variant="tertiary"
+          [icon]="['fas', 'share-nodes']"
+          [disabled]="!qrData()"
+          (click)="share()">
+          Share
+        </app-button>
+      }
     </div>
   </main>
   <app-logo-footer />
