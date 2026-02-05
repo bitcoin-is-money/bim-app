@@ -31,6 +31,7 @@ vi.mock('../../src/adapters/index.js', () => {
 function createMockConfig(): AppConfig {
   return {
     nodeEnv: 'test',
+    starknetNetwork: 'testnet',
     port: 8080,
     databaseUrl: 'postgres://test',
     webauthnRpId: 'localhost',
