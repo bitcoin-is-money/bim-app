@@ -2,6 +2,7 @@ import {Component, DestroyRef, inject, OnInit, signal} from '@angular/core';
 import {Router} from '@angular/router';
 import {ButtonComponent} from '../../components/button/button.component';
 import {SpinnerComponent} from '../../components/spinner/spinner.component';
+import {FullPageLayoutComponent} from '../../layout/full-page-layout/full-page-layout.component';
 import {AccountService} from '../../services/account.service';
 import {AuthService} from "../../services/auth.service";
 import {NotificationService} from '../../services/notification.service';
@@ -11,7 +12,7 @@ const POLL_INTERVAL_MS = 1000;
 @Component({
   selector: 'app-account-setup',
   standalone: true,
-  imports: [SpinnerComponent, ButtonComponent],
+  imports: [SpinnerComponent, ButtonComponent, FullPageLayoutComponent],
   templateUrl: './account-setup.page.html',
   styleUrl: './account-setup.page.scss',
 })

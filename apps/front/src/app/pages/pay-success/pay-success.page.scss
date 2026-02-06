@@ -1,7 +1,7 @@
 @reference "tailwindcss";
 
 .pay-success-page {
-  @apply h-screen flex flex-col overflow-hidden;
+  @apply h-full flex flex-col overflow-hidden;
 
   .pay-success-main {
     @apply flex-1 flex flex-col items-center justify-center gap-6;

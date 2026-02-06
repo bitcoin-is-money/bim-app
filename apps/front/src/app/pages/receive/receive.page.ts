@@ -4,8 +4,8 @@ import {AmountFieldComponent} from '../../components/amount-field/amount-field.c
 import {ButtonComponent} from '../../components/button/button.component';
 import {FieldComponent} from '../../components/field/field.component';
 import {GoBackHeaderComponent} from '../../components/go-back-header/go-back-header.component';
-import {LogoFooterComponent} from "../../components/logo-footer/logo-footer.component";
 import {NetworkLogoComponent} from '../../components/network-logo/network-logo.component';
+import {FullPageLayoutComponent} from '../../layout/full-page-layout/full-page-layout.component';
 import {Amount} from '../../model';
 import {AuthService} from '../../services/auth.service';
 import {CurrencyService} from '../../services/currency.service';
@@ -26,7 +26,7 @@ const WBTC_TOKEN_ADDRESS = '0x00abbd7d98ad664568f204d6e1af6e02d6a5c55eb4e83c9fbb
     AmountFieldComponent,
     FieldComponent,
     ButtonComponent,
-    LogoFooterComponent,
+    FullPageLayoutComponent,
   ],
   templateUrl: './receive.page.html',
   styleUrl: './receive.page.scss',

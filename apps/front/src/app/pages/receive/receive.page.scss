@@ -1,7 +1,7 @@
 @reference "tailwindcss";
 
 .receive-page {
-  @apply h-screen flex flex-col overflow-hidden;
+  @apply h-full flex flex-col overflow-hidden;
 }
 
 .receive-main {
