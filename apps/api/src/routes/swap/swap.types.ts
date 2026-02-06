@@ -33,15 +33,3 @@ export interface SwapClaimResponse {
   txHash: string;
   status: string;
 }
-
-// =============================================================================
-// GET /api/swap/events/:swapId (SSE)
-// =============================================================================
-
-export interface SwapEventData {
-  swapId: string;
-  status: string;
-  progress: number;
-  direction: string;
-  txHash: string | undefined;
-}

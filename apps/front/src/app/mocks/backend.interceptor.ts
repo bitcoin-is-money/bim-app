@@ -15,6 +15,7 @@ import {PricesHandlerMock} from './prices-handler.mock';
 import {TransactionHandlerMock} from './transaction-handler.mock';
 import {PaymentHandlerMock} from './payment/payment-handler.mock';
 import {ReceiveHandlerMock} from './receive/receive-handler.mock';
+import {SwapHandlerMock} from './swap/swap-handler.mock';
 
 const store = new DataStoreMock();
 const mockAuthHandler = new AuthHandlerMock(store);
@@ -23,6 +24,7 @@ const mockPricesHandler = new PricesHandlerMock();
 const mockTransactionHandler = new TransactionHandlerMock(store);
 const mockPaymentHandler = new PaymentHandlerMock(store);
 const mockReceiveHandler = new ReceiveHandlerMock(store);
+const mockSwapHandler = new SwapHandlerMock(store);
 
 const payDelay = 3000;
 const receiveDelay = 3000;
@@ -93,6 +95,12 @@ export const backendInterceptor: HttpInterceptorFn = (
   } else if (url === '/api/payment/receive' && method === 'POST') {
     response = mockReceiveHandler.createInvoice(body as Parameters<typeof mockReceiveHandler.createInvoice>[0]);
     httpFakeDelay = receiveDelay;
+  }
+
+  // Swap routes
+  else if (url.startsWith('/api/swap/status/') && method === 'GET') {
+    const swapId = url.split('/api/swap/status/')[1];
+    response = mockSwapHandler.getStatus(swapId!);
   }
 
   if (response) {

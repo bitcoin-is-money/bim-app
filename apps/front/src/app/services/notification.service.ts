@@ -9,6 +9,11 @@ const DEFAULT_OPTIONS: ToastOptions<unknown> = {
   position: 'top-center'
 }
 
+const DEFAULT_ERROR_OPTIONS: ToastOptions<unknown> = {
+  ...DEFAULT_OPTIONS,
+  duration: 10000,
+}
+
 export interface NotificationData {
   message: string;
   icon?: IconProp;
@@ -53,7 +58,7 @@ export class NotificationService {
     options?: ToastOptions<unknown>
   ) {
     this.show(data, {
-      ...DEFAULT_OPTIONS,
+      ...DEFAULT_ERROR_OPTIONS,
       ...options,
       style: {
         '--hot-toast-bg': '#c83030',

@@ -1,4 +1,4 @@
-import type {Account} from '../model';
+import type {Account, SwapDirection} from '../model';
 import {DEFAULT_MOCK_USER, type MockUserProfile} from './mock-users';
 
 const STORAGE_KEYS = {
@@ -7,7 +7,18 @@ const STORAGE_KEYS = {
   CURRENT_SESSION: 'mock_current_session',
   MOCK_USER_PROFILE: 'mock_user_profile',
   REGISTRATION_TIMESTAMP: 'mock_registration_timestamp',
+  MOCK_SWAPS: 'mock_swaps',
+  MOCK_SWAP_POLL_COUNTS: 'mock_swap_poll_counts',
 } as const;
+
+export interface MockSwapData {
+  swapId: string;
+  direction: SwapDirection;
+  amountSats: number;
+  destinationAddress: string;
+  createdAt: string;
+  expiresAt: string;
+}
 
 export interface StoredCredential {
   credentialId: string;
@@ -132,11 +143,52 @@ export class DataStoreMock {
     return dateIso ? new Date(dateIso) : null;
   }
 
+  // Mock Swaps (created during receive/pay)
+  getSwaps(): Map<string, MockSwapData> {
+    const data = localStorage.getItem(STORAGE_KEYS.MOCK_SWAPS);
+    if (!data) return new Map();
+    const entries: Array<[string, MockSwapData]> = JSON.parse(data);
+    return new Map(entries);
+  }
+
+  saveSwap(swap: MockSwapData): void {
+    const swaps = this.getSwaps();
+    swaps.set(swap.swapId, swap);
+    localStorage.setItem(STORAGE_KEYS.MOCK_SWAPS, JSON.stringify([...swaps.entries()]));
+  }
+
+  getSwap(swapId: string): MockSwapData | undefined {
+    return this.getSwaps().get(swapId);
+  }
+
+  // Poll counts (to track status progression)
+  getPollCounts(): Map<string, number> {
+    const data = localStorage.getItem(STORAGE_KEYS.MOCK_SWAP_POLL_COUNTS);
+    if (!data) return new Map();
+    const entries: Array<[string, number]> = JSON.parse(data);
+    return new Map(entries);
+  }
+
+  incrementPollCount(swapId: string): number {
+    const counts = this.getPollCounts();
+    const current = counts.get(swapId) ?? 0;
+    const next = current + 1;
+    counts.set(swapId, next);
+    localStorage.setItem(STORAGE_KEYS.MOCK_SWAP_POLL_COUNTS, JSON.stringify([...counts.entries()]));
+    return next;
+  }
+
+  getPollCount(swapId: string): number {
+    return this.getPollCounts().get(swapId) ?? 0;
+  }
+
   // Utils
   clearAll(): void {
     localStorage.removeItem(STORAGE_KEYS.CREDENTIALS);
     localStorage.removeItem(STORAGE_KEYS.PENDING_CHALLENGES);
     localStorage.removeItem(STORAGE_KEYS.CURRENT_SESSION);
     localStorage.removeItem(STORAGE_KEYS.MOCK_USER_PROFILE);
+    localStorage.removeItem(STORAGE_KEYS.MOCK_SWAPS);
+    localStorage.removeItem(STORAGE_KEYS.MOCK_SWAP_POLL_COUNTS);
   }
 }

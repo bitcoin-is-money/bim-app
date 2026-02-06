@@ -1,8 +1,7 @@
 import {HttpErrorResponse} from '@angular/common/http';
-import {Injectable, signal} from '@angular/core';
+import {inject, Injectable, signal} from '@angular/core';
 import {Router} from '@angular/router';
-import {Base64Url} from "@bim/lib/encoding";
-import {UuidCodec} from "@bim/lib/encoding";
+import {Base64Url, UuidCodec} from "@bim/lib/encoding";
 import {catchError, firstValueFrom, map, Observable} from 'rxjs';
 import {environment} from '../../environments/environment';
 import {Account} from "../model";
@@ -21,15 +20,16 @@ export type {AuthResponse, BeginAuthResponse, BeginRegisterResponse, UserSession
   providedIn: 'root',
 })
 export class AuthService {
+
+  private readonly httpService = inject(AuthHttpService);
+  private readonly router = inject(Router);
+  private readonly notifications= inject(NotificationService);
+
   currentUser = signal<Account | null>(null);
   isLoading = signal(false);
   isNewUser = signal(false);
 
-  constructor(
-    private readonly httpService: AuthHttpService,
-    private readonly router: Router,
-    private readonly notifications: NotificationService,
-  ) {
+  constructor() {
     this.loadCurrentUser();
   }
 

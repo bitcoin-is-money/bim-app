@@ -17,6 +17,10 @@ export class MenuPage {
     private readonly authService: AuthService
   ) {}
 
+  navigateToSwaps(): void {
+    this.router.navigate(['/swaps']);
+  }
+
   navigateToAbout(): void {
     this.router.navigate(['/about']);
   }

@@ -1,0 +1,35 @@
+@reference "tailwindcss";
+
+.swaps-page {
+  @apply h-screen flex flex-col bg-neutral-900 overflow-hidden;
+
+  .swaps-main {
+    @apply flex-1 p-4;
+
+    .empty-state {
+      @apply text-center py-12;
+
+      .empty-text {
+        @apply text-neutral-400 text-lg;
+      }
+
+      .empty-hint {
+        @apply text-neutral-500 text-sm mt-2;
+      }
+    }
+
+    .swap-list {
+      @apply flex flex-col divide-y divide-neutral-800;
+    }
+
+    .refresh-section {
+      //@apply mt-6 pt-4 border-t border-neutral-800;
+
+      .refresh-button {
+        //@apply w-full py-3 px-4 rounded-lg bg-neutral-800 text-white font-medium
+        //       hover:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed
+        //       transition-colors;
+      }
+    }
+  }
+}
