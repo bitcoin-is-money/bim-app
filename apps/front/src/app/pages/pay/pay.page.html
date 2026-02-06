@@ -1,43 +1,43 @@
-<div class="pay-page">
-  <app-go-back-header title="Choose your payment method"></app-go-back-header>
+<app-full-page-layout [showFooter]="true">
+  <div class="pay-page">
+    <app-go-back-header title="Choose your payment method"></app-go-back-header>
 
-  <main class="pay-main">
-    <app-button
-      class="scan-button"
-      variant="contrast"
-      sizeVariant="xl"
-      [icon]="['fas', 'qrcode']"
-      (click)="scanQRCode()"
-      [disabled]="isLoading()"
-    >
-      Scan a QR Code
-    </app-button>
-    <app-button
-      class="parse-clipboard-button"
-      variant="contrast"
-      sizeVariant="xl"
-      [icon]="['fas', 'paste']"
-      (click)="pasteFromClipboard()"
-      [disabled]="isLoading()"
-    >
-      Paste from clipboard
-    </app-button>
-  </main>
+    <main class="pay-main">
+      <app-button
+        class="scan-button"
+        variant="contrast"
+        sizeVariant="xl"
+        [icon]="['fas', 'qrcode']"
+        (click)="scanQRCode()"
+        [disabled]="isLoading()"
+      >
+        Scan a QR Code
+      </app-button>
+      <app-button
+        class="parse-clipboard-button"
+        variant="contrast"
+        sizeVariant="xl"
+        [icon]="['fas', 'paste']"
+        (click)="pasteFromClipboard()"
+        [disabled]="isLoading()"
+      >
+        Paste from clipboard
+      </app-button>
+    </main>
 
-  @if (scanning()) {
-    <div class="scanner-overlay">
-      <div class="scanner-header">
-        <button class="scanner-close" (click)="closeScanner()">✕</button>
-      </div>
-      <div id="qr-reader" class="qr-reader"></div>
-      @if (scannerError(); as error) {
-        <div class="scanner-error">
-          <p>{{ error }}</p>
-          <button class="scanner-retry" (click)="closeScanner()">Close</button>
+    @if (scanning()) {
+      <div class="scanner-overlay">
+        <div class="scanner-header">
+          <button class="scanner-close" (click)="closeScanner()">✕</button>
         </div>
-      }
-    </div>
-  }
-
-  <app-logo-footer />
-</div>
+        <div id="qr-reader" class="qr-reader"></div>
+        @if (scannerError(); as error) {
+          <div class="scanner-error">
+            <p>{{ error }}</p>
+            <button class="scanner-retry" (click)="closeScanner()">Close</button>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</app-full-page-layout>

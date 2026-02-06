@@ -1,14 +1,16 @@
-<div class="menu-page">
-  <app-go-back-header title="Menu"></app-go-back-header>
+<app-full-page-layout [showFooter]="false">
+  <div class="menu-page">
+    <app-go-back-header title="Menu"></app-go-back-header>
 
-  <main class="menu-main">
-    <nav class="menu-nav">
-      <button class="menu-item" (click)="navigateToAbout()">
-        About
-      </button>
-      <button class="menu-item menu-item--danger" (click)="logout()">
-        Logout
-      </button>
-    </nav>
-  </main>
-</div>
+    <main class="menu-main">
+      <nav class="menu-nav">
+        <button class="menu-item" (click)="navigateToAbout()">
+          About
+        </button>
+        <button class="menu-item menu-item--danger" (click)="logout()">
+          Logout
+        </button>
+      </nav>
+    </main>
+  </div>
+</app-full-page-layout>

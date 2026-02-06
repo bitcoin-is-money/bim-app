@@ -1,48 +1,48 @@
-<div class="pay-confirm-page">
-  <app-go-back-header title="Confirm payment"></app-go-back-header>
+<app-full-page-layout [showFooter]="true">
+  <div class="pay-confirm-page">
+    <app-go-back-header title="Confirm payment"></app-go-back-header>
 
-  <main class="pay-confirm-main">
-    @if (payment(); as p) {
-      <div class="payment-details">
-        <app-network-logo [network]="p.network" style="height:48px"/>
-        <app-amount-highlight [originalAmount]="p.amount"/>
-        <div class="payment-fields">
-          <app-field
-            label="To"
-            [title]="p.destination"
-            [value]="p.shortDestination"
-            [monospace]="true"
-          />
-          <app-field
-            [editable]="true"
-            [value]="p.description"
-          />
-          <app-amount-field
-            [currencyToggle]="false"
-            [amount]="computedFee()!"
-            label="Fee"
-          />
+    <main class="pay-confirm-main">
+      @if (payment(); as p) {
+        <div class="payment-details">
+          <app-network-logo [network]="p.network" style="height:48px"/>
+          <app-amount-highlight [originalAmount]="p.amount"/>
+          <div class="payment-fields">
+            <app-field
+              label="To"
+              [title]="p.destination"
+              [value]="p.shortDestination"
+              [monospace]="true"
+            />
+            <app-field
+              [editable]="true"
+              [value]="p.description"
+            />
+            <app-amount-field
+              [currencyToggle]="false"
+              [amount]="computedFee()!"
+              label="Fee"
+            />
+          </div>
+          <app-button
+            class="confirm-button"
+            variant="tertiary"
+            [icon]="['fas', 'location-arrow']"
+            [loading]="isProcessing()"
+            [disabled]="!paymentAvailable() || isProcessing()"
+            (click)="confirm()"
+          >
+            @if (isProcessing()) {
+              Processing...
+            } @else {
+              Pay
+            }
+          </app-button>
         </div>
-        <app-button
-          class="confirm-button"
-          variant="tertiary"
-          [icon]="['fas', 'location-arrow']"
-          [loading]="isProcessing()"
-          [disabled]="!paymentAvailable() || isProcessing()"
-          (click)="confirm()"
-        >
-          @if (isProcessing()) {
-            Processing...
-          } @else {
-            Pay
-          }
-        </app-button>
-      </div>
 
-    } @else {
-      <p class="no-payment">No payment data. Please scan a QR code first.</p>
-    }
-  </main>
-
-  <app-logo-footer/>
-</div>
+      } @else {
+        <p class="no-payment">No payment data. Please scan a QR code first.</p>
+      }
+    </main>
+  </div>
+</app-full-page-layout>

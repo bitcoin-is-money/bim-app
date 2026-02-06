@@ -4,7 +4,7 @@ import {FormsModule} from '@angular/forms';
 import {Html5Qrcode, Html5QrcodeSupportedFormats} from 'html5-qrcode';
 import {ButtonComponent} from '../../components/button/button.component';
 import {GoBackHeaderComponent} from '../../components/go-back-header/go-back-header.component';
-import {LogoFooterComponent} from '../../components/logo-footer/logo-footer.component';
+import {FullPageLayoutComponent} from '../../layout/full-page-layout/full-page-layout.component';
 import {NotificationService} from '../../services/notification.service';
 import {PayService} from '../../services/pay.service';
 import {environment} from '../../../environments/environment';
@@ -12,7 +12,7 @@ import {environment} from '../../../environments/environment';
 @Component({
   selector: 'app-pay',
   standalone: true,
-  imports: [CommonModule, FormsModule, ButtonComponent, LogoFooterComponent, GoBackHeaderComponent],
+  imports: [CommonModule, FormsModule, ButtonComponent, GoBackHeaderComponent, FullPageLayoutComponent],
   templateUrl: './pay.page.html',
   styleUrl: './pay.page.scss',
 })

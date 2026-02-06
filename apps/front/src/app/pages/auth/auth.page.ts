@@ -2,13 +2,13 @@ import {CommonModule} from '@angular/common';
 import {Component, inject, signal} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {ButtonComponent} from "../../components/button/button.component";
-import {LogoFooterComponent} from "../../components/logo-footer/logo-footer.component";
+import {FullPageLayoutComponent} from '../../layout/full-page-layout/full-page-layout.component';
 import {AuthService} from '../../services/auth.service';
 
 @Component({
   selector: 'app-auth',
   standalone: true,
-  imports: [CommonModule, FormsModule, ButtonComponent, LogoFooterComponent],
+  imports: [CommonModule, FormsModule, ButtonComponent, FullPageLayoutComponent],
   templateUrl: './auth.page.html',
   styleUrl: './auth.page.scss',
 })

@@ -5,8 +5,8 @@ import {AmountHighlightComponent} from '../../components/amount-highlight/amount
 import {ButtonComponent} from '../../components/button/button.component';
 import {FieldComponent} from '../../components/field/field.component';
 import {GoBackHeaderComponent} from '../../components/go-back-header/go-back-header.component';
-import {LogoFooterComponent} from '../../components/logo-footer/logo-footer.component';
 import {NetworkLogoComponent} from '../../components/network-logo/network-logo.component';
+import {FullPageLayoutComponent} from '../../layout/full-page-layout/full-page-layout.component';
 import {Amount} from "../../model";
 import {AccountService} from '../../services/account.service';
 import {CurrencyService} from '../../services/currency.service';
@@ -16,7 +16,7 @@ import {PayService} from '../../services/pay.service';
 @Component({
   selector: 'app-pay-confirm',
   standalone: true,
-  imports: [CommonModule, ButtonComponent, GoBackHeaderComponent, LogoFooterComponent, NetworkLogoComponent, FieldComponent, AmountFieldComponent, AmountHighlightComponent],
+  imports: [CommonModule, ButtonComponent, GoBackHeaderComponent, NetworkLogoComponent, FieldComponent, AmountFieldComponent, AmountHighlightComponent, FullPageLayoutComponent],
   templateUrl: './pay-confirm.page.html',
   styleUrl: './pay-confirm.page.scss',
 })

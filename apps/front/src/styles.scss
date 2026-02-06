@@ -18,10 +18,15 @@ button {
     box-sizing: border-box;
 }
 
-:root {
+html, body {
+  @apply h-full w-full m-0 p-0 overflow-hidden;
+}
+
+html {
   @apply bg-black text-neutral-100;
-  body {
-    margin: 0;
-  }
+}
+
+app-root {
+  @apply block h-full w-full overflow-hidden;
 }
 
