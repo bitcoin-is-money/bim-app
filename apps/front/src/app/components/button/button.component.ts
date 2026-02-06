@@ -15,7 +15,7 @@ import {SizeVariant, StyleVariant} from "../variant";
 export class ButtonComponent {
   @Input({ required: true }) variant!: StyleVariant;
   @Input() sizeVariant: SizeVariant = 'base';
-  @Input() icon?: IconProp;
+  @Input() icon: IconProp | undefined;
   @Input() disabled = false;
   @Input() loading = false;
 }

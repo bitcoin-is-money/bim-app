@@ -1,11 +1,15 @@
 <app-full-page-layout [showFooter]="false">
   <div class="menu-page">
     <app-go-back-header title="Menu"></app-go-back-header>
-
     <main class="menu-main">
       <nav class="menu-nav">
+        <p>General</p>
         <button class="menu-item" (click)="navigateToAbout()">
           About
+        </button>
+        <p>Advanced</p>
+        <button class="menu-item" (click)="navigateToSwaps()">
+          Swaps
         </button>
         <button class="menu-item menu-item--danger" (click)="logout()">
           Logout

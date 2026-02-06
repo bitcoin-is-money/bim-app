@@ -8,7 +8,9 @@ import type {
   UserSessionResponse,
 } from '../../services/auth.service';
 import {DataStoreMock, type StoredCredential} from './../data-store.mock';
-import {getMockUser} from './../mock-users';
+import {getMockUser, type MockUserProfile} from './../mock-users';
+
+const SWAPS_STORAGE_KEY = 'bim:swaps';
 
 
 interface ApiErrorResponse {
@@ -49,6 +51,16 @@ export class AuthHandlerMock {
   constructor(
     private readonly store: DataStoreMock
   ) {
+  }
+
+  /**
+   * Load existing swaps from user profile into localStorage.
+   * This simulates swaps that already exist for the user.
+   */
+  private loadExistingSwaps(profile: MockUserProfile): void {
+    if (profile.existingSwaps.length > 0) {
+      localStorage.setItem(SWAPS_STORAGE_KEY, JSON.stringify(profile.existingSwaps));
+    }
   }
 
   // POST /api/auth/register/begin
@@ -146,9 +158,11 @@ export class AuthHandlerMock {
       status: 'pending',
     };
 
+    const mockProfile = getMockUser(username);
     this.store.setSession(account);
     this.store.setRegistrationDate(new Date());
-    this.store.setMockUserProfile(getMockUser(username));
+    this.store.setMockUserProfile(mockProfile);
+    this.loadExistingSwaps(mockProfile);
 
     return new HttpResponse({
       status: 200,
@@ -253,7 +267,10 @@ export class AuthHandlerMock {
       status: 'active',
     };
 
+    const mockProfile = getMockUser(storedCredential.username);
     this.store.setSession(account);
+    this.store.setMockUserProfile(mockProfile);
+    this.loadExistingSwaps(mockProfile);
 
     return new HttpResponse({
       status: 200,

@@ -1,0 +1,67 @@
+@reference "tailwindcss";
+
+.swap-item {
+  @apply py-3;
+
+  .swap-content {
+    @apply flex items-start gap-3;
+
+    .swap-status-indicator {
+      @apply w-3 h-3 rounded-full bg-neutral-400 self-center transition-colors;
+
+      &.polling {
+        @apply bg-yellow-400 animate-pulse;
+      }
+    }
+
+    .swap-info {
+      @apply flex-1 min-w-0;
+
+      .swap-direction {
+        @apply text-white font-medium;
+      }
+
+      .swap-date {
+        @apply text-sm text-neutral-400 mt-1;
+      }
+    }
+
+    .swap-right {
+      @apply text-right flex-shrink-0;
+
+      .swap-amount {
+        @apply font-semibold;
+
+        &.credit {
+          @apply text-green-400;
+        }
+
+        &.debit {
+          @apply text-neutral-300;
+        }
+      }
+
+      .swap-status {
+        @apply text-xs text-neutral-500 mt-1 uppercase;
+      }
+    }
+  }
+
+  &.status-completed .swap-status-indicator {
+    @apply bg-green-500;
+  }
+
+  &.status-failed .swap-status-indicator,
+  &.status-expired .swap-status-indicator {
+    @apply bg-red-500;
+  }
+
+  &.status-pending .swap-status-indicator {
+    @apply bg-neutral-400;
+  }
+
+  &.status-paid .swap-status-indicator,
+  &.status-confirming .swap-status-indicator {
+    @apply bg-yellow-400;
+  }
+}

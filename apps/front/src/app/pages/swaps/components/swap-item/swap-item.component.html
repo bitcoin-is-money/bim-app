@@ -1,0 +1,18 @@
+<div class="swap-item" [class]="statusClass()">
+  <div class="swap-content">
+    <div class="swap-status-indicator" [class.polling]="isPolling()"></div>
+    <div class="swap-info">
+      <div class="swap-direction">{{ directionLabel() }}</div>
+      <div class="swap-date">{{ swap().createdAt | date:'short' }}</div>
+    </div>
+    <div class="swap-right">
+      <div
+        class="swap-amount"
+        [class.credit]="swap().type === 'receive'"
+        [class.debit]="swap().type === 'send'">
+        {{ formattedAmount() }}
+      </div>
+      <div class="swap-status">{{ swap().lastKnownStatus }}</div>
+    </div>
+  </div>
+</div>

@@ -8,7 +8,7 @@ import {
   faPaste,
   faPen,
   faQrcode,
-  faShareNodes
+  faShareNodes, faSyncAlt
 } from '@fortawesome/free-solid-svg-icons';
 
 export function registerIcons(library: FaIconLibrary): void {
@@ -21,6 +21,7 @@ export function registerIcons(library: FaIconLibrary): void {
     faCircleCheck,    // Payment success: 'fas', 'circle-check'
     faShareNodes,     // Share: 'fas', 'share-nodes'
     faCoins,          // Money: 'fas', 'coins'
-    faArrowLeft       // back: 'fas', 'arrow-left'
+    faArrowLeft,      // back: 'fas', 'arrow-left'
+    faSyncAlt         // refresh, 'fas', 'sync-alt'
   );
 }

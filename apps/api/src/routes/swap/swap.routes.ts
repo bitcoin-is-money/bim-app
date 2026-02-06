@@ -7,13 +7,12 @@ import {
 } from '@bim/domain/swap';
 import {Hono} from 'hono';
 import type {TypedResponse} from 'hono';
-import {streamSSE} from 'hono/streaming';
 import {z} from 'zod';
 import type {AppContext} from "../../app-context";
 import {createAuthMiddleware} from "../../middleware/auth.middleware";
 import type {AuthenticatedHono} from '../../types.js';
 import {SwapDirectionSchema} from './swap.schemas';
-import type {SwapClaimResponse, SwapEventData, SwapLimitsResponse, SwapStatusResponse} from './swap.types';
+import type {SwapClaimResponse, SwapLimitsResponse, SwapStatusResponse} from './swap.types';
 
 // =============================================================================
 // Routes
@@ -90,55 +89,6 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
     } catch (error) {
       return handleError(honoCtx, error);
     }
-  });
-
-  // ---------------------------------------------------------------------------
-  // SSE: Stream Swap Status Events
-  // ---------------------------------------------------------------------------
-
-  app.get('/events/:swapId', (honoCtx): Response => {
-    const swapId = honoCtx.req.param('swapId');
-    const SSE_POLL_INTERVAL = 3000;
-
-    return streamSSE(honoCtx, async (stream) => {
-      let lastStatus: string | undefined;
-
-      while (true) {
-        try {
-          const result = await swapService.fetchStatus({swapId});
-
-          const currentStatus = result.status;
-          if (currentStatus !== lastStatus) {
-            lastStatus = currentStatus;
-            const data: SwapEventData = {
-              swapId: result.swap.id,
-              status: result.status,
-              progress: result.progress,
-              direction: result.swap.direction,
-              txHash: result.txHash,
-            };
-            await stream.writeSSE({
-              event: 'status',
-              data: JSON.stringify(data),
-            });
-          }
-
-          // Close stream on terminal state
-          if (['completed', 'expired', 'failed'].includes(currentStatus)) {
-            return;
-          }
-        } catch {
-          // Swap not found or sync error — close stream
-          await stream.writeSSE({
-            event: 'error',
-            data: JSON.stringify({error: 'Swap not found or unavailable'}),
-          });
-          return;
-        }
-
-        await stream.sleep(SSE_POLL_INTERVAL);
-      }
-    });
   });
 
   return app;
