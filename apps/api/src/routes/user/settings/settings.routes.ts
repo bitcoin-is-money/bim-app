@@ -1,8 +1,9 @@
 import {Account} from '@bim/domain/account';
-import {FiatCurrency, UnsupportedCurrencyError} from "@bim/domain/user";
+import {FiatCurrency} from '@bim/domain/user';
 import {Hono} from 'hono';
 import type {TypedResponse} from 'hono';
 import type {AppContext} from '../../../app-context';
+import {handleDomainError, type ApiErrorResponse} from '../../../errors';
 import type {AuthenticatedHono} from '../../../types.js';
 import type {GetSettingsResponse, UpdateSettingsResponse} from './settings.types';
 
@@ -20,7 +21,7 @@ export function createSettingsRoutes(appContext: AppContext): AuthenticatedHono 
   // Get User Settings
   // ---------------------------------------------------------------------------
 
-  app.get('/', async (honoCtx): Promise<TypedResponse<GetSettingsResponse> | Response> => {
+  app.get('/', async (honoCtx): Promise<TypedResponse<GetSettingsResponse | ApiErrorResponse>> => {
     try {
       const account: Account = honoCtx.get('account');
 
@@ -31,7 +32,7 @@ export function createSettingsRoutes(appContext: AppContext): AuthenticatedHono 
         supportedCurrencies: FiatCurrency.getSupportedCurrencies(),
       });
     } catch (error) {
-      return handleError(honoCtx, error);
+      return handleDomainError(honoCtx, error);
     }
   });
 
@@ -39,7 +40,7 @@ export function createSettingsRoutes(appContext: AppContext): AuthenticatedHono 
   // Update User Settings
   // ---------------------------------------------------------------------------
 
-  app.put('/', async (honoCtx): Promise<TypedResponse<UpdateSettingsResponse> | Response> => {
+  app.put('/', async (honoCtx): Promise<TypedResponse<UpdateSettingsResponse | ApiErrorResponse>> => {
     try {
       const account: Account = honoCtx.get('account');
       const body = await honoCtx.req.json();
@@ -54,26 +55,9 @@ export function createSettingsRoutes(appContext: AppContext): AuthenticatedHono 
         supportedCurrencies: FiatCurrency.getSupportedCurrencies(),
       });
     } catch (error) {
-      return handleError(honoCtx, error);
+      return handleDomainError(honoCtx, error);
     }
   });
 
   return app;
-}
-
-// =============================================================================
-// Helpers
-// =============================================================================
-
-function handleError(
-  honoCtx: {json: (data: unknown, status: number) => Response},
-  error: unknown
-): Response {
-  console.error('User settings error:', error);
-
-  if (error instanceof UnsupportedCurrencyError) {
-    return honoCtx.json({error: error.message}, 400);
-  }
-
-  return honoCtx.json({error: 'Internal server error'}, 500);
 }

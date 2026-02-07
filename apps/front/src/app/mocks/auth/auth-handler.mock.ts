@@ -1,27 +1,21 @@
 import {HttpResponse} from '@angular/common/http';
-import {WebauthnUserHandleDecoder} from "@bim/lib/auth";
-import {Account} from "../../model";
+import {WebauthnUserHandleDecoder} from '@bim/lib/auth';
+import {Account, type ApiErrorResponse, ErrorCode} from '../../model';
 import type {
   AuthResponse,
   BeginAuthResponse,
   BeginRegisterResponse,
   UserSessionResponse,
 } from '../../services/auth.service';
-import {DataStoreMock, type StoredCredential} from './../data-store.mock';
-import {getMockUser, type MockUserProfile} from './../mock-users';
+import {DataStoreMock, type StoredCredential} from '../data-store.mock';
+import {createErrorResponse} from '../mock-error';
+import {getMockUser, type MockUserProfile} from '../mock-users';
 
 const SWAPS_STORAGE_KEY = 'bim:swaps';
 
-
-interface ApiErrorResponse {
-  error: { message: string };
-}
-
 // Predictable test Starknet address based on username
 function generateStarknetAddress(username: string): string {
-  const hash = username
-    .split('')
-    .reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const hash = username.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const paddedHash = hash.toString(16).padStart(8, '0');
   return `0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7${paddedHash}`;
 }
@@ -48,10 +42,7 @@ export class AuthHandlerMock {
   private readonly RP_ID = 'localhost';
   private readonly RP_NAME = 'BIM App (Mock)';
 
-  constructor(
-    private readonly store: DataStoreMock
-  ) {
-  }
+  constructor(private readonly store: DataStoreMock) {}
 
   /**
    * Load existing swaps from user profile into localStorage.
@@ -64,16 +55,13 @@ export class AuthHandlerMock {
   }
 
   // POST /api/auth/register/begin
-  beginRegister(body: { username: string }): HttpResponse<BeginRegisterResponse | ApiErrorResponse> {
-    const { username } = body;
+  beginRegister(body: {username: string}): HttpResponse<BeginRegisterResponse | ApiErrorResponse> {
+    const {username} = body;
 
     // Error: user already exists
     const existing = this.store.findCredentialByUsername(username);
     if (existing) {
-      return new HttpResponse({
-        status: 409,
-        body: { error: { message: 'Username already taken' } },
-      });
+      return createErrorResponse(409, ErrorCode.ACCOUNT_ALREADY_EXISTS, 'Username already taken');
     }
 
     const challengeId = generateUUID();
@@ -113,32 +101,23 @@ export class AuthHandlerMock {
     credential: {
       id: string;
       rawId: string;
-      response: { clientDataJSON: string; attestationObject: string };
+      response: {clientDataJSON: string; attestationObject: string};
       type: string;
     };
   }): HttpResponse<AuthResponse | ApiErrorResponse> {
-    const { challengeId, accountId, username, credential } = body;
+    const {challengeId, accountId, username, credential} = body;
 
     const pendingChallenge = this.store.consumeChallenge(challengeId);
     if (!pendingChallenge) {
-      return new HttpResponse({
-        status: 400,
-        body: { error: { message: 'Invalid or expired challenge' } },
-      });
+      return createErrorResponse(400, ErrorCode.CHALLENGE_NOT_FOUND, 'Challenge not found');
     }
 
     if (pendingChallenge.type !== 'registration') {
-      return new HttpResponse({
-        status: 400,
-        body: { error: { message: 'Challenge type mismatch' } },
-      });
+      return createErrorResponse(400, ErrorCode.CHALLENGE_EXPIRED, 'Challenge type mismatch');
     }
 
     if (pendingChallenge.expiresAt < Date.now()) {
-      return new HttpResponse({
-        status: 400,
-        body: { error: { message: 'Challenge expired' } },
-      });
+      return createErrorResponse(400, ErrorCode.CHALLENGE_EXPIRED, 'Challenge expired');
     }
 
     // Store credential using the accountId passed from beginRegister
@@ -166,7 +145,7 @@ export class AuthHandlerMock {
 
     return new HttpResponse({
       status: 200,
-      body: { account },
+      body: {account},
     });
   }
 
@@ -212,46 +191,31 @@ export class AuthHandlerMock {
       type: string;
     };
   }): HttpResponse<AuthResponse | ApiErrorResponse> {
-    const { challengeId, credential } = body;
+    const {challengeId, credential} = body;
 
     const pendingChallenge = this.store.consumeChallenge(challengeId);
     if (!pendingChallenge) {
-      return new HttpResponse({
-        status: 400,
-        body: { error: { message: 'Invalid or expired challenge' } },
-      });
+      return createErrorResponse(400, ErrorCode.CHALLENGE_NOT_FOUND, 'Challenge not found');
     }
 
     if (pendingChallenge.type !== 'authentication') {
-      return new HttpResponse({
-        status: 400,
-        body: { error: { message: 'Challenge type mismatch' } },
-      });
+      return createErrorResponse(400, ErrorCode.CHALLENGE_EXPIRED, 'Challenge type mismatch');
     }
 
     if (pendingChallenge.expiresAt < Date.now()) {
-      return new HttpResponse({
-        status: 400,
-        body: { error: { message: 'Challenge expired' } },
-      });
+      return createErrorResponse(400, ErrorCode.CHALLENGE_EXPIRED, 'Challenge expired');
     }
 
     // For username-less flow, use userHandle to find the credential
     const userHandle = credential.response.userHandle;
     if (!userHandle) {
-      return new HttpResponse({
-        status: 401,
-        body: { error: { message: 'No userHandle in credential response' } },
-      });
+      return createErrorResponse(401, ErrorCode.AUTHENTICATION_FAILED, 'No userHandle in credential response');
     }
 
     const userId = WebauthnUserHandleDecoder.decodeToUuid(userHandle);
     const storedCredential = this.store.findCredentialByUserId(userId);
     if (!storedCredential) {
-      return new HttpResponse({
-        status: 401,
-        body: { error: { message: 'Invalid credential' } },
-      });
+      return createErrorResponse(401, ErrorCode.AUTHENTICATION_FAILED, 'Invalid credential');
     }
 
     // In a real backend, you'd verify the signature here
@@ -274,22 +238,20 @@ export class AuthHandlerMock {
 
     return new HttpResponse({
       status: 200,
-      body: { account },
+      body: {account},
     });
   }
 
   // GET /api/auth/session
   getSession(): HttpResponse<UserSessionResponse> {
     const account = this.store.getSession();
-    const body: UserSessionResponse = account
-      ? { authenticated: true, account }
-      : { authenticated: false };
-    return new HttpResponse({ status: 200, body });
+    const body: UserSessionResponse = account ? {authenticated: true, account} : {authenticated: false};
+    return new HttpResponse({status: 200, body});
   }
 
   // POST /api/auth/logout
   logout(): HttpResponse<void> {
     this.store.setSession(null);
-    return new HttpResponse({ status: 200 });
+    return new HttpResponse({status: 200});
   }
 }

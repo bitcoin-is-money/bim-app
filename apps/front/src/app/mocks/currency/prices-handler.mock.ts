@@ -1,5 +1,5 @@
 import {HttpResponse} from '@angular/common/http';
-import {ConversionRates} from "../model";
+import {ConversionRates} from "../../model";
 
 export class PricesHandlerMock {
   // GET /api/prices

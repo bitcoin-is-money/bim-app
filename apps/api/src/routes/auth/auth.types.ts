@@ -53,7 +53,7 @@ export type CompleteAuthenticationResponse = CompleteRegistrationResponse;
 /**
  * API response type from GET /api/auth/session (authenticated)
  */
-export interface SessionResponse {
+export interface SessionAuthenticatedResponse {
   authenticated: true;
   account: {
     id: string;
@@ -62,6 +62,15 @@ export interface SessionResponse {
     status: string;
   };
 }
+
+/**
+ * API response type from GET /api/auth/session (not authenticated)
+ */
+export interface SessionUnauthenticatedResponse {
+  authenticated: false;
+}
+
+export type SessionResponse = SessionAuthenticatedResponse | SessionUnauthenticatedResponse;
 
 /**
  * API response type from POST /api/auth/logout

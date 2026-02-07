@@ -1,13 +1,9 @@
-import {
-  InvalidPaymentAmountError,
-  type ReceiveResult,
-} from '@bim/domain/payment';
+import {type ReceiveResult} from '@bim/domain/payment';
 import {Amount} from '@bim/domain/shared';
-import {SwapAmountError, SwapCreationError} from '@bim/domain/swap';
 import {Hono} from 'hono';
 import type {TypedResponse} from 'hono';
-import {z} from 'zod';
 import type {AppContext} from '../../../app-context';
+import {ErrorCode, createErrorResponse, handleDomainError, type ApiErrorResponse} from '../../../errors';
 import type {AuthenticatedHono} from '../../../types';
 import {ReceiveSchema} from './receive.schemas';
 import type {ReceiveResponse} from './receive.types';
@@ -25,7 +21,7 @@ export function createReceiveRoutes(appContext: AppContext): AuthenticatedHono {
   // Create receive request
   // ---------------------------------------------------------------------------
 
-  app.post('/', async (honoCtx): Promise<TypedResponse<ReceiveResponse> | Response> => {
+  app.post('/', async (honoCtx): Promise<TypedResponse<ReceiveResponse | ApiErrorResponse>> => {
     try {
       const body = await honoCtx.req.json();
       const input = ReceiveSchema.parse(body);
@@ -33,7 +29,7 @@ export function createReceiveRoutes(appContext: AppContext): AuthenticatedHono {
       const account = honoCtx.get('account');
       const starknetAddress = account.getStarknetAddress();
       if (!starknetAddress) {
-        return honoCtx.json({error: 'Account not deployed'}, 400);
+        return createErrorResponse(honoCtx, 400, ErrorCode.ACCOUNT_NOT_DEPLOYED, 'Account not deployed');
       }
 
       const amount = input.amount ? Amount.ofSatoshi(BigInt(input.amount)) : undefined;
@@ -47,7 +43,7 @@ export function createReceiveRoutes(appContext: AppContext): AuthenticatedHono {
 
       return honoCtx.json<ReceiveResponse>(serializeReceiveResult(result));
     } catch (error) {
-      return handleError(honoCtx, error);
+      return handleDomainError(honoCtx, error);
     }
   });
 
@@ -84,33 +80,4 @@ function serializeReceiveResult(result: ReceiveResult): ReceiveResponse {
         expiresAt: result.expiresAt.toISOString(),
       };
   }
-}
-
-// =============================================================================
-// Error Handling
-// =============================================================================
-
-function handleError(honoCtx: {json: (data: unknown, status: number) => Response}, error: unknown): Response {
-  if (error instanceof z.ZodError) {
-    return honoCtx.json({error: 'Validation error', details: error.errors}, 400);
-  }
-
-  if (error instanceof InvalidPaymentAmountError) {
-    return honoCtx.json({error: error.message}, 400);
-  }
-
-  if (error instanceof SwapAmountError) {
-    return honoCtx.json({
-      error: 'Amount out of range',
-      min: error.min.toSatString(),
-      max: error.max.toSatString(),
-    }, 400);
-  }
-
-  if (error instanceof SwapCreationError) {
-    return honoCtx.json({error: error.message}, 400);
-  }
-
-  console.error('Receive error:', error);
-  return honoCtx.json({error: 'Internal server error'}, 500);
 }

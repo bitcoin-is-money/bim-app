@@ -1,6 +1,7 @@
 import {HttpResponse} from '@angular/common/http';
-import type {SwapStatus, SwapStatusResponse} from '../../model';
+import {type ApiErrorResponse, ErrorCode, type SwapStatus, type SwapStatusResponse} from '../../model';
 import {DataStoreMock} from '../data-store.mock';
+import {createErrorResponse} from '../mock-error';
 
 /** Predefined statuses for bob's existing swaps */
 const PREDEFINED_SWAP_STATUSES: Record<string, SwapStatus> = {
@@ -14,19 +15,24 @@ const PREDEFINED_SWAP_STATUSES: Record<string, SwapStatus> = {
 
 function getProgressForStatus(status: SwapStatus): number {
   switch (status) {
-    case 'pending': return 0;
-    case 'paid': return 33;
-    case 'confirming': return 66;
-    case 'completed': return 100;
+    case 'pending':
+      return 0;
+    case 'paid':
+      return 33;
+    case 'confirming':
+      return 66;
+    case 'completed':
+      return 100;
     case 'expired':
-    case 'failed': return 0;
+    case 'failed':
+      return 0;
   }
 }
 
 export class SwapHandlerMock {
   constructor(private readonly store: DataStoreMock) {}
 
-  getStatus(swapId: string): HttpResponse<SwapStatusResponse | {error: {message: string}}> {
+  getStatus(swapId: string): HttpResponse<SwapStatusResponse | ApiErrorResponse> {
     const profile = this.store.getMockUserProfile();
 
     // Check if it's a predefined swap (bob's existing swaps)
@@ -34,9 +40,7 @@ export class SwapHandlerMock {
       const status = PREDEFINED_SWAP_STATUSES[swapId]!;
       const body: SwapStatusResponse = {
         swapId,
-        direction: swapId.includes('lightning')
-          ? 'lightning_to_starknet'
-          : 'starknet_to_bitcoin',
+        direction: swapId.includes('lightning') ? 'lightning_to_starknet' : 'starknet_to_bitcoin',
         status,
         progress: getProgressForStatus(status),
         amountSats: '50000',
@@ -52,10 +56,7 @@ export class SwapHandlerMock {
     // Check if it's a swap created during this session
     const swap = this.store.getSwap(swapId);
     if (!swap) {
-      return new HttpResponse({
-        status: 404,
-        body: {error: {message: 'Swap not found'}},
-      });
+      return createErrorResponse(404, ErrorCode.SWAP_NOT_FOUND, 'Swap not found');
     }
 
     // Get current poll count and determine status from progression

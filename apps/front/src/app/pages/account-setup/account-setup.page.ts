@@ -39,7 +39,7 @@ export class AccountSetupPage implements OnInit {
         this.startPolling();
       },
       error: (err) => {
-        // Check if account is already deploying or deployed (not an error)
+        // Check if the account is already deploying or deployed (not an error)
         if (err.status === 400) {
           // Account may already be deploying, start polling anyway
           this.startPolling();

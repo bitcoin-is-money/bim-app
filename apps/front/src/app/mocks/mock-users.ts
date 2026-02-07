@@ -1,4 +1,4 @@
-import type {SwapStatus, StoredSwap} from '../model';
+import type {StoredSwap, SwapStatus} from '../model';
 import {ParsePaymentResponse} from '../services/pay.http.service';
 
 export interface MockSwapConfig {

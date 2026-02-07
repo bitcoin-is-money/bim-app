@@ -4,7 +4,7 @@
   @apply h-screen flex flex-col bg-neutral-900 overflow-hidden;
 
   .swaps-main {
-    @apply flex-1 p-4;
+    @apply flex-1 p-4 overflow-y-auto;
 
     .empty-state {
       @apply text-center py-12;

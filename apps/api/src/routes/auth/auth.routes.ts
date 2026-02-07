@@ -1,18 +1,9 @@
-import {AccountAlreadyExistsError, AccountNotFoundError, InvalidUsernameError} from "@bim/domain/account";
-import {
-  AuthenticationFailedError,
-  ChallengeExpiredError,
-  ChallengeNotFoundError,
-  InvalidSessionIdError,
-  RegistrationFailedError,
-  SessionExpiredError,
-  SessionNotFoundError
-} from "@bim/domain/auth";
+import {InvalidSessionIdError, SessionExpiredError, SessionNotFoundError} from '@bim/domain/auth';
 import {Hono} from 'hono';
 import type {TypedResponse} from 'hono';
-import {z} from 'zod';
-import type {AppContext} from "../../app-context";
-import {BeginRegistrationSchema, CompleteAuthenticationSchema, CompleteRegistrationSchema} from "./auth.schemas";
+import type {AppContext} from '../../app-context';
+import {handleDomainError, type ApiErrorResponse} from '../../errors';
+import {BeginRegistrationSchema, CompleteAuthenticationSchema, CompleteRegistrationSchema} from './auth.schemas';
 import type {
   BeginAuthenticationResponse,
   BeginRegistrationResponse,
@@ -36,7 +27,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
   // Registration
   // ---------------------------------------------------------------------------
 
-  app.post('/register/begin', async (honoCtx): Promise<TypedResponse<BeginRegistrationResponse> | Response> => {
+  app.post('/register/begin', async (honoCtx): Promise<TypedResponse<BeginRegistrationResponse | ApiErrorResponse>> => {
     try {
       const body = await honoCtx.req.json();
       const input = BeginRegistrationSchema.parse(body);
@@ -51,11 +42,11 @@ export function createAuthRoutes(appContext: AppContext): Hono {
         accountId: result.accountId,
       });
     } catch (error) {
-      return handleError(honoCtx, error);
+      return handleDomainError(honoCtx, error);
     }
   });
 
-  app.post('/register/complete', async (honoCtx): Promise<TypedResponse<CompleteRegistrationResponse> | Response> => {
+  app.post('/register/complete', async (honoCtx): Promise<TypedResponse<CompleteRegistrationResponse | ApiErrorResponse>> => {
     try {
       const body = await honoCtx.req.json();
       const input = CompleteRegistrationSchema.parse(body);
@@ -79,7 +70,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
         },
       });
     } catch (error) {
-      return handleError(honoCtx, error);
+      return handleDomainError(honoCtx, error);
     }
   });
 
@@ -87,7 +78,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
   // Authentication
   // ---------------------------------------------------------------------------
 
-  app.post('/login/begin', async (honoCtx): Promise<TypedResponse<BeginAuthenticationResponse> | Response> => {
+  app.post('/login/begin', async (honoCtx): Promise<TypedResponse<BeginAuthenticationResponse | ApiErrorResponse>> => {
     try {
       const result = await authService.beginAuthentication();
 
@@ -96,11 +87,11 @@ export function createAuthRoutes(appContext: AppContext): Hono {
         challengeId: result.challengeId,
       });
     } catch (error) {
-      return handleError(honoCtx, error);
+      return handleDomainError(honoCtx, error);
     }
   });
 
-  app.post('/login/complete', async (honoCtx): Promise<TypedResponse<CompleteAuthenticationResponse> | Response> => {
+  app.post('/login/complete', async (honoCtx): Promise<TypedResponse<CompleteAuthenticationResponse | ApiErrorResponse>> => {
     try {
       const body = await honoCtx.req.json();
       const input = CompleteAuthenticationSchema.parse(body);
@@ -122,7 +113,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
         },
       });
     } catch (error) {
-      return handleError(honoCtx, error);
+      return handleDomainError(honoCtx, error);
     }
   });
 
@@ -130,7 +121,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
   // Session
   // ---------------------------------------------------------------------------
 
-  app.get('/session', async (honoCtx): Promise<TypedResponse<SessionResponse> | Response> => {
+  app.get('/session', async (honoCtx): Promise<TypedResponse<SessionResponse | ApiErrorResponse>> => {
     try {
       const sessionId = getSessionId(honoCtx);
       if (!sessionId) {
@@ -157,7 +148,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
         clearCookie(honoCtx);
         return honoCtx.json({authenticated: false}, 401);
       }
-      return handleError(honoCtx, error);
+      return handleDomainError(honoCtx, error);
     }
   });
 
@@ -184,7 +175,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
 // Helpers
 // =============================================================================
 
-function getSessionId(honoCtx: { req: { header: (name: string) => string | undefined } }): string | undefined {
+function getSessionId(honoCtx: {req: {header: (name: string) => string | undefined}}): string | undefined {
   const cookie = honoCtx.req.header('Cookie');
   if (!cookie) return undefined;
 
@@ -192,7 +183,7 @@ function getSessionId(honoCtx: { req: { header: (name: string) => string | undef
   return match?.[1];
 }
 
-function setCookie(honoCtx: { header: (name: string, value: string) => void }, sessionId: string): void {
+function setCookie(honoCtx: {header: (name: string, value: string) => void}, sessionId: string): void {
   const isProduction = process.env.NODE_ENV === 'production';
   const maxAge = 7 * 24 * 60 * 60; // 7 days
 
@@ -210,50 +201,6 @@ function setCookie(honoCtx: { header: (name: string, value: string) => void }, s
   honoCtx.header('Set-Cookie', cookie);
 }
 
-function clearCookie(honoCtx: { header: (name: string, value: string) => void }): void {
+function clearCookie(honoCtx: {header: (name: string, value: string) => void}): void {
   honoCtx.header('Set-Cookie', 'session=; Path=/; Max-Age=0; HttpOnly; SameSite=Strict');
-}
-
-function handleError(honoCtx: { json: (data: unknown, status: number) => Response }, error: unknown): Response {
-  // Log error safely - some error objects (like ZodError) can cause console.error to throw
-  try {
-    console.error('Auth error:', error);
-  } catch {
-    console.error('Auth error:', error instanceof Error ? error.message : String(error));
-  }
-
-  if (error instanceof z.ZodError) {
-    return honoCtx.json(
-      { error: { message: 'Validation error', details: error.errors } },
-      400,
-    );
-  }
-
-  if (error instanceof AccountAlreadyExistsError) {
-    return honoCtx.json({ error: { message: 'Username already taken' } }, 409);
-  }
-
-  if (error instanceof InvalidUsernameError) {
-    return honoCtx.json({ error: { message: error.message } }, 400);
-  }
-
-  if (error instanceof AccountNotFoundError) {
-    return honoCtx.json({ error: { message: 'Account not found' } }, 404);
-  }
-
-  if (
-    error instanceof ChallengeNotFoundError ||
-    error instanceof ChallengeExpiredError
-  ) {
-    return honoCtx.json({ error: { message: 'Challenge expired or invalid' } }, 400);
-  }
-
-  if (
-    error instanceof AuthenticationFailedError ||
-    error instanceof RegistrationFailedError
-  ) {
-    return honoCtx.json({ error: { message: 'Authentication failed' } }, 401);
-  }
-
-  return honoCtx.json({ error: { message: 'Internal server error' } }, 500);
 }

@@ -8,14 +8,14 @@ import {
 } from '@angular/common/http';
 import {Observable, of, throwError} from 'rxjs';
 import {delay, mergeMap} from 'rxjs/operators';
-import {AuthHandlerMock} from './auth/auth-handler.mock';
 import {AccountHandlerMock} from './account/account-handler.mock';
+import {AuthHandlerMock} from './auth/auth-handler.mock';
 import {DataStoreMock} from "./data-store.mock";
-import {PricesHandlerMock} from './prices-handler.mock';
-import {TransactionHandlerMock} from './transaction-handler.mock';
 import {PaymentHandlerMock} from './payment/payment-handler.mock';
+import {PricesHandlerMock} from './currency/prices-handler.mock';
 import {ReceiveHandlerMock} from './receive/receive-handler.mock';
 import {SwapHandlerMock} from './swap/swap-handler.mock';
+import {TransactionHandlerMock} from './user/transaction-handler.mock';
 
 const store = new DataStoreMock();
 const mockAuthHandler = new AuthHandlerMock(store);
