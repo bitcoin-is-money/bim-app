@@ -1,15 +1,8 @@
-import {
-  InvalidSwapStateError,
-  SwapAmountError,
-  SwapClaimError,
-  SwapCreationError,
-  SwapNotFoundError,
-} from '@bim/domain/swap';
 import {Hono} from 'hono';
 import type {TypedResponse} from 'hono';
-import {z} from 'zod';
-import type {AppContext} from "../../app-context";
-import {createAuthMiddleware} from "../../middleware/auth.middleware";
+import type {AppContext} from '../../app-context';
+import {handleDomainError, type ApiErrorResponse} from '../../errors';
+import {createAuthMiddleware} from '../../middleware/auth.middleware';
 import type {AuthenticatedHono} from '../../types.js';
 import {SwapDirectionSchema} from './swap.schemas';
 import type {SwapClaimResponse, SwapLimitsResponse, SwapStatusResponse} from './swap.types';
@@ -30,11 +23,11 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
   // Get Swap Limits
   // ---------------------------------------------------------------------------
 
-  app.get('/limits/:direction', async (honoCtx): Promise<TypedResponse<SwapLimitsResponse> | Response> => {
+  app.get('/limits/:direction', async (honoCtx): Promise<TypedResponse<SwapLimitsResponse | ApiErrorResponse>> => {
     try {
       const direction = SwapDirectionSchema.parse(honoCtx.req.param('direction'));
 
-      const result = await swapService.fetchLimits({ direction });
+      const result = await swapService.fetchLimits({direction});
 
       return honoCtx.json<SwapLimitsResponse>({
         minSats: result.limits.minSats.toString(),
@@ -42,7 +35,7 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
         feePercent: result.limits.feePercent,
       });
     } catch (error) {
-      return handleError(honoCtx, error);
+      return handleDomainError(honoCtx, error);
     }
   });
 
@@ -50,11 +43,11 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
   // Get Swap Status
   // ---------------------------------------------------------------------------
 
-  app.get('/status/:swapId', async (honoCtx): Promise<TypedResponse<SwapStatusResponse> | Response> => {
+  app.get('/status/:swapId', async (honoCtx): Promise<TypedResponse<SwapStatusResponse | ApiErrorResponse>> => {
     try {
       const swapId = honoCtx.req.param('swapId');
 
-      const result = await swapService.fetchStatus({ swapId });
+      const result = await swapService.fetchStatus({swapId});
 
       return honoCtx.json<SwapStatusResponse>({
         swapId: result.swap.id,
@@ -67,7 +60,7 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
         expiresAt: result.swap.expiresAt.toISOString(),
       });
     } catch (error) {
-      return handleError(honoCtx, error);
+      return handleDomainError(honoCtx, error);
     }
   });
 
@@ -75,11 +68,11 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
   // Claim Swap (used by SwapMonitor and tests — not called by frontend)
   // ---------------------------------------------------------------------------
 
-  app.post('/claim/:swapId', async (honoCtx): Promise<TypedResponse<SwapClaimResponse> | Response> => {
+  app.post('/claim/:swapId', async (honoCtx): Promise<TypedResponse<SwapClaimResponse | ApiErrorResponse>> => {
     try {
       const swapId = honoCtx.req.param('swapId');
 
-      const result = await swapService.claim({ swapId });
+      const result = await swapService.claim({swapId});
 
       return honoCtx.json<SwapClaimResponse>({
         swapId: result.swap.id,
@@ -87,53 +80,9 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
         status: result.swap.getStatus(),
       });
     } catch (error) {
-      return handleError(honoCtx, error);
+      return handleDomainError(honoCtx, error);
     }
   });
 
   return app;
-}
-
-// =============================================================================
-// Helpers
-// =============================================================================
-
-function handleError(honoCtx: { json: (data: unknown, status: number) => Response }, error: unknown): Response {
-  console.error('Swap error:', error);
-
-  if (error instanceof z.ZodError) {
-    return honoCtx.json(
-      { error: 'Validation error', details: error.errors },
-      400,
-    );
-  }
-
-  if (error instanceof SwapNotFoundError) {
-    return honoCtx.json({ error: 'Swap not found' }, 404);
-  }
-
-  if (error instanceof SwapAmountError) {
-    return honoCtx.json(
-      {
-        error: 'Amount out of range',
-        min: error.min.toSatString(),
-        max: error.max.toSatString(),
-      },
-      400,
-    );
-  }
-
-  if (error instanceof SwapCreationError) {
-    return honoCtx.json({ error: error.message }, 400);
-  }
-
-  if (error instanceof SwapClaimError) {
-    return honoCtx.json({ error: error.message }, 400);
-  }
-
-  if (error instanceof InvalidSwapStateError) {
-    return honoCtx.json({ error: error.message }, 400);
-  }
-
-  return honoCtx.json({ error: 'Internal server error' }, 500);
 }

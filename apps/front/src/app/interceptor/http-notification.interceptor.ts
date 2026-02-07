@@ -1,7 +1,8 @@
 import {HttpErrorResponse, HttpHandlerFn, HttpInterceptorFn, HttpRequest} from '@angular/common/http';
 import {inject} from '@angular/core';
 import {catchError, throwError} from 'rxjs';
-import {NotificationService} from "../services/notification.service";
+import {getErrorMessage, isApiErrorResponse} from '../model';
+import {NotificationService} from '../services/notification.service';
 
 export const httpNotificationInterceptor: HttpInterceptorFn = (
   req: HttpRequest<unknown>,
@@ -10,15 +11,30 @@ export const httpNotificationInterceptor: HttpInterceptorFn = (
   const notifications = inject(NotificationService);
 
   return next(req).pipe(
-    catchError((error: HttpErrorResponse) => {
-      const message = error.error?.error?.message || error.message || 'An error occurred';
-      if (error.status >= 400 && error.status < 500) {
-        notifications.error({ message });
-      } else if (error.status >= 500) {
-        notifications.error({ message: 'Server error, please try later.' });
+    catchError((response: HttpErrorResponse) => {
+      // Extract message from the new API error format
+      let message: string;
+
+      if (isApiErrorResponse(response.error)) {
+        // New format: { error: { code, message, args? } }
+        message = getErrorMessage(response.error);
+      } else if (response.error?.error?.message) {
+        // Legacy format: { error: { message } }
+        message = response.error.error.message;
+      } else if (response.error?.message) {
+        // Simple format: { message }
+        message = response.error.message;
+      } else {
+        message = response.message || 'An error occurred';
       }
-      return throwError(() => error);
+
+      if (response.status >= 400 && response.status < 500) {
+        notifications.error({message});
+      } else if (response.status >= 500) {
+        notifications.error({message: 'Server error, please try later.'});
+      }
+
+      return throwError(() => response);
     })
   );
 };
-

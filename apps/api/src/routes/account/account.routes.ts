@@ -1,7 +1,8 @@
-import {Account, AccountId, AccountNotFoundError, InvalidAccountStateError,} from '@bim/domain/account';
+import {Account, AccountId} from '@bim/domain/account';
 import type {TypedResponse} from 'hono';
 import {Hono} from 'hono';
-import type {AppContext} from "../../app-context";
+import type {AppContext} from '../../app-context';
+import {ErrorCode, createErrorResponse, handleDomainError, type ApiErrorResponse} from '../../errors';
 import {createAuthMiddleware} from '../../middleware/auth.middleware';
 import type {AuthenticatedHono} from '../../types.js';
 import type {
@@ -45,7 +46,7 @@ export function createAccountRoutes(appCtx: AppContext): AuthenticatedHono {
   // Deploy Account
   // ---------------------------------------------------------------------------
 
-  app.post('/deploy', async (honoCtx): Promise<TypedResponse<DeployAccountResponse> | Response> => {
+  app.post('/deploy', async (honoCtx): Promise<TypedResponse<DeployAccountResponse | ApiErrorResponse>> => {
     try {
       const account: Account = honoCtx.get('account');
       const body: DeployAccountRequest = await honoCtx.req.json().catch(() => ({}));
@@ -62,7 +63,7 @@ export function createAccountRoutes(appCtx: AppContext): AuthenticatedHono {
         starknetAddress: result.account.getStarknetAddress()!,
       });
     } catch (error) {
-      return handleError(honoCtx, error);
+      return handleDomainError(honoCtx, error);
     }
   });
 
@@ -70,7 +71,7 @@ export function createAccountRoutes(appCtx: AppContext): AuthenticatedHono {
   // Get Deployment Status
   // ---------------------------------------------------------------------------
 
-  app.get('/deployment-status', async (honoCtx): Promise<TypedResponse<GetDeploymentStatusResponse> | Response> => {
+  app.get('/deployment-status', async (honoCtx): Promise<TypedResponse<GetDeploymentStatusResponse | ApiErrorResponse>> => {
     const account: Account = honoCtx.get('account');
 
     // Reload account to get the latest status
@@ -79,7 +80,7 @@ export function createAccountRoutes(appCtx: AppContext): AuthenticatedHono {
     );
 
     if (!freshAccount) {
-      return honoCtx.json({ error: 'Account not found' }, 404);
+      return createErrorResponse(honoCtx, 404, ErrorCode.ACCOUNT_NOT_FOUND, 'Account not found');
     }
 
     return honoCtx.json<GetDeploymentStatusResponse>({
@@ -89,38 +90,17 @@ export function createAccountRoutes(appCtx: AppContext): AuthenticatedHono {
     });
   });
 
-  app.get('/balance', async (honoCtx): Promise<TypedResponse<GetBalanceResponse> | Response> => {
+  app.get('/balance', async (honoCtx): Promise<TypedResponse<GetBalanceResponse | ApiErrorResponse>> => {
     try {
       const account: Account = honoCtx.get('account');
 
-      const result = await accountService.getBalance({ accountId: account.id });
+      const result = await accountService.getBalance({accountId: account.id});
 
       return honoCtx.json<GetBalanceResponse>(result);
     } catch (error) {
-      return handleError(honoCtx, error);
+      return handleDomainError(honoCtx, error);
     }
   });
 
   return app;
-}
-
-// =============================================================================
-// Helpers
-// =============================================================================
-
-function handleError(
-  honoCtx: { json: (data: unknown, status: number) => Response },
-  error: unknown
-): Response {
-  console.error('Account error:', error);
-
-  if (error instanceof AccountNotFoundError) {
-    return honoCtx.json({ error: 'Account not found' }, 404);
-  }
-
-  if (error instanceof InvalidAccountStateError) {
-    return honoCtx.json({ error: error.message }, 400);
-  }
-
-  return honoCtx.json({ error: 'Internal server error' }, 500);
 }

@@ -1,6 +1,7 @@
 import type {Hono} from 'hono';
 import pg from "pg";
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
+import type {ApiErrorBody, ApiErrorResponse} from "../../../src/errors";
 import {type DbClient, StrkDevnetContext, TestApp, TestDatabase} from '../helpers';
 import {AccountFixture} from "../helpers/account";
 import {AuthFixture} from "../helpers/auth";
@@ -190,8 +191,8 @@ describe('Starknet Integration', () => {
       );
 
       expect(response.status).toBe(400);
-      const body = await response.json() as {error: string};
-      expect(body.error).toContain('pending');
+      const body = await response.json() as ApiErrorResponse;
+      expect(body.error.message).toContain('pending');
     });
 
     it('requires authentication to deploy', async () => {

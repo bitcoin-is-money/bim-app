@@ -1,7 +1,8 @@
 import {HttpResponse} from '@angular/common/http';
-import type {SwapDirection} from '../../model';
+import {type ApiErrorResponse, ErrorCode, type SwapDirection} from '../../model';
 import type {ReceiveResponse} from '../../services/receive.http.service';
 import {DataStoreMock} from '../data-store.mock';
+import {createErrorResponse} from '../mock-error';
 
 interface ReceiveRequestBody {
   network: 'lightning' | 'bitcoin' | 'starknet';
@@ -10,24 +11,23 @@ interface ReceiveRequestBody {
 }
 
 export class ReceiveHandlerMock {
+  constructor(private readonly store: DataStoreMock) {}
 
-  constructor(
-    private readonly store: DataStoreMock
-  ) {}
-
-  createInvoice(body: ReceiveRequestBody): HttpResponse<ReceiveResponse | {error: {message: string}}> {
+  createInvoice(body: ReceiveRequestBody): HttpResponse<ReceiveResponse | ApiErrorResponse> {
     const profile = this.store.getMockUserProfile();
 
     if (!profile.receiveInvoiceSuccess) {
-      return new HttpResponse({
-        status: 500,
-        body: {error: {message: 'Invoice creation failed: service unavailable'}},
-      });
+      return createErrorResponse(
+        500,
+        ErrorCode.SWAP_CREATION_FAILED,
+        'Invoice creation failed: service unavailable'
+      );
     }
 
     const amount = Number(body.amount);
     const session = this.store.getSession();
-    const destinationAddress = session?.starknetAddress ?? '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d';
+    const destinationAddress =
+      session?.starknetAddress ?? '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d';
 
     let response: ReceiveResponse;
     switch (body.network) {

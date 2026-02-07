@@ -1,15 +1,8 @@
-import {
-  InvalidPaymentAmountError,
-  PaymentParsingError,
-  type PaymentResult,
-  type PreparedPayment,
-  SameAddressPaymentError,
-  UnsupportedNetworkError,
-} from '@bim/domain/payment';
+import {type PaymentResult, type PreparedPayment} from '@bim/domain/payment';
 import {Hono} from 'hono';
 import type {TypedResponse} from 'hono';
-import {z} from 'zod';
 import type {AppContext} from '../../../app-context';
+import {ErrorCode, createErrorResponse, handleDomainError, type ApiErrorResponse} from '../../../errors';
 import type {AuthenticatedHono} from '../../../types';
 import {ExecutePaymentSchema, ParsePaymentSchema} from './pay.schemas';
 import type {AmountResponse, PaymentResultResponse, PreparedPaymentResponse} from './pay.types';
@@ -27,7 +20,7 @@ export function createPayRoutes(appContext: AppContext): AuthenticatedHono {
   // Parse + prepare payment (returns parsed data + fee)
   // ---------------------------------------------------------------------------
 
-  app.post('/parse', async (honoCtx): Promise<TypedResponse<PreparedPaymentResponse> | Response> => {
+  app.post('/parse', async (honoCtx): Promise<TypedResponse<PreparedPaymentResponse | ApiErrorResponse>> => {
     try {
       const body = await honoCtx.req.json();
       const {data} = ParsePaymentSchema.parse(body);
@@ -36,7 +29,7 @@ export function createPayRoutes(appContext: AppContext): AuthenticatedHono {
 
       return honoCtx.json<PreparedPaymentResponse>(serializePreparedPayment(prepared));
     } catch (error) {
-      return handleError(honoCtx, error);
+      return handleDomainError(honoCtx, error);
     }
   });
 
@@ -44,7 +37,7 @@ export function createPayRoutes(appContext: AppContext): AuthenticatedHono {
   // Execute payment
   // ---------------------------------------------------------------------------
 
-  app.post('/execute', async (honoCtx): Promise<TypedResponse<PaymentResultResponse> | Response> => {
+  app.post('/execute', async (honoCtx): Promise<TypedResponse<PaymentResultResponse | ApiErrorResponse>> => {
     try {
       const body = await honoCtx.req.json();
       const {data} = ExecutePaymentSchema.parse(body);
@@ -52,14 +45,14 @@ export function createPayRoutes(appContext: AppContext): AuthenticatedHono {
       const account = honoCtx.get('account');
       const senderAddress = account.getStarknetAddress();
       if (!senderAddress) {
-        return honoCtx.json({error: 'Account not deployed'}, 400);
+        return createErrorResponse(honoCtx, 400, ErrorCode.ACCOUNT_NOT_DEPLOYED, 'Account not deployed');
       }
 
       const result = await payService.execute({data, senderAddress});
 
       return honoCtx.json<PaymentResultResponse>(serializePaymentResult(result));
     } catch (error) {
-      return handleError(honoCtx, error);
+      return handleDomainError(honoCtx, error);
     }
   });
 
@@ -133,33 +126,4 @@ function serializePaymentResult(result: PaymentResult): PaymentResultResponse {
         expiresAt: result.expiresAt.toISOString(),
       };
   }
-}
-
-// =============================================================================
-// Error Handling
-// =============================================================================
-
-function handleError(honoCtx: {json: (data: unknown, status: number) => Response}, error: unknown): Response {
-  if (error instanceof z.ZodError) {
-    return honoCtx.json({error: 'Validation error', details: error.errors}, 400);
-  }
-
-  if (error instanceof UnsupportedNetworkError) {
-    return honoCtx.json({error: error.message}, 400);
-  }
-
-  if (error instanceof PaymentParsingError) {
-    return honoCtx.json({error: error.message}, 400);
-  }
-
-  if (error instanceof InvalidPaymentAmountError) {
-    return honoCtx.json({error: error.message}, 400);
-  }
-
-  if (error instanceof SameAddressPaymentError) {
-    return honoCtx.json({error: error.message}, 400);
-  }
-
-  console.error('Payment error:', error);
-  return honoCtx.json({error: 'Internal server error'}, 500);
 }

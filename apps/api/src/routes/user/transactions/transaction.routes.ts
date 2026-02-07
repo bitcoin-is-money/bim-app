@@ -1,7 +1,8 @@
 import {Account} from '@bim/domain/account';
 import {Hono} from 'hono';
 import type {TypedResponse} from 'hono';
-import type {AppContext} from "../../../app-context";
+import type {AppContext} from '../../../app-context';
+import {handleDomainError, type ApiErrorResponse} from '../../../errors';
 import type {AuthenticatedHono} from '../../../types.js';
 import type {GetTransactionsResponse} from './transaction.types';
 
@@ -19,7 +20,7 @@ export function createTransactionRoutes(appContext: AppContext): AuthenticatedHo
   // Get Transactions
   // ---------------------------------------------------------------------------
 
-  app.get('/', async (honoCtx): Promise<TypedResponse<GetTransactionsResponse> | Response> => {
+  app.get('/', async (honoCtx): Promise<TypedResponse<GetTransactionsResponse | ApiErrorResponse>> => {
     try {
       const account: Account = honoCtx.get('account');
 
@@ -53,8 +54,7 @@ export function createTransactionRoutes(appContext: AppContext): AuthenticatedHo
         offset,
       });
     } catch (error) {
-      console.error('Transaction error:', error);
-      return honoCtx.json({error: 'Internal server error'}, 500);
+      return handleDomainError(honoCtx, error);
     }
   });
 
