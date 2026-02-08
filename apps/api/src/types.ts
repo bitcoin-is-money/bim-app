@@ -62,7 +62,7 @@ export function loadConfig(): AppConfig {
     starknetRpcUrl: required('STARKNET_RPC_URL'),
     accountClassHash: required('ACCOUNT_CLASS_HASH'),
     wbtcTokenAddress: optional('WBTC_TOKEN_ADDRESS', DEFAULT_WBTC_ADDRESS),
-    avnuApiUrl: optional('AVNU_API_URL', 'https://starknet.api.avnu.fi'),
+    avnuApiUrl: optional('AVNU_API_URL', 'https://starknet.paymaster.avnu.fi'),
     avnuApiKey: optional('AVNU_API_KEY', ''),
     feeTreasuryAddress: required('FEE_TREASURY_ADDRESS'),
     webauthnRpId: optional('WEBAUTHN_RP_ID', 'localhost'),

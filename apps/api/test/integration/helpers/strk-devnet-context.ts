@@ -51,6 +51,8 @@ export class StrkDevnetContext {
         tokenAddresses: {
           WBTC: WBTC_TOKEN_ADDRESS,
         },
+        webauthnOrigin: 'http://localhost:8080',
+        webauthnRpId: 'localhost',
       },
       this.paymasterGateway,
     );

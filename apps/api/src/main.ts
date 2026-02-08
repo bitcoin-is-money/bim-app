@@ -1,8 +1,6 @@
-import {expand} from 'dotenv-expand';
-import {config} from 'dotenv';
+import {loadEnv} from './load-env';
 
-// Load environment variables from .env file (supports DOTENV_CONFIG_PATH)
-expand(config());
+loadEnv();
 
 import {serve} from '@hono/node-server';
 import {createApp} from './app';

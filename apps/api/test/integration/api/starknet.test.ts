@@ -70,7 +70,11 @@ describe('Starknet Integration', () => {
 
       expect(deployTx.type).toBe('DEPLOY_ACCOUNT');
       expect(deployTx.classHash).toBe(strkContext.getAccountClassHash());
-      expect(deployTx.constructorCallData).toContain(publicKey);
+      // Calldata is Argent Signer::Webauthn struct: [0x4, origin_len, ...bytes, rpIdHash_low, rpIdHash_high, pubkey_low, pubkey_high, 0x1]
+      expect(deployTx.constructorCallData[0]).toBe('0x4'); // Webauthn variant
+      expect(deployTx.constructorCallData[deployTx.constructorCallData.length - 1]).toBe('0x1'); // Option::None guardian
+      expect(deployTx.constructorCallData.length).toBeGreaterThan(7); // At minimum: variant + len + rpId(2) + pubkey(2) + guardian
+      expect(deployTx.salt).toBe('0xc'); // Constant salt = 12n
     });
   });
 

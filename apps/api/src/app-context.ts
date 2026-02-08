@@ -126,6 +126,8 @@ export namespace AppContext {
           rpcUrl: config.starknetRpcUrl,
           accountClassHash: config.accountClassHash,
           tokenAddresses: {WBTC: config.wbtcTokenAddress},
+          webauthnOrigin: config.webauthnOrigin,
+          webauthnRpId: config.webauthnRpId,
         },
         paymasterGateway,
       ),
