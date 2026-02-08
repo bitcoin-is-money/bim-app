@@ -1,6 +1,8 @@
 import {Component, computed, inject, OnInit, signal} from '@angular/core';
+import {TranslateModule} from '@ngx-translate/core';
 import {ButtonComponent} from "../../components/button/button.component";
 import {GoBackHeaderComponent} from '../../components/go-back-header/go-back-header.component';
+import {FullPageLayoutComponent} from "../../layout";
 import {SwapPollingService} from '../../services/swap-polling.service';
 import {SwapStorageService} from '../../services/swap-storage.service';
 import {SwapItemComponent} from './components/swap-item/swap-item.component';
@@ -8,7 +10,7 @@ import {SwapItemComponent} from './components/swap-item/swap-item.component';
 @Component({
   selector: 'app-swaps',
   standalone: true,
-  imports: [GoBackHeaderComponent, SwapItemComponent, ButtonComponent],
+  imports: [TranslateModule, GoBackHeaderComponent, SwapItemComponent, ButtonComponent, FullPageLayoutComponent],
   templateUrl: './swaps.page.html',
   styleUrl: './swaps.page.scss',
 })

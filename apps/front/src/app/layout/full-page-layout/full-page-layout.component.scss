@@ -1,7 +1,7 @@
 @reference "tailwindcss";
 
 .full-page-layout {
-  @apply h-full w-full flex flex-col overflow-hidden;
+  @apply h-full w-full flex flex-col overflow-hidden bg-neutral-900;
 
   &__content {
     @apply flex-1 overflow-hidden;

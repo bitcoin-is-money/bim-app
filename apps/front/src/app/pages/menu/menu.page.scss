@@ -1,7 +1,7 @@
 @reference "tailwindcss";
 
 .menu-page {
-  @apply h-full flex flex-col bg-neutral-900;
+  @apply h-full flex flex-col;
 
   .menu-main {
     @apply flex-1 p-4;

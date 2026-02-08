@@ -57,6 +57,7 @@ export const userSettings = pgTable('user_settings', {
     .notNull()
     .unique(),
   fiatCurrency: text('fiat_currency').notNull().default('USD'),
+  language: text('language').notNull().default('en'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

@@ -1,5 +1,5 @@
 import {Account} from '@bim/domain/account';
-import {FiatCurrency} from '@bim/domain/user';
+import {FiatCurrency, Language} from '@bim/domain/user';
 import {Hono} from 'hono';
 import type {TypedResponse} from 'hono';
 import type {AppContext} from '../../../app-context';
@@ -28,6 +28,8 @@ export function createSettingsRoutes(appContext: AppContext): AuthenticatedHono 
       const result = await userSettingsService.fetch({accountId: account.id});
 
       return honoCtx.json<GetSettingsResponse>({
+        language: result.settings.getLanguage(),
+        supportedLanguages: Language.getSupportedLanguages(),
         fiatCurrency: result.settings.getFiatCurrency(),
         supportedCurrencies: FiatCurrency.getSupportedCurrencies(),
       });
@@ -47,10 +49,13 @@ export function createSettingsRoutes(appContext: AppContext): AuthenticatedHono 
 
       const result = await userSettingsService.update({
         accountId: account.id,
+        language: body.language,
         fiatCurrency: body.fiatCurrency,
       });
 
       return honoCtx.json<UpdateSettingsResponse>({
+        language: result.settings.getLanguage(),
+        supportedLanguages: Language.getSupportedLanguages(),
         fiatCurrency: result.settings.getFiatCurrency(),
         supportedCurrencies: FiatCurrency.getSupportedCurrencies(),
       });

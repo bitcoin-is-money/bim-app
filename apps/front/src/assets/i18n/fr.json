@@ -1,0 +1,170 @@
+{
+  "auth": {
+    "tagline": "Payez et recevez en Bitcoin. C'est tout.",
+    "signIn": "Se connecter",
+    "signUp": "S'inscrire",
+    "orCreateAccount": "ou créer un compte",
+    "chooseUsername": "Choisissez votre nom d'utilisateur",
+    "useDeviceSecurity": "Utilisez la sécurité de votre appareil pour accéder à votre portefeuille"
+  },
+  "home": {
+    "greeting": "Bonjour {{username}}",
+    "receive": "Recevoir",
+    "pay": "Payer"
+  },
+  "receive": {
+    "title": "Recevoir",
+    "createInvoice": "Créer une facture",
+    "share": "Partager",
+    "optionalDescription": "Description optionnelle",
+    "amount": "Montant",
+    "enterAmount": "Entrez un montant",
+    "createInvoiceForQr": "Créez une facture pour générer le QR code",
+    "noStarknetAddress": "Aucune adresse Starknet disponible",
+    "sharingFailed": "Échec du partage",
+    "copiedToClipboard": "Copié dans le presse-papiers",
+    "couldNotCopy": "Impossible de copier dans le presse-papiers",
+    "goToNetwork": "Aller à {{network}}",
+    "network": {
+      "lightning": "Lightning",
+      "bitcoin": "Bitcoin",
+      "starknet": "Starknet"
+    }
+  },
+  "pay": {
+    "title": "Payer",
+    "chooseMethod": "Choisissez votre méthode de paiement",
+    "scanQr": "Scanner un QR Code",
+    "pasteClipboard": "Coller depuis le presse-papiers",
+    "close": "Fermer",
+    "clipboardEmpty": "Le presse-papiers est vide",
+    "clipboardAccessDenied": "Impossible de lire le presse-papiers. Veuillez autoriser l'accès.",
+    "cameraNotSupported": "La caméra n'est pas supportée par ce navigateur",
+    "cameraAccessDenied": "L'accès à la caméra a été refusé. Veuillez l'autoriser dans les paramètres du navigateur.",
+    "noCameraFound": "Aucune caméra trouvée sur cet appareil.",
+    "scannerFailed": "Échec du démarrage du scanner"
+  },
+  "payConfirm": {
+    "title": "Confirmer le paiement",
+    "to": "Vers",
+    "fee": "Frais",
+    "pay": "Payer",
+    "processing": "Traitement en cours...",
+    "noPaymentData": "Aucune donnée de paiement. Veuillez scanner un QR code.",
+    "insufficientBalance": "Solde insuffisant"
+  },
+  "paySuccess": {
+    "title": "Paiement réussi",
+    "done": "Terminer"
+  },
+  "accountSetup": {
+    "title": "Configuration de votre compte...",
+    "pleaseWait": "Veuillez patienter pendant la création de votre compte Starknet",
+    "failed": "La création du compte a échoué",
+    "back": "Retour",
+    "deploymentStartFailed": "Échec du démarrage du déploiement du compte",
+    "deploymentFailed": "Échec du déploiement du compte",
+    "unexpectedError": "Une erreur inattendue s'est produite",
+    "success": "Compte créé avec succès"
+  },
+  "menu": {
+    "title": "Menu",
+    "general": "Général",
+    "settings": "Paramètres",
+    "about": "À propos",
+    "advanced": "Avancé",
+    "swaps": "Échanges",
+    "logout": "Déconnexion"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "language": "Langue"
+  },
+  "about": {
+    "title": "À propos",
+    "description": "BIM est une application de portefeuille numérique qui vous permet de payer et recevoir en Bitcoin via le réseau Lightning et Starknet."
+  },
+  "swaps": {
+    "title": "Échanges",
+    "noSwaps": "Aucun échange",
+    "swapsWillAppear": "Les échanges apparaîtront ici lorsque vous enverrez ou recevrez des paiements via les réseaux Lightning ou Bitcoin.",
+    "refreshAll": "Tout rafraîchir",
+    "refreshing": "Rafraîchissement...",
+    "direction": {
+      "lightningReceive": "Réception Lightning",
+      "lightningPay": "Envoi Lightning",
+      "bitcoinReceive": "Réception Bitcoin",
+      "bitcoinPay": "Envoi Bitcoin"
+    },
+    "status": {
+      "pending": "En attente",
+      "paid": "Payé",
+      "confirming": "Confirmation",
+      "completed": "Terminé",
+      "expired": "Expiré",
+      "failed": "Échoué"
+    }
+  },
+  "transactions": {
+    "empty": {
+      "title": "Commencez à utiliser BIM pour vos paiements :",
+      "topUp": "Rechargez votre portefeuille.",
+      "step1": "1. Appuyez sur 'recevoir' et créez une facture.",
+      "step2": "2. Puis payez-la depuis un autre portefeuille :",
+      "step2Example": "Ledger ou Phoenix par exemple.",
+      "step3": "3. Profitez de BIM !"
+    },
+    "type": {
+      "receive": "Reçu",
+      "send": "Envoyé"
+    }
+  },
+  "common": {
+    "loading": "Chargement",
+    "back": "Retour",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "retry": "Réessayer",
+    "close": "Fermer",
+    "copy": "Copier",
+    "copied": "Copié !"
+  },
+  "errors": {
+    "INTERNAL_ERROR": "Une erreur s'est produite. Veuillez réessayer.",
+    "VALIDATION_ERROR": "Données invalides.",
+    "UNAUTHORIZED": "Veuillez vous connecter pour continuer.",
+    "ACCOUNT_NOT_FOUND": "Compte introuvable.",
+    "ACCOUNT_ALREADY_EXISTS": "Ce nom d'utilisateur est déjà pris.",
+    "INVALID_USERNAME": "Nom d'utilisateur invalide.",
+    "CHALLENGE_NOT_FOUND": "Défi d'authentification introuvable.",
+    "CHALLENGE_EXPIRED": "Le défi d'authentification a expiré. Veuillez réessayer.",
+    "CHALLENGE_ALREADY_USED": "Le défi d'authentification a déjà été utilisé.",
+    "AUTHENTICATION_FAILED": "L'authentification a échoué. Veuillez réessayer.",
+    "REGISTRATION_FAILED": "L'inscription a échoué. Veuillez réessayer.",
+    "SESSION_NOT_FOUND": "Session introuvable. Veuillez vous connecter.",
+    "SESSION_EXPIRED": "Votre session a expiré. Veuillez vous reconnecter.",
+    "ACCOUNT_NOT_DEPLOYED": "Le compte n'est pas encore déployé.",
+    "INVALID_ACCOUNT_STATE": "État du compte invalide.",
+    "ACCOUNT_DEPLOYMENT_FAILED": "Le déploiement du compte a échoué.",
+    "INVALID_STARKNET_ADDRESS": "Adresse Starknet invalide.",
+    "SWAP_NOT_FOUND": "Échange introuvable.",
+    "SWAP_EXPIRED": "L'échange a expiré.",
+    "SWAP_AMOUNT_OUT_OF_RANGE": "Le montant doit être entre {{min}} et {{max}} {{unit}}.",
+    "SWAP_CREATION_FAILED": "Échec de la création de l'échange.",
+    "SWAP_CLAIM_FAILED": "Échec de la réclamation de l'échange.",
+    "INVALID_SWAP_STATE": "État de l'échange invalide.",
+    "PAYMENT_PARSING_ERROR": "Impossible d'analyser les données de paiement.",
+    "INVALID_PAYMENT_AMOUNT": "Montant de paiement invalide.",
+    "MISSING_PAYMENT_AMOUNT": "Le montant du paiement est requis.",
+    "SAME_ADDRESS_PAYMENT": "Impossible d'envoyer à votre propre adresse.",
+    "UNSUPPORTED_NETWORK": "Réseau non supporté.",
+    "UNSUPPORTED_TOKEN": "Jeton non supporté.",
+    "INVALID_LIGHTNING_INVOICE": "Facture Lightning invalide.",
+    "INVALID_BITCOIN_ADDRESS": "Adresse Bitcoin invalide.",
+    "INVALID_PAYMENT_ADDRESS": "Adresse de paiement invalide.",
+    "USER_SETTINGS_NOT_FOUND": "Paramètres utilisateur introuvables.",
+    "UNSUPPORTED_CURRENCY": "Devise non supportée.",
+    "EXTERNAL_SERVICE_ERROR": "Le service externe est temporairement indisponible.",
+    "TIMEOUT_ERROR": "La requête a expiré. Veuillez réessayer."
+  }
+}

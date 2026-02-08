@@ -1,13 +1,10 @@
-<app-full-page-layout [showFooter]="false">
+<app-full-page-layout [showFooter]="true">
   <div class="about-page">
-    <app-go-back-header title="About"></app-go-back-header>
+    <app-go-back-header [title]="'about.title' | translate"></app-go-back-header>
 
     <main class="about-main">
       <div class="about-content">
-        <p class="about-text">
-          BIM is a digital wallet application that allows you to manage your transactions
-          securely with biometric authentication.
-        </p>
+        <p class="about-text">{{ 'about.description' | translate }}</p>
       </div>
     </main>
   </div>

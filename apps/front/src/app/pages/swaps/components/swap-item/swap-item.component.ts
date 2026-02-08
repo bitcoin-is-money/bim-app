@@ -1,13 +1,21 @@
 import {CommonModule, DatePipe} from '@angular/common';
 import {Component, computed, inject, input} from '@angular/core';
-import {Amount, Currency, formatSwapDirection, isTerminalStatus, type StoredSwap} from '../../../../model';
+import {TranslateModule} from '@ngx-translate/core';
+import {Amount, Currency, isTerminalStatus, SwapDirection, type StoredSwap} from '../../../../model';
 import {CurrencyService} from '../../../../services/currency.service';
 import {SwapPollingService} from '../../../../services/swap-polling.service';
+
+const DIRECTION_KEYS: Record<SwapDirection, string> = {
+  lightning_to_starknet: 'swaps.direction.lightningReceive',
+  bitcoin_to_starknet: 'swaps.direction.bitcoinReceive',
+  starknet_to_lightning: 'swaps.direction.lightningPay',
+  starknet_to_bitcoin: 'swaps.direction.bitcoinPay',
+};
 
 @Component({
   selector: 'app-swap-item',
   standalone: true,
-  imports: [CommonModule, DatePipe],
+  imports: [CommonModule, DatePipe, TranslateModule],
   templateUrl: './swap-item.component.html',
   styleUrl: './swap-item.component.scss',
 })
@@ -19,7 +27,8 @@ export class SwapItemComponent {
 
   readonly isPolling = computed(() => this.pollingService.isPolling(this.swap().id));
   readonly isTerminal = computed(() => isTerminalStatus(this.swap().lastKnownStatus));
-  readonly directionLabel = computed(() => formatSwapDirection(this.swap().direction));
+  readonly directionKey = computed(() => DIRECTION_KEYS[this.swap().direction]);
+  readonly statusKey = computed(() => `swaps.status.${this.swap().lastKnownStatus}`);
 
   readonly formattedAmount = computed(() => {
     const s = this.swap();

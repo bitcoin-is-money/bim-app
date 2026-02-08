@@ -1,0 +1,38 @@
+@reference "tailwindcss";
+
+.settings-page {
+  @apply h-full flex flex-col;
+
+  .settings-main {
+    @apply flex-1 p-4;
+
+    .settings-section {
+      @apply max-w-md mx-auto;
+
+      .settings-label {
+        @apply block text-neutral-300 text-sm font-medium mb-2;
+      }
+
+      .select-wrapper {
+        @apply relative;
+
+        .language-select {
+          @apply w-full appearance-none bg-neutral-800 text-white
+                 border border-neutral-700 rounded-lg px-4 py-3 pr-10
+                 text-base cursor-pointer
+                 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent
+                 hover:border-neutral-600 transition-colors;
+
+          option {
+            @apply bg-neutral-800 text-white py-2;
+          }
+        }
+
+        .select-arrow {
+          @apply absolute right-3 top-1/2 -translate-y-1/2
+                 text-neutral-400 text-xs pointer-events-none;
+        }
+      }
+    }
+  }
+}

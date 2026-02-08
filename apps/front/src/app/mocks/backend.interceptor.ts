@@ -14,6 +14,7 @@ import {DataStoreMock} from "./data-store.mock";
 import {PaymentHandlerMock} from './payment/payment-handler.mock';
 import {PricesHandlerMock} from './currency/prices-handler.mock';
 import {ReceiveHandlerMock} from './receive/receive-handler.mock';
+import {SettingsHandlerMock} from './user/settings-handler.mock';
 import {SwapHandlerMock} from './swap/swap-handler.mock';
 import {TransactionHandlerMock} from './user/transaction-handler.mock';
 
@@ -25,6 +26,7 @@ const mockTransactionHandler = new TransactionHandlerMock(store);
 const mockPaymentHandler = new PaymentHandlerMock(store);
 const mockReceiveHandler = new ReceiveHandlerMock(store);
 const mockSwapHandler = new SwapHandlerMock(store);
+const mockSettingsHandler = new SettingsHandlerMock(store);
 
 const payDelay = 3000;
 const receiveDelay = 3000;
@@ -84,6 +86,13 @@ export const backendInterceptor: HttpInterceptorFn = (
   // Transaction routes
   else if (url.startsWith('/api/user/transactions') && method === 'GET') {
     response = mockTransactionHandler.getTransactions(req);
+  }
+
+  // User settings routes
+  else if (url === '/api/user/settings' && method === 'GET') {
+    response = mockSettingsHandler.getSettings();
+  } else if (url === '/api/user/settings' && method === 'PUT') {
+    response = mockSettingsHandler.updateSettings(body as Record<string, unknown>);
   }
 
   // Payment routes

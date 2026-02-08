@@ -4,7 +4,7 @@
       <div class="transaction-content">
         <div class="transaction-bullet"></div>
         <div class="transaction-info">
-          <div class="transaction-label">{{ transaction.original.type }}</div>
+          <div class="transaction-label">{{ 'transactions.type.' + transaction.original.type | translate }}</div>
           <div class="transaction-date">{{ transaction.original.timestamp | date:'short' }}</div>
         </div>
         <div

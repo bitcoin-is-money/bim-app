@@ -4,9 +4,11 @@ import {
   InvalidTransactionIdError,
   InvalidUserSettingsIdError,
   InvalidWatchedAddressIdError,
+  Language,
   TransactionHash,
   TransactionId,
   UnsupportedCurrencyError,
+  UnsupportedLanguageError,
   UserSettingsId,
   WatchedAddressId,
 } from '@bim/domain/user';
@@ -166,6 +168,63 @@ describe('FiatCurrency', () => {
   describe('DEFAULT', () => {
     it('is USD', () => {
       expect(FiatCurrency.DEFAULT).toBe('USD');
+    });
+  });
+});
+
+describe('Language', () => {
+  describe('of', () => {
+    it('creates Language from valid code', () => {
+      const language = Language.of('en');
+      expect(language).toBe('en');
+    });
+
+    it('normalizes to lowercase', () => {
+      const language = Language.of('EN');
+      expect(language).toBe('en');
+    });
+
+    it('trims whitespace', () => {
+      const language = Language.of('  fr  ');
+      expect(language).toBe('fr');
+    });
+
+    it('accepts all supported languages', () => {
+      const supported = ['en', 'fr'];
+      for (const code of supported) {
+        expect(() => Language.of(code)).not.toThrow();
+      }
+    });
+
+    it('throws UnsupportedLanguageError for unsupported language', () => {
+      expect(() => Language.of('de')).toThrow(UnsupportedLanguageError);
+      expect(() => Language.of('es')).toThrow(UnsupportedLanguageError);
+    });
+  });
+
+  describe('isSupported', () => {
+    it('returns true for supported languages', () => {
+      expect(Language.isSupported('en')).toBe(true);
+      expect(Language.isSupported('FR')).toBe(true);
+    });
+
+    it('returns false for unsupported languages', () => {
+      expect(Language.isSupported('de')).toBe(false);
+    });
+  });
+
+  describe('getSupportedLanguages', () => {
+    it('returns list of supported languages', () => {
+      const languages = Language.getSupportedLanguages();
+      expect(languages).toContain('en');
+      expect(languages).toContain('fr');
+      expect(languages.length).toBe(2);
+    });
+  });
+
+  describe('DEFAULT', () => {
+    it('is en', () => {
+      expect(Language.DEFAULT).toBe('en');
     });
   });
 });

@@ -1,10 +1,12 @@
 import {Component, DestroyRef, inject, OnInit, signal} from '@angular/core';
 import {Router} from '@angular/router';
+import {TranslateModule} from '@ngx-translate/core';
 import {ButtonComponent} from '../../components/button/button.component';
 import {SpinnerComponent} from '../../components/spinner/spinner.component';
 import {FullPageLayoutComponent} from '../../layout/full-page-layout/full-page-layout.component';
 import {AccountService} from '../../services/account.service';
 import {AuthService} from "../../services/auth.service";
+import {I18nService} from '../../services/i18n.service';
 import {NotificationService} from '../../services/notification.service';
 
 const POLL_INTERVAL_MS = 1000;
@@ -12,7 +14,7 @@ const POLL_INTERVAL_MS = 1000;
 @Component({
   selector: 'app-account-setup',
   standalone: true,
-  imports: [SpinnerComponent, ButtonComponent, FullPageLayoutComponent],
+  imports: [TranslateModule, SpinnerComponent, ButtonComponent, FullPageLayoutComponent],
   templateUrl: './account-setup.page.html',
   styleUrl: './account-setup.page.scss',
 })
@@ -23,6 +25,7 @@ export class AccountSetupPage implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly accountService = inject(AccountService);
   private readonly router = inject(Router);
+  private readonly i18n = inject(I18nService);
   private readonly notifications = inject(NotificationService);
   private readonly destroyRef = inject(DestroyRef);
   private pollTimer: ReturnType<typeof setInterval> | null = null;
@@ -45,7 +48,7 @@ export class AccountSetupPage implements OnInit {
           this.startPolling();
         } else {
           this.failed.set(true);
-          this.errorMessage.set('Failed to start account deployment');
+          this.errorMessage.set(this.i18n.t('accountSetup.deploymentStartFailed'));
         }
       },
     });
@@ -72,20 +75,20 @@ export class AccountSetupPage implements OnInit {
         if (response.status === 'deployed') {
           this.stopPolling();
           this.notifications.success({
-            message: 'Account created successfully',
+            message: this.i18n.t('accountSetup.success'),
             useConfetti: true
           });
           this.router.navigate(['/home']);
         } else if (response.status === 'failed') {
           this.stopPolling();
           this.failed.set(true);
-          this.errorMessage.set('Account deployment failed');
+          this.errorMessage.set(this.i18n.t('accountSetup.deploymentFailed'));
         }
       },
       error: () => {
         this.stopPolling();
         this.failed.set(true);
-        this.errorMessage.set('An unexpected error occurred');
+        this.errorMessage.set(this.i18n.t('accountSetup.unexpectedError'));
       },
     });
   }

@@ -1,10 +1,12 @@
 import {CommonModule} from '@angular/common';
 import {Component, inject, OnDestroy, signal} from '@angular/core';
 import {FormsModule} from '@angular/forms';
+import {TranslateModule} from '@ngx-translate/core';
 import {Html5Qrcode, Html5QrcodeSupportedFormats} from 'html5-qrcode';
 import {ButtonComponent} from '../../components/button/button.component';
 import {GoBackHeaderComponent} from '../../components/go-back-header/go-back-header.component';
 import {FullPageLayoutComponent} from '../../layout/full-page-layout/full-page-layout.component';
+import {I18nService} from '../../services/i18n.service';
 import {NotificationService} from '../../services/notification.service';
 import {PayService} from '../../services/pay.service';
 import {environment} from '../../../environments/environment';
@@ -12,13 +14,14 @@ import {environment} from '../../../environments/environment';
 @Component({
   selector: 'app-pay',
   standalone: true,
-  imports: [CommonModule, FormsModule, ButtonComponent, GoBackHeaderComponent, FullPageLayoutComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, ButtonComponent, GoBackHeaderComponent, FullPageLayoutComponent],
   templateUrl: './pay.page.html',
   styleUrl: './pay.page.scss',
 })
 export class PayPage implements OnDestroy {
 
   private readonly paymentService = inject(PayService);
+  private readonly i18n = inject(I18nService);
   private readonly notifications = inject(NotificationService);
 
   private scanner: Html5Qrcode | null = null;
@@ -46,12 +49,12 @@ export class PayPage implements OnDestroy {
     try {
       const text = await navigator.clipboard.readText();
       if (!text?.trim()) {
-        this.notifications.error({message: 'Clipboard is empty'});
+        this.notifications.error({message: this.i18n.t('pay.clipboardEmpty')});
         return;
       }
       this.paymentService.parseAndNavigate(text.trim());
     } catch {
-      this.notifications.error({message: 'Could not read clipboard. Please allow clipboard access.'});
+      this.notifications.error({message: this.i18n.t('pay.clipboardAccessDenied')});
     }
   }
 
@@ -66,7 +69,7 @@ export class PayPage implements OnDestroy {
   private startScanner(): void {
     if (!navigator.mediaDevices?.getUserMedia) {
       this.notifications.error({
-        message: 'Camera is not supported in this browser'
+        message: this.i18n.t('pay.cameraNotSupported')
       });
       return;
     }
@@ -106,15 +109,12 @@ export class PayPage implements OnDestroy {
       );
       this.scannerStarted = true;
     } catch (error) {
-      const message = error instanceof Error
-        ? error.message
-        : 'Failed to start scanner';
       if (error instanceof Error && error.name === 'NotAllowedError') {
-        this.scannerError.set('Camera access was denied. Please allow camera access in your browser settings.');
+        this.scannerError.set(this.i18n.t('pay.cameraAccessDenied'));
       } else if (error instanceof Error && error.name === 'NotFoundError') {
-        this.scannerError.set('No camera found on this device.');
+        this.scannerError.set(this.i18n.t('pay.noCameraFound'));
       } else {
-        this.scannerError.set(message);
+        this.scannerError.set(this.i18n.t('pay.scannerFailed'));
       }
     }
   }

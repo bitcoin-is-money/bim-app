@@ -1,6 +1,6 @@
 import {AccountId} from '@bim/domain/account';
 import type {UserSettingsRepository} from "@bim/domain/ports";
-import {FiatCurrency, UserSettings, UserSettingsId} from "@bim/domain/user";
+import {FiatCurrency, Language, UserSettings, UserSettingsId} from "@bim/domain/user";
 
 import {eq} from 'drizzle-orm';
 import type {NodePgDatabase} from 'drizzle-orm/node-postgres';
@@ -24,6 +24,7 @@ export class DrizzleUserSettingsRepository implements UserSettingsRepository {
         id: data.id,
         accountId: data.accountId,
         fiatCurrency: data.fiatCurrency,
+        language: data.language,
         createdAt: data.createdAt,
         updatedAt: data.updatedAt,
       })
@@ -31,6 +32,7 @@ export class DrizzleUserSettingsRepository implements UserSettingsRepository {
         target: schema.userSettings.id,
         set: {
           fiatCurrency: data.fiatCurrency,
+          language: data.language,
           updatedAt: new Date(),
         },
       });
@@ -53,6 +55,7 @@ export class DrizzleUserSettingsRepository implements UserSettingsRepository {
       id: UserSettingsId.of(record.id),
       accountId: AccountId.of(record.accountId),
       fiatCurrency: FiatCurrency.of(record.fiatCurrency),
+      language: Language.of(record.language),
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     });

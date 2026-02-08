@@ -1,6 +1,6 @@
 import {AccountId} from '../account';
 import type {UserSettingsRepository} from '../ports';
-import {FiatCurrency, UserSettingsId} from './types';
+import {FiatCurrency, Language, UserSettingsId} from './types';
 import {UserSettings} from './user-settings';
 
 // =============================================================================
@@ -26,6 +26,7 @@ export interface FetchUserSettingsOutput {
 export interface UpdateUserSettingsInput {
   accountId: string;
   fiatCurrency?: string;
+  language?: string;
 }
 
 export interface UpdateUserSettingsOutput {
@@ -83,6 +84,11 @@ export class UserSettingsService {
     if (input.fiatCurrency !== undefined) {
       const currency = FiatCurrency.of(input.fiatCurrency);
       settings.setFiatCurrency(currency);
+    }
+
+    if (input.language !== undefined) {
+      const language = Language.of(input.language);
+      settings.setLanguage(language);
     }
 
     await this.deps.userSettingsRepository.save(settings);

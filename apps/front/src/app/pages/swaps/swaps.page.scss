@@ -1,7 +1,7 @@
 @reference "tailwindcss";
 
 .swaps-page {
-  @apply h-screen flex flex-col bg-neutral-900 overflow-hidden;
+  @apply h-screen flex flex-col overflow-hidden;
 
   .swaps-main {
     @apply flex-1 p-4 overflow-y-auto;

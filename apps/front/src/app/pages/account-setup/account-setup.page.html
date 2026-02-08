@@ -1,15 +1,15 @@
 <app-full-page-layout [showFooter]="false">
   <div class="account-setup-page">
     @if (!failed()) {
-      <h1>Setting up your account...</h1>
-      <p>Please wait while we create your starknet account</p>
+      <h1>{{ 'accountSetup.title' | translate }}</h1>
+      <p>{{ 'accountSetup.pleaseWait' | translate }}</p>
       <div class="spinner-container">
         <app-spinner />
       </div>
     } @else {
-      <h1>Account creation failed</h1>
+      <h1>{{ 'accountSetup.failed' | translate }}</h1>
       <p class="error-message">{{ errorMessage() }}</p>
-      <app-button variant="secondary" (click)="goBack()">Back</app-button>
+      <app-button variant="secondary" (click)="goBack()">{{ 'accountSetup.back' | translate }}</app-button>
     }
   </div>
 </app-full-page-layout>

@@ -2,7 +2,9 @@ import {AccountId} from '@bim/domain/account';
 import type {UserSettingsRepository} from '@bim/domain/ports';
 import {
   FiatCurrency,
+  Language,
   UnsupportedCurrencyError,
+  UnsupportedLanguageError,
   UserSettings,
   UserSettingsId,
   UserSettingsService,
@@ -32,6 +34,7 @@ describe('UserSettingsService', () => {
         id: settingsId,
         accountId,
         fiatCurrency: FiatCurrency.of('EUR'),
+        language: Language.of('fr'),
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -40,6 +43,7 @@ describe('UserSettingsService', () => {
       const result = await service.fetch({accountId: accountId});
 
       expect(result.settings.getFiatCurrency()).toBe('EUR');
+      expect(result.settings.getLanguage()).toBe('fr');
       expect(mockRepository.save).not.toHaveBeenCalled();
     });
 
@@ -49,6 +53,7 @@ describe('UserSettingsService', () => {
       const result = await service.fetch({accountId: accountId});
 
       expect(result.settings.getFiatCurrency()).toBe('USD'); // Default
+      expect(result.settings.getLanguage()).toBe('en'); // Default
       expect(mockRepository.save).toHaveBeenCalled();
     });
   });
@@ -58,16 +63,17 @@ describe('UserSettingsService', () => {
       const settings = UserSettings.create({
         id: settingsId,
         accountId,
-        fiatCurrency: FiatCurrency.of('USD'),
       });
       vi.mocked(mockRepository.findByAccountId).mockResolvedValue(settings);
 
       const result = await service.update({
         accountId: accountId,
         fiatCurrency: 'EUR',
+        language: 'fr',
       });
 
       expect(result.settings.getFiatCurrency()).toBe('EUR');
+      expect(result.settings.getLanguage()).toBe('fr');
       expect(mockRepository.save).toHaveBeenCalled();
     });
 
@@ -77,9 +83,11 @@ describe('UserSettingsService', () => {
       const result = await service.update({
         accountId: accountId,
         fiatCurrency: 'EUR',
+        language: 'fr',
       });
 
       expect(result.settings.getFiatCurrency()).toBe('EUR');
+      expect(result.settings.getLanguage()).toBe('fr');
       expect(mockRepository.save).toHaveBeenCalled();
     });
 
@@ -96,6 +104,21 @@ describe('UserSettingsService', () => {
           fiatCurrency: 'INVALID',
         }),
       ).rejects.toThrow(UnsupportedCurrencyError);
+    });
+
+    it('throws for unsupported language', async () => {
+      const settings = UserSettings.create({
+        id: settingsId,
+        accountId,
+      });
+      vi.mocked(mockRepository.findByAccountId).mockResolvedValue(settings);
+
+      await expect(
+        service.update({
+          accountId: accountId,
+          language: 'de',
+        }),
+      ).rejects.toThrow(UnsupportedLanguageError);
     });
   });
 });

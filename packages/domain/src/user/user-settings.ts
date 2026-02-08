@@ -1,11 +1,12 @@
 import {AccountId} from '../account';
-import {FiatCurrency, type UserSettingsData, UserSettingsId,} from './types';
+import {FiatCurrency, Language, type UserSettingsData, UserSettingsId,} from './types';
 
 /**
  * UserSettings entity representing user preferences.
  */
 export class UserSettings {
   private fiatCurrency: FiatCurrency;
+  private language: Language;
   private updatedAt: Date;
 
   private constructor(
@@ -13,9 +14,11 @@ export class UserSettings {
     readonly accountId: AccountId,
     readonly createdAt: Date,
     fiatCurrency: FiatCurrency,
+    language: Language,
     updatedAt: Date,
   ) {
     this.fiatCurrency = fiatCurrency;
+    this.language = language;
     this.updatedAt = updatedAt;
   }
 
@@ -32,6 +35,7 @@ export class UserSettings {
       params.accountId,
       now,
       FiatCurrency.DEFAULT,
+      Language.DEFAULT,
       now,
     );
   }
@@ -45,6 +49,7 @@ export class UserSettings {
       data.accountId,
       data.createdAt,
       data.fiatCurrency,
+      data.language,
       data.updatedAt,
     );
   }
@@ -54,6 +59,13 @@ export class UserSettings {
    */
   getFiatCurrency(): FiatCurrency {
     return this.fiatCurrency;
+  }
+
+  /**
+   * Returns the preferred language.
+   */
+  getLanguage(): Language {
+    return this.language;
   }
 
   /**
@@ -72,6 +84,14 @@ export class UserSettings {
   }
 
   /**
+   * Updates the preferred language.
+   */
+  setLanguage(language: Language): void {
+    this.language = language;
+    this.updatedAt = new Date();
+  }
+
+  /**
    * Exports the settings data for persistence.
    */
   toData(): UserSettingsData {
@@ -79,6 +99,7 @@ export class UserSettings {
       id: this.id,
       accountId: this.accountId,
       fiatCurrency: this.fiatCurrency,
+      language: this.language,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
     };
