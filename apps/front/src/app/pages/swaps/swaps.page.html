@@ -1,35 +1,37 @@
-<div class="swaps-page">
-  <app-go-back-header title="Swaps"></app-go-back-header>
+<app-full-page-layout [showFooter]="false">
+  <div class="swaps-page">
+    <app-go-back-header [title]="'swaps.title' | translate"></app-go-back-header>
 
-  <main class="swaps-main">
-    @if (isEmpty()) {
-      <div class="empty-state">
-        <p class="empty-text">No swaps yet</p>
-        <p class="empty-hint">Swaps will appear here when you send or receive Lightning/Bitcoin payments</p>
-      </div>
-    } @else {
-      <div class="swap-list">
-        @for (swap of swaps(); track swap.id) {
-          <app-swap-item [swap]="swap" />
-        }
-      </div>
-
-      <div class="refresh-section">
-        <app-button
-          class="refresh-button"
-          variant="primary"
-          [disabled]="isRefreshing()"
-          [loading]="isRefreshing()"
-          [icon]="['fas', 'sync-alt']"
-          (click)="refreshAllStatuses()"
-        >
-          @if (isRefreshing()) {
-            Refreshing...
-          } @else {
-            Refresh All
+    <main class="swaps-main">
+      @if (isEmpty()) {
+        <div class="empty-state">
+          <p class="empty-text">{{ 'swaps.noSwaps' | translate }}</p>
+          <p class="empty-hint">{{ 'swaps.swapsWillAppear' | translate }}</p>
+        </div>
+      } @else {
+        <div class="swap-list">
+          @for (swap of swaps(); track swap.id) {
+            <app-swap-item [swap]="swap"/>
           }
-        </app-button>
-      </div>
-    }
-  </main>
-</div>
+        </div>
+
+        <div class="refresh-section">
+          <app-button
+            class="refresh-button"
+            variant="primary"
+            [disabled]="isRefreshing()"
+            [loading]="isRefreshing()"
+            [icon]="['fas', 'sync-alt']"
+            (click)="refreshAllStatuses()"
+          >
+            @if (isRefreshing()) {
+              {{ 'swaps.refreshing' | translate }}
+            } @else {
+              {{ 'swaps.refreshAll' | translate }}
+            }
+          </app-button>
+        </div>
+      }
+    </main>
+  </div>
+</app-full-page-layout>

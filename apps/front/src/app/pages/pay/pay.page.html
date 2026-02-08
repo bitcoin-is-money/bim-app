@@ -1,6 +1,6 @@
 <app-full-page-layout [showFooter]="true">
   <div class="pay-page">
-    <app-go-back-header title="Choose your payment method"></app-go-back-header>
+    <app-go-back-header [title]="'pay.chooseMethod' | translate"></app-go-back-header>
 
     <main class="pay-main">
       <app-button
@@ -11,7 +11,7 @@
         (click)="scanQRCode()"
         [disabled]="isLoading()"
       >
-        Scan a QR Code
+        {{ 'pay.scanQr' | translate }}
       </app-button>
       <app-button
         class="parse-clipboard-button"
@@ -21,7 +21,7 @@
         (click)="pasteFromClipboard()"
         [disabled]="isLoading()"
       >
-        Paste from clipboard
+        {{ 'pay.pasteClipboard' | translate }}
       </app-button>
     </main>
 
@@ -34,7 +34,7 @@
         @if (scannerError(); as error) {
           <div class="scanner-error">
             <p>{{ error }}</p>
-            <button class="scanner-retry" (click)="closeScanner()">Close</button>
+            <button class="scanner-retry" (click)="closeScanner()">{{ 'pay.close' | translate }}</button>
           </div>
         }
       </div>

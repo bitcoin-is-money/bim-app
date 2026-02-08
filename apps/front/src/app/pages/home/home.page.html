@@ -2,7 +2,7 @@
   <div class="home-page">
     <header class="home-header">
       <div class="header-content">
-        <h2 class="greeting">Hi {{ username }}</h2>
+        <h2 class="greeting">{{ 'home.greeting' | translate: { username: username } }}</h2>
         <button
           class="menu-button"
           (click)="openMenu()"
@@ -38,7 +38,7 @@
         sizeVariant="lg"
         (click)="onReceive()"
       >
-        Receive
+        {{ 'home.receive' | translate }}
       </app-button>
       <div class="footer-divider"></div>
       <app-button
@@ -48,7 +48,7 @@
         sizeVariant="lg"
         (click)="onPay()"
       >
-        Pay
+        {{ 'home.pay' | translate }}
       </app-button>
     </footer>
   </div>

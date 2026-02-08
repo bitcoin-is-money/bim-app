@@ -1,4 +1,5 @@
 import {Component, computed, effect, inject, signal} from '@angular/core';
+import {TranslateModule} from '@ngx-translate/core';
 import QRCode from 'qrcode';
 import {AmountFieldComponent} from '../../components/amount-field/amount-field.component';
 import {ButtonComponent} from '../../components/button/button.component';
@@ -9,6 +10,7 @@ import {FullPageLayoutComponent} from '../../layout/full-page-layout/full-page-l
 import {Amount} from '../../model';
 import {AuthService} from '../../services/auth.service';
 import {CurrencyService} from '../../services/currency.service';
+import {I18nService} from '../../services/i18n.service';
 import {NotificationService} from '../../services/notification.service';
 import {ReceiveService} from '../../services/receive.service';
 
@@ -21,6 +23,7 @@ const WBTC_TOKEN_ADDRESS = '0x00abbd7d98ad664568f204d6e1af6e02d6a5c55eb4e83c9fbb
   selector: 'app-receive',
   standalone: true,
   imports: [
+    TranslateModule,
     GoBackHeaderComponent,
     NetworkLogoComponent,
     AmountFieldComponent,
@@ -35,6 +38,7 @@ export class ReceivePage {
 
   private readonly authService = inject(AuthService);
   private readonly currencyService = inject(CurrencyService);
+  private readonly i18n = inject(I18nService);
   private readonly notifications = inject(NotificationService);
   private readonly receiveService = inject(ReceiveService);
   readonly networks = NETWORKS;
@@ -86,13 +90,13 @@ export class ReceivePage {
 
   readonly qrPlaceholderMessage = computed(() => {
     if (this.amount().value === 0) {
-      return 'Enter an amount';
+      return this.i18n.t('receive.enterAmount');
     }
     if (this.selectedNetwork() !== 'starknet') {
-      return 'Create an invoice to generate QR code';
+      return this.i18n.t('receive.createInvoiceForQr');
     }
     if (!this.starknetAddress()) {
-      return 'No Starknet address available';
+      return this.i18n.t('receive.noStarknetAddress');
     }
     return '';
   });
@@ -239,15 +243,15 @@ export class ReceivePage {
         await navigator.share({title: 'BIM Receive', text: data});
       } catch (error) {
         if (error instanceof Error && error.name !== 'AbortError') {
-          this.notifications.error({message: 'Sharing failed'});
+          this.notifications.error({message: this.i18n.t('receive.sharingFailed')});
         }
       }
     } else {
       try {
         await navigator.clipboard.writeText(data);
-        this.notifications.success({message: 'Copied to clipboard'});
+        this.notifications.success({message: this.i18n.t('receive.copiedToClipboard')});
       } catch {
-        this.notifications.error({message: 'Could not copy to clipboard'});
+        this.notifications.error({message: this.i18n.t('receive.couldNotCopy')});
       }
     }
   }

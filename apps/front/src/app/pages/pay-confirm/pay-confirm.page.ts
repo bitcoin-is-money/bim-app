@@ -1,5 +1,6 @@
 import {CommonModule} from '@angular/common';
 import {Component, computed, inject} from '@angular/core';
+import {TranslateModule} from '@ngx-translate/core';
 import {AmountFieldComponent} from '../../components/amount-field/amount-field.component';
 import {AmountHighlightComponent} from '../../components/amount-highlight/amount-highlight.component';
 import {ButtonComponent} from '../../components/button/button.component';
@@ -10,13 +11,14 @@ import {FullPageLayoutComponent} from '../../layout/full-page-layout/full-page-l
 import {Amount} from "../../model";
 import {AccountService} from '../../services/account.service';
 import {CurrencyService} from '../../services/currency.service';
+import {I18nService} from '../../services/i18n.service';
 import {NotificationService} from "../../services/notification.service";
 import {PayService} from '../../services/pay.service';
 
 @Component({
   selector: 'app-pay-confirm',
   standalone: true,
-  imports: [CommonModule, ButtonComponent, GoBackHeaderComponent, NetworkLogoComponent, FieldComponent, AmountFieldComponent, AmountHighlightComponent, FullPageLayoutComponent],
+  imports: [CommonModule, TranslateModule, ButtonComponent, GoBackHeaderComponent, NetworkLogoComponent, FieldComponent, AmountFieldComponent, AmountHighlightComponent, FullPageLayoutComponent],
   templateUrl: './pay-confirm.page.html',
   styleUrl: './pay-confirm.page.scss',
 })
@@ -24,6 +26,7 @@ export class PayConfirmPage {
 
   private readonly accountService = inject(AccountService);
   private readonly currencyService = inject(CurrencyService);
+  private readonly i18n = inject(I18nService);
   private readonly paymentService = inject(PayService);
   private readonly notificationService = inject(NotificationService);
 
@@ -44,7 +47,7 @@ export class PayConfirmPage {
     const result: boolean = balance.value >= p.amount.value + p.fee.value;
     if (!result) {
       console.log('Insufficient balance', balance, p);
-      this.notificationService.error({message: 'Insufficient balance'});
+      this.notificationService.error({message: this.i18n.t('payConfirm.insufficientBalance')});
     }
     return result;
   });

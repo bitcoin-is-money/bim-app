@@ -1,0 +1,170 @@
+{
+  "auth": {
+    "tagline": "Pay and receive in Bitcoin. That's it.",
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "orCreateAccount": "or create account",
+    "chooseUsername": "Choose your username",
+    "useDeviceSecurity": "Use your device security to access your wallet"
+  },
+  "home": {
+    "greeting": "Hi {{username}}",
+    "receive": "Receive",
+    "pay": "Pay"
+  },
+  "receive": {
+    "title": "Receive",
+    "createInvoice": "Create Invoice",
+    "share": "Share",
+    "optionalDescription": "Optional description",
+    "amount": "Amount",
+    "enterAmount": "Enter an amount",
+    "createInvoiceForQr": "Create an invoice to generate QR code",
+    "noStarknetAddress": "No Starknet address available",
+    "sharingFailed": "Sharing failed",
+    "copiedToClipboard": "Copied to clipboard",
+    "couldNotCopy": "Could not copy to clipboard",
+    "goToNetwork": "Go to {{network}}",
+    "network": {
+      "lightning": "Lightning",
+      "bitcoin": "Bitcoin",
+      "starknet": "Starknet"
+    }
+  },
+  "pay": {
+    "title": "Pay",
+    "chooseMethod": "Choose your payment method",
+    "scanQr": "Scan a QR Code",
+    "pasteClipboard": "Paste from clipboard",
+    "close": "Close",
+    "clipboardEmpty": "Clipboard is empty",
+    "clipboardAccessDenied": "Could not read clipboard. Please allow clipboard access.",
+    "cameraNotSupported": "Camera is not supported in this browser",
+    "cameraAccessDenied": "Camera access was denied. Please allow camera access in your browser settings.",
+    "noCameraFound": "No camera found on this device.",
+    "scannerFailed": "Failed to start scanner"
+  },
+  "payConfirm": {
+    "title": "Confirm payment",
+    "to": "To",
+    "fee": "Fee",
+    "pay": "Pay",
+    "processing": "Processing...",
+    "noPaymentData": "No payment data. Please scan a QR code first.",
+    "insufficientBalance": "Insufficient balance"
+  },
+  "paySuccess": {
+    "title": "Payment successful",
+    "done": "Done"
+  },
+  "accountSetup": {
+    "title": "Setting up your account...",
+    "pleaseWait": "Please wait while we create your Starknet account",
+    "failed": "Account creation failed",
+    "back": "Back",
+    "deploymentStartFailed": "Failed to start account deployment",
+    "deploymentFailed": "Account deployment failed",
+    "unexpectedError": "An unexpected error occurred",
+    "success": "Account created successfully"
+  },
+  "menu": {
+    "title": "Menu",
+    "general": "General",
+    "settings": "Settings",
+    "about": "About",
+    "advanced": "Advanced",
+    "swaps": "Swaps",
+    "logout": "Logout"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language"
+  },
+  "about": {
+    "title": "About",
+    "description": "BIM is a digital wallet application that allows you to pay and receive in Bitcoin using the Lightning Network and Starknet."
+  },
+  "swaps": {
+    "title": "Swaps",
+    "noSwaps": "No swaps yet",
+    "swapsWillAppear": "Swaps will appear here when you send or receive payments via Lightning or Bitcoin networks.",
+    "refreshAll": "Refresh All",
+    "refreshing": "Refreshing...",
+    "direction": {
+      "lightningReceive": "Lightning Receive",
+      "lightningPay": "Lightning Send",
+      "bitcoinReceive": "Bitcoin Receive",
+      "bitcoinPay": "Bitcoin Send"
+    },
+    "status": {
+      "pending": "Pending",
+      "paid": "Paid",
+      "confirming": "Confirming",
+      "completed": "Completed",
+      "expired": "Expired",
+      "failed": "Failed"
+    }
+  },
+  "transactions": {
+    "empty": {
+      "title": "Start using BIM for your payments:",
+      "topUp": "Top up your wallet.",
+      "step1": "1. Tap 'receive' and create invoice.",
+      "step2": "2. Then pay it from another wallet you have:",
+      "step2Example": "Ledger or Phoenix for example.",
+      "step3": "3. Enjoy BIM!"
+    },
+    "type": {
+      "receive": "Received",
+      "send": "Sent"
+    }
+  },
+  "common": {
+    "loading": "Loading",
+    "back": "Back",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "retry": "Retry",
+    "close": "Close",
+    "copy": "Copy",
+    "copied": "Copied!"
+  },
+  "errors": {
+    "INTERNAL_ERROR": "An error occurred. Please try again.",
+    "VALIDATION_ERROR": "Invalid data provided.",
+    "UNAUTHORIZED": "Please sign in to continue.",
+    "ACCOUNT_NOT_FOUND": "Account not found.",
+    "ACCOUNT_ALREADY_EXISTS": "This username is already taken.",
+    "INVALID_USERNAME": "Invalid username.",
+    "CHALLENGE_NOT_FOUND": "Authentication challenge not found.",
+    "CHALLENGE_EXPIRED": "Authentication challenge has expired. Please try again.",
+    "CHALLENGE_ALREADY_USED": "Authentication challenge has already been used.",
+    "AUTHENTICATION_FAILED": "Authentication failed. Please try again.",
+    "REGISTRATION_FAILED": "Registration failed. Please try again.",
+    "SESSION_NOT_FOUND": "Session not found. Please sign in.",
+    "SESSION_EXPIRED": "Your session has expired. Please sign in again.",
+    "ACCOUNT_NOT_DEPLOYED": "Account is not yet deployed.",
+    "INVALID_ACCOUNT_STATE": "Invalid account state.",
+    "ACCOUNT_DEPLOYMENT_FAILED": "Account deployment failed.",
+    "INVALID_STARKNET_ADDRESS": "Invalid Starknet address.",
+    "SWAP_NOT_FOUND": "Swap not found.",
+    "SWAP_EXPIRED": "Swap has expired.",
+    "SWAP_AMOUNT_OUT_OF_RANGE": "Amount must be between {{min}} and {{max}} {{unit}}.",
+    "SWAP_CREATION_FAILED": "Failed to create swap.",
+    "SWAP_CLAIM_FAILED": "Failed to claim swap.",
+    "INVALID_SWAP_STATE": "Invalid swap state.",
+    "PAYMENT_PARSING_ERROR": "Unable to parse payment data.",
+    "INVALID_PAYMENT_AMOUNT": "Invalid payment amount.",
+    "MISSING_PAYMENT_AMOUNT": "Payment amount is required.",
+    "SAME_ADDRESS_PAYMENT": "Cannot send to your own address.",
+    "UNSUPPORTED_NETWORK": "Unsupported network.",
+    "UNSUPPORTED_TOKEN": "Unsupported token.",
+    "INVALID_LIGHTNING_INVOICE": "Invalid Lightning invoice.",
+    "INVALID_BITCOIN_ADDRESS": "Invalid Bitcoin address.",
+    "INVALID_PAYMENT_ADDRESS": "Invalid payment address.",
+    "USER_SETTINGS_NOT_FOUND": "User settings not found.",
+    "UNSUPPORTED_CURRENCY": "Unsupported currency.",
+    "EXTERNAL_SERVICE_ERROR": "External service is temporarily unavailable.",
+    "TIMEOUT_ERROR": "Request timed out. Please try again."
+  }
+}

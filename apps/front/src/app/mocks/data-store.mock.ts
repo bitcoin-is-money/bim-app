@@ -1,5 +1,11 @@
 import type {Account, SwapDirection} from '../model';
+import type {Language} from '../services/i18n.http.service';
 import {DEFAULT_MOCK_USER, type MockUserProfile} from './mock-users';
+
+export interface StoredUserSettings {
+  language: Language;
+  fiatCurrency: string;
+}
 
 const STORAGE_KEYS = {
   CREDENTIALS: 'mock_credentials',
@@ -9,6 +15,7 @@ const STORAGE_KEYS = {
   REGISTRATION_TIMESTAMP: 'mock_registration_timestamp',
   MOCK_SWAPS: 'mock_swaps',
   MOCK_SWAP_POLL_COUNTS: 'mock_swap_poll_counts',
+  USER_SETTINGS: 'mock_user_settings',
 } as const;
 
 export interface MockSwapData {
@@ -182,6 +189,24 @@ export class DataStoreMock {
     return this.getPollCounts().get(swapId) ?? 0;
   }
 
+  // User Settings
+  getUserSettings(): StoredUserSettings {
+    const data = localStorage.getItem(STORAGE_KEYS.USER_SETTINGS);
+    if (data) {
+      return JSON.parse(data);
+    }
+    // Default settings based on current mock user profile
+    const profile = this.getMockUserProfile();
+    return {
+      language: profile.language,
+      fiatCurrency: 'USD',
+    };
+  }
+
+  setUserSettings(settings: StoredUserSettings): void {
+    localStorage.setItem(STORAGE_KEYS.USER_SETTINGS, JSON.stringify(settings));
+  }
+
   // Utils
   clearAll(): void {
     localStorage.removeItem(STORAGE_KEYS.CREDENTIALS);
@@ -190,5 +215,6 @@ export class DataStoreMock {
     localStorage.removeItem(STORAGE_KEYS.MOCK_USER_PROFILE);
     localStorage.removeItem(STORAGE_KEYS.MOCK_SWAPS);
     localStorage.removeItem(STORAGE_KEYS.MOCK_SWAP_POLL_COUNTS);
+    localStorage.removeItem(STORAGE_KEYS.USER_SETTINGS);
   }
 }

@@ -1,4 +1,5 @@
 import type {StoredSwap, SwapStatus} from '../model';
+import type {Language} from '../services/i18n.http.service';
 import {ParsePaymentResponse} from '../services/pay.http.service';
 
 export interface MockSwapConfig {
@@ -18,6 +19,8 @@ export interface MockUserProfile {
   existingSwaps: StoredSwap[];
   /** How created swaps evolve over time */
   swapConfig: MockSwapConfig;
+  /** User's preferred language */
+  language: Language;
 }
 
 export const MOCK_USERS: MockUserProfile[] = [
@@ -39,6 +42,7 @@ export const MOCK_USERS: MockUserProfile[] = [
     },
     existingSwaps: [],
     swapConfig: {statusProgression: ['pending', 'paid', 'confirming', 'completed']},
+    language: 'en',
   },
   {
     // LIGHTNING USER - HAS EXISTING SWAPS WITH ALL STATUSES
@@ -65,6 +69,7 @@ export const MOCK_USERS: MockUserProfile[] = [
       {id: 'swap-bob-failed', type: 'send', direction: 'starknet_to_lightning', amountSats: 15000, createdAt: new Date(Date.now() - 259200000).toISOString(), lastKnownStatus: 'failed'},
     ],
     swapConfig: {statusProgression: ['pending', 'paid', 'confirming', 'completed']},
+    language: 'en',
   },
   {
     // BITCOIN USER - NO SWAPS YET, swap will progress to completed
@@ -83,6 +88,7 @@ export const MOCK_USERS: MockUserProfile[] = [
     },
     existingSwaps: [],
     swapConfig: {statusProgression: ['pending', 'paid', 'confirming', 'completed']},
+    language: 'en',
   },
   {
     // BALANCE 0 USER - UNABLE TO PAY
@@ -102,9 +108,10 @@ export const MOCK_USERS: MockUserProfile[] = [
     },
     existingSwaps: [],
     swapConfig: {statusProgression: ['pending', 'paid', 'confirming', 'completed']},
+    language: 'en',
   },
   {
-    // PAYMENT ERROR USER - swaps will fail
+    // PAYMENT ERROR USER - swaps will fail - FRENCH USER
     username: 'marc',
     deployAccountSuccess: true,
     hasTransactions: false,
@@ -121,9 +128,10 @@ export const MOCK_USERS: MockUserProfile[] = [
     },
     existingSwaps: [],
     swapConfig: {statusProgression: ['pending', 'failed']},
+    language: 'fr',
   },
   {
-    // INVALID USER - swaps will expire
+    // INVALID USER - swaps will expire - FRENCH USER
     username: 'mallory',
     deployAccountSuccess: false,
     hasTransactions: false,
@@ -140,6 +148,7 @@ export const MOCK_USERS: MockUserProfile[] = [
     },
     existingSwaps: [],
     swapConfig: {statusProgression: ['pending', 'expired']},
+    language: 'fr',
   }
 ];
 

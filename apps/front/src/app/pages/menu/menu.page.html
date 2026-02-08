@@ -1,18 +1,21 @@
-<app-full-page-layout [showFooter]="false">
+<app-full-page-layout [showFooter]="true">
   <div class="menu-page">
-    <app-go-back-header title="Menu"></app-go-back-header>
+    <app-go-back-header [title]="'menu.title' | translate"></app-go-back-header>
     <main class="menu-main">
       <nav class="menu-nav">
-        <p>General</p>
+        <p>{{ 'menu.general' | translate }}</p>
         <button class="menu-item" (click)="navigateToAbout()">
-          About
+          {{ 'menu.about' | translate }}
         </button>
-        <p>Advanced</p>
+        <button class="menu-item" (click)="navigateToSettings()">
+          {{ 'menu.settings' | translate }}
+        </button>
+        <p>{{ 'menu.advanced' | translate }}</p>
         <button class="menu-item" (click)="navigateToSwaps()">
-          Swaps
+          {{ 'menu.swaps' | translate }}
         </button>
         <button class="menu-item menu-item--danger" (click)="logout()">
-          Logout
+          {{ 'menu.logout' | translate }}
         </button>
       </nav>
     </main>

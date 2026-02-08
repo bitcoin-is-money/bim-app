@@ -2,7 +2,7 @@
   <div class="swap-content">
     <div class="swap-status-indicator" [class.polling]="isPolling()"></div>
     <div class="swap-info">
-      <div class="swap-direction">{{ directionLabel() }}</div>
+      <div class="swap-direction">{{ directionKey() | translate }}</div>
       <div class="swap-date">{{ swap().createdAt | date:'short' }}</div>
     </div>
     <div class="swap-right">
@@ -12,7 +12,7 @@
         [class.debit]="swap().type === 'send'">
         {{ formattedAmount() }}
       </div>
-      <div class="swap-status">{{ swap().lastKnownStatus }}</div>
+      <div class="swap-status">{{ statusKey() | translate }}</div>
     </div>
   </div>
 </div>

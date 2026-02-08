@@ -1,6 +1,6 @@
 <app-full-page-layout [showFooter]="true">
   <div class="receive-page">
-    <app-go-back-header title="Receive"></app-go-back-header>
+    <app-go-back-header [title]="'receive.title' | translate"></app-go-back-header>
 
     <main class="receive-main">
       <!-- Swipeable zone: logo + dots + QR -->
@@ -20,7 +20,7 @@
               class="dot"
               [class.dot-active]="activeNetworkIndex() === i"
               (click)="scrollToIndex(i)"
-              [attr.aria-label]="'Go to ' + network">
+              [attr.aria-label]="'receive.goToNetwork' | translate: { network: network }">
             </button>
           }
         </div>
@@ -49,7 +49,7 @@
         <app-field
           [value]="description()"
           [editable]="true"
-          placeholder="Optional description"
+          [placeholder]="'receive.optionalDescription' | translate"
           (valueChange)="onDescriptionChange($event)"/>
       </div>
 
@@ -62,7 +62,7 @@
             [disabled]="isCreatingInvoice()"
             [loading]="isCreatingInvoice()"
             (click)="createInvoice()">
-            Create Invoice
+            {{ 'receive.createInvoice' | translate }}
           </app-button>
         }
         @if (qrData()) {
@@ -71,7 +71,7 @@
             [icon]="['fas', 'share-nodes']"
             [disabled]="!qrData()"
             (click)="share()">
-            Share
+            {{ 'receive.share' | translate }}
           </app-button>
         }
       </div>

@@ -94,25 +94,51 @@ export namespace TransactionHash {
 export type FiatCurrency = string & {readonly __brand: 'FiatCurrency'};
 
 export namespace FiatCurrency {
-  const SUPPORTED_CURRENCIES = ['USD', 'EUR', 'GBP', 'CHF', 'JPY', 'CAD', 'AUD'] as const;
-  export type Supported = (typeof SUPPORTED_CURRENCIES)[number];
+  const SUPPORTED_CURRENCIES = new Set(['USD', 'EUR', 'GBP', 'CHF', 'JPY', 'CAD', 'AUD']);
 
   export const DEFAULT: FiatCurrency = 'USD' as FiatCurrency;
 
   export function of(value: string): FiatCurrency {
     const normalized = value.trim().toUpperCase();
-    if (!SUPPORTED_CURRENCIES.includes(normalized as Supported)) {
+    if (!SUPPORTED_CURRENCIES.has(normalized)) {
       throw new UnsupportedCurrencyError(value);
     }
     return normalized as FiatCurrency;
   }
 
   export function isSupported(value: string): boolean {
-    return SUPPORTED_CURRENCIES.includes(value.trim().toUpperCase() as Supported);
+    return SUPPORTED_CURRENCIES.has(value.trim().toUpperCase());
   }
 
   export function getSupportedCurrencies(): readonly string[] {
-    return SUPPORTED_CURRENCIES;
+    return [...SUPPORTED_CURRENCIES];
+  }
+}
+
+/**
+ * Language code (ISO 639-1).
+ */
+export type Language = string & {readonly __brand: 'Language'};
+
+export namespace Language {
+  const SUPPORTED_LANGUAGES = new Set(['en', 'fr']);
+
+  export const DEFAULT: Language = 'en' as Language;
+
+  export function of(value: string): Language {
+    const normalized = value.trim().toLowerCase();
+    if (!SUPPORTED_LANGUAGES.has(normalized)) {
+      throw new UnsupportedLanguageError(value);
+    }
+    return normalized as Language;
+  }
+
+  export function isSupported(value: string): boolean {
+    return SUPPORTED_LANGUAGES.has(value.trim().toLowerCase());
+  }
+
+  export function getSupportedLanguages(): readonly string[] {
+    return [...SUPPORTED_LANGUAGES];
   }
 }
 
@@ -132,6 +158,7 @@ export interface UserSettingsData {
   id: UserSettingsId;
   accountId: AccountId;
   fiatCurrency: FiatCurrency;
+  language: Language;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -191,6 +218,12 @@ export class InvalidTransactionHashError extends DomainError {
 export class UnsupportedCurrencyError extends DomainError {
   constructor(readonly currency: string) {
     super(`Unsupported currency: ${currency}. Supported: ${FiatCurrency.getSupportedCurrencies().join(', ')}`);
+  }
+}
+
+export class UnsupportedLanguageError extends DomainError {
+  constructor(readonly language: string) {
+    super(`Unsupported language: ${language}. Supported: ${Language.getSupportedLanguages().join(', ')}`);
   }
 }
 

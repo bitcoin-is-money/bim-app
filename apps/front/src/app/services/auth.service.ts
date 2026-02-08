@@ -12,6 +12,7 @@ import {
   BeginRegisterResponse,
   UserSessionResponse,
 } from './auth.http.service';
+import {I18nService} from './i18n.service';
 import {NotificationService} from './notification.service';
 
 export type {AuthResponse, BeginAuthResponse, BeginRegisterResponse, UserSessionResponse};
@@ -23,7 +24,8 @@ export class AuthService {
 
   private readonly httpService = inject(AuthHttpService);
   private readonly router = inject(Router);
-  private readonly notifications= inject(NotificationService);
+  private readonly i18n = inject(I18nService);
+  private readonly notifications = inject(NotificationService);
 
   currentUser = signal<Account | null>(null);
   isLoading = signal(false);
@@ -116,6 +118,9 @@ export class AuthService {
 
       await firstValueFrom(this.completeLogin(beginResponse.challengeId, credential));
 
+      // Load user's language preference after login
+      await this.i18n.init();
+
       await this.router.navigate(['/home']);
     } catch (error) {
       // HTTP errors are already handled by the interceptor
@@ -135,6 +140,8 @@ export class AuthService {
   async signOut(): Promise<void> {
     await firstValueFrom(this.httpService.logout());
     this.currentUser.set(null);
+    // Reset to browser language after logout
+    await this.i18n.initFromBrowser();
     await this.router.navigate(['/auth']);
   }
 
@@ -153,8 +160,12 @@ export class AuthService {
       .subscribe((response: UserSessionResponse) => {
         if (response.authenticated && response.account) {
           this.currentUser.set(response.account);
+          // Load user's language preference
+          this.i18n.init();
         } else {
           this.currentUser.set(null);
+          // Use browser language for unauthenticated users
+          this.i18n.initFromBrowser();
         }
       });
   }

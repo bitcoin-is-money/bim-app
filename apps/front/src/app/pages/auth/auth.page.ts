@@ -1,6 +1,7 @@
 import {CommonModule} from '@angular/common';
 import {Component, inject, signal} from '@angular/core';
 import {FormsModule} from '@angular/forms';
+import {TranslateModule} from '@ngx-translate/core';
 import {ButtonComponent} from "../../components/button/button.component";
 import {FullPageLayoutComponent} from '../../layout/full-page-layout/full-page-layout.component';
 import {AuthService} from '../../services/auth.service';
@@ -8,7 +9,7 @@ import {AuthService} from '../../services/auth.service';
 @Component({
   selector: 'app-auth',
   standalone: true,
-  imports: [CommonModule, FormsModule, ButtonComponent, FullPageLayoutComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, ButtonComponent, FullPageLayoutComponent],
   templateUrl: './auth.page.html',
   styleUrl: './auth.page.scss',
 })

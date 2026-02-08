@@ -2,29 +2,29 @@
   <div class="auth-page">
     <header>
       <img src="/logo-baseline.png" alt="Bim_Logo" style="height:48px;"/>
-      <h1 class="welcome-message">Pay and receive in Bitcoin. That's it.</h1>
+      <h1 class="welcome-message">{{ 'auth.tagline' | translate }}</h1>
     </header>
     <main>
       <section class="sign-in-section">
-        <h2>Sign In</h2>
-        <p>Use your device security to access your wallet</p>
+        <h2>{{ 'auth.signIn' | translate }}</h2>
+        <p>{{ 'auth.useDeviceSecurity' | translate }}</p>
         <app-button
           class="sign-in-button"
           variant="special"
           (click)="onSignIn()"
           [disabled]="authService.isLoading()"
         >
-          Sign In
+          {{ 'auth.signIn' | translate }}
         </app-button>
       </section>
       <div class="divider">
-        <span>or create account</span>
+        <span>{{ 'auth.orCreateAccount' | translate }}</span>
       </div>
       <section class="sign-up-section">
         <input
           type="text"
           class="username-input"
-          placeholder="Choose your username"
+          [placeholder]="'auth.chooseUsername' | translate"
           [value]="username()"
           (input)="updateUsername($event)"
           [disabled]="authService.isLoading()"
@@ -35,7 +35,7 @@
           (click)="onSignUp()"
           [disabled]="authService.isLoading() || !username()"
         >
-          Sign Up
+          {{ 'auth.signUp' | translate }}
         </app-button>
       </section>
     </main>

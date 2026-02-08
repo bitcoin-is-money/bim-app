@@ -1,0 +1,27 @@
+<app-full-page-layout [showFooter]="true">
+  <div class="settings-page">
+    <app-go-back-header [title]="'settings.title' | translate"></app-go-back-header>
+
+    <main class="settings-main">
+      <div class="settings-section">
+        <label class="settings-label" for="language-select">
+          {{ 'settings.language' | translate }}
+        </label>
+        <div class="select-wrapper">
+          <select
+            id="language-select"
+            class="language-select"
+            [(ngModel)]="currentLanguage"
+          >
+            @for (lang of languages; track lang.code) {
+              <option [value]="lang.code">
+                {{ lang.flag }} {{ lang.name }}
+              </option>
+            }
+          </select>
+          <span class="select-arrow">▼</span>
+        </div>
+      </div>
+    </main>
+  </div>
+</app-full-page-layout>

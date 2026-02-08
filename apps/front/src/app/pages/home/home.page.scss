@@ -1,7 +1,7 @@
 @reference "tailwindcss";
 
 .home-page {
-  @apply h-full flex flex-col bg-neutral-900;
+  @apply h-full flex flex-col;
 
   .home-header {
     @apply p-4 border-b border-neutral-800;
