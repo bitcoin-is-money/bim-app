@@ -9,6 +9,7 @@ import type {
 } from "@bim/domain/ports";
 import {ExternalServiceError} from "@bim/domain/shared";
 import {CallData, hash, RpcProvider} from 'starknet';
+import {ARGENT_WEBAUTHN_SALT, buildArgentWebauthnCalldata} from './argent-calldata.js';
 
 /**
  * Configuration for Starknet gateway.
@@ -17,6 +18,8 @@ export interface StarknetGatewayConfig {
   rpcUrl: string;
   accountClassHash: string;
   tokenAddresses: Record<string, string>;
+  webauthnOrigin: string;
+  webauthnRpId: string;
 }
 
 /**
@@ -36,11 +39,15 @@ export class StarknetRpcGateway implements StarknetGateway {
     publicKey: string;
   }): Promise<StarknetAddress> {
     try {
-      const salt = params.publicKey;
+      const calldata = buildArgentWebauthnCalldata({
+        origin: this.config.webauthnOrigin,
+        rpId: this.config.webauthnRpId,
+        publicKey: params.publicKey,
+      });
       const address = hash.calculateContractAddressFromHash(
-        salt,
+        ARGENT_WEBAUTHN_SALT,
         this.config.accountClassHash,
-        CallData.compile([params.publicKey]),
+        CallData.compile(calldata),
         0,
       );
 
@@ -57,11 +64,17 @@ export class StarknetRpcGateway implements StarknetGateway {
     starknetAddress: StarknetAddress;
     publicKey: string;
   }): Promise<DeployTransaction> {
+    const calldata = buildArgentWebauthnCalldata({
+      origin: this.config.webauthnOrigin,
+      rpId: this.config.webauthnRpId,
+      publicKey: params.publicKey,
+    });
     return {
       type: 'DEPLOY_ACCOUNT',
       contractAddress: params.starknetAddress.toString(),
       classHash: this.config.accountClassHash,
-      constructorCallData: [params.publicKey],
+      salt: ARGENT_WEBAUTHN_SALT,
+      constructorCallData: calldata,
       signature: [],
     };
   }

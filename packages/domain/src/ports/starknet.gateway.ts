@@ -66,6 +66,7 @@ export interface DeployTransaction {
   type: 'DEPLOY_ACCOUNT';
   contractAddress: string;
   classHash: string;
+  salt: string;
   constructorCallData: string[];
   signature: string[];
 }

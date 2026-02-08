@@ -1,0 +1,11 @@
+diff --git a/node_modules/@atomiqlabs/sdk/node_modules/@atomiqlabs/base/src/swaps/SwapData.ts b/node_modules/@atomiqlabs/sdk/node_modules/@atomiqlabs/base/src/swaps/SwapData.ts
+index d5d3c45..a762494 100644
+--- a/node_modules/@atomiqlabs/sdk/node_modules/@atomiqlabs/base/src/swaps/SwapData.ts
++++ b/node_modules/@atomiqlabs/sdk/node_modules/@atomiqlabs/base/src/swaps/SwapData.ts
+@@ -1,5 +1,5 @@
+ import {ChainSwapType} from "./ChainSwapType";
+-import {StorageObject} from "../storage/StorageObject";
++import type {StorageObject} from "../storage/StorageObject";
+ 
+ /**
+  * Represents full escrow swap data and parameters

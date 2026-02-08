@@ -10,10 +10,11 @@
     "build": "npm run typecheck && esbuild src/main.ts --bundle --platform=node --format=esm --outfile=dist/main.js --packages=external",
     "dev": "tsc --watch --noEmit",
     "start": "node dist/main.js",
-    "start:dev": "tsx watch src/main.ts",
+    "start:dev": "BIM_ENV=testnet tsx watch src/main.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:integration": "vitest run --config vitest.config.integration.ts",
+    "test:testnet": "vitest run --config vitest.config.testnet.ts",
     "test:all": "npm run test && npm run test:integration",
     "copy:front": "cp -r ../front/dist/frontend/browser/browser/* ./public/",
     "db:generate": "drizzle-kit generate --config drizzle.config.ts",
@@ -22,27 +23,27 @@
     "db:studio": "drizzle-kit studio --config drizzle.config.ts"
   },
   "dependencies": {
-    "@atomiqlabs/chain-starknet": "^7.0.25",
-    "@atomiqlabs/sdk": "^7.0.10",
-    "@atomiqlabs/storage-sqlite": "^4.0.0",
+    "@atomiqlabs/chain-starknet": "^8.0.13",
+    "@atomiqlabs/sdk": "^8.1.8",
+    "@atomiqlabs/storage-sqlite": "^5.0.0",
     "@bim/domain": "*",
     "@bim/lib": "*",
-    "@hono/node-server": "^1.13.0",
-    "dotenv": "^17.2.3",
+    "@hono/node-server": "^1.19.9",
+    "dotenv": "^17.2.4",
     "dotenv-expand": "^12.0.3",
-    "drizzle-orm": "^0.38.0",
-    "hono": "^4.6.0",
+    "drizzle-orm": "^0.45.1",
+    "hono": "^4.11.9",
     "light-bolt11-decoder": "^3.2.0",
-    "pg": "^8.13.0",
+    "pg": "^8.18.0",
     "starknet": "^9.3.0",
-    "zod": "^3.24.0"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@bim/test-toolkit": "*",
     "@testcontainers/postgresql": "^11.11.0",
-    "@types/node": "^25.0.9",
-    "@types/pg": "^8.11.6",
-    "drizzle-kit": "^0.30.0",
+    "@types/node": "^25.2.2",
+    "@types/pg": "^8.16.0",
+    "drizzle-kit": "^0.31.8",
     "testcontainers": "^11.11.0"
   }
 }

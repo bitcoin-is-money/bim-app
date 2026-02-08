@@ -9,12 +9,6 @@ import {type Uint8Array_, verifyAuthenticationResponse, verifyRegistrationRespon
 import {cose, decodeCredentialPublicKey,} from '@simplewebauthn/server/helpers';
 
 /**
- * Stark curve prime: 2^251 + 17 * 2^192 + 1
- * Values used in Starknet Pedersen hash must be < this prime.
- */
-const STARK_PRIME: bigint = 2n ** 251n + 17n * 2n ** 192n + 1n;
-
-/**
  * SimpleWebAuthn-based implementation of WebAuthnGateway.
  */
 export class SimpleWebAuthnGateway implements WebAuthnGateway {
@@ -139,13 +133,10 @@ export class SimpleWebAuthnGateway implements WebAuthnGateway {
   }
 
   /**
-   * Extracts the x-coordinate from a COSE-encoded P-256 public key and
-   * reduces it to fit within the Stark field (< STARK_PRIME).
+   * Extracts the x-coordinate from a COSE-encoded P-256 public key.
    *
-   * P-256 uses a 256-bit field, but the Starknet's Stark curve uses ~251 bits.
-   * We apply modular reduction to ensure the value is valid for Pedersen hash.
-   *
-   * TODO: use lib, remove this technical code if possible
+   * Returns the full 256-bit value (NOT reduced mod STARK_PRIME) because
+   * the Argent contract stores it as u256 (two 128-bit felts).
    */
   private extractP256XCoordinate(coseKey: Uint8Array_): string {
     const cosePublicKey = decodeCredentialPublicKey(coseKey);
@@ -159,13 +150,8 @@ export class SimpleWebAuthnGateway implements WebAuthnGateway {
       throw new Error('Missing x coordinate in public key');
     }
 
-    // Convert to bigint for modular reduction
     const xCoordBigInt = BigInt('0x' + Buffer.from(xCoord).toString('hex'));
 
-    // Reduce to fit within the Stark field (< STARK_PRIME)
-    const reducedX = xCoordBigInt % STARK_PRIME;
-
-    // Convert back to hex, padded to 64 characters
-    return '0x' + reducedX.toString(16).padStart(64, '0');
+    return '0x' + xCoordBigInt.toString(16).padStart(64, '0');
   }
 }

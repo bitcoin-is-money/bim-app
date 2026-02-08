@@ -73,7 +73,7 @@ export function handleDomainError(ctx: Context, error: unknown): TypedResponse<A
 
   // Zod validation errors
   if (error instanceof ZodError) {
-    const firstError = error.errors[0];
+    const firstError = error.issues[0];
     const field = firstError?.path.join('.') || 'unknown';
     return createErrorResponse(ctx, 400, ErrorCode.VALIDATION_ERROR, `Invalid ${field}: ${firstError?.message}`, {
       field,

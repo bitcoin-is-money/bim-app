@@ -1,6 +1,6 @@
-import {StarknetInitializer} from '@atomiqlabs/chain-starknet';
-import type {MultichainSwapperOptions} from '@atomiqlabs/sdk';
-import {BitcoinNetwork, Swapper, SwapperFactory, SwapType} from '@atomiqlabs/sdk';
+import {StarknetInitializer, type StarknetInitializerType} from '@atomiqlabs/chain-starknet';
+import type {TypedSwapper, TypedSwapperOptions} from '@atomiqlabs/sdk';
+import {BitcoinNetwork, SwapperFactory, SwapType} from '@atomiqlabs/sdk';
 import {SqliteStorageManager, SqliteUnifiedStorage} from '@atomiqlabs/storage-sqlite';
 import {StarknetAddress} from "@bim/domain/account";
 import type {
@@ -34,6 +34,8 @@ interface SwapInfo {
   createdAt: Date;
 }
 
+type StarknetChainInitializers = readonly [StarknetInitializerType];
+
 /**
  * Atomiq SDK gateway implementation for cross-chain swaps.
  *
@@ -41,8 +43,8 @@ interface SwapInfo {
  * with the swap protocol for Lightning and Bitcoin to/from Starknet swaps.
  */
 export class AtomiqSdkGateway implements AtomiqGateway {
-  private swapperFactory: SwapperFactory<any> | null = null;
-  private swapper: Swapper<any> | null = null;
+  private swapperFactory: SwapperFactory<StarknetChainInitializers> | null = null;
+  private swapper: TypedSwapper<StarknetChainInitializers> | null = null;
   private readonly swapRegistry: Map<string, SwapInfo> = new Map();
   private isInitialized: boolean = false;
 
@@ -62,7 +64,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
 
     try {
       // Create SwapperFactory with Starknet chain initializer
-      this.swapperFactory = new SwapperFactory([StarknetInitializer as any]);
+      this.swapperFactory = new SwapperFactory([StarknetInitializer]);
 
       // Configure the swapper
       const bitcoinNetworkEnum = this.config.network === 'mainnet'
@@ -71,17 +73,17 @@ export class AtomiqSdkGateway implements AtomiqGateway {
 
       const storagePath = this.config.storagePath || './data';
 
-      const swapperOptions: MultichainSwapperOptions<any> = {
+      const swapperOptions: TypedSwapperOptions<StarknetChainInitializers> = {
         bitcoinNetwork: bitcoinNetworkEnum,
         chains: {
           STARKNET: {
             rpcUrl: this.config.starknetRpcUrl
           }
         },
-        swapStorage: (chainId) => {
+        swapStorage: (chainId: string) => {
           return new SqliteUnifiedStorage(`${storagePath}/CHAIN_${chainId}.sqlite3`);
         },
-        chainStorageCtor: (name) => {
+        chainStorageCtor: (name: string) => {
           return new SqliteStorageManager(`${storagePath}/STORE_${name}.sqlite3`);
         }
       };
@@ -377,8 +379,8 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       );
 
       return {
-        minSats: BigInt(limits.input.min.rawAmount),
-        maxSats: BigInt(limits.input.max.rawAmount),
+        minSats: limits.input.min.rawAmount ?? 0n,
+        maxSats: limits.input.max?.rawAmount ?? 0n,
         feePercent: this.getSwapFeePercent(SwapType.FROM_BTCLN),
       };
     } catch {
@@ -398,8 +400,8 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       );
 
       return {
-        minSats: BigInt(limits.input.min.rawAmount),
-        maxSats: BigInt(limits.input.max.rawAmount),
+        minSats: limits.input.min.rawAmount ?? 0n,
+        maxSats: limits.input.max?.rawAmount ?? 0n,
         feePercent: this.getSwapFeePercent(SwapType.FROM_BTC),
       };
     } catch {
@@ -419,8 +421,8 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       );
 
       return {
-        minSats: BigInt(limits.input.min.rawAmount),
-        maxSats: BigInt(limits.input.max.rawAmount),
+        minSats: limits.input.min.rawAmount ?? 0n,
+        maxSats: limits.input.max?.rawAmount ?? 0n,
         feePercent: this.getSwapFeePercent(SwapType.TO_BTCLN),
       };
     } catch {
@@ -440,8 +442,8 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       );
 
       return {
-        minSats: BigInt(limits.input.min.rawAmount),
-        maxSats: BigInt(limits.input.max.rawAmount),
+        minSats: limits.input.min.rawAmount ?? 0n,
+        maxSats: limits.input.max?.rawAmount ?? 0n,
         feePercent: this.getSwapFeePercent(SwapType.TO_BTC),
       };
     } catch {
