@@ -4,23 +4,8 @@ import {sql} from 'drizzle-orm';
 import type {Hono} from 'hono';
 import pg from 'pg';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
+import type {BeginRegistrationResponse, CompleteRegistrationResponse, SessionAuthenticatedResponse, SessionUnauthenticatedResponse} from '../../../src/routes/auth/auth.types';
 import {type DbClient, StrkDevnetContext, TestApp, TestDatabase,} from '../helpers';
-
-/**
- * API response type from /api/auth/register/begin
- */
-interface BeginRegistrationResponse {
-  options: {
-    challenge: string;
-    rpId: string;
-    rpName: string;
-    userId: string;
-    userName: string;
-    timeout: number;
-  };
-  challengeId: string;
-  accountId: string; // Pre-generated account ID - must be passed to completeRegistration
-}
 
 // The expected origin matches WEBAUTHN_ORIGIN env var set in test-app.ts
 const webAuthnOrigin = 'http://localhost:8080';
@@ -146,14 +131,7 @@ describe('Registration Flow', () => {
       const {completeResponse} = await registerUser(username);
 
       expect(completeResponse.status).toBe(200);
-      const body = await completeResponse.json() as {
-        account: {
-          id: string;
-          username: string;
-          starknetAddress: string | null;
-          status: string;
-        };
-      };
+      const body = await completeResponse.json() as CompleteRegistrationResponse;
 
       expect(body.account.id).toBeDefined();
       expect(body.account.username).toBe(username);
@@ -257,10 +235,7 @@ describe('Registration Flow', () => {
         });
 
       expect(sessionResponse.status).toBe(200);
-      const body = await sessionResponse.json() as {
-        authenticated: boolean;
-        account: { username: string };
-      };
+      const body = await sessionResponse.json() as SessionAuthenticatedResponse;
       expect(body.authenticated).toBe(true);
       expect(body.account.username).toBe(username);
     });
@@ -271,7 +246,7 @@ describe('Registration Flow', () => {
         .get('/api/auth/session');
 
       expect(response.status).toBe(401);
-      const body = await response.json() as { authenticated: boolean };
+      const body = await response.json() as SessionUnauthenticatedResponse;
       expect(body.authenticated).toBe(false);
     });
   });

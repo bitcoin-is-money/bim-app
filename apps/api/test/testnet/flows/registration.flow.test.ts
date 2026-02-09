@@ -3,35 +3,8 @@ import {type CredentialCreationOptions, WebauthnVirtualAuthenticator} from '@bim
 import type {Hono} from 'hono';
 import pg from 'pg';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
+import type {BeginRegistrationResponse, CompleteRegistrationResponse, SessionAuthenticatedResponse} from '../../../src/routes/auth/auth.types';
 import {TestDatabase, TestnetApp} from '../helpers';
-
-/**
- * API response type from /api/auth/register/begin
- */
-interface BeginRegistrationResponse {
-  options: {
-    challenge: string;
-    rpId: string;
-    rpName: string;
-    userId: string;
-    userName: string;
-    timeout: number;
-  };
-  challengeId: string;
-  accountId: string;
-}
-
-/**
- * API response type from registration complete
- */
-interface RegistrationCompleteResponse {
-  account: {
-    id: string;
-    username: string;
-    starknetAddress: string | null;
-    status: string;
-  };
-}
 
 const webAuthnOrigin = 'http://localhost:8080';
 
@@ -133,7 +106,7 @@ describe('Registration Flow (Testnet)', () => {
       const {completeResponse} = await registerUser('tn_bob');
 
       expect(completeResponse.status).toBe(200);
-      const body = await completeResponse.json() as RegistrationCompleteResponse;
+      const body = await completeResponse.json() as CompleteRegistrationResponse;
 
       expect(body.account.id).toBeDefined();
       expect(body.account.username).toBe('tn_bob');
@@ -168,10 +141,7 @@ describe('Registration Flow (Testnet)', () => {
         });
 
       expect(sessionResponse.status).toBe(200);
-      const body = await sessionResponse.json() as {
-        authenticated: boolean;
-        account: {username: string};
-      };
+      const body = await sessionResponse.json() as SessionAuthenticatedResponse;
       expect(body.authenticated).toBe(true);
       expect(body.account.username).toBe('tn_session');
     });

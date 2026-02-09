@@ -5,57 +5,10 @@ import {eq} from 'drizzle-orm';
 import type {Hono} from 'hono';
 import pg from 'pg';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
+import type {DeployAccountResponse, GetAccountResponse, GetDeploymentStatusResponse} from '../../../src/routes/account/account.types';
+import type {BeginRegistrationResponse, CompleteRegistrationResponse} from '../../../src/routes/auth/auth.types';
 import * as schema from '../../../src/db/schema';
 import {type DbClient, DevnetPaymasterGateway, StrkDevnetContext, TestApp, TestDatabase,} from '../helpers';
-
-/**
- * API response type from /api/auth/register/begin
- */
-interface BeginRegistrationResponse {
-  options: {
-    challenge: string;
-    rpId: string;
-    rpName: string;
-    userId: string;
-    userName: string;
-    timeout: number;
-  };
-  challengeId: string;
-  accountId: string; // Pre-generated account ID - must be passed to completeRegistration
-}
-
-/**
- * API response type from registration complete
- */
-interface RegistrationCompleteResponse {
-  account: {
-    id: string;
-    username: string;
-    starknetAddress: string | null;
-    status: string;
-  };
-}
-
-/**
- * API response type from account/me
- */
-interface AccountMeResponse {
-  id: string;
-  username: string;
-  starknetAddress: string | null;
-  status: string;
-  deploymentTxHash: string | null;
-  createdAt: string;
-}
-
-/**
- * API response type from deployment-status endpoint
- */
-interface DeploymentStatusResponse {
-  status: string;
-  txHash: string | null;
-  isDeployed: boolean;
-}
 
 // The expected origin matches WEBAUTHN_ORIGIN env var set in test-app.ts
 const webAuthnOrigin = 'http://localhost:8080';
@@ -135,7 +88,7 @@ describe('Account Deployment Flow', () => {
    */
   async function registerUser(username: string): Promise<{
     sessionCookie: string;
-    account: RegistrationCompleteResponse['account'];
+    account: CompleteRegistrationResponse['account'];
   }> {
     const beginResponse = await TestApp
       .request(app)
@@ -153,7 +106,7 @@ describe('Account Deployment Flow', () => {
         credential,
       });
 
-    const completeBody = await completeResponse.json() as RegistrationCompleteResponse;
+    const completeBody = await completeResponse.json() as CompleteRegistrationResponse;
     const setCookie = completeResponse.headers.get('Set-Cookie') || '';
     const sessionMatch = /session=([^;]+)/.exec(setCookie);
     const sessionCookie = sessionMatch ? `session=${sessionMatch[1]}` : '';
@@ -181,7 +134,7 @@ describe('Account Deployment Flow', () => {
         });
 
       expect(response.status).toBe(200);
-      const body = await response.json() as AccountMeResponse;
+      const body = await response.json() as GetAccountResponse;
 
       expect(body.id).toBe(account.id);
       expect(body.username).toBe(username);
@@ -221,7 +174,7 @@ describe('Account Deployment Flow', () => {
         });
 
       expect(response.status).toBe(200);
-      const body = await response.json() as DeploymentStatusResponse;
+      const body = await response.json() as GetDeploymentStatusResponse;
 
       expect(body.status).toBe('pending');
       expect(body.txHash).toBeNull();
@@ -262,11 +215,7 @@ describe('Account Deployment Flow', () => {
         });
 
       expect(deployResponse.status).toBe(200);
-      const deployBody = await deployResponse.json() as {
-        txHash: string;
-        status: string;
-        starknetAddress: string;
-      };
+      const deployBody = await deployResponse.json() as DeployAccountResponse;
 
       // Starknet address should now be computed
       expect(deployBody.starknetAddress).toMatch(/^0x[0-9a-fA-F]{64}$/);
@@ -312,7 +261,7 @@ describe('Account Deployment Flow', () => {
         });
 
       expect(statusResponse.status).toBe(200);
-      const statusBody = await statusResponse.json() as DeploymentStatusResponse;
+      const statusBody = await statusResponse.json() as GetDeploymentStatusResponse;
       expect(statusBody.status).toBe('deployed');
       expect(statusBody.isDeployed).toBe(true);
       expect(statusBody.txHash).toBe(deployBody.txHash);

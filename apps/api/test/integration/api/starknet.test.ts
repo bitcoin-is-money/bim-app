@@ -2,6 +2,7 @@ import type {Hono} from 'hono';
 import pg from "pg";
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 import type {ApiErrorBody, ApiErrorResponse} from "../../../src/errors";
+import type {DeployAccountResponse, GetDeploymentStatusResponse} from "../../../src/routes/account/account.types";
 import {type DbClient, StrkDevnetContext, TestApp, TestDatabase} from '../helpers';
 import {AccountFixture} from "../helpers/account";
 import {AuthFixture} from "../helpers/auth";
@@ -149,7 +150,7 @@ describe('Starknet Integration', () => {
 
       // 5. Verify response
       expect(response.status).toBe(200);
-      const body = await response.json() as {txHash: string; status: string};
+      const body = await response.json() as DeployAccountResponse;
       expect(body.txHash).toMatch(/^0x[0-9a-fA-F]+$/);
       expect(body.status).toBe('deploying');
 
@@ -163,7 +164,7 @@ describe('Starknet Integration', () => {
       );
 
       expect(statusResponse.status).toBe(200);
-      const statusBody = await statusResponse.json() as {status: string; isDeployed: boolean};
+      const statusBody = await statusResponse.json() as GetDeploymentStatusResponse;
       expect(statusBody.status).toBe('deployed');
       expect(statusBody.isDeployed).toBe(true);
 
