@@ -29,9 +29,9 @@ export class Bolt11LightningDecoder implements LightningDecoder {
         : undefined;
 
     const expiresAt =
-      decoded.expiry !== undefined
-        ? new Date(decoded.expiry * 1000)
-        : undefined;
+      decoded.expiry === undefined
+        ? undefined
+        : new Date(decoded.expiry * 1000);
 
     return {amountMSat, description, expiresAt};
   }
