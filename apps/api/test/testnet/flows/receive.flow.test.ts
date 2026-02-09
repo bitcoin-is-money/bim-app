@@ -3,44 +3,10 @@ import {type CredentialCreationOptions, WebauthnVirtualAuthenticator} from '@bim
 import type {Hono} from 'hono';
 import pg from 'pg';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
+import type {DeployAccountResponse} from '../../../src/routes/account/account.types';
+import type {BeginRegistrationResponse} from '../../../src/routes/auth/auth.types';
+import type {StarknetReceiveResponse} from '../../../src/routes/payment/receive/receive.types';
 import {TestDatabase, TestnetApp, TestnetContext} from '../helpers';
-
-/**
- * API response type from /api/auth/register/begin
- */
-interface BeginRegistrationResponse {
-  options: {
-    challenge: string;
-    rpId: string;
-    rpName: string;
-    userId: string;
-    userName: string;
-    timeout: number;
-  };
-  challengeId: string;
-  accountId: string;
-}
-
-/**
- * API response type from registration complete
- */
-interface RegistrationCompleteResponse {
-  account: {
-    id: string;
-    username: string;
-    starknetAddress: string | null;
-    status: string;
-  };
-}
-
-/**
- * API response from Starknet receive
- */
-interface StarknetReceiveResponse {
-  network: 'starknet';
-  address: string;
-  uri: string;
-}
 
 const webAuthnOrigin = 'http://localhost:8080';
 
@@ -141,10 +107,7 @@ describe('Receive Flow (Testnet)', () => {
       throw new Error(`Deployment failed (HTTP ${deployResponse.status}): ${errorBody}`);
     }
 
-    const deployBody = await deployResponse.json() as {
-      txHash: string;
-      starknetAddress: string;
-    };
+    const deployBody = await deployResponse.json() as DeployAccountResponse;
 
     // Wait for Sepolia confirmation
     await testnetContext.waitForTransaction(deployBody.txHash);

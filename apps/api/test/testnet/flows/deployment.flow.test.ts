@@ -8,6 +8,7 @@ import * as schema from '../../../src/db/schema';
 import type {
   BeginRegistrationResponse,
   CompleteRegistrationResponse,
+  DeployAccountResponse,
   GetAccountResponse,
   GetDeploymentStatusResponse
 } from "../../../src/routes";
@@ -140,11 +141,7 @@ describe('Deployment Flow (Testnet)', () => {
         );
       }
 
-      const deployBody = await deployResponse.json() as {
-        txHash: string;
-        status: string;
-        starknetAddress: string;
-      };
+      const deployBody = await deployResponse.json() as DeployAccountResponse;
 
       // Starknet address should now be computed from P256 public key
       expect(deployBody.starknetAddress).toMatch(/^0x[0-9a-fA-F]{64}$/);

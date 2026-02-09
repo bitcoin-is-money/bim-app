@@ -8,36 +8,10 @@ import type {Hono} from 'hono';
 import pg from 'pg';
 import {Account, Signer} from 'starknet';
 import {afterAll, beforeAll, describe, expect, it} from 'vitest';
+import type {DeployAccountResponse} from '../../../src/routes/account/account.types';
+import type {BeginRegistrationResponse, CompleteRegistrationResponse} from '../../../src/routes/auth/auth.types';
 import {DevnetPaymasterGateway, StrkDevnetContext, TestApp, TestDatabase,} from '../helpers';
 import {ETH_TOKEN_ADDRESS, STRK_TOKEN_ADDRESS} from '../helpers';
-
-/**
- * API response type from /api/auth/register/begin
- */
-interface BeginRegistrationResponse {
-  options: {
-    challenge: string;
-    rpId: string;
-    rpName: string;
-    userId: string;
-    userName: string;
-    timeout: number;
-  };
-  challengeId: string;
-  accountId: string; // Pre-generated account ID - must be passed to completeRegistration
-}
-
-/**
- * API response type from registration complete
- */
-interface RegistrationCompleteResponse {
-  account: {
-    id: string;
-    username: string;
-    starknetAddress: string | null;
-    status: string;
-  };
-}
 
 // The expected origin matches WEBAUTHN_ORIGIN env var set in test-app.ts
 const webAuthnOrigin = 'http://localhost:8080';
@@ -102,7 +76,7 @@ describe('Transfer Flow', () => {
    */
   async function registerAndDeployUser(username: string): Promise<{
     sessionCookie: string;
-    account: RegistrationCompleteResponse['account'];
+    account: CompleteRegistrationResponse['account'];
     deployedAddress: string;
     deployedAccount: Account;
   }> {
@@ -123,7 +97,7 @@ describe('Transfer Flow', () => {
         credential,
       });
 
-    const completeBody = await completeResponse.json() as RegistrationCompleteResponse;
+    const completeBody = await completeResponse.json() as CompleteRegistrationResponse;
     const setCookie = completeResponse.headers.get('Set-Cookie') || '';
     const sessionMatch = /session=([^;]+)/.exec(setCookie);
     const sessionCookie = sessionMatch ? `session=${sessionMatch[1]}` : '';
@@ -136,7 +110,7 @@ describe('Transfer Flow', () => {
       });
 
     expect(deployResponse.status).toBe(200);
-    const deployBody = await deployResponse.json() as {txHash: string; status: string};
+    const deployBody = await deployResponse.json() as DeployAccountResponse;
 
     // Wait for deployment confirmation
     await strkContext.waitForTransaction(deployBody.txHash);

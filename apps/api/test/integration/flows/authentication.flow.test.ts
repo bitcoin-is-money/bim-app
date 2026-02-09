@@ -12,7 +12,10 @@ import * as schema from '../../../src/db/schema';
 import type {
   BeginAuthenticationResponse,
   BeginRegistrationResponse,
-  CompleteAuthenticationResponse
+  CompleteAuthenticationResponse,
+  LogoutResponse,
+  SessionAuthenticatedResponse,
+  SessionUnauthenticatedResponse,
 } from "../../../src/routes";
 import {type DbClient, StrkDevnetContext, TestApp, TestDatabase,} from '../helpers';
 
@@ -292,10 +295,7 @@ describe('Authentication Flow', () => {
         });
 
       expect(sessionResponse.status).toBe(200);
-      const body = await sessionResponse.json() as {
-        authenticated: boolean;
-        account: { username: string };
-      };
+      const body = await sessionResponse.json() as SessionAuthenticatedResponse;
       expect(body.authenticated).toBe(true);
       expect(body.account.username).toBe(username);
     });
@@ -306,7 +306,7 @@ describe('Authentication Flow', () => {
         .get('/api/auth/session');
 
       expect(response.status).toBe(401);
-      const body = await response.json() as { authenticated: boolean };
+      const body = await response.json() as SessionUnauthenticatedResponse;
       expect(body.authenticated).toBe(false);
     });
 
@@ -357,7 +357,7 @@ describe('Authentication Flow', () => {
         .post('/api/auth/logout', {});
 
       expect(response.status).toBe(200);
-      const body = await response.json() as { success: boolean };
+      const body = await response.json() as LogoutResponse;
       expect(body.success).toBe(true);
     });
   });
