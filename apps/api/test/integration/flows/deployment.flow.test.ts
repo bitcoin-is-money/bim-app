@@ -1,37 +1,13 @@
 import {StarknetAddress} from '@bim/domain/account';
-import {UuidCodec} from '@bim/lib/encoding';
-import {type CredentialCreationOptions, WebauthnVirtualAuthenticator} from "@bim/test-toolkit/auth";
+import {WebauthnVirtualAuthenticator} from "@bim/test-toolkit/auth";
 import {eq} from 'drizzle-orm';
 import type {Hono} from 'hono';
 import pg from 'pg';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import type {DeployAccountResponse, GetAccountResponse, GetDeploymentStatusResponse} from '../../../src/routes/account/account.types';
-import type {BeginRegistrationResponse, CompleteRegistrationResponse} from '../../../src/routes/auth/auth.types';
+import type {DeployAccountResponse, GetAccountResponse, GetDeploymentStatusResponse} from '../../../src/routes';
 import * as schema from '../../../src/db/schema';
+import {registerUser} from '../../helpers';
 import {type DbClient, DevnetPaymasterGateway, StrkDevnetContext, TestApp, TestDatabase,} from '../helpers';
-
-// The expected origin matches WEBAUTHN_ORIGIN env var set in test-app.ts
-const webAuthnOrigin = 'http://localhost:8080';
-
-
-/**
- * Converts API registration options to VirtualAuthenticator format.
- */
-function toRegistrationOptions(apiResponse: BeginRegistrationResponse): CredentialCreationOptions {
-  return {
-    challenge: apiResponse.options.challenge,
-    rp: {
-      id: apiResponse.options.rpId,
-      name: apiResponse.options.rpName,
-    },
-    user: {
-      id: UuidCodec.toBase64Url(apiResponse.options.userId), // Convert UUID to base64url bytes
-      name: apiResponse.options.userName,
-      displayName: apiResponse.options.userName,
-    },
-    origin: webAuthnOrigin,
-  };
-}
 
 /**
  * Account Deployment Flow Integration Tests
@@ -83,44 +59,14 @@ describe('Account Deployment Flow', () => {
     await pool.end();
   });
 
-  /**
-   * Helper to register a user, return session cookie and account info.
-   */
-  async function registerUser(username: string): Promise<{
-    sessionCookie: string;
-    account: CompleteRegistrationResponse['account'];
-  }> {
-    const beginResponse = await TestApp
-      .request(app)
-      .post('/api/auth/register/begin', {username});
-    const beginBody = await beginResponse.json() as BeginRegistrationResponse;
-    const credential = await authenticator
-      .createCredential(toRegistrationOptions(beginBody));
-
-    const completeResponse = await TestApp
-      .request(app)
-      .post('/api/auth/register/complete', {
-        challengeId: beginBody.challengeId,
-        accountId: beginBody.accountId, // Pass accountId from begin to complete
-        username,
-        credential,
-      });
-
-    const completeBody = await completeResponse.json() as CompleteRegistrationResponse;
-    const setCookie = completeResponse.headers.get('Set-Cookie') || '';
-    const sessionMatch = /session=([^;]+)/.exec(setCookie);
-    const sessionCookie = sessionMatch ? `session=${sessionMatch[1]}` : '';
-
-    return {
-      sessionCookie,
-      account: completeBody.account,
-    };
+  function register(username: string) {
+    return registerUser(TestApp.request(app), authenticator, username);
   }
 
   describe('GET /api/account/me', () => {
     it('returns account info for authenticated user', async () => {
       const username = 'account_info';
-      const {sessionCookie, account} = await registerUser(username);
+      const {sessionCookie, account} = await register(username);
 
       // Verify account state from registration response
       expect(account.status).toBe('pending');
@@ -166,7 +112,7 @@ describe('Account Deployment Flow', () => {
   describe('GET /api/account/deployment-status', () => {
     it('returns pending status for new account', async () => {
       const username = 'status_pending';
-      const {sessionCookie} = await registerUser(username);
+      const {sessionCookie} = await register(username);
       const response = await TestApp
         .request(app)
         .get('/api/account/deployment-status', {
@@ -201,7 +147,7 @@ describe('Account Deployment Flow', () => {
 
     it('deploys account to Starknet devnet', async () => {
       const username = 'deploy_test';
-      const {sessionCookie, account} = await registerUser(username);
+      const {sessionCookie, account} = await register(username);
 
       // Verify the account is pending before deployment (no starknet address yet)
       expect(account.status).toBe('pending');
@@ -272,7 +218,7 @@ describe('Account Deployment Flow', () => {
 
     it('account has no Starknet address after registration', async () => {
       const username = 'address_test';
-      const {account} = await registerUser(username);
+      const {account} = await register(username);
 
       // Starknet address should NOT be computed at registration
       expect(account.starknetAddress).toBeNull();

@@ -1,30 +1,11 @@
-import {UuidCodec} from '@bim/lib/encoding';
-import {type CredentialCreationOptions, WebauthnVirtualAuthenticator} from '@bim/test-toolkit/auth';
+import {WebauthnVirtualAuthenticator} from '@bim/test-toolkit/auth';
 import type {Hono} from 'hono';
 import pg from 'pg';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 import type {DeployAccountResponse} from '../../../src/routes/account/account.types';
-import type {BeginRegistrationResponse} from '../../../src/routes/auth/auth.types';
 import type {StarknetReceiveResponse} from '../../../src/routes/payment/receive/receive.types';
+import {registerUser} from '../../helpers';
 import {TestDatabase, TestnetApp, TestnetContext} from '../helpers';
-
-const webAuthnOrigin = 'http://localhost:8080';
-
-function toRegistrationOptions(apiResponse: BeginRegistrationResponse): CredentialCreationOptions {
-  return {
-    challenge: apiResponse.options.challenge,
-    rp: {
-      id: apiResponse.options.rpId,
-      name: apiResponse.options.rpName,
-    },
-    user: {
-      id: UuidCodec.toBase64Url(apiResponse.options.userId),
-      name: apiResponse.options.userName,
-      displayName: apiResponse.options.userName,
-    },
-    origin: webAuthnOrigin,
-  };
-}
 
 /**
  * Receive Flow — Testnet (Starknet Sepolia)
@@ -68,6 +49,10 @@ describe('Receive Flow (Testnet)', () => {
     await pool.end();
   });
 
+  function register(username: string) {
+    return registerUser(TestnetApp.request(app), authenticator, username);
+  }
+
   /**
    * Registers and deploys an account on Sepolia.
    * Waits for on-chain confirmation before returning.
@@ -76,26 +61,7 @@ describe('Receive Flow (Testnet)', () => {
     sessionCookie: string;
     starknetAddress: string;
   }> {
-    // Register
-    const beginResponse = await TestnetApp
-      .request(app)
-      .post('/api/auth/register/begin', {username});
-    const beginBody = await beginResponse.json() as BeginRegistrationResponse;
-    const credential = await authenticator
-      .createCredential(toRegistrationOptions(beginBody));
-    const completeResponse = await TestnetApp
-      .request(app)
-      .post('/api/auth/register/complete', {
-        challengeId: beginBody.challengeId,
-        accountId: beginBody.accountId,
-        username,
-        credential,
-      });
-    expect(completeResponse.status).toBe(200);
-
-    const setCookie = completeResponse.headers.get('Set-Cookie') || '';
-    const sessionMatch = /session=([^;]+)/.exec(setCookie);
-    const sessionCookie = sessionMatch ? `session=${sessionMatch[1]}` : '';
+    const {sessionCookie} = await register(username);
 
     // Deploy
     const deployResponse = await TestnetApp
@@ -139,23 +105,7 @@ describe('Receive Flow (Testnet)', () => {
     it('rejects receive for non-deployed account', async ({skip}) => {
       if (deploymentFailed) skip('Deployment failed — AVNU paymaster likely needs updating');
       // Register a new user (not deployed)
-      const beginResponse = await TestnetApp
-        .request(app)
-        .post('/api/auth/register/begin', {username: 'tn_recv_pending'});
-      const beginBody = await beginResponse.json() as BeginRegistrationResponse;
-      const credential = await authenticator
-        .createCredential(toRegistrationOptions(beginBody));
-      const completeResponse = await TestnetApp
-        .request(app)
-        .post('/api/auth/register/complete', {
-          challengeId: beginBody.challengeId,
-          accountId: beginBody.accountId,
-          username: 'tn_recv_pending',
-          credential,
-        });
-      const setCookie = completeResponse.headers.get('Set-Cookie') || '';
-      const sessionMatch = /session=([^;]+)/.exec(setCookie);
-      const pendingCookie = sessionMatch ? `session=${sessionMatch[1]}` : '';
+      const {sessionCookie: pendingCookie} = await register('tn_recv_pending');
 
       const response = await TestnetApp
         .request(app)

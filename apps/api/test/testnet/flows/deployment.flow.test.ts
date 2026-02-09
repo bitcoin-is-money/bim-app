@@ -1,36 +1,16 @@
-import {UuidCodec} from '@bim/lib/encoding';
-import {type CredentialCreationOptions, WebauthnVirtualAuthenticator} from '@bim/test-toolkit/auth';
+import {WebauthnVirtualAuthenticator} from '@bim/test-toolkit/auth';
 import {eq} from 'drizzle-orm';
 import type {Hono} from 'hono';
 import pg from 'pg';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 import * as schema from '../../../src/db/schema';
 import type {
-  BeginRegistrationResponse,
-  CompleteRegistrationResponse,
   DeployAccountResponse,
   GetAccountResponse,
   GetDeploymentStatusResponse
 } from "../../../src/routes";
+import {registerUser} from '../../helpers';
 import {type DbClient, TestDatabase, TestnetApp, TestnetContext} from '../helpers';
-
-const webAuthnOrigin = 'http://localhost:8080';
-
-function toRegistrationOptions(apiResponse: BeginRegistrationResponse): CredentialCreationOptions {
-  return {
-    challenge: apiResponse.options.challenge,
-    rp: {
-      id: apiResponse.options.rpId,
-      name: apiResponse.options.rpName,
-    },
-    user: {
-      id: UuidCodec.toBase64Url(apiResponse.options.userId),
-      name: apiResponse.options.userName,
-      displayName: apiResponse.options.userName,
-    },
-    origin: webAuthnOrigin,
-  };
-}
 
 /**
  * Account Deployment Flow — Testnet (Starknet Sepolia)
@@ -68,41 +48,13 @@ describe('Deployment Flow (Testnet)', () => {
     await pool.end();
   });
 
-  /**
-   * Helper to register a user and return session cookie + account info.
-   */
-  async function registerUser(username: string): Promise<{
-    sessionCookie: string;
-    account: CompleteRegistrationResponse['account'];
-  }> {
-    const beginResponse = await TestnetApp
-      .request(app)
-      .post('/api/auth/register/begin', {username});
-    const beginBody = await beginResponse.json() as BeginRegistrationResponse;
-
-    const credential = await authenticator
-      .createCredential(toRegistrationOptions(beginBody));
-
-    const completeResponse = await TestnetApp
-      .request(app)
-      .post('/api/auth/register/complete', {
-        challengeId: beginBody.challengeId,
-        accountId: beginBody.accountId,
-        username,
-        credential,
-      });
-
-    const completeBody = await completeResponse.json() as CompleteRegistrationResponse;
-    const setCookie = completeResponse.headers.get('Set-Cookie') || '';
-    const sessionMatch = /session=([^;]+)/.exec(setCookie);
-    const sessionCookie = sessionMatch ? `session=${sessionMatch[1]}` : '';
-
-    return {sessionCookie, account: completeBody.account};
+  function register(username: string) {
+    return registerUser(TestnetApp.request(app), authenticator, username);
   }
 
   describe('GET /api/account/me', () => {
     it('returns pending account before deployment', async () => {
-      const {sessionCookie, account} = await registerUser('tn_deploy_info');
+      const {sessionCookie, account} = await register('tn_deploy_info');
 
       expect(account.status).toBe('pending');
       expect(account.starknetAddress).toBeNull();
@@ -122,7 +74,7 @@ describe('Deployment Flow (Testnet)', () => {
   describe('POST /api/account/deploy', () => {
     it('deploys account to Starknet Sepolia via AVNU paymaster', async () => {
       const username = 'tn_deploy_test';
-      const {sessionCookie, account} = await registerUser(username);
+      const {sessionCookie, account} = await register(username);
 
       // Account starts as pending with no Starknet address
       expect(account.status).toBe('pending');

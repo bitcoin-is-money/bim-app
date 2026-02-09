@@ -2,39 +2,15 @@ import {StarknetAddress} from '@bim/domain/account';
 import {FeeConfig} from '@bim/domain/payment';
 import {Erc20CallFactory} from '@bim/domain/payment';
 import {Amount} from '@bim/domain/shared';
-import {UuidCodec} from '@bim/lib/encoding';
-import {type CredentialCreationOptions, WebauthnVirtualAuthenticator} from "@bim/test-toolkit/auth";
+import {WebauthnVirtualAuthenticator} from "@bim/test-toolkit/auth";
 import type {Hono} from 'hono';
 import pg from 'pg';
 import {Account, Signer} from 'starknet';
 import {afterAll, beforeAll, describe, expect, it} from 'vitest';
-import type {DeployAccountResponse} from '../../../src/routes/account/account.types';
-import type {BeginRegistrationResponse, CompleteRegistrationResponse} from '../../../src/routes/auth/auth.types';
+import type {DeployAccountResponse} from '../../../src/routes';
+import {registerUser} from '../../helpers';
 import {DevnetPaymasterGateway, StrkDevnetContext, TestApp, TestDatabase,} from '../helpers';
 import {ETH_TOKEN_ADDRESS, STRK_TOKEN_ADDRESS} from '../helpers';
-
-// The expected origin matches WEBAUTHN_ORIGIN env var set in test-app.ts
-const webAuthnOrigin = 'http://localhost:8080';
-
-
-/**
- * Converts API registration options to VirtualAuthenticator format.
- */
-function toRegistrationOptions(apiResponse: BeginRegistrationResponse): CredentialCreationOptions {
-  return {
-    challenge: apiResponse.options.challenge,
-    rp: {
-      id: apiResponse.options.rpId,
-      name: apiResponse.options.rpName,
-    },
-    user: {
-      id: UuidCodec.toBase64Url(apiResponse.options.userId), // Convert UUID to base64url bytes
-      name: apiResponse.options.userName,
-      displayName: apiResponse.options.userName,
-    },
-    origin: webAuthnOrigin,
-  };
-}
 
 /**
  * Transfer Flow Integration Tests
@@ -71,36 +47,16 @@ describe('Transfer Flow', () => {
   let bimTreasuryAddress: string;
 
   /**
-   * Helper to register and deploy a user account.
-   * Must be called after the app and authenticator are initialized.
+   * Registers and deploys a user account on devnet.
+   * Returns the session cookie, account info, deployed address, and Account instance.
    */
   async function registerAndDeployUser(username: string): Promise<{
     sessionCookie: string;
-    account: CompleteRegistrationResponse['account'];
     deployedAddress: string;
     deployedAccount: Account;
   }> {
     // Step 1: Register via WebAuthn
-    const beginResponse = await TestApp
-      .request(app)
-      .post('/api/auth/register/begin', {username});
-    const beginBody = await beginResponse.json() as BeginRegistrationResponse;
-    const credential = await authenticator
-      .createCredential(toRegistrationOptions(beginBody));
-
-    const completeResponse = await TestApp
-      .request(app)
-      .post('/api/auth/register/complete', {
-        challengeId: beginBody.challengeId,
-        accountId: beginBody.accountId, // Pass accountId from begin to complete
-        username,
-        credential,
-      });
-
-    const completeBody = await completeResponse.json() as CompleteRegistrationResponse;
-    const setCookie = completeResponse.headers.get('Set-Cookie') || '';
-    const sessionMatch = /session=([^;]+)/.exec(setCookie);
-    const sessionCookie = sessionMatch ? `session=${sessionMatch[1]}` : '';
+    const {sessionCookie} = await registerUser(TestApp.request(app), authenticator, username);
 
     // Step 2: Deploy the account
     const deployResponse = await TestApp
@@ -135,7 +91,6 @@ describe('Transfer Flow', () => {
 
     return {
       sessionCookie,
-      account: completeBody.account,
       deployedAddress: actualDeployedAddress,
       deployedAccount: account,
     };
