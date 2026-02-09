@@ -105,7 +105,7 @@ export async function registerUser(
     credential,
   });
 
-  const completeBody = await completeResponse.json() as CompleteRegistrationResponse;
+  const completeBody = await completeResponse.clone().json() as CompleteRegistrationResponse;
   const sessionCookie = extractSessionCookie(completeResponse);
 
   return {

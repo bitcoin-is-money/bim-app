@@ -2,7 +2,12 @@ import {WebauthnVirtualAuthenticator} from '@bim/test-toolkit/auth';
 import type {Hono} from 'hono';
 import pg from 'pg';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import type {BeginRegistrationResponse, SessionAuthenticatedResponse} from '../../../src/routes/auth/auth.types';
+import type {ApiErrorResponse} from '../../../src/errors';
+import type {
+  BeginRegistrationResponse,
+  SessionAuthenticatedResponse,
+  SessionUnauthenticatedResponse
+} from '../../../src/routes';
 import {registerUser} from '../../helpers';
 import {TestDatabase, TestnetApp} from '../helpers';
 
@@ -60,6 +65,8 @@ describe('Registration Flow (Testnet)', () => {
         .post('/api/auth/register/begin', {username: 'ab'});
 
       expect(response.status).toBe(400);
+      const body = await response.json() as ApiErrorResponse;
+      expect(body.error.code).toBe('VALIDATION_ERROR');
     });
   });
 
@@ -84,6 +91,8 @@ describe('Registration Flow (Testnet)', () => {
 
       const {completeResponse: second} = await register('tn_duplicate');
       expect(second.status).toBe(409);
+      const body = await second.json() as ApiErrorResponse;
+      expect(body.error.code).toBe('ACCOUNT_ALREADY_EXISTS');
     });
   });
 
@@ -109,6 +118,8 @@ describe('Registration Flow (Testnet)', () => {
         .get('/api/auth/session');
 
       expect(response.status).toBe(401);
+      const body = await response.json() as SessionUnauthenticatedResponse;
+      expect(body.authenticated).toBe(false);
     });
   });
 });

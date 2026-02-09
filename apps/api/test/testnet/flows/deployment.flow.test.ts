@@ -4,6 +4,7 @@ import type {Hono} from 'hono';
 import pg from 'pg';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 import * as schema from '../../../src/db/schema';
+import type {ApiErrorResponse} from '../../../src/errors';
 import type {
   DeployAccountResponse,
   GetAccountResponse,
@@ -95,7 +96,7 @@ describe('Deployment Flow (Testnet)', () => {
 
       const deployBody = await deployResponse.json() as DeployAccountResponse;
 
-      // Starknet address should now be computed from P256 public key
+      // Starknet address should now be computed from a P256 public key
       expect(deployBody.starknetAddress).toMatch(/^0x[0-9a-fA-F]{64}$/);
 
       if (!deployBody.txHash) {
@@ -164,6 +165,8 @@ describe('Deployment Flow (Testnet)', () => {
         .post('/api/account/deploy', {});
 
       expect(response.status).toBe(401);
+      const body = await response.json() as ApiErrorResponse;
+      expect(body.error.code).toBe('UNAUTHORIZED');
     });
   });
 });
