@@ -1,6 +1,5 @@
 import {StarknetAddress} from '@bim/domain/account';
-import {FeeConfig} from '@bim/domain/payment';
-import {Erc20CallFactory} from '@bim/domain/payment';
+import {Erc20CallFactory, FeeConfig} from '@bim/domain/payment';
 import {Amount} from '@bim/domain/shared';
 import {WebauthnVirtualAuthenticator} from "@bim/test-toolkit/auth";
 import type {Hono} from 'hono';
@@ -9,8 +8,14 @@ import {Account, Signer} from 'starknet';
 import {afterAll, beforeAll, describe, expect, it} from 'vitest';
 import type {DeployAccountResponse} from '../../../src/routes';
 import {registerUser} from '../../helpers';
-import {DevnetPaymasterGateway, StrkDevnetContext, TestApp, TestDatabase,} from '../helpers';
-import {ETH_TOKEN_ADDRESS, STRK_TOKEN_ADDRESS} from '../helpers';
+import {
+  DevnetPaymasterGateway,
+  ETH_TOKEN_ADDRESS,
+  STRK_TOKEN_ADDRESS,
+  StrkDevnetContext,
+  TestApp,
+  TestDatabase,
+} from '../helpers';
 
 /**
  * Transfer Flow Integration Tests

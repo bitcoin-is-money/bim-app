@@ -5,11 +5,7 @@ import pg from 'pg';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 import * as schema from '../../../src/db/schema';
 import type {ApiErrorResponse} from '../../../src/errors';
-import type {
-  DeployAccountResponse,
-  GetAccountResponse,
-  GetDeploymentStatusResponse
-} from "../../../src/routes";
+import type {DeployAccountResponse, GetAccountResponse, GetDeploymentStatusResponse} from "../../../src/routes";
 import {registerUser} from '../../helpers';
 import {type DbClient, TestDatabase, TestnetApp, TestnetContext} from '../helpers';
 

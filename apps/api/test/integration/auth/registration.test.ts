@@ -4,7 +4,11 @@ import type {Hono} from 'hono';
 import pg from 'pg';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 import type {ApiErrorResponse} from '../../../src/errors';
-import type {BeginRegistrationResponse, SessionAuthenticatedResponse, SessionUnauthenticatedResponse} from '../../../src/routes';
+import type {
+  BeginRegistrationResponse,
+  SessionAuthenticatedResponse,
+  SessionUnauthenticatedResponse
+} from '../../../src/routes';
 import {registerUser, toRegistrationOptions} from '../../helpers';
 import {type DbClient, StrkDevnetContext, TestApp, TestDatabase,} from '../helpers';
 

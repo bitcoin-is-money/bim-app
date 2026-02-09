@@ -4,11 +4,13 @@ import {eq} from 'drizzle-orm';
 import type {Hono} from 'hono';
 import pg from 'pg';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
+import * as schema from '../../../src/db/schema';
 import type {ApiErrorResponse} from '../../../src/errors';
 import type {DeployAccountResponse, GetAccountResponse, GetDeploymentStatusResponse} from '../../../src/routes';
-import * as schema from '../../../src/db/schema';
 import {registerUser} from '../../helpers';
 import {type DbClient, DevnetPaymasterGateway, StrkDevnetContext, TestApp, TestDatabase,} from '../helpers';
+import {AccountFixture} from '../helpers/account';
+import {AuthFixture} from '../helpers/auth';
 
 /**
  * Account Deployment Flow Integration Tests
@@ -29,6 +31,8 @@ describe('Account Deployment Flow', () => {
   let authenticator: WebauthnVirtualAuthenticator;
   let strkContext: StrkDevnetContext;
   let paymasterGateway: DevnetPaymasterGateway;
+  let accountFixture: AccountFixture;
+  let authFixture: AuthFixture;
 
   beforeAll(async () => {
     strkContext = StrkDevnetContext.create();
@@ -40,6 +44,8 @@ describe('Account Deployment Flow', () => {
     paymasterGateway = strkContext.getDevnetPaymasterGateway();
     pool = TestDatabase.createPool();
     db = TestDatabase.getClient(pool);
+    accountFixture = AccountFixture.create(db);
+    authFixture = AuthFixture.create(db);
     app = TestApp.createTestApp({
       context: {
         gateways: {
@@ -152,6 +158,30 @@ describe('Account Deployment Flow', () => {
       expect(response.status).toBe(401);
       const body = await response.json() as ApiErrorResponse;
       expect(body.error.code).toBe('UNAUTHORIZED');
+    });
+
+    it('rejects deployment for already deployed account', async () => {
+      const publicKey = strkContext.generateTestPublicKey();
+      const starknetGateway = strkContext.getStarknetGateway();
+      const starknetAddress = await starknetGateway.calculateAccountAddress({publicKey});
+
+      const account = await accountFixture.insertAccount({
+        username: 'already_deployed_user',
+        publicKey,
+        starknetAddress: starknetAddress.toString(),
+        status: 'deployed',
+      });
+      const session = await authFixture.insertSession(account.id);
+
+      const response = await TestApp
+        .request(app)
+        .post('/api/account/deploy', {}, {
+          headers: {Cookie: `session=${session.id}`},
+        });
+
+      expect(response.status).toBe(400);
+      const body = await response.json() as ApiErrorResponse;
+      expect(body.error.code).toBe('INVALID_ACCOUNT_STATE');
     });
 
     it('deploys account to Starknet devnet', async () => {

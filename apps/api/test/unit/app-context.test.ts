@@ -1,6 +1,5 @@
 import type {AccountRepository, PaymasterGateway,} from '@bim/domain/ports';
 import {describe, expect, it, vi} from 'vitest';
-import {Bolt11LightningDecoder} from "../../src/adapters";
 import {AppContext, type AppContextOverrides} from '../../src/app-context.js';
 import type {AppConfig} from '../../src/types.js';
 
