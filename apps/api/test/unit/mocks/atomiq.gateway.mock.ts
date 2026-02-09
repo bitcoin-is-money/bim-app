@@ -68,8 +68,9 @@ export class AtomiqGatewayMock implements AtomiqGateway {
       const swapId = crypto.randomUUID();
       const expiresAt = new Date(Date.now() + 3 * 60 * 60 * 1000); // 3 hours
 
-      // Mock: Generate a fake deposit address
-      const depositAddress = `bc1q...mock_address_${swapId.slice(0, 8)}`;
+      // Mock: Generate a valid-looking testnet bech32 address (tb1 + 39 alphanumeric chars)
+      const hex = swapId.replaceAll('-', '');
+      const depositAddress = `tb1q${hex}${hex}`.slice(0, 42);
       const bip21Uri = `bitcoin:${depositAddress}?amount=${Number(params.amountSats) / 100000000}`;
 
       const swapObject = {
@@ -219,27 +220,30 @@ export class AtomiqGatewayMock implements AtomiqGateway {
   }
 
   async getSwapStatus(swapId: SwapId): Promise<AtomiqSwapStatus> {
-    const swap = this.swapRegistry.get(swapId);
-
-    if (!swap) {
-      return {
-        state: -1,
-        isPaid: false,
-        isCompleted: false,
-        isFailed: false,
-        isExpired: true,
-        error: 'Swap not found',
-      };
-    }
-
-    // Mock: Return pending status
-    return {
+    const swap = this.swapRegistry.get(swapId) as Record<string, unknown> | undefined;
+    const defaults: AtomiqSwapStatus = {
       state: 0,
       isPaid: false,
       isCompleted: false,
       isFailed: false,
       isExpired: false,
     };
+
+    if (!swap) {
+      return {
+        ...defaults,
+        state: -1,
+        isExpired: true,
+        error: 'Swap not found',
+      };
+    }
+
+    // Return overridden status if set via setSwapStatus()
+    if (swap._mockStatus) {
+      return {...defaults, ...(swap._mockStatus as Partial<AtomiqSwapStatus>)};
+    }
+
+    return defaults;
   }
 
   async isSwapPaid(swapId: SwapId): Promise<boolean> {

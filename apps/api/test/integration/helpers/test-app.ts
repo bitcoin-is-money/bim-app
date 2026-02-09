@@ -1,5 +1,5 @@
 import type {Hono} from 'hono';
-import {createApp, type CreateAppOptions} from '../../../src/app.js';
+import {createApp, type AppInstance, type CreateAppOptions} from '../../../src/app.js';
 import {DEVNET_ACCOUNT_CLASS_HASH} from './devnet-paymaster.gateway.js';
 
 export namespace TestApp {
@@ -36,6 +36,19 @@ export namespace TestApp {
       ...options,
     });
     return app;
+  }
+
+  /**
+   * Creates a test application instance with a SwapMonitor.
+   * Use this when tests need to call monitor.runIteration() directly.
+   */
+  export function createTestAppWithSwapMonitor(options: CreateAppOptions = {}): AppInstance {
+    setupTestEnv();
+    return createApp({
+      skipStaticFiles: true,
+      skipLogger: true,
+      ...options,
+    });
   }
 
   /**
