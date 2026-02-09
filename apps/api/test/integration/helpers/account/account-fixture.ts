@@ -1,6 +1,6 @@
 import * as schema from "../../../../src/db/schema";
+import {DbFixture} from "../db-fixture";
 import type {DbClient} from "../test-database";
-import {DbFixture} from "./../db-fixture";
 import {createAccountData} from "./account-test-data";
 
 export class AccountFixture extends DbFixture {
