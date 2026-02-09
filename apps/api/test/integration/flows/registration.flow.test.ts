@@ -1,34 +1,11 @@
-import {UuidCodec} from '@bim/lib/encoding';
-import {type CredentialCreationOptions, WebauthnVirtualAuthenticator} from "@bim/test-toolkit/auth";
+import {WebauthnVirtualAuthenticator} from "@bim/test-toolkit/auth";
 import {sql} from 'drizzle-orm';
 import type {Hono} from 'hono';
 import pg from 'pg';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import type {BeginRegistrationResponse, CompleteRegistrationResponse, SessionAuthenticatedResponse, SessionUnauthenticatedResponse} from '../../../src/routes/auth/auth.types';
+import type {BeginRegistrationResponse, SessionAuthenticatedResponse, SessionUnauthenticatedResponse} from '../../../src/routes';
+import {registerUser, toRegistrationOptions} from '../../helpers';
 import {type DbClient, StrkDevnetContext, TestApp, TestDatabase,} from '../helpers';
-
-// The expected origin matches WEBAUTHN_ORIGIN env var set in test-app.ts
-const webAuthnOrigin = 'http://localhost:8080';
-
-
-/**
- * Converts API registration options to VirtualAuthenticator format.
- */
-function toAuthenticatorOptions(apiResponse: BeginRegistrationResponse): CredentialCreationOptions {
-  return {
-    challenge: apiResponse.options.challenge,
-    rp: {
-      id: apiResponse.options.rpId,
-      name: apiResponse.options.rpName,
-    },
-    user: {
-      id: UuidCodec.toBase64Url(apiResponse.options.userId), // Convert UUID to base64url bytes
-      name: apiResponse.options.userName,
-      displayName: apiResponse.options.userName,
-    },
-    origin: webAuthnOrigin,
-  };
-}
 
 /**
  * Complete Registration Flow Integration Tests
@@ -76,27 +53,6 @@ describe('Registration Flow', () => {
     await pool.end();
   });
 
-  /**
-   * Helper to perform the full registration flow.
-   */
-  async function registerUser(username: string) {
-    const beginResponse = await TestApp
-      .request(app)
-      .post('/api/auth/register/begin', {username});
-    const beginBody = await beginResponse.json() as BeginRegistrationResponse;
-    const credential = await authenticator
-      .createCredential(toAuthenticatorOptions(beginBody));
-    const completeResponse = await TestApp
-      .request(app)
-      .post('/api/auth/register/complete', {
-        challengeId: beginBody.challengeId,
-        accountId: beginBody.accountId, // Pass accountId from begin to complete
-        username,
-        credential,
-      });
-    return {beginBody, credential, completeResponse};
-  }
-
   describe('POST /api/auth/register/begin', () => {
     it('returns WebAuthn registration options and challenge ID', async () => {
       const response = await TestApp
@@ -128,32 +84,32 @@ describe('Registration Flow', () => {
   describe('POST /api/auth/register/complete', () => {
     it('creates account with valid WebAuthn credential and starknet address', async () => {
       const username = 'bob';
-      const {completeResponse} = await registerUser(username);
+      const {completeResponse, account} = await registerUser(TestApp.request(app), authenticator, username);
 
       expect(completeResponse.status).toBe(200);
-      const body = await completeResponse.json() as CompleteRegistrationResponse;
 
-      expect(body.account.id).toBeDefined();
-      expect(body.account.username).toBe(username);
-      expect(body.account.status).toBe('pending');
+      expect(account.id).toBeDefined();
+      expect(account.username).toBe(username);
+      expect(account.status).toBe('pending');
 
       // Verify the session cookie is set
       const setCookie = completeResponse.headers.get('Set-Cookie');
       expect(setCookie).toContain('session=');
 
       // Starknet address is null after registration (computed during deployment)
-      expect(body.account.starknetAddress).toBeNull();
+      expect(account.starknetAddress).toBeNull();
     });
 
     it('rejects duplicate username', async () => {
       const username = 'duplicate_user';
+      const requester = TestApp.request(app);
 
       // First registration should succeed
-      const {completeResponse: first} = await registerUser(username);
+      const {completeResponse: first} = await registerUser(requester, authenticator, username);
       expect(first.status).toBe(200);
 
       // Second registration with the same username should fail
-      const {completeResponse: second} = await registerUser(username);
+      const {completeResponse: second} = await registerUser(requester, authenticator, username);
       expect(second.status).toBe(409); // Conflict
     });
 
@@ -168,7 +124,7 @@ describe('Registration Flow', () => {
 
       // Create credential
       const credential = await authenticator
-        .createCredential(toAuthenticatorOptions(beginBody));
+        .createCredential(toRegistrationOptions(beginBody));
 
       // Expire the challenge by updating it in the database
       await db.execute(
@@ -201,7 +157,7 @@ describe('Registration Flow', () => {
 
       // Create credential
       const credential = await authenticator
-        .createCredential(toAuthenticatorOptions(beginBody));
+        .createCredential(toRegistrationOptions(beginBody));
 
       // Try to complete with a random challenge ID
       const completeResponse = await TestApp
@@ -220,12 +176,7 @@ describe('Registration Flow', () => {
   describe('GET /api/auth/session', () => {
     it('returns authenticated state after registration', async () => {
       const username = 'session_test';
-      const {completeResponse} = await registerUser(username);
-
-      // Extract session cookie
-      const setCookie = completeResponse.headers.get('Set-Cookie');
-      const sessionMatch = /session=([^;]+)/.exec(setCookie || '');
-      const sessionCookie = sessionMatch ? `session=${sessionMatch[1]}` : '';
+      const {sessionCookie} = await registerUser(TestApp.request(app), authenticator, username);
 
       // Check session
       const sessionResponse = await TestApp

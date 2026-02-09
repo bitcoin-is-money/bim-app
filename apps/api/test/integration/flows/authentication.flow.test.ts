@@ -1,9 +1,4 @@
-import {UuidCodec} from '@bim/lib/encoding';
-import {
-  type CredentialCreationOptions,
-  type CredentialRequestOptions,
-  WebauthnVirtualAuthenticator
-} from "@bim/test-toolkit/auth";
+import {WebauthnVirtualAuthenticator} from "@bim/test-toolkit/auth";
 import {eq} from 'drizzle-orm';
 import type {Hono} from 'hono';
 import pg from 'pg';
@@ -11,54 +6,13 @@ import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 import * as schema from '../../../src/db/schema';
 import type {
   BeginAuthenticationResponse,
-  BeginRegistrationResponse,
   CompleteAuthenticationResponse,
   LogoutResponse,
   SessionAuthenticatedResponse,
   SessionUnauthenticatedResponse,
 } from "../../../src/routes";
+import {registerUser, toAuthenticationOptions} from '../../helpers';
 import {type DbClient, StrkDevnetContext, TestApp, TestDatabase,} from '../helpers';
-
-// The expected origin matches WEBAUTHN_ORIGIN env var set in test-app.ts
-const webAuthnOrigin = 'http://localhost:8080';
-
-
-/**
- * Converts API registration options to WebauthnVirtualAuthenticator format.
- */
-function toRegistrationOptions(
-  apiResponse: BeginRegistrationResponse
-): CredentialCreationOptions {
-  return {
-    challenge: apiResponse.options.challenge,
-    rp: {
-      id: apiResponse.options.rpId,
-      name: apiResponse.options.rpName,
-    },
-    user: {
-      id: UuidCodec.toBase64Url(apiResponse.options.userId), // Convert UUID to base64url bytes
-      name: apiResponse.options.userName,
-      displayName: apiResponse.options.userName,
-    },
-    origin: webAuthnOrigin,
-  };
-}
-
-/**
- * Converts API authentication options to WebauthnVirtualAuthenticator format.
- * For usernameless flow, allowCredentials is empty and userHandle must be returned.
- */
-function toAuthenticationOptions(
-  apiResponse: BeginAuthenticationResponse,
-  rpId: string,
-): CredentialRequestOptions {
-  return {
-    challenge: apiResponse.options.challenge,
-    rpId,
-    allowCredentials: apiResponse.options.allowCredentials,
-    origin: webAuthnOrigin,
-  };
-}
 
 /**
  * Complete Authentication Flow Integration Tests
@@ -104,41 +58,13 @@ describe('Authentication Flow', () => {
     await pool.end();
   });
 
-  /**
-   * Helper to register a user and return the session cookie.
-   */
-  async function registerUser(username: string): Promise<{
-    sessionCookie: string;
-    accountId: string;
-  }> {
-    const beginResponse = await TestApp
-      .request(app)
-      .post('/api/auth/register/begin', {username});
-    const beginBody = await beginResponse.json() as BeginRegistrationResponse;
-    const credential = await authenticator
-      .createCredential(toRegistrationOptions(beginBody));
-    const completeResponse = await TestApp
-      .request(app)
-      .post('/api/auth/register/complete', {
-        challengeId: beginBody.challengeId,
-        accountId: beginBody.accountId, // Pass accountId from begin to complete
-        username,
-        credential,
-      });
-
-    const completeBody = await completeResponse.json() as CompleteAuthenticationResponse;
-    const setCookie = completeResponse.headers.get('Set-Cookie') || '';
-    const sessionMatch = /session=([^;]+)/.exec(setCookie);
-    const sessionCookie = sessionMatch ? `session=${sessionMatch[1]}` : '';
-
-    return {
-      sessionCookie,
-      accountId: completeBody.account.id,
-    };
+  async function register(username: string) {
+    const result = await registerUser(TestApp.request(app), authenticator, username);
+    return {sessionCookie: result.sessionCookie, accountId: result.account.id};
   }
 
   /**
-   * Helper to perform full login flow (usernameless - discoverable credentials).
+   * Helper to perform a full login flow (usernameless - discoverable credentials).
    * The authenticator returns userHandle which identifies the user.
    */
   async function loginUser(): Promise<{
@@ -181,7 +107,7 @@ describe('Authentication Flow', () => {
   describe('POST /api/auth/login/complete', () => {
     it('authenticates user with valid WebAuthn assertion (usernameless)', async () => {
       const username = 'auth_complete_user';
-      await registerUser(username);
+      await register(username);
 
       const {completeResponse} = await loginUser();
 
@@ -201,7 +127,7 @@ describe('Authentication Flow', () => {
 
     it('increments sign count after successful authentication', async () => {
       const username = 'signCountUser';
-      const {accountId} = await registerUser(username);
+      const {accountId} = await register(username);
 
       async function expectSignCount(expected: number): Promise<void> {
         const result = await db
@@ -226,7 +152,7 @@ describe('Authentication Flow', () => {
 
     it('rejects invalid challenge ID', async () => {
       const username = 'bad_challenge';
-      await registerUser(username);
+      await register(username);
 
       // Start login to get valid assertion options
       const beginResponse = await TestApp
@@ -249,7 +175,7 @@ describe('Authentication Flow', () => {
 
     it('rejects tampered assertion signature', async () => {
       const username = 'tampered_sig_user';
-      await registerUser(username);
+      await register(username);
 
       const beginResponse = await TestApp
         .request(app)
@@ -281,7 +207,7 @@ describe('Authentication Flow', () => {
   describe('Session Management', () => {
     it('allows access to protected resource with valid session', async () => {
       const username = 'session_valid_user';
-      await registerUser(username);
+      await register(username);
       const {completeResponse} = await loginUser();
 
       const setCookie = completeResponse.headers.get('Set-Cookie') || '';
@@ -324,7 +250,7 @@ describe('Authentication Flow', () => {
   describe('POST /api/auth/logout', () => {
     it('invalidates session on logout', async () => {
       const username = 'logout_user';
-      const {sessionCookie} = await registerUser(username);
+      const {sessionCookie} = await register(username);
 
       // Verify session is valid before logout
       const beforeLogout = await TestApp
@@ -343,12 +269,12 @@ describe('Authentication Flow', () => {
       expect(logoutResponse.status).toBe(200);
 
       // Verify session is invalid after logout
-      const afterLogout = await TestApp
+      const afterLogoutResponse = await TestApp
         .request(app)
         .get('/api/auth/session', {
           headers: {Cookie: sessionCookie},
         });
-      expect(afterLogout.status).toBe(401);
+      expect(afterLogoutResponse.status).toBe(401);
     });
 
     it('succeeds even without session cookie', async () => {
