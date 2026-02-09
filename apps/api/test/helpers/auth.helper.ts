@@ -1,6 +1,14 @@
 import {UuidCodec} from '@bim/lib/encoding';
-import {type CredentialCreationOptions, type CredentialRequestOptions, WebauthnVirtualAuthenticator} from '@bim/test-toolkit/auth';
-import type {BeginAuthenticationResponse, BeginRegistrationResponse, CompleteRegistrationResponse} from '../../src/routes';
+import {
+  type CredentialCreationOptions,
+  type CredentialRequestOptions,
+  WebauthnVirtualAuthenticator
+} from '@bim/test-toolkit/auth';
+import type {
+  BeginAuthenticationResponse,
+  BeginRegistrationResponse,
+  CompleteRegistrationResponse
+} from '../../src/routes';
 
 // =============================================================================
 // Types

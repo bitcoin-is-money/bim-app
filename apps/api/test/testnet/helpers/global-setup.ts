@@ -1,6 +1,6 @@
 import type {TestProject} from 'vitest/node';
 import {loadEnv} from '../../../src/load-env';
-import {TestDatabase} from '../../integration/helpers/test-database';
+import {TestDatabase} from '../../integration/helpers';
 
 /**
  * Global setup for testnet tests.
