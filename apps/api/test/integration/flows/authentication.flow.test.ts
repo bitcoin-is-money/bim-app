@@ -4,6 +4,7 @@ import type {Hono} from 'hono';
 import pg from 'pg';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 import * as schema from '../../../src/db/schema';
+import type {ApiErrorResponse} from '../../../src/errors';
 import type {
   BeginAuthenticationResponse,
   CompleteAuthenticationResponse,
@@ -171,6 +172,8 @@ describe('Authentication Flow', () => {
         });
 
       expect(completeResponse.status).toBe(400);
+      const body = await completeResponse.json() as ApiErrorResponse;
+      expect(body.error.code).toBe('CHALLENGE_NOT_FOUND');
     });
 
     it('rejects tampered assertion signature', async () => {
@@ -201,6 +204,8 @@ describe('Authentication Flow', () => {
         });
 
       expect(completeResponse.status).toBe(401);
+      const body = await completeResponse.json() as ApiErrorResponse;
+      expect(body.error.code).toBe('AUTHENTICATION_FAILED');
     });
   });
 
@@ -244,6 +249,8 @@ describe('Authentication Flow', () => {
         });
 
       expect(response.status).toBe(401);
+      const body = await response.json() as SessionUnauthenticatedResponse;
+      expect(body.authenticated).toBe(false);
     });
   });
 
@@ -275,6 +282,8 @@ describe('Authentication Flow', () => {
           headers: {Cookie: sessionCookie},
         });
       expect(afterLogoutResponse.status).toBe(401);
+      const body = await afterLogoutResponse.json() as SessionUnauthenticatedResponse;
+      expect(body.authenticated).toBe(false);
     });
 
     it('succeeds even without session cookie', async () => {

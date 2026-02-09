@@ -1,8 +1,8 @@
 import type {Hono} from 'hono';
 import pg from "pg";
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import type {ApiErrorBody, ApiErrorResponse} from "../../../src/errors";
-import type {DeployAccountResponse, GetDeploymentStatusResponse} from "../../../src/routes/account/account.types";
+import type {ApiErrorResponse} from "../../../src/errors";
+import type {DeployAccountResponse, GetDeploymentStatusResponse} from "../../../src/routes";
 import {type DbClient, StrkDevnetContext, TestApp, TestDatabase} from '../helpers';
 import {AccountFixture} from "../helpers/account";
 import {AuthFixture} from "../helpers/auth";
@@ -204,6 +204,8 @@ describe('Starknet Integration', () => {
       const response = await TestApp.request(app).post('/api/account/deploy', {});
 
       expect(response.status).toBe(401);
+      const body = await response.json() as ApiErrorResponse;
+      expect(body.error.code).toBe('UNAUTHORIZED');
     });
   });
 

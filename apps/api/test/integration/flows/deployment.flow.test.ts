@@ -4,6 +4,7 @@ import {eq} from 'drizzle-orm';
 import type {Hono} from 'hono';
 import pg from 'pg';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
+import type {ApiErrorResponse} from '../../../src/errors';
 import type {DeployAccountResponse, GetAccountResponse, GetDeploymentStatusResponse} from '../../../src/routes';
 import * as schema from '../../../src/db/schema';
 import {registerUser} from '../../helpers';
@@ -96,6 +97,8 @@ describe('Account Deployment Flow', () => {
         .get('/api/account/me');
 
       expect(response.status).toBe(401);
+      const body = await response.json() as ApiErrorResponse;
+      expect(body.error.code).toBe('UNAUTHORIZED');
     });
 
     it('rejects invalid session', async () => {
@@ -106,6 +109,8 @@ describe('Account Deployment Flow', () => {
         });
 
       expect(response.status).toBe(401);
+      const body = await response.json() as ApiErrorResponse;
+      expect(body.error.code).toBe('SESSION_NOT_FOUND');
     });
   });
 
@@ -133,6 +138,8 @@ describe('Account Deployment Flow', () => {
         .get('/api/account/deployment-status');
 
       expect(response.status).toBe(401);
+      const body = await response.json() as ApiErrorResponse;
+      expect(body.error.code).toBe('UNAUTHORIZED');
     });
   });
 
@@ -143,6 +150,8 @@ describe('Account Deployment Flow', () => {
         .post('/api/account/deploy', {});
 
       expect(response.status).toBe(401);
+      const body = await response.json() as ApiErrorResponse;
+      expect(body.error.code).toBe('UNAUTHORIZED');
     });
 
     it('deploys account to Starknet devnet', async () => {

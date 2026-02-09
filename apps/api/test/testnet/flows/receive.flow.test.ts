@@ -1,18 +1,18 @@
 import {WebauthnVirtualAuthenticator} from '@bim/test-toolkit/auth';
 import type {Hono} from 'hono';
 import pg from 'pg';
-import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import type {DeployAccountResponse} from '../../../src/routes/account/account.types';
-import type {StarknetReceiveResponse} from '../../../src/routes/payment/receive/receive.types';
+import {afterAll, beforeAll, describe, expect, it} from 'vitest';
+import type {ApiErrorResponse} from '../../../src/errors';
+import type {DeployAccountResponse, StarknetReceiveResponse} from '../../../src/routes';
 import {registerUser} from '../../helpers';
 import {TestDatabase, TestnetApp, TestnetContext} from '../helpers';
 
 /**
  * Receive Flow — Testnet (Starknet Sepolia)
  *
- * Tests the receive payment flow through the HTTP API.
+ * Tests receive payment flow through the HTTP API.
  * For Starknet network: generates a starknet: URI (no Atomiq dependency).
- * Requires a deployed account (full registration + deployment on Sepolia).
+ * Requires a deployed account (full registration and deployment on Sepolia).
  */
 describe('Receive Flow (Testnet)', () => {
   let app: Hono;
@@ -115,6 +115,8 @@ describe('Receive Flow (Testnet)', () => {
         }, {headers: {Cookie: pendingCookie}});
 
       expect(response.status).toBe(400);
+      const body = await response.json() as ApiErrorResponse;
+      expect(body.error.code).toBe('ACCOUNT_NOT_DEPLOYED');
     });
 
     it('rejects unauthenticated receive request', async () => {
@@ -126,6 +128,8 @@ describe('Receive Flow (Testnet)', () => {
         });
 
       expect(response.status).toBe(401);
+      const body = await response.json() as ApiErrorResponse;
+      expect(body.error.code).toBe('UNAUTHORIZED');
     });
   });
 });

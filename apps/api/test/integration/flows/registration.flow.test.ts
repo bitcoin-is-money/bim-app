@@ -3,6 +3,7 @@ import {sql} from 'drizzle-orm';
 import type {Hono} from 'hono';
 import pg from 'pg';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
+import type {ApiErrorResponse} from '../../../src/errors';
 import type {BeginRegistrationResponse, SessionAuthenticatedResponse, SessionUnauthenticatedResponse} from '../../../src/routes';
 import {registerUser, toRegistrationOptions} from '../../helpers';
 import {type DbClient, StrkDevnetContext, TestApp, TestDatabase,} from '../helpers';
@@ -76,8 +77,9 @@ describe('Registration Flow', () => {
         .post('/api/auth/register/begin', {
           username: 'ab', // Too short
         });
-
       expect(response.status).toBe(400);
+      const body = await response.json() as ApiErrorResponse;
+      expect(body.error.code).toBe('VALIDATION_ERROR');
     });
   });
 
@@ -110,7 +112,9 @@ describe('Registration Flow', () => {
 
       // Second registration with the same username should fail
       const {completeResponse: second} = await registerUser(requester, authenticator, username);
-      expect(second.status).toBe(409); // Conflict
+      expect(second.status).toBe(409);
+      const body = await second.json() as ApiErrorResponse;
+      expect(body.error.code).toBe('ACCOUNT_ALREADY_EXISTS');
     });
 
     it('rejects expired challenge', async () => {
@@ -144,6 +148,8 @@ describe('Registration Flow', () => {
         });
 
       expect(completeResponse.status).toBe(400);
+      const body = await completeResponse.json() as ApiErrorResponse;
+      expect(body.error.code).toBe('CHALLENGE_EXPIRED');
     });
 
     it('rejects invalid challenge ID', async () => {
@@ -170,6 +176,8 @@ describe('Registration Flow', () => {
         });
 
       expect(completeResponse.status).toBe(400);
+      const body = await completeResponse.json() as ApiErrorResponse;
+      expect(body.error.code).toBe('CHALLENGE_NOT_FOUND');
     });
   });
 
