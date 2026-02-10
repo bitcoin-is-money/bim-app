@@ -62,7 +62,6 @@ export class TestDatabase {
   static async reset(pool: pg.Pool): Promise<void> {
     const db = TestDatabase.getClient(pool);
     await db.delete(schema.transactions);
-    await db.delete(schema.watchedAddresses);
     await db.delete(schema.userSettings);
     await db.delete(schema.challenges);
     await db.delete(schema.sessions);

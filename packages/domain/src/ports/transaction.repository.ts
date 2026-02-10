@@ -1,4 +1,5 @@
-import {Transaction, TransactionHash, TransactionId, WatchedAddressId} from '../user';
+import {AccountId} from '../account';
+import {Transaction, TransactionHash, TransactionId} from '../user';
 
 /**
  * Pagination options for transaction queries.
@@ -33,17 +34,17 @@ export interface TransactionRepository {
   findByHash(hash: TransactionHash): Promise<Transaction | undefined>;
 
   /**
-   * Finds all transactions for a watched address with pagination.
+   * Finds all transactions for an account with pagination.
    */
-  findByWatchedAddressId(
-    watchedAddressId: WatchedAddressId,
+  findByAccountId(
+    accountId: AccountId,
     options: TransactionPaginationOptions,
   ): Promise<Transaction[]>;
 
   /**
-   * Counts transactions for a watched address.
+   * Counts transactions for an account.
    */
-  countByWatchedAddressId(watchedAddressId: WatchedAddressId): Promise<number>;
+  countByAccountId(accountId: AccountId): Promise<number>;
 
   /**
    * Checks if a transaction with the given hash exists.

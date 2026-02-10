@@ -18,34 +18,15 @@ export function createUserSettingsData(
 }
 
 /**
- * Creates a test watched address record
- */
-export function createWatchedAddressData(
-  accountId: string,
-  overrides?: Partial<schema.NewWatchedAddressRecord>,
-): schema.NewWatchedAddressRecord {
-  return {
-    id: crypto.randomUUID(),
-    accountId,
-    starknetAddress: '0x' + '1'.repeat(64),
-    addressType: 'main',
-    isActive: true,
-    registeredAt: new Date(),
-    lastScannedBlock: null,
-    ...overrides,
-  };
-}
-
-/**
  * Creates a test transaction record
  */
 export function createTransactionData(
-  watchedAddressId: string,
+  accountId: string,
   overrides?: Partial<schema.NewTransactionRecord>,
 ): schema.NewTransactionRecord {
   return {
     id: crypto.randomUUID(),
-    watchedAddressId,
+    accountId,
     transactionHash: '0x' + crypto.randomUUID().replace(/-/g, ''),
     blockNumber: '12345',
     transactionType: 'receipt',

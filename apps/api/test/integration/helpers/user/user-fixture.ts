@@ -1,7 +1,7 @@
 import * as schema from "../../../../src/db/schema";
 import type {DbClient} from "../test-database";
 import {DbFixture} from "./../db-fixture";
-import {createTransactionData, createUserSettingsData, createWatchedAddressData} from "./user-test-data";
+import {createTransactionData, createUserSettingsData} from "./user-test-data";
 
 export class UserFixture extends DbFixture {
 
@@ -21,23 +21,11 @@ export class UserFixture extends DbFixture {
     return inserted;
   }
 
-  async insertWatchedAddress(
-    accountId: string,
-    data?: Partial<schema.NewWatchedAddressRecord>,
-  ): Promise<schema.WatchedAddressRecord> {
-    const addressData = createWatchedAddressData(accountId, data);
-    const [inserted] = await this.db
-      .insert(schema.watchedAddresses)
-      .values(addressData)
-      .returning();
-    return inserted;
-  }
-
   async insertTransaction(
-    watchedAddressId: string,
+    accountId: string,
     data?: Partial<schema.NewTransactionRecord>,
   ): Promise<schema.TransactionRecord> {
-    const txData = createTransactionData(watchedAddressId, data);
+    const txData = createTransactionData(accountId, data);
     const [inserted] = await this.db
       .insert(schema.transactions)
       .values(txData)

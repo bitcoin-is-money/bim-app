@@ -1,5 +1,5 @@
-import {StarknetAddress} from '../account';
-import {type TransactionData, TransactionHash, TransactionId, type TransactionType, WatchedAddressId,} from './types';
+import {AccountId, StarknetAddress} from '../account';
+import {type TransactionData, TransactionHash, TransactionId, type TransactionType} from './types';
 
 /**
  * Transaction entity representing a recorded blockchain transaction.
@@ -7,7 +7,7 @@ import {type TransactionData, TransactionHash, TransactionId, type TransactionTy
 export class Transaction {
   private constructor(
     readonly id: TransactionId,
-    readonly watchedAddressId: WatchedAddressId,
+    readonly accountId: AccountId,
     readonly transactionHash: TransactionHash,
     readonly blockNumber: bigint,
     readonly transactionType: TransactionType,
@@ -24,7 +24,7 @@ export class Transaction {
    */
   static create(params: {
     id: TransactionId;
-    watchedAddressId: WatchedAddressId;
+    accountId: AccountId;
     transactionHash: TransactionHash;
     blockNumber: bigint;
     transactionType: TransactionType;
@@ -36,7 +36,7 @@ export class Transaction {
   }): Transaction {
     return new Transaction(
       params.id,
-      params.watchedAddressId,
+      params.accountId,
       params.transactionHash,
       params.blockNumber,
       params.transactionType,
@@ -55,7 +55,7 @@ export class Transaction {
   static fromData(data: TransactionData): Transaction {
     return new Transaction(
       data.id,
-      data.watchedAddressId,
+      data.accountId,
       data.transactionHash,
       data.blockNumber,
       data.transactionType,
@@ -88,7 +88,7 @@ export class Transaction {
   toData(): TransactionData {
     return {
       id: this.id,
-      watchedAddressId: this.watchedAddressId,
+      accountId: this.accountId,
       transactionHash: this.transactionHash,
       blockNumber: this.blockNumber,
       transactionType: this.transactionType,
