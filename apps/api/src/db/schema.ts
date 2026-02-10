@@ -4,7 +4,7 @@ import {boolean, integer, pgTable, text, timestamp, unique, uuid,} from 'drizzle
 // Accounts Table
 // =============================================================================
 
-export const accounts = pgTable('accounts', {
+export const accounts = pgTable('bim_accounts', {
   id: uuid('id').primaryKey(),
   username: text('username').notNull().unique(),
   credentialId: text('credential_id').notNull().unique(),
@@ -22,7 +22,7 @@ export const accounts = pgTable('accounts', {
 // Sessions Table
 // =============================================================================
 
-export const sessions = pgTable('sessions', {
+export const sessions = pgTable('bim_sessions', {
   id: text('id').primaryKey(),
   accountId: uuid('account_id')
     .references(() => accounts.id, { onDelete: 'cascade' })
@@ -35,7 +35,7 @@ export const sessions = pgTable('sessions', {
 // WebAuthn Challenges Table
 // =============================================================================
 
-export const challenges = pgTable('challenges', {
+export const challenges = pgTable('bim_challenges', {
   id: uuid('id').primaryKey(),
   challenge: text('challenge').notNull(),
   purpose: text('purpose').notNull(),
@@ -50,7 +50,7 @@ export const challenges = pgTable('challenges', {
 // User Settings Table
 // =============================================================================
 
-export const userSettings = pgTable('user_settings', {
+export const userSettings = pgTable('bim_user_settings', {
   id: uuid('id').primaryKey(),
   accountId: uuid('account_id')
     .references(() => accounts.id, {onDelete: 'cascade'})
@@ -66,7 +66,7 @@ export const userSettings = pgTable('user_settings', {
 // Transactions Table
 // =============================================================================
 
-export const transactions = pgTable('transactions', {
+export const transactions = pgTable('bim_transactions', {
   id: uuid('id').primaryKey(),
   accountId: uuid('account_id')
     .references(() => accounts.id, {onDelete: 'cascade'})
@@ -81,7 +81,7 @@ export const transactions = pgTable('transactions', {
   timestamp: timestamp('timestamp').notNull(),
   indexedAt: timestamp('indexed_at').defaultNow().notNull(),
 }, (table) => [
-  unique('transactions_hash_account_unique').on(table.transactionHash, table.accountId),
+  unique('bim_transactions_hash_account_unique').on(table.transactionHash, table.accountId),
 ]);
 
 // =============================================================================
