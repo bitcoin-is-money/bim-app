@@ -6,7 +6,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import pg from 'pg';
-import * as schema from "../../../src/db/schema";
+import * as schema from '@bim/db';
 
 export type DbClient = NodePgDatabase<typeof schema>;
 

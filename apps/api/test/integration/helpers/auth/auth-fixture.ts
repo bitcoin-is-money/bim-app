@@ -1,4 +1,4 @@
-import * as schema from "../../../../src/db/schema";
+import * as schema from '@bim/db';
 import type {DbClient} from "../test-database";
 import {DbFixture} from "./../db-fixture";
 import {createChallengeData, createSessionData} from "./auth-test-data";
