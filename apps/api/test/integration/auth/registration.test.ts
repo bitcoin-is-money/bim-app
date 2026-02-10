@@ -136,7 +136,7 @@ describe('Registration Flow', () => {
 
       // Expire the challenge by updating it in the database
       await db.execute(
-        sql`UPDATE challenges
+        sql`UPDATE bim_challenges
             SET expires_at = NOW() - INTERVAL '1 minute'
             WHERE id = ${beginBody.challengeId}`,
       );
