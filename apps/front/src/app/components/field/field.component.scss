@@ -1,11 +1,11 @@
 @reference "tailwindcss";
 
 :host {
-  @apply block w-full;;
+  @apply block w-full;
 }
 
 .field {
-  @apply flex items-center gap-3 px-4 py-3 rounded-xl bg-neutral-900;
+  @apply flex items-center gap-3 px-4 py-3 rounded-xl bg-neutral-800;
 
   .field-label {
     @apply text-sm text-neutral-500 whitespace-nowrap;
