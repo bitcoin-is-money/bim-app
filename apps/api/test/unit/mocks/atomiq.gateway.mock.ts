@@ -34,8 +34,9 @@ export class AtomiqGatewayMock implements AtomiqGateway {
       const swapId = crypto.randomUUID();
       const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
 
-      // Mock: Generate a fake invoice
-      const invoice = `lnbc${params.amountSats}n1...mock_invoice_${swapId}`;
+      // Mock: Generate a valid-looking BOLT11 invoice (alphanumeric only, no dots/underscores)
+      const hex = swapId.replaceAll('-', '');
+      const invoice = `lnbc${params.amountSats}n1p${hex}${hex}`;
 
       const swapObject = {
         id: swapId,
