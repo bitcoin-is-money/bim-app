@@ -19,7 +19,6 @@ import type {
   SwapRepository,
   TransactionRepository,
   UserSettingsRepository,
-  WatchedAddressRepository,
   WebAuthnGateway,
 } from "@bim/domain/ports";
 import {SwapService,} from "@bim/domain/swap";
@@ -33,7 +32,6 @@ import {
   DrizzleSessionRepository,
   DrizzleTransactionRepository,
   DrizzleUserSettingsRepository,
-  DrizzleWatchedAddressRepository,
   InMemorySwapRepository,
   SimpleWebAuthnGateway,
   StarknetRpcGateway
@@ -51,7 +49,6 @@ export interface AppContext {
     challenge: ChallengeRepository;
     swap: SwapRepository;
     userSettings: UserSettingsRepository;
-    watchedAddress: WatchedAddressRepository;
     transaction: TransactionRepository;
   };
   gateways: {
@@ -107,7 +104,6 @@ export namespace AppContext {
       challenge: new DrizzleChallengeRepository(db),
       swap: new InMemorySwapRepository(),
       userSettings: new DrizzleUserSettingsRepository(db),
-      watchedAddress: new DrizzleWatchedAddressRepository(db),
       transaction: new DrizzleTransactionRepository(db),
       ...overrides?.repositories,
     };
@@ -181,7 +177,6 @@ export namespace AppContext {
 
     const transactionService = new TransactionService({
       transactionRepository: repositories.transaction,
-      watchedAddressRepository: repositories.watchedAddress,
     });
 
     const starknetConfig: StarknetConfig = {

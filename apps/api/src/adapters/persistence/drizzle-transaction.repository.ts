@@ -1,6 +1,6 @@
-import {StarknetAddress} from '@bim/domain/account';
+import {AccountId, StarknetAddress} from '@bim/domain/account';
 import type {TransactionPaginationOptions, TransactionRepository} from "@bim/domain/ports";
-import {Transaction, TransactionHash, TransactionId, type TransactionType, WatchedAddressId} from "@bim/domain/user";
+import {Transaction, TransactionHash, TransactionId, type TransactionType} from "@bim/domain/user";
 import {count, desc, eq} from 'drizzle-orm';
 import type {NodePgDatabase} from 'drizzle-orm/node-postgres';
 import * as schema from '../../db/schema.js';
@@ -21,7 +21,7 @@ export class DrizzleTransactionRepository implements TransactionRepository {
       .insert(schema.transactions)
       .values({
         id: data.id,
-        watchedAddressId: data.watchedAddressId,
+        accountId: data.accountId,
         transactionHash: data.transactionHash,
         blockNumber: data.blockNumber.toString(),
         transactionType: data.transactionType,
@@ -44,7 +44,7 @@ export class DrizzleTransactionRepository implements TransactionRepository {
       const data = tx.toData();
       return {
         id: data.id,
-        watchedAddressId: data.watchedAddressId,
+        accountId: data.accountId,
         transactionHash: data.transactionHash,
         blockNumber: data.blockNumber.toString(),
         transactionType: data.transactionType,
@@ -87,12 +87,12 @@ export class DrizzleTransactionRepository implements TransactionRepository {
     return this.toTransaction(record);
   }
 
-  async findByWatchedAddressId(
-    watchedAddressId: WatchedAddressId,
+  async findByAccountId(
+    accountId: AccountId,
     options: TransactionPaginationOptions,
   ): Promise<Transaction[]> {
     const records = await this.db.query.transactions.findMany({
-      where: eq(schema.transactions.watchedAddressId, watchedAddressId),
+      where: eq(schema.transactions.accountId, accountId),
       orderBy: [desc(schema.transactions.timestamp)],
       limit: options.limit,
       offset: options.offset,
@@ -101,11 +101,11 @@ export class DrizzleTransactionRepository implements TransactionRepository {
     return records.map((record) => this.toTransaction(record));
   }
 
-  async countByWatchedAddressId(watchedAddressId: WatchedAddressId): Promise<number> {
+  async countByAccountId(accountId: AccountId): Promise<number> {
     const result = await this.db
       .select({count: count()})
       .from(schema.transactions)
-      .where(eq(schema.transactions.watchedAddressId, watchedAddressId));
+      .where(eq(schema.transactions.accountId, accountId));
 
     return result[0]?.count ?? 0;
   }
@@ -122,7 +122,7 @@ export class DrizzleTransactionRepository implements TransactionRepository {
   private toTransaction(record: schema.TransactionRecord): Transaction {
     return Transaction.fromData({
       id: TransactionId.of(record.id),
-      watchedAddressId: WatchedAddressId.of(record.watchedAddressId),
+      accountId: AccountId.of(record.accountId),
       transactionHash: TransactionHash.of(record.transactionHash),
       blockNumber: BigInt(record.blockNumber),
       transactionType: record.transactionType as TransactionType,

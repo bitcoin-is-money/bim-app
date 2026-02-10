@@ -3,7 +3,6 @@ export * from './session.repository';
 export * from './challenge.repository';
 export * from './swap.repository';
 export * from './user-settings.repository';
-export * from './watched-address.repository';
 export * from './transaction.repository';
 export * from './starknet.gateway';
 export * from './paymaster.gateway';

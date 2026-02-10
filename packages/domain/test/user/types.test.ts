@@ -3,14 +3,12 @@ import {
   InvalidTransactionHashError,
   InvalidTransactionIdError,
   InvalidUserSettingsIdError,
-  InvalidWatchedAddressIdError,
   Language,
   TransactionHash,
   TransactionId,
   UnsupportedCurrencyError,
   UnsupportedLanguageError,
   UserSettingsId,
-  WatchedAddressId,
 } from '@bim/domain/user';
 import {describe, expect, it} from 'vitest';
 
@@ -30,27 +28,6 @@ describe('UserSettingsId', () => {
   describe('generate', () => {
     it('generates valid UUID', () => {
       const id = UserSettingsId.generate();
-      expect(id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
-    });
-  });
-});
-
-describe('WatchedAddressId', () => {
-  describe('of', () => {
-    it('creates WatchedAddressId from valid UUID', () => {
-      const uuid = '550e8400-e29b-41d4-a716-446655440000';
-      const id = WatchedAddressId.of(uuid);
-      expect(id).toBe(uuid);
-    });
-
-    it('throws InvalidWatchedAddressIdError for invalid UUID', () => {
-      expect(() => WatchedAddressId.of('invalid')).toThrow(InvalidWatchedAddressIdError);
-    });
-  });
-
-  describe('generate', () => {
-    it('generates valid UUID', () => {
-      const id = WatchedAddressId.generate();
       expect(id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
     });
   });

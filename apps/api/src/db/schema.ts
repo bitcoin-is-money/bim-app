@@ -1,4 +1,4 @@
-import {boolean, integer, pgTable, text, timestamp, uuid,} from 'drizzle-orm/pg-core';
+import {boolean, integer, pgTable, text, timestamp, unique, uuid,} from 'drizzle-orm/pg-core';
 
 // =============================================================================
 // Accounts Table
@@ -63,31 +63,15 @@ export const userSettings = pgTable('user_settings', {
 });
 
 // =============================================================================
-// Watched Addresses Table
-// =============================================================================
-
-export const watchedAddresses = pgTable('watched_addresses', {
-  id: uuid('id').primaryKey(),
-  accountId: uuid('account_id')
-    .references(() => accounts.id, {onDelete: 'cascade'})
-    .notNull(),
-  starknetAddress: text('starknet_address').notNull(),
-  addressType: text('address_type').notNull(), // 'main' | 'imported'
-  isActive: boolean('is_active').notNull().default(true),
-  registeredAt: timestamp('registered_at').defaultNow().notNull(),
-  lastScannedBlock: text('last_scanned_block'), // bigint as text for precision
-});
-
-// =============================================================================
 // Transactions Table
 // =============================================================================
 
 export const transactions = pgTable('transactions', {
   id: uuid('id').primaryKey(),
-  watchedAddressId: uuid('watched_address_id')
-    .references(() => watchedAddresses.id, {onDelete: 'cascade'})
+  accountId: uuid('account_id')
+    .references(() => accounts.id, {onDelete: 'cascade'})
     .notNull(),
-  transactionHash: text('transaction_hash').notNull().unique(),
+  transactionHash: text('transaction_hash').notNull(),
   blockNumber: text('block_number').notNull(), // bigint as text for precision
   transactionType: text('transaction_type').notNull(), // 'receipt' | 'spent'
   amount: text('amount').notNull(),
@@ -96,7 +80,9 @@ export const transactions = pgTable('transactions', {
   toAddress: text('to_address').notNull(),
   timestamp: timestamp('timestamp').notNull(),
   indexedAt: timestamp('indexed_at').defaultNow().notNull(),
-});
+}, (table) => [
+  unique('transactions_hash_account_unique').on(table.transactionHash, table.accountId),
+]);
 
 // =============================================================================
 // Type Exports
@@ -113,9 +99,6 @@ export type NewChallengeRecord = typeof challenges.$inferInsert;
 
 export type UserSettingsRecord = typeof userSettings.$inferSelect;
 export type NewUserSettingsRecord = typeof userSettings.$inferInsert;
-
-export type WatchedAddressRecord = typeof watchedAddresses.$inferSelect;
-export type NewWatchedAddressRecord = typeof watchedAddresses.$inferInsert;
 
 export type TransactionRecord = typeof transactions.$inferSelect;
 export type NewTransactionRecord = typeof transactions.$inferInsert;

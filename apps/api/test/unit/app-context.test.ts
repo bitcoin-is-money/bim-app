@@ -16,7 +16,6 @@ vi.mock('../../src/adapters/index.js', () => {
     DrizzleSessionRepository: class { name = 'drizzle-session'; },
     DrizzleChallengeRepository: class { name = 'drizzle-challenge'; },
     DrizzleUserSettingsRepository: class { name = 'drizzle-userSettings'; },
-    DrizzleWatchedAddressRepository: class { name = 'drizzle-watchedAddress'; },
     DrizzleTransactionRepository: class { name = 'drizzle-transaction'; },
     InMemorySwapRepository: class { name = 'in-memory-swap'; },
     SimpleWebAuthnGateway: class { name = 'simple-webauthn'; },
