@@ -3,7 +3,7 @@ import {Session, SessionId} from "@bim/domain/auth";
 import type {SessionRepository} from "@bim/domain/ports";
 import {eq, lt} from 'drizzle-orm';
 import type {NodePgDatabase} from 'drizzle-orm/node-postgres';
-import * as schema from '../../db/schema.js';
+import * as schema from '@bim/db';
 
 /**
  * Drizzle-based implementation of SessionRepository.

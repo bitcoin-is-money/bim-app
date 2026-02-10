@@ -3,7 +3,7 @@ import type {TransactionPaginationOptions, TransactionRepository} from "@bim/dom
 import {Transaction, TransactionHash, TransactionId, type TransactionType} from "@bim/domain/user";
 import {count, desc, eq} from 'drizzle-orm';
 import type {NodePgDatabase} from 'drizzle-orm/node-postgres';
-import * as schema from '../../db/schema.js';
+import * as schema from '@bim/db';
 
 /**
  * Drizzle-based implementation of TransactionRepository.

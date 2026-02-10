@@ -1,4 +1,4 @@
-import * as schema from "../../../../src/db/schema";
+import * as schema from '@bim/db';
 
 export function createAccountData(
   overrides?: Partial<schema.NewAccountRecord>

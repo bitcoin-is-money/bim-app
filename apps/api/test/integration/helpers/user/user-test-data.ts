@@ -1,4 +1,4 @@
-import * as schema from "../../../../src/db/schema";
+import * as schema from '@bim/db';
 
 /**
  * Creates a test user settings record
