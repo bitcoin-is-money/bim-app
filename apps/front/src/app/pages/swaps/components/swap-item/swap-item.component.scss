@@ -33,7 +33,7 @@
         @apply font-semibold;
 
         &.credit {
-          @apply text-green-400;
+          color: var(--color-green);
         }
 
         &.debit {
@@ -48,7 +48,7 @@
   }
 
   &.status-completed .swap-status-indicator {
-    @apply bg-green-500;
+    color: var(--color-green);
   }
 
   &.status-failed .swap-status-indicator,

@@ -29,7 +29,7 @@
         @apply text-right font-semibold flex-shrink-0;
 
         &.credit {
-          @apply text-green-400;
+          color: var(--color-green);
         }
 
         &.debit {
