@@ -381,86 +381,58 @@ export class AtomiqSdkGateway implements AtomiqGateway {
 
   async getLightningToStarknetLimits(): Promise<SwapLimits> {
     await this.ensureInitialized();
-
-    try {
-      const Tokens = this.getTokens();
-      const limits = this.swapper!.getSwapLimits(
-        Tokens.BITCOIN.BTCLN,
-        Tokens.STARKNET.WBTC
-      );
-
-      return {
-        minSats: limits.input.min.rawAmount ?? 0n,
-        maxSats: limits.input.max?.rawAmount ?? 0n,
-        feePercent: this.getSwapFeePercent(SwapType.FROM_BTCLN),
-      };
-    } catch {
-      // Fallback to default values
-      return { minSats: 10000n, maxSats: 10000000n, feePercent: 0.5 };
-    }
+    const Tokens = this.getTokens();
+    const limits = this.swapper!.getSwapLimits(
+      Tokens.BITCOIN.BTCLN,
+      Tokens.STARKNET.WBTC
+    );
+    return {
+      minSats: limits.input.min.rawAmount ?? 0n,
+      maxSats: limits.input.max?.rawAmount ?? 0n,
+      feePercent: this.getSwapFeePercent(SwapType.FROM_BTCLN),
+    };
   }
 
   async getBitcoinToStarknetLimits(): Promise<SwapLimits> {
     await this.ensureInitialized();
-
-    try {
-      const Tokens = this.getTokens();
-      const limits = this.swapper!.getSwapLimits(
-        Tokens.BITCOIN.BTC,
-        Tokens.STARKNET.WBTC
-      );
-
-      return {
-        minSats: limits.input.min.rawAmount ?? 0n,
-        maxSats: limits.input.max?.rawAmount ?? 0n,
-        feePercent: this.getSwapFeePercent(SwapType.FROM_BTC),
-      };
-    } catch {
-      // Fallback to default values
-      return { minSats: 50000n, maxSats: 100000000n, feePercent: 0.3 };
-    }
+    const Tokens = this.getTokens();
+    const limits = this.swapper!.getSwapLimits(
+      Tokens.BITCOIN.BTC,
+      Tokens.STARKNET.WBTC
+    );
+    return {
+      minSats: limits.input.min.rawAmount ?? 0n,
+      maxSats: limits.input.max?.rawAmount ?? 0n,
+      feePercent: this.getSwapFeePercent(SwapType.FROM_BTC),
+    };
   }
 
   async getStarknetToLightningLimits(): Promise<SwapLimits> {
     await this.ensureInitialized();
-
-    try {
-      const Tokens = this.getTokens();
-      const limits = this.swapper!.getSwapLimits(
-        Tokens.STARKNET.WBTC,
-        Tokens.BITCOIN.BTCLN
-      );
-
-      return {
-        minSats: limits.input.min.rawAmount ?? 0n,
-        maxSats: limits.input.max?.rawAmount ?? 0n,
-        feePercent: this.getSwapFeePercent(SwapType.TO_BTCLN),
-      };
-    } catch {
-      // Fallback to default values
-      return { minSats: 10000n, maxSats: 5000000n, feePercent: 0.5 };
-    }
+    const Tokens = this.getTokens();
+    const limits = this.swapper!.getSwapLimits(
+      Tokens.STARKNET.WBTC,
+      Tokens.BITCOIN.BTCLN
+    );
+    return {
+      minSats: limits.input.min.rawAmount ?? 0n,
+      maxSats: limits.input.max?.rawAmount ?? 0n,
+      feePercent: this.getSwapFeePercent(SwapType.TO_BTCLN),
+    };
   }
 
   async getStarknetToBitcoinLimits(): Promise<SwapLimits> {
     await this.ensureInitialized();
-
-    try {
-      const Tokens = this.getTokens();
-      const limits = this.swapper!.getSwapLimits(
-        Tokens.STARKNET.WBTC,
-        Tokens.BITCOIN.BTC
-      );
-
-      return {
-        minSats: limits.input.min.rawAmount ?? 0n,
-        maxSats: limits.input.max?.rawAmount ?? 0n,
-        feePercent: this.getSwapFeePercent(SwapType.TO_BTC),
-      };
-    } catch {
-      // Fallback to default values
-      return { minSats: 50000n, maxSats: 50000000n, feePercent: 0.3 };
-    }
+    const Tokens = this.getTokens();
+    const limits = this.swapper!.getSwapLimits(
+      Tokens.STARKNET.WBTC,
+      Tokens.BITCOIN.BTC
+    );
+    return {
+      minSats: limits.input.min.rawAmount ?? 0n,
+      maxSats: limits.input.max?.rawAmount ?? 0n,
+      feePercent: this.getSwapFeePercent(SwapType.TO_BTC),
+    };
   }
 
   // ===========================================================================
