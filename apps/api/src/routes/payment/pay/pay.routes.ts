@@ -23,9 +23,9 @@ export function createPayRoutes(appContext: AppContext): AuthenticatedHono {
   app.post('/parse', async (honoCtx): Promise<TypedResponse<PreparedPaymentResponse | ApiErrorResponse>> => {
     try {
       const body = await honoCtx.req.json();
-      const {data} = ParsePaymentSchema.parse(body);
+      const {paymentPayload} = ParsePaymentSchema.parse(body);
 
-      const prepared = payService.prepare(data);
+      const prepared = payService.prepare(paymentPayload);
 
       return honoCtx.json<PreparedPaymentResponse>(serializePreparedPayment(prepared));
     } catch (error) {
@@ -40,7 +40,7 @@ export function createPayRoutes(appContext: AppContext): AuthenticatedHono {
   app.post('/execute', async (honoCtx): Promise<TypedResponse<PaymentResultResponse | ApiErrorResponse>> => {
     try {
       const body = await honoCtx.req.json();
-      const {data} = ExecutePaymentSchema.parse(body);
+      const input = ExecutePaymentSchema.parse(body);
 
       const account = honoCtx.get('account');
       const senderAddress = account.getStarknetAddress();
@@ -48,7 +48,7 @@ export function createPayRoutes(appContext: AppContext): AuthenticatedHono {
         return createErrorResponse(honoCtx, 400, ErrorCode.ACCOUNT_NOT_DEPLOYED, 'Account not deployed');
       }
 
-      const result = await payService.execute({data, senderAddress});
+      const result = await payService.execute({...input, senderAddress, accountId: account.id});
 
       return honoCtx.json<PaymentResultResponse>(serializePaymentResult(result));
     } catch (error) {

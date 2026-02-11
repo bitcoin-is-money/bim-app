@@ -8,6 +8,7 @@ interface ReceiveRequestBody {
   network: 'lightning' | 'bitcoin' | 'starknet';
   amount: string;
   tokenAddress?: string;
+  description?: string;
 }
 
 export class ReceiveHandlerMock {

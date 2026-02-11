@@ -1,5 +1,5 @@
 import {CommonModule} from '@angular/common';
-import {Component, computed, inject} from '@angular/core';
+import {Component, computed, inject, signal} from '@angular/core';
 import {TranslateModule} from '@ngx-translate/core';
 import {AmountFieldComponent} from '../../components/amount-field/amount-field.component';
 import {AmountHighlightComponent} from '../../components/amount-highlight/amount-highlight.component';
@@ -31,6 +31,7 @@ export class PayConfirmPage {
   private readonly notificationService = inject(NotificationService);
 
   payment = this.paymentService.parsedPayment;
+  description = signal('');
 
   computedFee = computed((): Amount | undefined => {
     const p = this.payment();
@@ -53,6 +54,18 @@ export class PayConfirmPage {
   });
 
   readonly isProcessing = this.paymentService.isProcessing;
+
+  constructor() {
+    const p = this.payment();
+    if (p) {
+      this.description.set(p.description);
+    }
+  }
+
+  onDescriptionChange(value: string): void {
+    this.description.set(value);
+    this.paymentService.setDescription(value);
+  }
 
   confirm(): void {
     this.paymentService.executeAndNavigate();

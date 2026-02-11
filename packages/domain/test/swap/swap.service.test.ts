@@ -1,5 +1,5 @@
 import {StarknetAddress} from '@bim/domain/account';
-import type {AtomiqGateway, SwapRepository} from '@bim/domain/ports';
+import type {AtomiqGateway, SwapRepository, TransactionRepository} from '@bim/domain/ports';
 import {Amount} from '@bim/domain/shared';
 import {Swap, SwapId, SwapService} from '@bim/domain/swap';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
@@ -59,15 +59,31 @@ function createMockGateway(): AtomiqGateway {
   };
 }
 
+function createMockTransactionRepository(): TransactionRepository {
+  return {
+    save: vi.fn(),
+    saveMany: vi.fn(),
+    findById: vi.fn(),
+    findByHash: vi.fn(),
+    findByAccountId: vi.fn(),
+    countByAccountId: vi.fn(),
+    existsByHash: vi.fn(),
+    saveDescription: vi.fn(),
+    deleteDescription: vi.fn(),
+  };
+}
+
 describe('SwapService', () => {
   let service: SwapService;
   let repository: SwapRepository;
   let gateway: AtomiqGateway;
+  let transactionRepository: TransactionRepository;
 
   beforeEach(() => {
     repository = createMockRepository();
     gateway = createMockGateway();
-    service = new SwapService({swapRepository: repository, atomiqGateway: gateway});
+    transactionRepository = createMockTransactionRepository();
+    service = new SwapService({swapRepository: repository, atomiqGateway: gateway, transactionRepository});
   });
 
   // =========================================================================

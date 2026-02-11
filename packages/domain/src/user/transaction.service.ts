@@ -1,6 +1,7 @@
 import {AccountId} from '../account';
 import type {TransactionRepository} from '../ports';
 import {Transaction} from './transaction';
+import {TransactionHash} from './types';
 
 // =============================================================================
 // Dependencies
@@ -23,6 +24,17 @@ export interface FetchTransactionsInput {
 export interface FetchTransactionsOutput {
   transactions: Transaction[];
   total: number;
+}
+
+export interface SetDescriptionInput {
+  accountId: string;
+  transactionHash: string;
+  description: string;
+}
+
+export interface DeleteDescriptionInput {
+  accountId: string;
+  transactionHash: string;
 }
 
 // =============================================================================
@@ -49,5 +61,23 @@ export class TransactionService {
     ]);
 
     return {transactions, total};
+  }
+
+  /**
+   * Sets a description on a transaction.
+   */
+  async setDescription(input: SetDescriptionInput): Promise<void> {
+    const accountId = AccountId.of(input.accountId);
+    const transactionHash = TransactionHash.of(input.transactionHash);
+    await this.deps.transactionRepository.saveDescription(transactionHash, accountId, input.description);
+  }
+
+  /**
+   * Deletes a description from a transaction.
+   */
+  async deleteDescription(input: DeleteDescriptionInput): Promise<void> {
+    const accountId = AccountId.of(input.accountId);
+    const transactionHash = TransactionHash.of(input.transactionHash);
+    await this.deps.transactionRepository.deleteDescription(transactionHash, accountId);
   }
 }

@@ -45,8 +45,11 @@ export type PreparedPayment = ParsedPaymentData & { fee: Amount };
 // =============================================================================
 
 export interface ExecutePaymentInput {
-  data: string;
+  /** Raw payment string to parse: Lightning invoice, BIP21 URI, Bitcoin address, or Starknet address. */
+  paymentPayload: string;
   senderAddress: StarknetAddress;
+  accountId: string;
+  description?: string;
 }
 
 // =============================================================================
@@ -175,6 +178,8 @@ export interface ReceivePaymentInput {
   destinationAddress: StarknetAddress;
   amount?: Amount;
   tokenAddress?: string;
+  description?: string;
+  accountId?: string;
 }
 
 // =============================================================================

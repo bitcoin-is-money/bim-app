@@ -13,6 +13,7 @@ export interface Transaction {
   toAddress: string;
   timestamp: string;
   indexedAt: string;
+  description?: string;
 }
 
 export interface PaginatedTransactions {

@@ -1,10 +1,15 @@
 import {Account} from '@bim/domain/account';
 import {Hono} from 'hono';
 import type {TypedResponse} from 'hono';
+import {z} from 'zod';
 import type {AppContext} from '../../../app-context';
 import {handleDomainError, type ApiErrorResponse} from '../../../errors';
 import type {AuthenticatedHono} from '../../../types.js';
-import type {GetTransactionsResponse} from './transaction.types';
+import type {DeleteDescriptionResponse, GetTransactionsResponse, SetDescriptionResponse} from './transaction.types';
+
+const SetDescriptionSchema = z.object({
+  description: z.string().min(1).max(100),
+});
 
 // =============================================================================
 // Routes
@@ -48,11 +53,56 @@ export function createTransactionRoutes(appContext: AppContext): AuthenticatedHo
           toAddress: tx.toAddress,
           timestamp: tx.timestamp.toISOString(),
           indexedAt: tx.indexedAt.toISOString(),
+          description: tx.description ?? undefined,
         })),
         total: result.total,
         limit,
         offset,
       });
+    } catch (error) {
+      return handleDomainError(honoCtx, error);
+    }
+  });
+
+  // ---------------------------------------------------------------------------
+  // Set Transaction Description
+  // ---------------------------------------------------------------------------
+
+  app.put('/:transactionHash/description', async (honoCtx): Promise<TypedResponse<SetDescriptionResponse | ApiErrorResponse>> => {
+    try {
+      const account: Account = honoCtx.get('account');
+      const transactionHash = honoCtx.req.param('transactionHash');
+
+      const body = await honoCtx.req.json();
+      const {description} = SetDescriptionSchema.parse(body);
+
+      await transactionService.setDescription({
+        accountId: account.id,
+        transactionHash,
+        description,
+      });
+
+      return honoCtx.json<SetDescriptionResponse>({transactionHash, description});
+    } catch (error) {
+      return handleDomainError(honoCtx, error);
+    }
+  });
+
+  // ---------------------------------------------------------------------------
+  // Delete Transaction Description
+  // ---------------------------------------------------------------------------
+
+  app.delete('/:transactionHash/description', async (honoCtx): Promise<TypedResponse<DeleteDescriptionResponse | ApiErrorResponse>> => {
+    try {
+      const account: Account = honoCtx.get('account');
+      const transactionHash = honoCtx.req.param('transactionHash');
+
+      await transactionService.deleteDescription({
+        accountId: account.id,
+        transactionHash,
+      });
+
+      return honoCtx.json<DeleteDescriptionResponse>({transactionHash});
     } catch (error) {
       return handleDomainError(honoCtx, error);
     }

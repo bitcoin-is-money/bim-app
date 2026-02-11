@@ -1,6 +1,7 @@
-import {StarknetAddress} from '../account';
-import type {AtomiqGateway, SwapRepository} from '../ports';
+import {AccountId, StarknetAddress} from '../account';
+import type {AtomiqGateway, SwapRepository, TransactionRepository} from '../ports';
 import {Amount} from '../shared';
+import {TransactionHash} from '../user/types';
 import {Swap} from './swap';
 import {
   BitcoinAddress,
@@ -23,6 +24,7 @@ import {
 export interface SwapServiceDeps {
   swapRepository: SwapRepository;
   atomiqGateway: AtomiqGateway;
+  transactionRepository: TransactionRepository;
 }
 
 // =============================================================================
@@ -32,6 +34,8 @@ export interface SwapServiceDeps {
 export interface CreateLightningToStarknetInput {
   amount: Amount;
   destinationAddress: string;
+  description?: string;
+  accountId?: string;
 }
 
 export interface CreateLightningToStarknetOutput {
@@ -46,6 +50,8 @@ export interface CreateLightningToStarknetOutput {
 export interface CreateBitcoinToStarknetInput {
   amount: Amount;
   destinationAddress: string;
+  description?: string;
+  accountId?: string;
 }
 
 export interface CreateBitcoinToStarknetOutput {
@@ -61,6 +67,8 @@ export interface CreateBitcoinToStarknetOutput {
 export interface CreateStarknetToLightningInput {
   invoice: string;
   sourceAddress: string;
+  description?: string;
+  accountId?: string;
 }
 
 export interface CreateStarknetToLightningOutput {
@@ -77,6 +85,8 @@ export interface CreateStarknetToBitcoinInput {
   amount: Amount;
   destinationAddress: string;
   sourceAddress: string;
+  description?: string;
+  accountId?: string;
 }
 
 export interface CreateStarknetToBitcoinOutput {
@@ -163,6 +173,8 @@ export class SwapService {
       destinationAddress,
       invoice: atomiqSwap.invoice,
       expiresAt: atomiqSwap.expiresAt,
+      description: input.description,
+      accountId: input.accountId,
     });
 
     await this.deps.swapRepository.save(swap);
@@ -206,6 +218,8 @@ export class SwapService {
       destinationAddress,
       depositAddress: atomiqSwap.depositAddress,
       expiresAt: atomiqSwap.expiresAt,
+      description: input.description,
+      accountId: input.accountId,
     });
 
     await this.deps.swapRepository.save(swap);
@@ -261,6 +275,8 @@ export class SwapService {
       invoice,
       depositAddress: atomiqSwap.depositAddress,
       expiresAt: atomiqSwap.expiresAt,
+      description: input.description,
+      accountId: input.accountId,
     });
 
     await this.deps.swapRepository.save(swap);
@@ -311,6 +327,8 @@ export class SwapService {
       destinationAddress,
       depositAddress: atomiqSwap.depositAddress,
       expiresAt: atomiqSwap.expiresAt,
+      description: input.description,
+      accountId: input.accountId,
     });
 
     await this.deps.swapRepository.save(swap);
@@ -446,6 +464,25 @@ export class SwapService {
   // ===========================================================================
 
   /**
+   * Persists the swap description to the transaction descriptions table if the swap has
+   * a description, an accountId, and a transaction hash.
+   */
+  private async persistDescriptionIfNeeded(swap: Swap): Promise<void> {
+    const txHash = swap.getTxHash();
+    if (swap.description && swap.accountId && txHash) {
+      try {
+        await this.deps.transactionRepository.saveDescription(
+          TransactionHash.of(txHash),
+          AccountId.of(swap.accountId),
+          swap.description,
+        );
+      } catch {
+        console.warn(`Failed to persist description for swap ${swap.id}, ignoring.`);
+      }
+    }
+  }
+
+  /**
    * Validates that an amount is within the gateway limits.
    * Converts limits from bigint (port boundary) to Amount for comparison.
    */
@@ -476,6 +513,7 @@ export class SwapService {
         }
         swap.markAsCompleted(atomiqStatus.txHash);
         await this.deps.swapRepository.save(swap);
+        await this.persistDescriptionIfNeeded(swap);
       } else if (atomiqStatus.isFailed) {
         swap.markAsFailed(atomiqStatus.error || 'Unknown error');
         await this.deps.swapRepository.save(swap);
@@ -504,6 +542,7 @@ export class SwapService {
       await this.deps.atomiqGateway.waitForClaimConfirmation(swap.id);
       swap.markAsCompleted(txHash);
       await this.deps.swapRepository.save(swap);
+      await this.persistDescriptionIfNeeded(swap);
     } catch {
       // Don't mark as failed - let the monitor handle final state
     }

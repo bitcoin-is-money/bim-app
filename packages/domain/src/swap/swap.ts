@@ -36,6 +36,8 @@ export class Swap {
     readonly expiresAt: Date,
     readonly createdAt: Date,
     state: SwapState,
+    readonly description: string | undefined,
+    readonly accountId: string | undefined,
   ) {
     this.state = state;
   }
@@ -61,6 +63,8 @@ export class Swap {
       params.expiresAt,
       new Date(),
       { status: 'pending' },
+      params.description,
+      params.accountId,
     );
   }
 
@@ -81,6 +85,8 @@ export class Swap {
       params.expiresAt,
       new Date(),
       { status: 'pending' },
+      params.description,
+      params.accountId,
     );
   }
 
@@ -101,6 +107,8 @@ export class Swap {
       params.expiresAt,
       new Date(),
       { status: 'pending' },
+      params.description,
+      params.accountId,
     );
   }
 
@@ -121,6 +129,8 @@ export class Swap {
       params.expiresAt,
       new Date(),
       { status: 'pending' },
+      params.description,
+      params.accountId,
     );
   }
 
@@ -139,6 +149,8 @@ export class Swap {
       data.expiresAt,
       data.createdAt,
       data.state,
+      data.description,
+      data.accountId,
     );
   }
 
@@ -328,6 +340,8 @@ export class Swap {
       depositAddress: this.depositAddress,
       expiresAt: this.expiresAt,
       createdAt: this.createdAt,
+      description: this.description,
+      accountId: this.accountId,
     };
   }
 }

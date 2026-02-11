@@ -14,6 +14,7 @@ export interface TransactionResponse {
   toAddress: string;
   timestamp: string;
   indexedAt: string;
+  description?: string;
 }
 
 export interface GetTransactionsResponse {
@@ -21,4 +22,21 @@ export interface GetTransactionsResponse {
   total: number;
   limit: number;
   offset: number;
+}
+
+// =============================================================================
+// PUT /api/user/transactions/:transactionHash/description
+// =============================================================================
+
+export interface SetDescriptionResponse {
+  transactionHash: string;
+  description: string;
+}
+
+// =============================================================================
+// DELETE /api/user/transactions/:transactionHash/description
+// =============================================================================
+
+export interface DeleteDescriptionResponse {
+  transactionHash: string;
 }

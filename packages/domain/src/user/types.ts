@@ -153,6 +153,7 @@ export interface TransactionData {
   toAddress: StarknetAddress;
   timestamp: Date;
   indexedAt: Date;
+  description?: string;
 }
 
 // =============================================================================

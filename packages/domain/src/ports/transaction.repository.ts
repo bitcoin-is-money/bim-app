@@ -50,4 +50,14 @@ export interface TransactionRepository {
    * Checks if a transaction with the given hash exists.
    */
   existsByHash(hash: TransactionHash): Promise<boolean>;
+
+  /**
+   * Saves a description for a transaction (upsert: insert or update if exists).
+   */
+  saveDescription(transactionHash: TransactionHash, accountId: AccountId, description: string): Promise<void>;
+
+  /**
+   * Deletes the description for a transaction.
+   */
+  deleteDescription(transactionHash: TransactionHash, accountId: AccountId): Promise<void>;
 }

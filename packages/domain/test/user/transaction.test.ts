@@ -73,6 +73,41 @@ describe('Transaction', () => {
       expect(tx.indexedAt.getTime()).toBeGreaterThanOrEqual(before.getTime());
       expect(tx.indexedAt.getTime()).toBeLessThanOrEqual(after.getTime());
     });
+
+    it('creates transaction with description', () => {
+      const tx = Transaction.create({
+        id: transactionId,
+        accountId,
+        transactionHash,
+        blockNumber: 12345n,
+        transactionType: 'receipt',
+        amount: '1000',
+        tokenAddress,
+        fromAddress,
+        toAddress,
+        timestamp: new Date('2024-01-15T12:00:00Z'),
+        description: 'Coffee payment',
+      });
+
+      expect(tx.description).toBe('Coffee payment');
+    });
+
+    it('creates transaction without description', () => {
+      const tx = Transaction.create({
+        id: transactionId,
+        accountId,
+        transactionHash,
+        blockNumber: 12345n,
+        transactionType: 'receipt',
+        amount: '1000',
+        tokenAddress,
+        fromAddress,
+        toAddress,
+        timestamp: new Date('2024-01-15T12:00:00Z'),
+      });
+
+      expect(tx.description).toBeUndefined();
+    });
   });
 
   describe('fromData', () => {
@@ -98,6 +133,28 @@ describe('Transaction', () => {
       expect(tx.amount).toBe('123456789');
       expect(tx.timestamp).toEqual(data.timestamp);
       expect(tx.indexedAt).toEqual(data.indexedAt);
+      expect(tx.description).toBeUndefined();
+    });
+
+    it('reconstitutes transaction with description', () => {
+      const data = {
+        id: transactionId,
+        accountId,
+        transactionHash,
+        blockNumber: 99999n,
+        transactionType: 'spent' as const,
+        amount: '123456789',
+        tokenAddress,
+        fromAddress,
+        toAddress,
+        timestamp: new Date('2024-02-01T10:00:00Z'),
+        indexedAt: new Date('2024-02-01T10:05:00Z'),
+        description: 'Rent',
+      };
+
+      const tx = Transaction.fromData(data);
+
+      expect(tx.description).toBe('Rent');
     });
   });
 
@@ -130,6 +187,25 @@ describe('Transaction', () => {
       expect(data.toAddress).toBe(toAddress);
       expect(data.timestamp).toEqual(timestamp);
       expect(data.indexedAt).toBeDefined();
+      expect(data.description).toBeUndefined();
+    });
+
+    it('exports description when set', () => {
+      const tx = Transaction.create({
+        id: transactionId,
+        accountId,
+        transactionHash,
+        blockNumber: 12345n,
+        transactionType: 'receipt',
+        amount: '1000',
+        tokenAddress,
+        fromAddress,
+        toAddress,
+        timestamp: new Date(),
+        description: 'Groceries',
+      });
+
+      expect(tx.toData().description).toBe('Groceries');
     });
   });
 });

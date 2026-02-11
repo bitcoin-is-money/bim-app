@@ -62,11 +62,17 @@ export class PayHttpService {
   private readonly apiUrl = '/api/payment/pay';
   private readonly http = inject(HttpClient);
 
-  parse(data: string): Observable<ParsePaymentResponse> {
-    return this.http.post<ParsePaymentResponse>(`${this.apiUrl}/parse`, {data});
+  parse(paymentPayload: string): Observable<ParsePaymentResponse> {
+    return this.http.post<ParsePaymentResponse>(`${this.apiUrl}/parse`, {paymentPayload});
   }
 
-  execute(data: string): Observable<ExecutePaymentResponse> {
-    return this.http.post<ExecutePaymentResponse>(`${this.apiUrl}/execute`, {data});
+  execute(
+    paymentPayload: string,
+    description?: string
+  ): Observable<ExecutePaymentResponse> {
+    return this.http.post<ExecutePaymentResponse>(`${this.apiUrl}/execute`, {
+      paymentPayload,
+      ...(description ? {description} : {}),
+    });
   }
 }
