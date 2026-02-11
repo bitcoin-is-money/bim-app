@@ -1,6 +1,6 @@
 import {StarknetAddress} from '@bim/domain/account';
 import {Erc20CallFactory, FeeConfig, InvalidPaymentAmountError, type ParseService, PayService, SameAddressPaymentError} from '@bim/domain/payment';
-import type {StarknetGateway} from '@bim/domain/ports';
+import type {StarknetGateway, TransactionRepository} from '@bim/domain/ports';
 import {Amount} from '@bim/domain/shared';
 import {BitcoinAddress, LightningInvoice, Swap, SwapAmountError, SwapCreationError, SwapId, type SwapService} from '@bim/domain/swap';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
@@ -18,6 +18,17 @@ const TX_HASH = '0xabc123';
 const DEPOSIT_ADDRESS = '0x05abbccdd00112233445566778899aabbccdd00112233445566778899aabbcc';
 const VALID_INVOICE = 'lntb1000n1pjtest0pp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypq';
 const BTC_BECH32 = 'bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4';
+const ACCOUNT_ID = '550e8400-e29b-41d4-a716-446655440000';
+
+function createMockTransactionRepository(): TransactionRepository {
+  return {
+    saveDescription: vi.fn().mockResolvedValue(undefined),
+    deleteDescription: vi.fn().mockResolvedValue(undefined),
+    findByAccountId: vi.fn(),
+    findById: vi.fn(),
+    findByHash: vi.fn(),
+  } as unknown as TransactionRepository;
+}
 
 // =============================================================================
 // Swap Factories
@@ -66,6 +77,7 @@ describe('PayService', () => {
   describe('execute — starknet', () => {
     let service: PayService;
     let mockStarknetGateway: StarknetGateway;
+    let mockTransactionRepository: TransactionRepository;
 
     beforeEach(() => {
       vi.resetAllMocks();
@@ -73,6 +85,8 @@ describe('PayService', () => {
       mockStarknetGateway = {
         executeCalls: vi.fn().mockResolvedValue({txHash: TX_HASH}),
       } as unknown as StarknetGateway;
+
+      mockTransactionRepository = createMockTransactionRepository();
 
       vi.mocked(mockParseService.parse).mockReturnValue({
         network: 'starknet',
@@ -87,6 +101,7 @@ describe('PayService', () => {
         erc20CallFactory: new Erc20CallFactory(feeConfig),
         starknetGateway: mockStarknetGateway,
         swapService: {} as unknown as SwapService,
+        transactionRepository: mockTransactionRepository,
         starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS},
         feeConfig,
       });
@@ -94,8 +109,9 @@ describe('PayService', () => {
 
     it('executes a transfer via the gateway (calls executeCalls with transfer + fee calls)', async () => {
       const result = await service.execute({
-        data: 'starknet:...',
+        paymentPayload: 'starknet:...',
         senderAddress: SENDER_ADDRESS,
+        accountId: ACCOUNT_ID,
       });
 
       expect(result.network).toBe('starknet');
@@ -113,8 +129,9 @@ describe('PayService', () => {
 
     it('returns txHash, amount, feeAmount, recipientAddress, tokenAddress', async () => {
       const result = await service.execute({
-        data: 'starknet:...',
+        paymentPayload: 'starknet:...',
         senderAddress: SENDER_ADDRESS,
+        accountId: ACCOUNT_ID,
       });
 
       expect(result.network).toBe('starknet');
@@ -137,8 +154,9 @@ describe('PayService', () => {
       });
 
       const result = await service.execute({
-        data: 'starknet:...',
+        paymentPayload: 'starknet:...',
         senderAddress: SENDER_ADDRESS,
+        accountId: ACCOUNT_ID,
       });
 
       if (result.network !== 'starknet') return;
@@ -158,7 +176,7 @@ describe('PayService', () => {
       });
 
       await expect(
-        service.execute({data: 'starknet:...', senderAddress: SENDER_ADDRESS}),
+        service.execute({paymentPayload: 'starknet:...', senderAddress: SENDER_ADDRESS, accountId: ACCOUNT_ID}),
       ).rejects.toThrow(InvalidPaymentAmountError);
     });
 
@@ -172,7 +190,7 @@ describe('PayService', () => {
       });
 
       await expect(
-        service.execute({data: 'starknet:...', senderAddress: SENDER_ADDRESS}),
+        service.execute({paymentPayload: 'starknet:...', senderAddress: SENDER_ADDRESS, accountId: ACCOUNT_ID}),
       ).rejects.toThrow(SameAddressPaymentError);
     });
   });
@@ -213,13 +231,14 @@ describe('PayService', () => {
         erc20CallFactory: new Erc20CallFactory({percentage: 0, recipientAddress: TREASURY_ADDRESS}),
         starknetGateway: mockStarknetGateway,
         swapService: mockSwapService,
+        transactionRepository: createMockTransactionRepository(),
         starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS},
         feeConfig,
       });
     });
 
     it('creates swap then executes WBTC deposit', async () => {
-      await service.execute({data: VALID_INVOICE, senderAddress: SENDER_ADDRESS});
+      await service.execute({paymentPayload: VALID_INVOICE, senderAddress: SENDER_ADDRESS, accountId: ACCOUNT_ID});
 
       // Step 1: create swap
       expect(mockSwapService.createStarknetToLightning).toHaveBeenCalledWith({
@@ -241,7 +260,7 @@ describe('PayService', () => {
     });
 
     it('returns txHash, swapId and swap details', async () => {
-      const result = await service.execute({data: VALID_INVOICE, senderAddress: SENDER_ADDRESS});
+      const result = await service.execute({paymentPayload: VALID_INVOICE, senderAddress: SENDER_ADDRESS, accountId: ACCOUNT_ID});
 
       expect(result.network).toBe('lightning');
       if (result.network !== 'lightning') return;
@@ -263,7 +282,7 @@ describe('PayService', () => {
       );
 
       await expect(
-        service.execute({data: VALID_INVOICE, senderAddress: SENDER_ADDRESS}),
+        service.execute({paymentPayload: VALID_INVOICE, senderAddress: SENDER_ADDRESS, accountId: ACCOUNT_ID}),
       ).rejects.toThrow(SwapAmountError);
     });
 
@@ -273,7 +292,7 @@ describe('PayService', () => {
       );
 
       await expect(
-        service.execute({data: VALID_INVOICE, senderAddress: SENDER_ADDRESS}),
+        service.execute({paymentPayload: VALID_INVOICE, senderAddress: SENDER_ADDRESS, accountId: ACCOUNT_ID}),
       ).rejects.toThrow(SwapCreationError);
     });
   });
@@ -313,13 +332,14 @@ describe('PayService', () => {
         erc20CallFactory: new Erc20CallFactory({percentage: 0, recipientAddress: TREASURY_ADDRESS}),
         starknetGateway: mockStarknetGateway,
         swapService: mockSwapService,
+        transactionRepository: createMockTransactionRepository(),
         starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS},
         feeConfig,
       });
     });
 
     it('creates swap then executes WBTC deposit', async () => {
-      await service.execute({data: `bitcoin:${BTC_BECH32}?amount=0.001`, senderAddress: SENDER_ADDRESS});
+      await service.execute({paymentPayload: `bitcoin:${BTC_BECH32}?amount=0.001`, senderAddress: SENDER_ADDRESS, accountId: ACCOUNT_ID});
 
       // Step 1: create swap
       expect(mockSwapService.createStarknetToBitcoin).toHaveBeenCalledWith({
@@ -343,8 +363,9 @@ describe('PayService', () => {
 
     it('returns txHash, swapId and payment details', async () => {
       const result = await service.execute({
-        data: `bitcoin:${BTC_BECH32}?amount=0.001`,
+        paymentPayload: `bitcoin:${BTC_BECH32}?amount=0.001`,
         senderAddress: SENDER_ADDRESS,
+        accountId: ACCOUNT_ID,
       });
 
       expect(result.network).toBe('bitcoin');
@@ -366,7 +387,7 @@ describe('PayService', () => {
       });
 
       await expect(
-        service.execute({data: `bitcoin:${BTC_BECH32}?amount=0`, senderAddress: SENDER_ADDRESS}),
+        service.execute({paymentPayload: `bitcoin:${BTC_BECH32}?amount=0`, senderAddress: SENDER_ADDRESS, accountId: ACCOUNT_ID}),
       ).rejects.toThrow(InvalidPaymentAmountError);
     });
 
@@ -380,7 +401,7 @@ describe('PayService', () => {
       );
 
       await expect(
-        service.execute({data: `bitcoin:${BTC_BECH32}?amount=0.001`, senderAddress: SENDER_ADDRESS}),
+        service.execute({paymentPayload: `bitcoin:${BTC_BECH32}?amount=0.001`, senderAddress: SENDER_ADDRESS, accountId: ACCOUNT_ID}),
       ).rejects.toThrow(SwapAmountError);
     });
 
@@ -390,7 +411,7 @@ describe('PayService', () => {
       );
 
       await expect(
-        service.execute({data: `bitcoin:${BTC_BECH32}?amount=0.001`, senderAddress: SENDER_ADDRESS}),
+        service.execute({paymentPayload: `bitcoin:${BTC_BECH32}?amount=0.001`, senderAddress: SENDER_ADDRESS, accountId: ACCOUNT_ID}),
       ).rejects.toThrow(SwapCreationError);
     });
   });

@@ -17,6 +17,7 @@ export class Transaction {
     readonly toAddress: StarknetAddress,
     readonly timestamp: Date,
     readonly indexedAt: Date,
+    readonly description: string | undefined,
   ) {}
 
   /**
@@ -33,6 +34,7 @@ export class Transaction {
     fromAddress: StarknetAddress;
     toAddress: StarknetAddress;
     timestamp: Date;
+    description?: string;
   }): Transaction {
     return new Transaction(
       params.id,
@@ -46,6 +48,7 @@ export class Transaction {
       params.toAddress,
       params.timestamp,
       new Date(),
+      params.description,
     );
   }
 
@@ -65,6 +68,7 @@ export class Transaction {
       data.toAddress,
       data.timestamp,
       data.indexedAt,
+      data.description,
     );
   }
 
@@ -98,6 +102,7 @@ export class Transaction {
       toAddress: this.toAddress,
       timestamp: this.timestamp,
       indexedAt: this.indexedAt,
+      description: this.description,
     };
   }
 }

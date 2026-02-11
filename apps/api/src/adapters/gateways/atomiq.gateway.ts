@@ -14,6 +14,7 @@ import type {
 import {ExternalServiceError} from "@bim/domain/shared";
 import type {SwapLimits} from "@bim/domain/swap";
 import {BitcoinAddress, LightningInvoice, SwapId} from '@bim/domain/swap';
+import { existsSync, mkdirSync } from 'node:fs';
 
 /**
  * Configuration for Atomiq gateway.
@@ -22,7 +23,8 @@ export interface AtomiqGatewayConfig {
   network: 'mainnet' | 'testnet';
   starknetRpcUrl: string;
   intermediaryUrl?: string;
-  storagePath?: string;
+  storagePath: string;
+  autoCreateStorage?: boolean;
 }
 
 /**
@@ -71,7 +73,16 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         ? BitcoinNetwork.MAINNET
         : BitcoinNetwork.TESTNET;
 
-      const storagePath = this.config.storagePath || './data';
+      const { storagePath, autoCreateStorage } = this.config;
+      if (!existsSync(storagePath)) {
+        if (autoCreateStorage) {
+          mkdirSync(storagePath, { recursive: true });
+        } else {
+          throw new Error(
+            `Atomiq storage directory does not exist: ${storagePath}. Create it manually or mount a persistent volume.`,
+          );
+        }
+      }
 
       const swapperOptions: TypedSwapperOptions<StarknetChainInitializers> = {
         bitcoinNetwork: bitcoinNetworkEnum,

@@ -5,9 +5,10 @@ import {z} from 'zod';
 // =============================================================================
 
 export const ParsePaymentSchema = z.object({
-  data: z.string().min(1),
+  paymentPayload: z.string().min(1),
 });
 
 export const ExecutePaymentSchema = z.object({
-  data: z.string().min(1),
+  paymentPayload: z.string().min(1),
+  description: z.string().max(100).optional(),
 });

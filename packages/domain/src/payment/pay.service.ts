@@ -1,13 +1,14 @@
-import {StarknetAddress} from '../account';
-import type {StarknetGateway} from '../ports';
+import {AccountId, StarknetAddress} from '../account';
+import type {StarknetGateway, TransactionRepository} from '../ports';
 import {Amount, type StarknetConfig} from '../shared';
 import type {SwapService} from '../swap';
+import {TransactionHash} from '../user/types';
 import type {Erc20CallFactory} from './erc20-call.factory';
 import {FeeCalculator, type FeeConfig} from './fee';
 import type {ParseService} from './parse.service';
 import {
   type ExecutePaymentInput,
-  InvalidPaymentAmountError,
+  InvalidPaymentAmountError, type ParsedPaymentData,
   type PaymentResult,
   type PreparedPayment,
   SameAddressPaymentError,
@@ -22,6 +23,7 @@ export interface PayServiceDeps {
   erc20CallFactory: Erc20CallFactory;
   starknetGateway: StarknetGateway;
   swapService: SwapService;
+  transactionRepository: TransactionRepository;
   starknetConfig: StarknetConfig;
   feeConfig: FeeConfig;
 }
@@ -50,8 +52,8 @@ export class PayService {
    * BIM fee is applied only to Starknet direct transfers.
    * Lightning and Bitcoin swaps have no BIM fee (swap fees are handled by Atomiq).
    */
-  prepare(data: string): PreparedPayment {
-    const parsed = this.deps.parseService.parse(data);
+  prepare(paymentPayload: string): PreparedPayment {
+    const parsed = this.deps.parseService.parse(paymentPayload);
     const fee = parsed.network === 'starknet'
       ? FeeCalculator.calculateFee(parsed.amount, this.deps.feeConfig.percentage)
       : Amount.zero();
@@ -71,16 +73,30 @@ export class PayService {
    * @throws SameAddressPaymentError if sender === recipient (Starknet)
    */
   async execute(input: ExecutePaymentInput): Promise<PaymentResult> {
-    const parsed = this.deps.parseService.parse(input.data);
+    const parsed: ParsedPaymentData = this.deps.parseService.parse(input.paymentPayload);
 
+    let result: PaymentResult;
     switch (parsed.network) {
       case 'starknet':
-        return {network: 'starknet', ...(await this.payStarknet(input, parsed))};
+        result = {network: 'starknet', ...(await this.payStarknet(input, parsed))};
+        break;
       case 'lightning':
-        return {network: 'lightning', ...(await this.payLightning(input, parsed))};
+        result = {network: 'lightning', ...(await this.payLightning(input, parsed))};
+        break;
       case 'bitcoin':
-        return {network: 'bitcoin', ...(await this.payBitcoin(input, parsed))};
+        result = {network: 'bitcoin', ...(await this.payBitcoin(input, parsed))};
+        break;
     }
+
+    if (input.description && result.txHash) {
+      await this.deps.transactionRepository.saveDescription(
+        TransactionHash.of(result.txHash),
+        AccountId.of(input.accountId),
+        input.description,
+      );
+    }
+
+    return result;
   }
 
   // ===========================================================================
@@ -89,7 +105,7 @@ export class PayService {
 
   private async payStarknet(
     input: ExecutePaymentInput,
-    parsed: Extract<import('./types').ParsedPaymentData, {network: 'starknet'}>,
+    parsed: Extract<ParsedPaymentData, {network: 'starknet'}>,
   ) {
     if (!parsed.amount.isPositive()) {
       throw new InvalidPaymentAmountError('starknet', parsed.amount.getSat());
@@ -125,7 +141,7 @@ export class PayService {
 
   private async payLightning(
     input: ExecutePaymentInput,
-    parsed: Extract<import('./types').ParsedPaymentData, {network: 'lightning'}>,
+    parsed: Extract<ParsedPaymentData, {network: 'lightning'}>,
   ) {
     const swapResult = await this.deps.swapService.createStarknetToLightning({
       invoice: parsed.invoice,

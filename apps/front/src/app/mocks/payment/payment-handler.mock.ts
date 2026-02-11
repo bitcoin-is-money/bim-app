@@ -7,7 +7,7 @@ import {createErrorResponse} from '../mock-error';
 export class PaymentHandlerMock {
   constructor(private readonly store: DataStoreMock) {}
 
-  parse(_body: {data: string}): HttpResponse<ParsePaymentResponse | ApiErrorResponse> {
+  parse(_body: {paymentPayload: string}): HttpResponse<ParsePaymentResponse | ApiErrorResponse> {
     const profile = this.store.getMockUserProfile();
 
     if (!profile.paymentParseResult) {
@@ -20,7 +20,7 @@ export class PaymentHandlerMock {
     });
   }
 
-  execute(_body: {data: string}): HttpResponse<ExecutePaymentResponse | ApiErrorResponse> {
+  execute(_body: {paymentPayload: string; description?: string}): HttpResponse<ExecutePaymentResponse | ApiErrorResponse> {
     const profile = this.store.getMockUserProfile();
 
     if (!profile.paymentExecuteSuccess) {

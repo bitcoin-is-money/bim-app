@@ -133,6 +133,8 @@ export interface SwapData {
   depositAddress?: string;
   expiresAt: Date;
   createdAt: Date;
+  description?: string;
+  accountId?: string;
 }
 
 export interface CreateLightningToStarknetParams {
@@ -141,6 +143,8 @@ export interface CreateLightningToStarknetParams {
   destinationAddress: StarknetAddress;
   invoice: string;
   expiresAt: Date;
+  description?: string;
+  accountId?: string;
 }
 
 export interface CreateBitcoinToStarknetParams {
@@ -149,6 +153,8 @@ export interface CreateBitcoinToStarknetParams {
   destinationAddress: StarknetAddress;
   depositAddress: string;
   expiresAt: Date;
+  description?: string;
+  accountId?: string;
 }
 
 export interface CreateStarknetToLightningParams {
@@ -158,6 +164,8 @@ export interface CreateStarknetToLightningParams {
   invoice: LightningInvoice;
   depositAddress: string;
   expiresAt: Date;
+  description?: string;
+  accountId?: string;
 }
 
 export interface CreateStarknetToBitcoinParams {
@@ -167,6 +175,8 @@ export interface CreateStarknetToBitcoinParams {
   destinationAddress: BitcoinAddress;
   depositAddress: string;
   expiresAt: Date;
+  description?: string;
+  accountId?: string;
 }
 
 // =============================================================================

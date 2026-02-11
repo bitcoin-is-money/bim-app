@@ -85,6 +85,22 @@ export const transactions = pgTable('bim_transactions', {
 ]);
 
 // =============================================================================
+// Transaction Descriptions Table
+// =============================================================================
+
+export const transactionDescriptions = pgTable('bim_transaction_descriptions', {
+  id: uuid('id').primaryKey(),
+  transactionHash: text('transaction_hash').notNull(),
+  accountId: uuid('account_id')
+    .references(() => accounts.id, {onDelete: 'cascade'})
+    .notNull(),
+  description: text('description').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => [
+  unique('bim_transaction_descriptions_hash_account_unique').on(table.transactionHash, table.accountId),
+]);
+
+// =============================================================================
 // Type Exports
 // =============================================================================
 
@@ -102,3 +118,6 @@ export type NewUserSettingsRecord = typeof userSettings.$inferInsert;
 
 export type TransactionRecord = typeof transactions.$inferSelect;
 export type NewTransactionRecord = typeof transactions.$inferInsert;
+
+export type TransactionDescriptionRecord = typeof transactionDescriptions.$inferSelect;
+export type NewTransactionDescriptionRecord = typeof transactionDescriptions.$inferInsert;

@@ -231,7 +231,8 @@ export class ReceivePage {
     if (network === 'starknet') return;
 
     const satAmount = this.currencyService.convert(this.amount(), 'SAT');
-    this.receiveService.createInvoice(network, Math.round(satAmount.value));
+    const desc = this.description() || undefined;
+    this.receiveService.createInvoice(network, Math.round(satAmount.value), desc);
   }
 
   async share(): Promise<void> {

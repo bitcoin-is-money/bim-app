@@ -45,9 +45,9 @@ export class ReceiveService {
       case 'starknet':
         return {network: 'starknet', ...this.receiveStarknet(input.destinationAddress, input.amount, input.tokenAddress)};
       case 'lightning':
-        return {network: 'lightning', ...(await this.receiveLightning(input.destinationAddress, input.amount))};
+        return {network: 'lightning', ...(await this.receiveLightning(input.destinationAddress, input.amount, input.description, input.accountId))};
       case 'bitcoin':
-        return {network: 'bitcoin', ...(await this.receiveBitcoin(input.destinationAddress, input.amount))};
+        return {network: 'bitcoin', ...(await this.receiveBitcoin(input.destinationAddress, input.amount, input.description, input.accountId))};
     }
   }
 
@@ -70,10 +70,12 @@ export class ReceiveService {
   // Lightning — Lightning → Starknet swap (returns invoice)
   // ===========================================================================
 
-  private async receiveLightning(destinationAddress: StarknetAddress, amount: Amount) {
+  private async receiveLightning(destinationAddress: StarknetAddress, amount: Amount, description?: string, accountId?: string) {
     const result = await this.deps.swapService.createLightningToStarknet({
       amount,
       destinationAddress,
+      description,
+      accountId,
     });
 
     return {
@@ -88,10 +90,12 @@ export class ReceiveService {
   // Bitcoin — Bitcoin → Starknet swap (returns deposit address)
   // ===========================================================================
 
-  private async receiveBitcoin(destinationAddress: StarknetAddress, amount: Amount) {
+  private async receiveBitcoin(destinationAddress: StarknetAddress, amount: Amount, description?: string, accountId?: string) {
     const result = await this.deps.swapService.createBitcoinToStarknet({
       amount,
       destinationAddress,
+      description,
+      accountId,
     });
 
     return {

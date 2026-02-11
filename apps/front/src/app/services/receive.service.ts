@@ -17,11 +17,11 @@ export class ReceiveService {
   readonly isLoading = signal(false);
   readonly invoice = signal<ReceiveResponse | null>(null);
 
-  createInvoice(network: ReceiveNetwork, amount: number): void {
+  createInvoice(network: ReceiveNetwork, amount: number, description?: string): void {
     this.isLoading.set(true);
     this.invoice.set(null);
 
-    this.httpService.createInvoice({network, amount}).subscribe({
+    this.httpService.createInvoice({network, amount, ...(description ? {description} : {})}).subscribe({
       next: (response) => {
         this.invoice.set(response);
         this.isLoading.set(false);

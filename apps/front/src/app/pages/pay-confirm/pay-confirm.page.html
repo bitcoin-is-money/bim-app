@@ -16,7 +16,8 @@
             />
             <app-field
               [editable]="true"
-              [value]="p.description"
+              [value]="description()"
+              (valueChange)="onDescriptionChange($event)"
             />
             <app-amount-field
               [currencyToggle]="false"

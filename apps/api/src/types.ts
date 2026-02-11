@@ -16,6 +16,7 @@ export interface AppConfig {
   avnuApiUrl: string;
   avnuApiKey: string;
   feeTreasuryAddress: string;
+  atomiqStoragePath: string;
   webauthnRpId: string;
   webauthnRpName: string;
   webauthnOrigin: string;
@@ -64,6 +65,7 @@ export function loadConfig(): AppConfig {
     wbtcTokenAddress: optional('WBTC_TOKEN_ADDRESS', DEFAULT_WBTC_ADDRESS),
     avnuApiUrl: optional('AVNU_API_URL', 'https://starknet.paymaster.avnu.fi'),
     avnuApiKey: optional('AVNU_API_KEY', ''),
+    atomiqStoragePath: required('ATOMIQ_STORAGE_PATH'),
     feeTreasuryAddress: required('FEE_TREASURY_ADDRESS'),
     webauthnRpId: optional('WEBAUTHN_RP_ID', 'localhost'),
     webauthnRpName: optional('WEBAUTHN_RP_NAME', 'BIM'),

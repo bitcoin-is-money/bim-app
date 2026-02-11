@@ -8,6 +8,7 @@ export interface CreateInvoiceRequest {
   network: ReceiveNetwork;
   amount: number;
   tokenAddress?: string;
+  description?: string;
 }
 
 export interface StarknetReceiveResponse {
@@ -50,6 +51,7 @@ export class ReceiveHttpService {
       network: request.network,
       amount: String(request.amount),
       tokenAddress: request.tokenAddress,
+      ...(request.description ? {description: request.description} : {}),
     });
   }
 }

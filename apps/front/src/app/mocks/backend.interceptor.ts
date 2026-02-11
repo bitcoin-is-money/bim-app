@@ -97,9 +97,9 @@ export const backendInterceptor: HttpInterceptorFn = (
 
   // Payment routes
   else if (url === '/api/payment/pay/parse' && method === 'POST') {
-    response = mockPaymentHandler.parse(body as { data: string });
+    response = mockPaymentHandler.parse(body as { paymentPayload: string });
   } else if (url === '/api/payment/pay/execute' && method === 'POST') {
-    response = mockPaymentHandler.execute(body as { data: string });
+    response = mockPaymentHandler.execute(body as { paymentPayload: string });
     httpFakeDelay = payDelay;
   } else if (url === '/api/payment/receive' && method === 'POST') {
     response = mockReceiveHandler.createInvoice(body as Parameters<typeof mockReceiveHandler.createInvoice>[0]);

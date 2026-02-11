@@ -131,6 +131,8 @@ export namespace AppContext {
       atomiq: new AtomiqSdkGateway({
         network: config.starknetNetwork === 'mainnet' ? 'mainnet' : 'testnet',
         starknetRpcUrl: config.starknetRpcUrl,
+        storagePath: config.atomiqStoragePath,
+        autoCreateStorage: config.nodeEnv !== 'production',
       }),
       lightningDecoder: new Bolt11LightningDecoder(),
       ...overrides?.gateways,
@@ -169,6 +171,7 @@ export namespace AppContext {
     const swapService = new SwapService({
       swapRepository: repositories.swap,
       atomiqGateway: gateways.atomiq,
+      transactionRepository: repositories.transaction,
     });
 
     const userSettingsService = new UserSettingsService({
@@ -200,6 +203,7 @@ export namespace AppContext {
       erc20CallFactory,
       starknetGateway: gateways.starknet,
       swapService,
+      transactionRepository: repositories.transaction,
       starknetConfig,
       feeConfig,
     });
