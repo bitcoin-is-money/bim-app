@@ -60,3 +60,6 @@ tsconfig.tsbuildinfo
 coverage
 tmp
 *.log*
+
+# Misc
+.apibara/

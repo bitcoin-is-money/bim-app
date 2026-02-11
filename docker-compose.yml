@@ -1,0 +1,20 @@
+# Start PostgreSQL
+# docker compose up -d
+
+# Stop PostgreSQL
+# docker compose down -v
+
+services:
+  postgres:
+    image: postgres:16
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: bim_user
+      POSTGRES_PASSWORD: bim_password
+      POSTGRES_DB: bim
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

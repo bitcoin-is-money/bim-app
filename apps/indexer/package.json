@@ -1,0 +1,26 @@
+{
+  "name": "@bim/indexer",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "clean": "rm -rf .apibara",
+    "clean:all": "npm run clean && rm -rf node_modules",
+    "dev": "dotenv -e .env.testnet.local -- apibara dev --preset testnet",
+    "build": "apibara build",
+    "start": "dotenv -e .env.mainnet.local -- apibara start --preset mainnet --indexer wbtc-transfers",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@apibara/indexer": "^2.1.0-beta.54",
+    "@apibara/plugin-drizzle": "^2.1.0-beta.53",
+    "@apibara/starknet": "^2.1.0-beta.54",
+    "@bim/db": "*",
+    "apibara": "^2.1.0-beta.53",
+    "drizzle-orm": "^0.45.1"
+  },
+  "devDependencies": {
+    "dotenv-cli": "^11.0.0"
+  }
+}
