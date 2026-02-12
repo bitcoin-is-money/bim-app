@@ -1,3 +1,5 @@
+import {basename} from 'node:path';
+import type {Logger} from 'pino';
 import {WebauthnUserHandleDecoder} from "@bim/lib/auth";
 import {Account, AccountAlreadyExistsError, AccountId, AccountNotFoundError, CredentialId} from '../account';
 import type {AccountRepository, ChallengeRepository, SessionRepository, WebAuthnGateway,} from '../ports';
@@ -21,6 +23,7 @@ export interface AuthServiceDeps {
   challengeRepository: ChallengeRepository;
   sessionRepository: SessionRepository;
   webAuthnGateway: WebAuthnGateway;
+  logger: Logger;
 }
 
 export interface WebAuthnConfig {
@@ -100,10 +103,14 @@ export interface CompleteAuthenticationOutput {
  * Service for WebAuthn authentication and registration.
  */
 export class AuthService {
+  private readonly log: Logger;
+
   constructor(
     private readonly deps: AuthServiceDeps,
     private readonly config: WebAuthnConfig,
-  ) {}
+  ) {
+    this.log = deps.logger.child({name: basename(import.meta.filename)});
+  }
 
   // ===========================================================================
   // Registration
@@ -124,6 +131,7 @@ export class AuthService {
 
     await this.deps.challengeRepository.save(challenge);
 
+    this.log.info({username: input.username}, 'Registration started');
     return {
       options: {
         challenge: challenge.challenge,
@@ -195,6 +203,7 @@ export class AuthService {
     await this.deps.accountRepository.save(account);
     await this.deps.sessionRepository.save(session);
 
+    this.log.info({accountId: account.id, username: input.username}, 'Registration completed');
     return {account, session};
   }
 
@@ -289,6 +298,7 @@ export class AuthService {
     await this.deps.accountRepository.save(account);
     await this.deps.sessionRepository.save(session);
 
+    this.log.info({accountId: account.id}, 'Authentication completed');
     return {account, session};
   }
 }

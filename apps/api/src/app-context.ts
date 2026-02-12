@@ -1,13 +1,6 @@
 import {AccountService, StarknetAddress} from "@bim/domain/account";
 import {AuthService, SessionService} from "@bim/domain/auth";
-import {
-  Erc20CallFactory,
-  FeeConfig,
-  ParseService,
-  PayService,
-  ReceiveService,
-} from "@bim/domain/payment";
-import type {StarknetConfig} from "@bim/domain/shared";
+import {Erc20CallFactory, FeeConfig, ParseService, PayService, ReceiveService,} from "@bim/domain/payment";
 import type {
   AccountRepository,
   AtomiqGateway,
@@ -21,8 +14,10 @@ import type {
   UserSettingsRepository,
   WebAuthnGateway,
 } from "@bim/domain/ports";
+import type {StarknetConfig} from "@bim/domain/shared";
 import {SwapService,} from "@bim/domain/swap";
 import {TransactionService, UserSettingsService} from "@bim/domain/user";
+import type {Logger} from "pino";
 import {
   AtomiqSdkGateway,
   AvnuPaymasterGateway,
@@ -73,6 +68,7 @@ export interface AppContext {
     rpName: string;
     origin: string;
   };
+  logger: Logger;
 }
 
 /**
@@ -95,8 +91,10 @@ export namespace AppContext {
   export function createDefault(
     config: AppConfig,
     db: Database,
+    rootLogger: Logger,
     overrides?: AppContextOverrides,
   ): AppContext {
+
     // Initialize repositories (with optional overrides)
     const repositories: AppContext['repositories'] = {
       account: new DrizzleAccountRepository(db),
@@ -109,14 +107,17 @@ export namespace AppContext {
     };
 
     // Initialize paymaster first (needed by starknet gateway for executeCalls)
-    const paymasterGateway = new AvnuPaymasterGateway({
-      apiUrl: config.avnuApiUrl,
-      apiKey: config.avnuApiKey,
-    });
+    const paymasterGateway = new AvnuPaymasterGateway(
+      {
+        apiUrl: config.avnuApiUrl,
+        apiKey: config.avnuApiKey,
+      },
+      rootLogger,
+    );
 
     // Initialize gateways (with optional overrides)
     const gateways: AppContext['gateways'] = {
-      webAuthn: new SimpleWebAuthnGateway(),
+      webAuthn: new SimpleWebAuthnGateway(rootLogger),
       starknet: new StarknetRpcGateway(
         {
           rpcUrl: config.starknetRpcUrl,
@@ -126,14 +127,18 @@ export namespace AppContext {
           webauthnRpId: config.webauthnRpId,
         },
         paymasterGateway,
+        rootLogger,
       ),
       paymaster: paymasterGateway,
-      atomiq: new AtomiqSdkGateway({
-        network: config.starknetNetwork === 'mainnet' ? 'mainnet' : 'testnet',
-        starknetRpcUrl: config.starknetRpcUrl,
-        storagePath: config.atomiqStoragePath,
-        autoCreateStorage: config.nodeEnv !== 'production',
-      }),
+      atomiq: new AtomiqSdkGateway(
+        {
+          network: config.starknetNetwork === 'mainnet' ? 'mainnet' : 'testnet',
+          starknetRpcUrl: config.starknetRpcUrl,
+          storagePath: config.atomiqStoragePath,
+          autoCreateStorage: config.nodeEnv !== 'production',
+        },
+        rootLogger,
+      ),
       lightningDecoder: new Bolt11LightningDecoder(),
       ...overrides?.gateways,
     };
@@ -152,6 +157,7 @@ export namespace AppContext {
       accountRepository: repositories.account,
       starknetGateway: gateways.starknet,
       paymasterGateway: gateways.paymaster,
+      logger: rootLogger,
     });
 
     const authService = new AuthService({
@@ -159,6 +165,7 @@ export namespace AppContext {
         challengeRepository: repositories.challenge,
         sessionRepository: repositories.session,
         webAuthnGateway: gateways.webAuthn,
+        logger: rootLogger,
       },
       webauthn,
     );
@@ -166,12 +173,14 @@ export namespace AppContext {
     const sessionService = new SessionService({
       sessionRepository: repositories.session,
       accountRepository: repositories.account,
+      logger: rootLogger,
     });
 
     const swapService = new SwapService({
       swapRepository: repositories.swap,
       atomiqGateway: gateways.atomiq,
       transactionRepository: repositories.transaction,
+      logger: rootLogger,
     });
 
     const userSettingsService = new UserSettingsService({
@@ -206,11 +215,13 @@ export namespace AppContext {
       transactionRepository: repositories.transaction,
       starknetConfig,
       feeConfig,
+      logger: rootLogger,
     });
 
     const receiveService = new ReceiveService({
       swapService,
       starknetConfig,
+      logger: rootLogger,
     });
 
     return {
@@ -227,6 +238,7 @@ export namespace AppContext {
         receive: receiveService,
       },
       webauthn,
+      logger: rootLogger,
     };
   }
 

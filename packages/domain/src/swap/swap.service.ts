@@ -1,3 +1,5 @@
+import {basename} from 'node:path';
+import type {Logger} from 'pino';
 import {AccountId, StarknetAddress} from '../account';
 import type {AtomiqGateway, SwapRepository, TransactionRepository} from '../ports';
 import {Amount} from '../shared';
@@ -25,6 +27,7 @@ export interface SwapServiceDeps {
   swapRepository: SwapRepository;
   atomiqGateway: AtomiqGateway;
   transactionRepository: TransactionRepository;
+  logger: Logger;
 }
 
 // =============================================================================
@@ -135,7 +138,11 @@ export interface ClaimSwapOutput {
  * Supports Lightning ↔ Starknet and Bitcoin ↔ Starknet swaps.
  */
 export class SwapService {
-  constructor(private readonly deps: SwapServiceDeps) {}
+  private readonly log: Logger;
+
+  constructor(private readonly deps: SwapServiceDeps) {
+    this.log = deps.logger.child({name: basename(import.meta.filename)});
+  }
 
   // ===========================================================================
   // Forward Swaps (Receive on Starknet)
@@ -183,6 +190,7 @@ export class SwapService {
       atomiqSwap.swapObject,
     );
 
+    this.log.info({swapId: atomiqSwap.swapId, amountSats: input.amount.toSatString()}, 'Lightning-to-Starknet swap created');
     return {swap, invoice: atomiqSwap.invoice};
   }
 
@@ -228,6 +236,7 @@ export class SwapService {
       atomiqSwap.swapObject,
     );
 
+    this.log.info({swapId: atomiqSwap.swapId, amountSats: input.amount.toSatString()}, 'Bitcoin-to-Starknet swap created');
     return {
       swap,
       depositAddress: atomiqSwap.depositAddress,
@@ -285,6 +294,7 @@ export class SwapService {
       atomiqSwap.swapObject,
     );
 
+    this.log.info({swapId: atomiqSwap.swapId, amountSats: swapAmount.toSatString()}, 'Starknet-to-Lightning swap created');
     return {
       swap,
       depositAddress: atomiqSwap.depositAddress,
@@ -337,6 +347,7 @@ export class SwapService {
       atomiqSwap.swapObject,
     );
 
+    this.log.info({swapId: atomiqSwap.swapId, amountSats: input.amount.toSatString()}, 'Starknet-to-Bitcoin swap created');
     return {
       swap,
       depositAddress: atomiqSwap.depositAddress,
@@ -430,6 +441,7 @@ export class SwapService {
     }
 
     try {
+      this.log.info({swapId: swap.id}, 'Claiming swap');
       const result = await this.deps.atomiqGateway.claimSwap(swapId);
 
       swap.markAsConfirming(result.txHash);
@@ -477,7 +489,7 @@ export class SwapService {
           swap.description,
         );
       } catch {
-        console.warn(`Failed to persist description for swap ${swap.id}, ignoring.`);
+        this.log.warn({swapId: swap.id}, 'Failed to persist description for swap');
       }
     }
   }
@@ -530,7 +542,7 @@ export class SwapService {
       }
     } catch {
       // Ignore sync errors - return current local state
-      console.warn(`Failed to sync swap ${swap.id} with Atomiq, ignoring.`);
+      this.log.warn({swapId: swap.id}, 'Failed to sync swap with Atomiq');
     }
   }
 

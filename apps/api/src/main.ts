@@ -4,17 +4,19 @@ loadEnv();
 
 import {serve} from '@hono/node-server';
 import {createApp} from './app';
-import {closeDb} from './db';
+import {closeDb, setPoolLogger} from './db';
 
 // =============================================================================
 // Server Startup
 // =============================================================================
 
-const {app, monitor} = createApp();
+const {app, monitor, rootLogger} = createApp();
 const port = Number(process.env.PORT) || 8080;
 
-console.log(`Starting server on http://localhost:${port}`);
-console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+// Wire the logger to the database pool for error reporting
+setPoolLogger(rootLogger);
+
+rootLogger.info({port, env: process.env.NODE_ENV || 'development'}, 'Starting server');
 
 const server = serve({
   fetch: app.fetch,
@@ -24,12 +26,12 @@ const server = serve({
 // Start swap monitor
 if (monitor) {
   monitor.start();
-  console.log('Swap monitor started');
+  rootLogger.info('Swap monitor started');
 }
 
 // Graceful shutdown
 async function shutdown(signal: string): Promise<void> {
-  console.log(`${signal} received, shutting down...`);
+  rootLogger.info({signal}, 'Shutting down');
   if (monitor) {
     await monitor.stop();
   }
@@ -41,4 +43,4 @@ async function shutdown(signal: string): Promise<void> {
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('SIGINT', () => shutdown('SIGINT'));
 
-console.log(`Server running on http://localhost:${port}`);
+rootLogger.info({port}, 'Server ready');

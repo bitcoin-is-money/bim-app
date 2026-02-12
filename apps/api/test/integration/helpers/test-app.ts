@@ -25,18 +25,31 @@ export namespace TestApp {
   }
 
   /**
-   * Creates a test application instance.
-   * Automatically sets up required environment variables and skips static files/logger.
+   * Creates a test application instance with silent logging.
    */
   export function createTestApp(options: CreateAppOptions = {}): Hono {
     setupTestEnv();
     const {app} = createApp({
       skipStaticFiles: true,
-      skipLogger: true,
       skipMonitor: true,
+      config: {logLevel: 'silent'},
       ...options,
     });
     return app;
+  }
+
+  /**
+   * Creates a test application with visible logging (logLevel: 'info').
+   * Logs appear in the vitest console output.
+   */
+  export function createTestAppWithLogger(options: CreateAppOptions = {}): AppInstance {
+    setupTestEnv();
+    return createApp({
+      skipStaticFiles: true,
+      skipMonitor: true,
+      config: {logLevel: 'info'},
+      ...options,
+    });
   }
 
   /**
@@ -47,7 +60,7 @@ export namespace TestApp {
     setupTestEnv();
     return createApp({
       skipStaticFiles: true,
-      skipLogger: true,
+      config: {logLevel: 'silent'},
       ...options,
     });
   }
@@ -79,7 +92,3 @@ export namespace TestApp {
     };
   }
 }
-
-
-
-

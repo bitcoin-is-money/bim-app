@@ -7,11 +7,21 @@ import type {
 } from '@bim/domain/ports';
 import {type Uint8Array_, verifyAuthenticationResponse, verifyRegistrationResponse,} from '@simplewebauthn/server';
 import {cose, decodeCredentialPublicKey,} from '@simplewebauthn/server/helpers';
+import {basename} from 'node:path';
+import type {Logger} from "pino";
 
 /**
  * SimpleWebAuthn-based implementation of WebAuthnGateway.
  */
 export class SimpleWebAuthnGateway implements WebAuthnGateway {
+  private readonly log: Logger;
+
+  constructor(
+    rootLogger: Logger,
+  ) {
+    this.log = rootLogger.child({name: basename(import.meta.filename)});
+  }
+
   async verifyRegistration(
     params: VerifyRegistrationParams,
   ): Promise<RegistrationVerificationResult> {
@@ -44,7 +54,7 @@ export class SimpleWebAuthnGateway implements WebAuthnGateway {
         };
       }
 
-      const { registrationInfo } = verification;
+      const {registrationInfo} = verification;
 
       // Extract the public key in a format we can use
       const encodedCredentialPublicKey: Base64URLString = Buffer.from(
@@ -67,7 +77,12 @@ export class SimpleWebAuthnGateway implements WebAuthnGateway {
         signCount: registrationInfo.credential.counter,
       };
     } catch (error) {
-      console.error('WebAuthn registration verification failed:', error);
+      this.log?.error({
+          err: error instanceof Error
+            ? {name: error.name, message: error.message}
+            : error
+        },
+        'WebAuthn registration verification failed');
       return {
         verified: false,
         encodedCredentialId: '',
@@ -124,7 +139,12 @@ export class SimpleWebAuthnGateway implements WebAuthnGateway {
         newSignCount: verification.authenticationInfo?.newCounter ?? 0,
       };
     } catch (error) {
-      console.error('WebAuthn authentication verification failed:', error);
+      this.log?.error({
+          err: error instanceof Error
+            ? {name: error.name, message: error.message}
+            : error
+        },
+        'WebAuthn authentication verification failed');
       return {
         verified: false,
         newSignCount: 0,

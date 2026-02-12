@@ -3,7 +3,9 @@ import {Erc20CallFactory, FeeConfig, InvalidPaymentAmountError, type ParseServic
 import type {StarknetGateway, TransactionRepository} from '@bim/domain/ports';
 import {Amount} from '@bim/domain/shared';
 import {BitcoinAddress, LightningInvoice, Swap, SwapAmountError, SwapCreationError, SwapId, type SwapService} from '@bim/domain/swap';
+import type {Logger} from "pino";
 import {beforeEach, describe, expect, it, vi} from 'vitest';
+import {createTestLogger} from '../helper';
 
 // =============================================================================
 // Constants
@@ -104,6 +106,7 @@ describe('PayService', () => {
         transactionRepository: mockTransactionRepository,
         starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS},
         feeConfig,
+        logger: createTestLogger(),
       });
     });
 
@@ -234,6 +237,7 @@ describe('PayService', () => {
         transactionRepository: createMockTransactionRepository(),
         starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS},
         feeConfig,
+        logger: createTestLogger(),
       });
     });
 
@@ -335,6 +339,7 @@ describe('PayService', () => {
         transactionRepository: createMockTransactionRepository(),
         starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS},
         feeConfig,
+        logger: createTestLogger(),
       });
     });
 

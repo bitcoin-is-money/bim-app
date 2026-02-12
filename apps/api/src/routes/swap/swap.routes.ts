@@ -1,5 +1,6 @@
 import {Hono} from 'hono';
 import type {TypedResponse} from 'hono';
+import {basename} from 'node:path';
 import type {AppContext} from '../../app-context';
 import {handleDomainError, type ApiErrorResponse} from '../../errors';
 import {createAuthMiddleware} from '../../middleware/auth.middleware';
@@ -12,6 +13,7 @@ import type {SwapClaimResponse, SwapLimitsResponse, SwapStatusResponse} from './
 // =============================================================================
 
 export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
+  const log = appContext.logger.child({name: basename(import.meta.filename)});
   const app: AuthenticatedHono = new Hono();
 
   app.use('*', createAuthMiddleware(appContext));
@@ -35,7 +37,7 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
         feePercent: result.limits.feePercent,
       });
     } catch (error) {
-      return handleDomainError(honoCtx, error);
+      return handleDomainError(honoCtx, error, log);
     }
   });
 
@@ -60,7 +62,7 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
         expiresAt: result.swap.expiresAt.toISOString(),
       });
     } catch (error) {
-      return handleDomainError(honoCtx, error);
+      return handleDomainError(honoCtx, error, log);
     }
   });
 
@@ -80,7 +82,7 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
         status: result.swap.getStatus(),
       });
     } catch (error) {
-      return handleDomainError(honoCtx, error);
+      return handleDomainError(honoCtx, error, log);
     }
   });
 

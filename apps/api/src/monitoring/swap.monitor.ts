@@ -1,4 +1,6 @@
+import {basename} from 'node:path';
 import {isForwardSwap, type SwapDirection, type SwapService, type SwapStatus} from '@bim/domain/swap';
+import type {Logger} from 'pino';
 
 /**
  * Configuration for the SwapMonitor.
@@ -31,12 +33,15 @@ export class SwapMonitor {
   private iterating = false;
   private readonly config: Required<SwapMonitorConfig>;
   private readonly claimRetries = new Map<string, number>();
+  private readonly log: Logger;
 
   constructor(
     private readonly swapService: SwapService,
+    rootLogger: Logger,
     config?: SwapMonitorConfig,
   ) {
     this.config = {...DEFAULT_CONFIG, ...config};
+    this.log = rootLogger.child({name: basename(import.meta.filename)});
   }
 
   /**
@@ -83,7 +88,7 @@ export class SwapMonitor {
         }
       }
     } catch (error) {
-      console.error('[SwapMonitor] Iteration error:', error);
+      this.log?.error({err: error instanceof Error ? {name: error.name, message: error.message} : error}, 'SwapMonitor iteration error');
     } finally {
       this.iterating = false;
     }
@@ -101,10 +106,12 @@ export class SwapMonitor {
     if (retries >= this.config.maxClaimRetries) return;
 
     try {
+      this.log?.info({swapId}, 'Auto-claiming swap');
       await this.swapService.claim({swapId});
       this.claimRetries.delete(swapId);
     } catch {
       this.claimRetries.set(swapId, retries + 1);
+      this.log?.warn({swapId, retries: retries + 1, maxRetries: this.config.maxClaimRetries}, 'Swap claim failed, will retry');
     }
   }
 }

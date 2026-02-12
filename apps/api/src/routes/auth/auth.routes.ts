@@ -1,6 +1,7 @@
 import {InvalidSessionIdError, SessionExpiredError, SessionNotFoundError} from '@bim/domain/auth';
 import {Hono} from 'hono';
 import type {TypedResponse} from 'hono';
+import {basename} from 'node:path';
 import type {AppContext} from '../../app-context';
 import {handleDomainError, type ApiErrorResponse} from '../../errors';
 import {BeginRegistrationSchema, CompleteAuthenticationSchema, CompleteRegistrationSchema} from './auth.schemas';
@@ -19,6 +20,7 @@ import type {
 
 export function createAuthRoutes(appContext: AppContext): Hono {
   const app = new Hono();
+  const log = appContext.logger.child({name: basename(import.meta.filename)});
 
   // Services from AppContext (initialized once at startup)
   const {auth: authService, session: sessionService} = appContext.services;
@@ -42,7 +44,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
         accountId: result.accountId,
       });
     } catch (error) {
-      return handleDomainError(honoCtx, error);
+      return handleDomainError(honoCtx, error, log);
     }
   });
 
@@ -70,7 +72,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
         },
       });
     } catch (error) {
-      return handleDomainError(honoCtx, error);
+      return handleDomainError(honoCtx, error, log);
     }
   });
 
@@ -87,7 +89,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
         challengeId: result.challengeId,
       });
     } catch (error) {
-      return handleDomainError(honoCtx, error);
+      return handleDomainError(honoCtx, error, log);
     }
   });
 
@@ -113,7 +115,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
         },
       });
     } catch (error) {
-      return handleDomainError(honoCtx, error);
+      return handleDomainError(honoCtx, error, log);
     }
   });
 
@@ -148,7 +150,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
         clearCookie(honoCtx);
         return honoCtx.json({authenticated: false}, 401);
       }
-      return handleDomainError(honoCtx, error);
+      return handleDomainError(honoCtx, error, log);
     }
   });
 
@@ -162,7 +164,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
       clearCookie(honoCtx);
       return honoCtx.json<LogoutResponse>({success: true});
     } catch (error) {
-      console.error('Logout error:', error);
+      log.error({err: error instanceof Error ? {name: error.name, message: error.message} : error}, 'Logout error');
       clearCookie(honoCtx);
       return honoCtx.json<LogoutResponse>({success: true});
     }

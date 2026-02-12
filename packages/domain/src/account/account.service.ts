@@ -1,3 +1,5 @@
+import {basename} from 'node:path';
+import type {Logger} from 'pino';
 import type {AccountRepository, PaymasterGateway, StarknetGateway} from '../ports';
 import {Account} from './account';
 import {WBTCToken, WBTCTokenBalance} from './balance';
@@ -18,6 +20,7 @@ export interface AccountServiceDeps {
   accountRepository: AccountRepository;
   starknetGateway: StarknetGateway;
   paymasterGateway: PaymasterGateway;
+  logger: Logger;
 }
 
 // =============================================================================
@@ -59,7 +62,11 @@ export interface GetBalanceOutput {
  * Service for account management (creation, deployment, balance).
  */
 export class AccountService {
-  constructor(private readonly deps: AccountServiceDeps) {}
+  private readonly log: Logger;
+
+  constructor(private readonly deps: AccountServiceDeps) {
+    this.log = deps.logger.child({name: basename(import.meta.filename)});
+  }
 
   /**
    * Creates a new account with WebAuthn credentials.
@@ -85,6 +92,7 @@ export class AccountService {
 
     await this.deps.accountRepository.save(account);
 
+    this.log.info({accountId: input.accountId, username: input.username}, 'Account created');
     return account;
   }
 
@@ -120,6 +128,7 @@ export class AccountService {
     });
 
     // Execute via paymaster for gasless deployment
+    this.log.info({accountId: input.accountId, starknetAddress}, 'Deploying account via paymaster');
     const {txHash} = await this.deps.paymasterGateway.executeTransaction({
       transaction: deployTx,
       accountAddress: starknetAddress,
@@ -127,6 +136,7 @@ export class AccountService {
 
     account.markAsDeploying(starknetAddress, txHash);
     await this.deps.accountRepository.save(account);
+    this.log.info({accountId: input.accountId, txHash}, 'Account deployment submitted');
 
     if (input.sync) {
       // Wait for on-chain confirmation before returning
@@ -165,7 +175,7 @@ export class AccountService {
         token: WBTCToken.symbol,
       });
     } catch {
-      console.warn(`Failed to fetch balance for ${address}`);
+      this.log.warn({address}, 'Failed to fetch balance');
       amount = BigInt(0);
     }
 
@@ -189,8 +199,10 @@ export class AccountService {
     try {
       await this.deps.starknetGateway.waitForTransaction(txHash);
       account.markAsDeployed();
+      this.log.info({accountId: account.id, txHash}, 'Account deployment confirmed');
     } catch {
       account.markAsFailed();
+      this.log.error({accountId: account.id, txHash}, 'Account deployment failed');
     }
     await this.deps.accountRepository.save(account);
   }

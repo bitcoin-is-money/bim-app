@@ -11,6 +11,10 @@
     "./encoding":  {
       "types": "./dist/encoding/index.d.ts",
       "import": "./dist/encoding/index.js"
+    },
+    "./logger":  {
+      "types": "./dist/logger/index.d.ts",
+      "import": "./dist/logger/index.js"
     }
   },
   "scripts": {
@@ -23,5 +27,9 @@
   },
   "dependencies": {
     "@stablelib/base64": "^2.0.1"
+  },
+  "peerDependencies": {
+    "pino": "^10.0.0",
+    "pino-pretty": "^13.0.0"
   }
 }

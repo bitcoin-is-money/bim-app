@@ -2,6 +2,7 @@ import {Account} from '@bim/domain/account';
 import {FiatCurrency, Language} from '@bim/domain/user';
 import {Hono} from 'hono';
 import type {TypedResponse} from 'hono';
+import {basename} from 'node:path';
 import type {AppContext} from '../../../app-context';
 import {handleDomainError, type ApiErrorResponse} from '../../../errors';
 import type {AuthenticatedHono} from '../../../types.js';
@@ -12,6 +13,7 @@ import type {GetSettingsResponse, UpdateSettingsResponse} from './settings.types
 // =============================================================================
 
 export function createSettingsRoutes(appContext: AppContext): AuthenticatedHono {
+  const log = appContext.logger.child({name: basename(import.meta.filename)});
   const app: AuthenticatedHono = new Hono();
 
   // Service from AppContext (initialized once at startup)
@@ -34,7 +36,7 @@ export function createSettingsRoutes(appContext: AppContext): AuthenticatedHono 
         supportedCurrencies: FiatCurrency.getSupportedCurrencies(),
       });
     } catch (error) {
-      return handleDomainError(honoCtx, error);
+      return handleDomainError(honoCtx, error, log);
     }
   });
 
@@ -60,7 +62,7 @@ export function createSettingsRoutes(appContext: AppContext): AuthenticatedHono 
         supportedCurrencies: FiatCurrency.getSupportedCurrencies(),
       });
     } catch (error) {
-      return handleDomainError(honoCtx, error);
+      return handleDomainError(honoCtx, error, log);
     }
   });
 

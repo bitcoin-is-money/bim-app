@@ -1,3 +1,5 @@
+import {basename} from 'node:path';
+import type {Logger} from 'pino';
 import {AccountId, StarknetAddress} from '../account';
 import type {StarknetGateway, TransactionRepository} from '../ports';
 import {Amount, type StarknetConfig} from '../shared';
@@ -8,7 +10,8 @@ import {FeeCalculator, type FeeConfig} from './fee';
 import type {ParseService} from './parse.service';
 import {
   type ExecutePaymentInput,
-  InvalidPaymentAmountError, type ParsedPaymentData,
+  InvalidPaymentAmountError,
+  type ParsedPaymentData,
   type PaymentResult,
   type PreparedPayment,
   SameAddressPaymentError,
@@ -26,6 +29,7 @@ export interface PayServiceDeps {
   transactionRepository: TransactionRepository;
   starknetConfig: StarknetConfig;
   feeConfig: FeeConfig;
+  logger: Logger;
 }
 
 // =============================================================================
@@ -40,7 +44,11 @@ export interface PayServiceDeps {
  * - `execute()`: parse + execute payment on the detected network
  */
 export class PayService {
-  constructor(private readonly deps: PayServiceDeps) {}
+  private readonly log: Logger;
+
+  constructor(private readonly deps: PayServiceDeps) {
+    this.log = deps.logger.child({name: basename(import.meta.filename)});
+  }
 
   // ===========================================================================
   // PREPARE (parse + fee calculation)
@@ -73,6 +81,7 @@ export class PayService {
    * @throws SameAddressPaymentError if sender === recipient (Starknet)
    */
   async execute(input: ExecutePaymentInput): Promise<PaymentResult> {
+    this.log.info(input, 'Executing payment');
     const parsed: ParsedPaymentData = this.deps.parseService.parse(input.paymentPayload);
 
     let result: PaymentResult;
@@ -96,6 +105,7 @@ export class PayService {
       );
     }
 
+    this.log.info({network: result.network, txHash: result.txHash}, 'Payment completed');
     return result;
   }
 

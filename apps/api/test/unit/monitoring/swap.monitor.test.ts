@@ -1,4 +1,5 @@
 import {StarknetAddress} from '@bim/domain/account';
+import {createLogger} from '@bim/lib/logger';
 import {Amount} from '@bim/domain/shared';
 import {Swap, SwapId, type SwapService} from '@bim/domain/swap';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
@@ -47,7 +48,7 @@ describe('SwapMonitor', () => {
 
   beforeEach(() => {
     swapService = createMockSwapService();
-    monitor = new SwapMonitor(swapService, {pollInterval: 100, maxClaimRetries: 2});
+    monitor = new SwapMonitor(swapService, createLogger(), {pollInterval: 100, maxClaimRetries: 2});
   });
 
   describe('runIteration', () => {

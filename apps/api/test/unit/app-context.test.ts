@@ -1,7 +1,10 @@
 import type {AccountRepository, PaymasterGateway,} from '@bim/domain/ports';
+import {createLogger} from '@bim/lib/logger';
 import {describe, expect, it, vi} from 'vitest';
 import {AppContext, type AppContextOverrides} from '../../src/app-context.js';
 import type {AppConfig} from '../../src/types.js';
+
+const logger = createLogger();
 
 // Mock the database module
 vi.mock('../../src/db.js', () => ({
@@ -41,7 +44,8 @@ function createMockConfig(): AppConfig {
     avnuApiUrl: 'http://localhost:9090',
     avnuApiKey: 'test-key',
     feeTreasuryAddress: '0x027367ddd36d7efc4694e1af5742f8d26626369c07abf15d136ff422b9a40fa0',
-    atomiqStoragePath: "/tmp/bim/atomiq"
+    atomiqStoragePath: "/tmp/bim/atomiq",
+    logLevel: 'silent',
   };
 }
 
@@ -51,7 +55,7 @@ describe('AppContext', () => {
       const config = createMockConfig();
       const db = {} as any;
 
-      const context = AppContext.createDefault(config, db);
+      const context = AppContext.createDefault(config, db, logger);
 
       expect(context.repositories).toBeDefined();
       expect(context.gateways).toBeDefined();
@@ -69,7 +73,7 @@ describe('AppContext', () => {
         },
       };
 
-      const context = AppContext.createDefault(config, db, overrides);
+      const context = AppContext.createDefault(config, db, logger, overrides);
 
       expect((context.gateways.paymaster as any).name).toBe('mock-paymaster');
     });
@@ -84,7 +88,7 @@ describe('AppContext', () => {
         },
       };
 
-      const context = AppContext.createDefault(config, db, overrides);
+      const context = AppContext.createDefault(config, db, logger, overrides);
 
       expect((context.repositories.account as any).name).toBe('mock-account');
     });
@@ -98,7 +102,7 @@ describe('AppContext', () => {
         },
       };
 
-      const context = AppContext.createDefault(config, db, overrides);
+      const context = AppContext.createDefault(config, db, logger, overrides);
 
       expect(context.webauthn.rpId).toBe('override-rpId');
       // Other webauthn fields should come from config
@@ -118,7 +122,7 @@ describe('AppContext', () => {
         },
       };
 
-      const context = AppContext.createDefault(config, db, overrides);
+      const context = AppContext.createDefault(config, db, logger, overrides);
 
       // Verify the gateway is the mocked one
       expect((context.gateways.paymaster as any).name).toBe('mock-paymaster');
@@ -140,7 +144,7 @@ describe('AppContext', () => {
         },
       };
 
-      const context = AppContext.createDefault(config, db, overrides);
+      const context = AppContext.createDefault(config, db, logger, overrides);
 
       expect((context.repositories.account as any).name).toBe('mock-account');
     });

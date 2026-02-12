@@ -1,3 +1,5 @@
+import {basename} from 'node:path';
+import type {Logger} from 'pino';
 import {Account} from '../account';
 import type {AccountRepository, SessionRepository} from '../ports';
 import {Session} from './session';
@@ -10,6 +12,7 @@ import {SessionId, SessionNotFoundError} from './types';
 export interface SessionServiceDeps {
   sessionRepository: SessionRepository;
   accountRepository: AccountRepository;
+  logger: Logger;
 }
 
 // =============================================================================
@@ -37,7 +40,11 @@ export interface InvalidateSessionInput {
  * Service for session management (validation and invalidation).
  */
 export class SessionService {
-  constructor(private readonly deps: SessionServiceDeps) {}
+  private readonly log: Logger;
+
+  constructor(private readonly deps: SessionServiceDeps) {
+    this.log = deps.logger.child({name: basename(import.meta.filename)});
+  }
 
   /**
    * Validates an active session and returns the associated account.
@@ -60,10 +67,12 @@ export class SessionService {
     const account = await this.deps.accountRepository.findById(session.accountId);
     if (!account) {
       // Orphaned session - clean up
+      this.log.warn({sessionId}, 'Orphaned session cleaned up');
       await this.deps.sessionRepository.delete(sessionId);
       throw new SessionNotFoundError(sessionId);
     }
 
+    this.log.debug({accountId: account.id}, 'Session validated');
     return {session, account};
   }
 

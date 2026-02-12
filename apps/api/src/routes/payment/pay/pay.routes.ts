@@ -1,6 +1,7 @@
 import {type PaymentResult, type PreparedPayment} from '@bim/domain/payment';
 import {Hono} from 'hono';
 import type {TypedResponse} from 'hono';
+import {basename} from 'node:path';
 import type {AppContext} from '../../../app-context';
 import {ErrorCode, createErrorResponse, handleDomainError, type ApiErrorResponse} from '../../../errors';
 import type {AuthenticatedHono} from '../../../types';
@@ -12,6 +13,7 @@ import type {AmountResponse, PaymentResultResponse, PreparedPaymentResponse} fro
 // =============================================================================
 
 export function createPayRoutes(appContext: AppContext): AuthenticatedHono {
+  const log = appContext.logger.child({name: basename(import.meta.filename)});
   const app: AuthenticatedHono = new Hono();
 
   const {pay: payService} = appContext.services;
@@ -29,7 +31,7 @@ export function createPayRoutes(appContext: AppContext): AuthenticatedHono {
 
       return honoCtx.json<PreparedPaymentResponse>(serializePreparedPayment(prepared));
     } catch (error) {
-      return handleDomainError(honoCtx, error);
+      return handleDomainError(honoCtx, error, log);
     }
   });
 
@@ -52,7 +54,7 @@ export function createPayRoutes(appContext: AppContext): AuthenticatedHono {
 
       return honoCtx.json<PaymentResultResponse>(serializePaymentResult(result));
     } catch (error) {
-      return handleDomainError(honoCtx, error);
+      return handleDomainError(honoCtx, error, log);
     }
   });
 

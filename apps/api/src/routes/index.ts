@@ -1,4 +1,5 @@
 export * from './account/account.routes';
+export * from './admin/admin.routes';
 export * from './account/account.types';
 export * from './auth/auth.routes';
 export * from './auth/auth.schemas';
