@@ -1,6 +1,7 @@
 import {Account} from '@bim/domain/account';
 import {Hono} from 'hono';
 import type {TypedResponse} from 'hono';
+import {basename} from 'node:path';
 import {z} from 'zod';
 import type {AppContext} from '../../../app-context';
 import {handleDomainError, type ApiErrorResponse} from '../../../errors';
@@ -16,6 +17,7 @@ const SetDescriptionSchema = z.object({
 // =============================================================================
 
 export function createTransactionRoutes(appContext: AppContext): AuthenticatedHono {
+  const log = appContext.logger.child({name: basename(import.meta.filename)});
   const app: AuthenticatedHono = new Hono();
 
   // Service from AppContext (initialized once at startup)
@@ -60,7 +62,7 @@ export function createTransactionRoutes(appContext: AppContext): AuthenticatedHo
         offset,
       });
     } catch (error) {
-      return handleDomainError(honoCtx, error);
+      return handleDomainError(honoCtx, error, log);
     }
   });
 
@@ -84,7 +86,7 @@ export function createTransactionRoutes(appContext: AppContext): AuthenticatedHo
 
       return honoCtx.json<SetDescriptionResponse>({transactionHash, description});
     } catch (error) {
-      return handleDomainError(honoCtx, error);
+      return handleDomainError(honoCtx, error, log);
     }
   });
 
@@ -104,7 +106,7 @@ export function createTransactionRoutes(appContext: AppContext): AuthenticatedHo
 
       return honoCtx.json<DeleteDescriptionResponse>({transactionHash});
     } catch (error) {
-      return handleDomainError(honoCtx, error);
+      return handleDomainError(honoCtx, error, log);
     }
   });
 

@@ -8,6 +8,8 @@ import type {
   TransactionReceipt,
 } from "@bim/domain/ports";
 import {ExternalServiceError} from "@bim/domain/shared";
+import {basename} from 'node:path';
+import type {Logger} from "pino";
 import {CallData, hash, RpcProvider} from 'starknet';
 import {ARGENT_WEBAUTHN_SALT, buildArgentWebauthnCalldata} from './argent-calldata.js';
 
@@ -27,12 +29,15 @@ export interface StarknetGatewayConfig {
  */
 export class StarknetRpcGateway implements StarknetGateway {
   private readonly provider: RpcProvider;
+  private readonly log: Logger;
 
   constructor(
     private readonly config: StarknetGatewayConfig,
     private readonly paymasterGateway: PaymasterGateway,
+    rootLogger: Logger,
   ) {
-    this.provider = new RpcProvider({ nodeUrl: config.rpcUrl });
+    this.provider = new RpcProvider({nodeUrl: config.rpcUrl});
+    this.log = rootLogger.child({name: basename(import.meta.filename)});
   }
 
   async calculateAccountAddress(params: {
@@ -189,8 +194,11 @@ export class StarknetRpcGateway implements StarknetGateway {
   async executeCalls(params: {
     senderAddress: StarknetAddress;
     calls: readonly StarknetCall[];
-  }): Promise<{txHash: string}> {
+  }): Promise<{ txHash: string }> {
     try {
+      this.log?.info(
+        {senderAddress: params.senderAddress.toString(), callCount: params.calls.length},
+        'Executing multicall');
       const calldata = this.encodeMulticall(params.calls);
 
       const transaction: StarknetTransaction = {
@@ -208,6 +216,7 @@ export class StarknetRpcGateway implements StarknetGateway {
         throw new Error('Transaction execution failed');
       }
 
+      this.log?.info({txHash: result.txHash}, 'Multicall transaction submitted');
       return {txHash: result.txHash};
     } catch (error) {
       if (error instanceof ExternalServiceError) throw error;

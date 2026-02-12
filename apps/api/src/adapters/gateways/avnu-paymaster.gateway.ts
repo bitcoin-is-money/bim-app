@@ -7,6 +7,8 @@ import type {
   StarknetTransaction
 } from "@bim/domain/ports";
 import {ExternalServiceError} from "@bim/domain/shared";
+import {basename} from 'node:path';
+import type {Logger} from "pino";
 
 /**
  * Configuration for AVNU Paymaster gateway.
@@ -39,7 +41,14 @@ interface SNIP29ExecuteResponse {
  * Invoke path uses legacy REST API (TODO: migrate to SNIP-29 build/sign/execute).
  */
 export class AvnuPaymasterGateway implements PaymasterGateway {
-  constructor(private readonly config: AvnuPaymasterConfig) {}
+  private readonly log: Logger;
+
+  constructor(
+    private readonly config: AvnuPaymasterConfig,
+    rootLogger: Logger,
+  ) {
+    this.log = rootLogger.child({name: basename(import.meta.filename)});
+  }
 
   async executeTransaction(params: {
     transaction: StarknetTransaction | DeployTransaction;
@@ -76,6 +85,7 @@ export class AvnuPaymasterGateway implements PaymasterGateway {
     accountAddress: StarknetAddress,
   ): Promise<PaymasterResult> {
     try {
+      this.log?.info({accountAddress: accountAddress.toString()}, 'Deploying account via SNIP-29');
       const rpcBody = {
         jsonrpc: '2.0',
         method: 'paymaster_executeTransaction',
@@ -137,12 +147,14 @@ export class AvnuPaymasterGateway implements PaymasterGateway {
         );
       }
 
+      this.log?.info({txHash: result.result.transaction_hash}, 'SNIP-29 deploy transaction submitted');
       return {
         txHash: result.result.transaction_hash,
         success: true,
       };
     } catch (error) {
       if (error instanceof ExternalServiceError) {
+        this.log?.error({err: error.message}, 'SNIP-29 deploy failed');
         throw error;
       }
       throw new ExternalServiceError(

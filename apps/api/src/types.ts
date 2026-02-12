@@ -20,9 +20,14 @@ export interface AppConfig {
   webauthnRpId: string;
   webauthnRpName: string;
   webauthnOrigin: string;
+  logLevel: string;
 }
 
-export type AuthenticatedContext = {
+export type AppVariables = {
+  requestId: string;
+};
+
+export type AuthenticatedContext = AppVariables & {
   session: Session;
   account: Account;
 };
@@ -70,5 +75,6 @@ export function loadConfig(): AppConfig {
     webauthnRpId: optional('WEBAUTHN_RP_ID', 'localhost'),
     webauthnRpName: optional('WEBAUTHN_RP_NAME', 'BIM'),
     webauthnOrigin: optional('WEBAUTHN_ORIGIN', 'http://localhost:8080'),
+    logLevel: optional('LOG_LEVEL', 'info'),
   };
 }

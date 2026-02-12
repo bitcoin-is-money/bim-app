@@ -1,12 +1,15 @@
+import {createLogger} from "@bim/lib/logger";
 import {serveStatic} from '@hono/node-server/serve-static';
 import {Hono} from 'hono';
 import {cors} from 'hono/cors';
-import {logger} from 'hono/logger';
+import type {Logger} from 'pino';
 import {AppContext, type AppContextOverrides} from "./app-context";
 import {getDb} from './db';
+import {createRequestLoggerMiddleware} from './middleware/request-logger.middleware';
 import {SwapMonitor} from './monitoring/swap.monitor';
 import {
   createAccountRoutes,
+  createAdminRoutes,
   createAuthRoutes,
   createCurrencyRoutes,
   createHealthRoutes,
@@ -20,13 +23,13 @@ export interface CreateAppOptions {
   config?: Partial<AppConfig>;
   context?: AppContextOverrides;
   skipStaticFiles?: boolean;
-  skipLogger?: boolean;
   skipMonitor?: boolean;
 }
 
 export interface AppInstance {
   app: Hono;
   monitor: SwapMonitor | null;
+  rootLogger: Logger;
 }
 
 /**
@@ -34,19 +37,19 @@ export interface AppInstance {
  * Can be customized for testing by passing context overrides.
  */
 export function createApp(options: CreateAppOptions = {}): AppInstance {
-  const config = {...loadConfig(), ...options.config};
+  const rootLogger: Logger = createLogger('info');
+  const config = {
+    ...loadConfig(),
+    ...options.config
+  };
+  rootLogger.level = config.logLevel;
+  rootLogger.info(config, "Application configuration:");
   const db = getDb();
-  const context = AppContext.createDefault(config, db, options.context);
+  const context = AppContext.createDefault(config, db, rootLogger, options.context);
   const app = new Hono();
 
-  // Middleware
-  if (!options.skipLogger) {
-    app.use('*', logger());
-  }
-
-  app.use(
-    '/api/*',
-    cors({
+  app.use('*', createRequestLoggerMiddleware(context.logger));
+  app.use('/api/*', cors({
       origin: config.webauthnOrigin,
       credentials: true,
       allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -56,6 +59,7 @@ export function createApp(options: CreateAppOptions = {}): AppInstance {
 
   // API routes
   app.route('/api/account', createAccountRoutes(context));
+  app.route('/api/admin', createAdminRoutes(context));
   app.route('/api/auth', createAuthRoutes(context));
   app.route('/api/currency', createCurrencyRoutes());
   app.route('/api/health', createHealthRoutes());
@@ -72,8 +76,11 @@ export function createApp(options: CreateAppOptions = {}): AppInstance {
   // Swap monitor (background polling + auto-claim)
   let monitor: SwapMonitor | null = null;
   if (!options.skipMonitor) {
-    monitor = new SwapMonitor(context.services.swap);
+    monitor = new SwapMonitor(
+      context.services.swap,
+      context.logger,
+    );
   }
 
-  return {app, monitor};
+  return {app, monitor, rootLogger: rootLogger};
 }

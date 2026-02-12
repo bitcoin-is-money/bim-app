@@ -1,6 +1,7 @@
 import {Account, AccountId} from '@bim/domain/account';
 import type {TypedResponse} from 'hono';
 import {Hono} from 'hono';
+import {basename} from 'node:path';
 import type {AppContext} from '../../app-context';
 import {ErrorCode, createErrorResponse, handleDomainError, type ApiErrorResponse} from '../../errors';
 import {createAuthMiddleware} from '../../middleware/auth.middleware';
@@ -18,6 +19,7 @@ import type {
 // =============================================================================
 
 export function createAccountRoutes(appCtx: AppContext): AuthenticatedHono {
+  const log = appCtx.logger.child({name: basename(import.meta.filename)});
   const app: AuthenticatedHono = new Hono();
 
   app.use('*', createAuthMiddleware(appCtx));
@@ -63,7 +65,7 @@ export function createAccountRoutes(appCtx: AppContext): AuthenticatedHono {
         starknetAddress: result.account.getStarknetAddress()!,
       });
     } catch (error) {
-      return handleDomainError(honoCtx, error);
+      return handleDomainError(honoCtx, error, log);
     }
   });
 
@@ -98,7 +100,7 @@ export function createAccountRoutes(appCtx: AppContext): AuthenticatedHono {
 
       return honoCtx.json<GetBalanceResponse>(result);
     } catch (error) {
-      return handleDomainError(honoCtx, error);
+      return handleDomainError(honoCtx, error, log);
     }
   });
 

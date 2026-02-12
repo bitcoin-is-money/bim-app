@@ -1,3 +1,4 @@
+import {createLogger} from '@bim/lib/logger';
 import {WebauthnVirtualAuthenticator} from '@bim/test-toolkit/auth';
 import {P256Signer} from '@bim/test-toolkit/crypto';
 import {isoBase64URL} from '@simplewebauthn/server/helpers';
@@ -22,7 +23,7 @@ describe('SimpleWebAuthnGateway', () => {
   let authenticator: WebauthnVirtualAuthenticator;
 
   beforeEach(() => {
-    gateway = new SimpleWebAuthnGateway();
+    gateway = new SimpleWebAuthnGateway(createLogger());
     authenticator = new WebauthnVirtualAuthenticator();
   });
 

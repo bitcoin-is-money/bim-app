@@ -1,6 +1,8 @@
-import {drizzle} from 'drizzle-orm/node-postgres';
-import pg from 'pg';
 import * as schema from '@bim/db';
+import {drizzle} from 'drizzle-orm/node-postgres';
+import {basename} from "node:path";
+import pg from 'pg';
+import type {Logger} from 'pino';
 
 const { Pool } = pg;
 
@@ -8,6 +10,15 @@ export type Database = ReturnType<typeof drizzle<typeof schema>>;
 
 let pool: pg.Pool | undefined;
 let db: Database | undefined;
+let poolLogger: Logger | undefined;
+
+/**
+ * Sets the logger for pool error reporting.
+ * Call this after creating the pino logger.
+ */
+export function setPoolLogger(logger: Logger): void {
+  poolLogger = logger.child({name: basename(import.meta.filename)});
+}
 
 /**
  * Gets the database connection pool.
@@ -33,7 +44,9 @@ export function getPool(): pg.Pool {
     });
 
     pool.on('error', (err) => {
-      console.error('Unexpected database pool error:', err);
+      if (poolLogger) {
+        poolLogger.error({err: {name: err.name, message: err.message}}, 'Unexpected database pool error');
+      }
     });
   }
 
@@ -67,7 +80,9 @@ export async function testConnection(): Promise<boolean> {
     const result = await getPool().query('SELECT 1');
     return result.rowCount === 1;
   } catch (error) {
-    console.error('Database connection test failed:', error);
+    if (poolLogger) {
+      poolLogger.error({err: error instanceof Error ? {name: error.name, message: error.message} : error}, 'Database connection test failed');
+    }
     return false;
   }
 }

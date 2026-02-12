@@ -12,9 +12,11 @@ import type {
   UnsignedClaimTransactions
 } from '@bim/domain/ports';
 import {ExternalServiceError} from "@bim/domain/shared";
+import {basename} from 'node:path';
 import type {SwapLimits} from "@bim/domain/swap";
 import {BitcoinAddress, LightningInvoice, SwapId} from '@bim/domain/swap';
 import { existsSync, mkdirSync } from 'node:fs';
+import type {Logger} from "pino";
 
 /**
  * Configuration for Atomiq gateway.
@@ -49,8 +51,14 @@ export class AtomiqSdkGateway implements AtomiqGateway {
   private swapper: TypedSwapper<StarknetChainInitializers> | null = null;
   private readonly swapRegistry: Map<string, SwapInfo> = new Map();
   private isInitialized: boolean = false;
+  private readonly log: Logger;
 
-  constructor(private readonly config: AtomiqGatewayConfig) {}
+  constructor(
+    private readonly config: AtomiqGatewayConfig,
+    rootLogger: Logger,
+  ) {
+    this.log = rootLogger.child({name: basename(import.meta.filename)});
+  }
 
   // ===========================================================================
   // Initialization
@@ -108,6 +116,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       await this.swapper.init();
 
       this.isInitialized = true;
+      this.log?.info('Atomiq SDK initialized');
     } catch (error) {
       throw new ExternalServiceError(
         'Atomiq',
@@ -177,6 +186,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         createdAt: new Date()
       });
 
+      this.log?.info({swapId, amountSats: params.amountSats.toString()}, 'Lightning-to-Starknet swap created');
       return {
         swapId,
         invoice,

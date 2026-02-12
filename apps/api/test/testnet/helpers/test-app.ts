@@ -16,8 +16,8 @@ export namespace TestnetApp {
   export function createTestApp(options: CreateAppOptions = {}): Hono {
     const {app} = createApp({
       skipStaticFiles: true,
-      skipLogger: true,
       skipMonitor: true,
+      config: {logLevel: 'silent'},
       ...options,
     });
     return app;

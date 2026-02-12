@@ -1,3 +1,5 @@
+import {basename} from 'node:path';
+import type {Logger} from 'pino';
 import type {StarknetAddress} from '../account';
 import {Amount, type StarknetConfig} from '../shared';
 import {BitcoinAddress, LightningInvoice, type SwapService} from '../swap';
@@ -14,6 +16,7 @@ import {
 export interface ReceiveServiceDeps {
   swapService: SwapService;
   starknetConfig: StarknetConfig;
+  logger: Logger;
 }
 
 // =============================================================================
@@ -27,7 +30,11 @@ export interface ReceiveServiceDeps {
  * For Starknet, returns the user's address + a starknet: URI.
  */
 export class ReceiveService {
-  constructor(private readonly deps: ReceiveServiceDeps) {}
+  private readonly log: Logger;
+
+  constructor(private readonly deps: ReceiveServiceDeps) {
+    this.log = deps.logger.child({name: basename(import.meta.filename)});
+  }
 
   /**
    * Create a receive request for the given network.
@@ -41,6 +48,7 @@ export class ReceiveService {
       throw new InvalidPaymentAmountError(input.network, input.amount?.getSat() ?? 0n);
     }
 
+    this.log.info({network: input.network, amountSats: input.amount.toSatString()}, 'Creating receive request');
     switch (input.network) {
       case 'starknet':
         return {network: 'starknet', ...this.receiveStarknet(input.destinationAddress, input.amount, input.tokenAddress)};

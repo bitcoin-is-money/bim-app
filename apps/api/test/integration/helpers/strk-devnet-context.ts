@@ -1,5 +1,7 @@
 import {StarknetAddress} from '@bim/domain/account';
+import {createLogger} from '@bim/lib/logger';
 import {P256Signer} from "@bim/test-toolkit/crypto";
+import type {Logger} from "pino";
 import {Account, RpcProvider, Signer} from 'starknet';
 import {StarknetRpcGateway} from '../../../src/adapters';
 import {StarkSigner} from './crypto';
@@ -36,6 +38,7 @@ export class StrkDevnetContext {
   private starkSigner: StarkSigner | null = null;
   private readonly devnetUrl: string;
   private starkSignerInitialized = false;
+  private readonly logger: Logger;
 
   private constructor() {
     this.devnetUrl = StrkDevnet.getDevnetUrl();
@@ -44,6 +47,7 @@ export class StrkDevnetContext {
     // It will be updated when ensureStarkSignerInitialized is called
     this.paymasterGateway = new DevnetPaymasterGateway(this.devnetUrl);
 
+    this.logger = createLogger();
     this.starknetGateway = new StarknetRpcGateway(
       {
         rpcUrl: this.devnetUrl,
@@ -55,6 +59,7 @@ export class StrkDevnetContext {
         webauthnRpId: 'localhost',
       },
       this.paymasterGateway,
+      this.logger,
     );
 
     // Use shared P256Signer for WebAuthn credential testing
@@ -239,7 +244,7 @@ export class StrkDevnetContext {
       await new Promise(resolve => setTimeout(resolve, 500));
       this.resetStarknetContext();
     } catch (error) {
-      console.warn('Failed to reset devnet:', error);
+      this.logger.warn(error,'Failed to reset devnet:');
     }
   }
 
@@ -340,12 +345,12 @@ export class StrkDevnetContext {
         ? {resourceBounds: StrkDevnetContext.DEVNET_RESOURCE_BOUNDS}
         : undefined;
       const result = await from.execute(call, options);
-      console.log('ETH transfer tx:', result.transaction_hash);
+      this.logger.info(`ETH transfer tx: ${result.transaction_hash}`);
       const receipt = await this.devnetProvider.waitForTransaction(result.transaction_hash);
-      console.log('ETH transfer receipt:', JSON.stringify(receipt, null, 2));
+      this.logger.info(`ETH transfer receipt: ${JSON.stringify(receipt, null, 2)}`);
       return result.transaction_hash;
     } catch (error) {
-      console.error('ETH transfer error:', error);
+      this.logger.error(error, 'ETH transfer error:');
       throw error;
     }
   }

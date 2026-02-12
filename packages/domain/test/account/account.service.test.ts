@@ -8,7 +8,7 @@ import {
 } from '@bim/domain/account';
 import type {AccountRepository, PaymasterGateway, StarknetGateway} from '@bim/domain/ports';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {createAccount, createAccountRepoMock} from "../helper";
+import {createAccount, createAccountRepoMock, createTestLogger} from "../helper";
 
 describe('AccountService', () => {
   const accountId = AccountId.of('550e8400-e29b-41d4-a716-446655440000');
@@ -35,6 +35,7 @@ describe('AccountService', () => {
       accountRepository: mockAccountRepo,
       starknetGateway: mockStarknetGateway,
       paymasterGateway: mockPaymasterGateway,
+      logger: createTestLogger(),
     });
   });
 
@@ -58,7 +59,7 @@ describe('AccountService', () => {
     it('throws if username already exists', async () => {
       vi.mocked(mockAccountRepo.existsByUsername).mockResolvedValue(true);
 
-      expect(
+      await expect(
         service.create({
           accountId,
           username: 'testUser',
@@ -86,7 +87,7 @@ describe('AccountService', () => {
     it('throws if account not found', async () => {
       vi.mocked(mockAccountRepo.findById).mockResolvedValue(undefined);
 
-      expect(
+      await expect(
         service.deploy({accountId}),
       ).rejects.toThrow(AccountNotFoundError);
     });
@@ -95,7 +96,7 @@ describe('AccountService', () => {
       const account = createAccount('deployed');
       vi.mocked(mockAccountRepo.findById).mockResolvedValue(account);
 
-      expect(
+      await expect(
         service.deploy({accountId}),
       ).rejects.toThrow(InvalidAccountStateError);
     });
@@ -126,7 +127,7 @@ describe('AccountService', () => {
     it('throws if account not found', async () => {
       vi.mocked(mockAccountRepo.findById).mockResolvedValue(undefined);
 
-      expect(
+      await expect(
         service.getBalance({accountId: accountId}),
       ).rejects.toThrow(AccountNotFoundError);
     });

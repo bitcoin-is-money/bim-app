@@ -4,11 +4,11 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./auth":  {
+    "./auth": {
       "types": "./dist/auth/index.d.ts",
       "import": "./dist/auth/index.js"
     },
-    "./crypto":  {
+    "./crypto": {
       "types": "./dist/crypto/index.d.ts",
       "import": "./dist/crypto/index.js"
     }

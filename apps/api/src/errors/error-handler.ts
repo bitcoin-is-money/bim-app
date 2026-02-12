@@ -1,7 +1,3 @@
-import type {Context} from 'hono';
-import type {TypedResponse} from 'hono';
-import {ZodError} from 'zod';
-
 // Domain errors - Account
 import {
   AccountAlreadyExistsError,
@@ -23,6 +19,26 @@ import {
   SessionNotFoundError,
 } from '@bim/domain/auth';
 
+// Domain errors - Payment
+import {
+  InvalidPaymentAddressError,
+  InvalidPaymentAmountError,
+  MissingPaymentAmountError,
+  PaymentParsingError,
+  SameAddressPaymentError,
+  UnsupportedNetworkError,
+  UnsupportedTokenError,
+} from '@bim/domain/payment';
+
+// Domain errors - Shared
+import {
+  ExternalServiceError,
+  InvalidStateTransitionError,
+  TimeoutError,
+  UnauthorizedError,
+  ValidationError,
+} from '@bim/domain/shared';
+
 // Domain errors - Swap
 import {
   InvalidBitcoinAddressError,
@@ -35,41 +51,21 @@ import {
   SwapNotFoundError,
 } from '@bim/domain/swap';
 
-// Domain errors - Payment
-import {
-  InvalidPaymentAddressError,
-  InvalidPaymentAmountError,
-  MissingPaymentAmountError,
-  PaymentParsingError,
-  SameAddressPaymentError,
-  UnsupportedNetworkError,
-  UnsupportedTokenError,
-} from '@bim/domain/payment';
-
 // Domain errors - User
-import {
-  UnsupportedCurrencyError,
-  UserSettingsNotFoundError
-} from '@bim/domain/user';
-
-// Domain errors - Shared
-import {
-  ExternalServiceError,
-  InvalidStateTransitionError,
-  TimeoutError,
-  UnauthorizedError,
-  ValidationError,
-} from '@bim/domain/shared';
+import {UnsupportedCurrencyError, UserSettingsNotFoundError} from '@bim/domain/user';
+import type {Context, TypedResponse} from 'hono';
+import type {Logger} from 'pino';
+import {ZodError} from 'zod';
+import {type ApiErrorResponse, createErrorResponse} from './api-error';
 
 import {ErrorCode} from './error-codes';
-import {createErrorResponse, type ApiErrorResponse} from './api-error';
 
 /**
  * Centralized error handler that maps domain errors to API responses.
  * All routes should use this function to handle errors consistently.
  */
-export function handleDomainError(ctx: Context, error: unknown): TypedResponse<ApiErrorResponse> {
-  console.error('API error:', error instanceof Error ? `${error.name}: ${error.message}` : error);
+export function handleDomainError(ctx: Context, error: unknown, logger: Logger): TypedResponse<ApiErrorResponse> {
+  logger.error(error,'API error');
 
   // Zod validation errors
   if (error instanceof ZodError) {
