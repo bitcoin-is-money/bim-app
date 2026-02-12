@@ -41,6 +41,7 @@ function createMockConfig(): AppConfig {
     avnuApiUrl: 'http://localhost:9090',
     avnuApiKey: 'test-key',
     feeTreasuryAddress: '0x027367ddd36d7efc4694e1af5742f8d26626369c07abf15d136ff422b9a40fa0',
+    atomiqStoragePath: "/tmp/bim/atomiq"
   };
 }
 
