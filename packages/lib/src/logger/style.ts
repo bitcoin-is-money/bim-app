@@ -20,7 +20,7 @@ export type StyleConfig = {
 // extra key/value only support colorette colors:
 //   white(7), red(1), green(2), yellow(3), blue(4), magenta(5), cyan(6), gray(8),
 //   bgRed(bg:1), bgGreen(bg:2), bgYellow(bg:3), bgBlue(bg:4), bgMagenta(bg:5), bgCyan(bg:6).
-export const DEFAULT_STYLE: StyleConfig = {
+export const DEFAULT_LOGGER_CONFIG: StyleConfig = {
   levelPadding: false,
   timestamp: {fg: 250},
   requestId: {fg: 72},

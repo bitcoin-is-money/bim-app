@@ -4,7 +4,7 @@ import pinoPretty from 'pino-pretty';
 import type PinoPretty from 'pino-pretty';
 import {logContext} from './context';
 import {createErrorPrettifier, createLevelPrettifier, createMessageFormat, createTimestampPrettifier} from './prettifiers';
-import {DEFAULT_STYLE, type StyleConfig} from './style';
+import {DEFAULT_LOGGER_CONFIG, type StyleConfig} from './style';
 
 type PrettyOptions = PinoPretty.PrettyOptions;
 
@@ -22,8 +22,8 @@ export function isValidLevel(level: string | undefined): level is LogLevel {
  * @param destination - Optional writable destination. When omitted, writes to stdout.
  */
 export function createLogger(
-  level: string = 'silent',
-  style: StyleConfig = DEFAULT_STYLE,
+  level: string = 'info',
+  style: StyleConfig = DEFAULT_LOGGER_CONFIG,
   destination?: NodeJS.WritableStream,
 ): Logger {
   const prettyOptions: PrettyOptions = {

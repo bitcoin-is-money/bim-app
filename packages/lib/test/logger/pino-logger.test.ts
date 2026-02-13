@@ -1,5 +1,5 @@
 import {describe, it} from 'vitest';
-import {createLogger} from '../../src/logger';
+import {createLogger} from '@bim/lib/logger';
 
 // Visual smoke tests — verify rendering in vitest console output
 

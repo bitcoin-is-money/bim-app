@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest';
-import {createLogger, isValidLevel} from '../../src/logger';
+import {createLogger, isValidLevel} from '@bim/lib/logger';
 
 describe('isValidLevel', () => {
   it.each(['debug', 'info', 'warn', 'error', 'silent'])('accepts "%s"', (level) => {
