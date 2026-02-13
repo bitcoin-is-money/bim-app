@@ -1,8 +1,14 @@
+import {createLogger} from '@bim/lib/logger';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
-import {AccountCache} from '../../src/account-cache.js';
+import {AccountCache} from '../../src/wbtc-transfer/account-cache.js';
+import {INDEXER_LOGGER_CONFIG} from "../../src/wbtc-transfer/logger-config";
+
+const LOG_LEVEL = 'silent';
 
 const ALICE = {id: 'acc-alice', starknetAddress: '0x' + '1'.repeat(64)};
 const BOB = {id: 'acc-bob', starknetAddress: '0x' + '2'.repeat(64)};
+
+const logger = createLogger(LOG_LEVEL, INDEXER_LOGGER_CONFIG, process.stdout);
 
 function makeMockDb(rows: {id: string; starknetAddress: string}[]) {
   return {
@@ -25,7 +31,7 @@ describe('AccountCache', () => {
 
   it('fetches accounts on first call', async () => {
     const db = makeMockDb([ALICE]);
-    const cache = new AccountCache(60_000);
+    const cache = new AccountCache(60_000, logger);
 
     const result = await cache.get(db);
 
@@ -35,7 +41,7 @@ describe('AccountCache', () => {
 
   it('returns cached accounts within TTL', async () => {
     const db = makeMockDb([ALICE]);
-    const cache = new AccountCache(60_000);
+    const cache = new AccountCache(60_000, logger);
 
     await cache.get(db);
     vi.advanceTimersByTime(30_000);
@@ -47,7 +53,7 @@ describe('AccountCache', () => {
 
   it('refreshes after TTL expires', async () => {
     const db = makeMockDb([ALICE]);
-    const cache = new AccountCache(60_000);
+    const cache = new AccountCache(60_000, logger);
 
     await cache.get(db);
 
@@ -66,7 +72,7 @@ describe('AccountCache', () => {
 
   it('returns empty array when no accounts exist', async () => {
     const db = makeMockDb([]);
-    const cache = new AccountCache(60_000);
+    const cache = new AccountCache(60_000, logger);
 
     const result = await cache.get(db);
 

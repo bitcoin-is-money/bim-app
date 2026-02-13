@@ -15,6 +15,10 @@
     "./logger":  {
       "types": "./dist/logger/index.d.ts",
       "import": "./dist/logger/index.js"
+    },
+    "./url":  {
+      "types": "./dist/url/index.d.ts",
+      "import": "./dist/url/index.js"
     }
   },
   "scripts": {

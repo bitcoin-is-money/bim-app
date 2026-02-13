@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest';
-import {logContext} from '../../src/logger/context';
+import {logContext} from '@bim/lib/logger';
 
 describe('logContext', () => {
   it('returns undefined outside of run()', () => {

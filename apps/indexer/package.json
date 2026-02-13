@@ -17,7 +17,11 @@
     "@apibara/plugin-drizzle": "^2.1.0-beta.53",
     "@apibara/starknet": "^2.1.0-beta.54",
     "@bim/db": "*",
+    "@bim/lib": "*",
     "apibara": "^2.1.0-beta.53",
+    "pino": "^10.0.0",
+    "pino-pretty": "^13.0.0",
+    "starknet": "^9.3.0",
     "drizzle-orm": "^0.45.1"
   },
   "devDependencies": {
