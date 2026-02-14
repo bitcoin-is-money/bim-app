@@ -83,7 +83,11 @@
   @apply flex items-center justify-center my-2;
 
   .qr-image {
-    @apply w-56 h-56 rounded-xl;
+    @apply w-56 h-56 rounded-xl overflow-hidden;
+
+    svg {
+      @apply w-full h-full;
+    }
   }
 
   .qr-placeholder {

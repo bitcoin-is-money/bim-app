@@ -41,12 +41,11 @@
     "@ngx-translate/core": "^17.0.0",
     "@ngx-translate/http-loader": "^17.0.0",
     "@stablelib/base64": "^2.0.1",
-    "@types/qrcode": "^1.5.6",
     "canvas-confetti": "^1.9.4",
     "html5-qrcode": "^2.3.8",
-    "qrcode": "^1.5.4",
     "rxjs": "~7.8.0",
-    "tslib": "^2.3.0"
+    "tslib": "^2.3.0",
+    "uqr": "^0.1.2"
   },
   "devDependencies": {
     "@angular/build": "^21.0.5",
