@@ -7,8 +7,13 @@ import {
   StarknetAddress,
 } from '@bim/domain/account';
 import type {AccountRepository, PaymasterGateway, StarknetGateway} from '@bim/domain/ports';
+import {createLogger} from '@bim/lib/logger';
+import type {Logger} from "pino";
 import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {createAccount, createAccountRepoMock, createTestLogger} from "../helper";
+import {createAccount, createAccountRepoMock} from "../helper";
+
+const LOG_LEVEL = 'debug';
+const logger: Logger = createLogger(LOG_LEVEL);
 
 describe('AccountService', () => {
   const accountId = AccountId.of('550e8400-e29b-41d4-a716-446655440000');
@@ -35,7 +40,7 @@ describe('AccountService', () => {
       accountRepository: mockAccountRepo,
       starknetGateway: mockStarknetGateway,
       paymasterGateway: mockPaymasterGateway,
-      logger: createTestLogger(),
+      logger: logger,
     });
   });
 

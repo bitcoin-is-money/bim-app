@@ -25,6 +25,7 @@ export class SimpleWebAuthnGateway implements WebAuthnGateway {
   async verifyRegistration(
     params: VerifyRegistrationParams,
   ): Promise<RegistrationVerificationResult> {
+    this.log.debug({rpId: params.expectedRPID}, 'Verifying WebAuthn registration');
     try {
       const verification = await verifyRegistrationResponse({
         response: {
@@ -76,13 +77,8 @@ export class SimpleWebAuthnGateway implements WebAuthnGateway {
         encodedCredentialPublicKey: encodedCredentialPublicKey,
         signCount: registrationInfo.credential.counter,
       };
-    } catch (error) {
-      this.log?.error({
-          err: error instanceof Error
-            ? {name: error.name, message: error.message}
-            : error
-        },
-        'WebAuthn registration verification failed');
+    } catch (err) {
+      this.log.error({err}, 'WebAuthn registration verification failed');
       return {
         verified: false,
         encodedCredentialId: '',
@@ -96,6 +92,10 @@ export class SimpleWebAuthnGateway implements WebAuthnGateway {
   async verifyAuthentication(
     params: VerifyAuthenticationParams,
   ): Promise<AuthenticationVerificationResult> {
+    this.log.debug({
+        credentialId: params.storedCredential.credentialId,
+        rpId: params.expectedRPID
+      },'Verifying WebAuthn authentication');
     try {
       // Decode the stored credential public key
       const credentialPublicKey = params.storedCredential.credentialPublicKey
@@ -138,13 +138,8 @@ export class SimpleWebAuthnGateway implements WebAuthnGateway {
         verified: verification.verified,
         newSignCount: verification.authenticationInfo?.newCounter ?? 0,
       };
-    } catch (error) {
-      this.log?.error({
-          err: error instanceof Error
-            ? {name: error.name, message: error.message}
-            : error
-        },
-        'WebAuthn authentication verification failed');
+    } catch (err) {
+      this.log.error({err}, 'WebAuthn authentication verification failed');
       return {
         verified: false,
         newSignCount: 0,

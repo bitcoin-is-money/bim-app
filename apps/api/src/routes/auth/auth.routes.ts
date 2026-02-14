@@ -163,8 +163,8 @@ export function createAuthRoutes(appContext: AppContext): Hono {
 
       clearCookie(honoCtx);
       return honoCtx.json<LogoutResponse>({success: true});
-    } catch (error) {
-      log.error({err: error instanceof Error ? {name: error.name, message: error.message} : error}, 'Logout error');
+    } catch (err) {
+      log.error({err}, 'Logout error');
       clearCookie(honoCtx);
       return honoCtx.json<LogoutResponse>({success: true});
     }

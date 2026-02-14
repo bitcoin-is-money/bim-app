@@ -54,6 +54,11 @@ export class AvnuPaymasterGateway implements PaymasterGateway {
     transaction: StarknetTransaction | DeployTransaction;
     accountAddress: StarknetAddress;
   }): Promise<PaymasterResult> {
+    this.log.debug({
+        type: params.transaction.type,
+        accountAddress: params.accountAddress.toString()
+      },
+      'Executing paymaster transaction');
     if (params.transaction.type === 'DEPLOY_ACCOUNT') {
       return this.executeDeployViaSNIP29(
         params.transaction as DeployTransaction,
@@ -85,7 +90,8 @@ export class AvnuPaymasterGateway implements PaymasterGateway {
     accountAddress: StarknetAddress,
   ): Promise<PaymasterResult> {
     try {
-      this.log?.info({accountAddress: accountAddress.toString()}, 'Deploying account via SNIP-29');
+      this.log.info({accountAddress: accountAddress.toString()},
+        'Deploying account via SNIP-29');
       const rpcBody = {
         jsonrpc: '2.0',
         method: 'paymaster_executeTransaction',
@@ -147,19 +153,19 @@ export class AvnuPaymasterGateway implements PaymasterGateway {
         );
       }
 
-      this.log?.info({txHash: result.result.transaction_hash}, 'SNIP-29 deploy transaction submitted');
+      this.log.info({txHash: result.result.transaction_hash}, 'SNIP-29 deploy transaction submitted');
       return {
         txHash: result.result.transaction_hash,
         success: true,
       };
-    } catch (error) {
-      if (error instanceof ExternalServiceError) {
-        this.log?.error({err: error.message}, 'SNIP-29 deploy failed');
-        throw error;
+    } catch (err) {
+      if (err instanceof ExternalServiceError) {
+        this.log.error({err}, 'SNIP-29 deploy failed');
+        throw err;
       }
       throw new ExternalServiceError(
         'AVNU Paymaster',
-        `SNIP-29 deploy failed: ${error instanceof Error ? error.message : String(error)}`,
+        `SNIP-29 deploy failed: ${err instanceof Error ? err.message : String(err)}`,
       );
     }
   }
@@ -172,6 +178,7 @@ export class AvnuPaymasterGateway implements PaymasterGateway {
     tx: StarknetTransaction,
     accountAddress: StarknetAddress,
   ): Promise<PaymasterResult> {
+    this.log.debug({accountAddress: accountAddress.toString()}, 'Executing invoke via REST');
     try {
       const response = await fetch(`${this.config.apiUrl}/paymaster/execute`, {
         method: 'POST',
@@ -192,6 +199,10 @@ export class AvnuPaymasterGateway implements PaymasterGateway {
 
       const result = await response.json() as { txHash: string; success: boolean };
 
+      this.log.debug({
+        txHash: result.txHash,
+        success: result.success
+      }, 'Invoke via REST result');
       return {
         txHash: result.txHash,
         success: result.success,
@@ -211,6 +222,8 @@ export class AvnuPaymasterGateway implements PaymasterGateway {
     transaction: StarknetTransaction;
     accountAddress: StarknetAddress;
   }): Promise<PaymasterTransaction> {
+    this.log.debug({accountAddress: params.accountAddress.toString()},
+      'Building paymaster transaction');
     try {
       const response = await fetch(`${this.config.apiUrl}/paymaster/build`, {
         method: 'POST',
@@ -228,10 +241,7 @@ export class AvnuPaymasterGateway implements PaymasterGateway {
         const error = await response.text();
         throw new ExternalServiceError('AVNU Paymaster', `Build failed: ${error}`);
       }
-
-      const result = await response.json() as PaymasterTransaction;
-
-      return result;
+      return await response.json() as PaymasterTransaction;
     } catch (error) {
       if (error instanceof ExternalServiceError) {
         throw error;
@@ -244,6 +254,8 @@ export class AvnuPaymasterGateway implements PaymasterGateway {
   }
 
   async isAvailable(accountAddress: StarknetAddress): Promise<boolean> {
+    this.log.debug({accountAddress: accountAddress.toString()}, 'Checking paymaster availability');
+    let available = false;
     try {
       const response = await fetch(
         `${this.config.apiUrl}/paymaster/available?address=${accountAddress}`,
@@ -253,19 +265,23 @@ export class AvnuPaymasterGateway implements PaymasterGateway {
           },
         },
       );
-
-      if (!response.ok) {
-        return false;
+      if (response.ok) {
+        const result = await response.json() as { available: boolean };
+        available = result.available;
+      } else {
+        this.log.warn({status: response.status},
+          'Paymaster availability check failed');
       }
-
-      const result = await response.json() as { available: boolean };
-      return result.available;
     } catch {
-      return false;
+      // network error → available stays false
     }
+    this.log.debug({available}, 'Paymaster availability result');
+    return available;
   }
 
   async getSponsoredGasLimit(): Promise<bigint> {
+    this.log.debug('Getting sponsored gas limit');
+    let gasLimit = 0n;
     try {
       const response = await fetch(`${this.config.apiUrl}/paymaster/limits`, {
         headers: {
@@ -273,14 +289,17 @@ export class AvnuPaymasterGateway implements PaymasterGateway {
         },
       });
 
-      if (!response.ok) {
-        return 0n;
+      if (response.ok) {
+        const result = await response.json() as { gasLimit: string };
+        gasLimit = BigInt(result.gasLimit);
+      } else {
+        this.log.warn({status: response.status},
+          `Sponsored gas limit request failed (use ${gasLimit} as limit)`);
       }
-
-      const result = await response.json() as { gasLimit: string };
-      return BigInt(result.gasLimit);
     } catch {
-      return 0n;
+      // network error → gasLimit stays 0n
     }
+    this.log.debug({gasLimit: gasLimit.toString()}, 'Sponsored gas limit result');
+    return gasLimit;
   }
 }

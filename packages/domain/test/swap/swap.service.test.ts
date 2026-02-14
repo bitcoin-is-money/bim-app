@@ -2,8 +2,11 @@ import {StarknetAddress} from '@bim/domain/account';
 import type {AtomiqGateway, SwapRepository, TransactionRepository} from '@bim/domain/ports';
 import {Amount} from '@bim/domain/shared';
 import {Swap, SwapId, SwapService} from '@bim/domain/swap';
+import {createLogger} from '@bim/lib/logger';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {createTestLogger} from '../helper';
+
+const LOG_LEVEL = 'silent';
+const logger = createLogger(LOG_LEVEL);
 
 const DESTINATION_ADDRESS = StarknetAddress.of('0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef');
 const VALID_INVOICE = 'lntb1000n1pjtest0pp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypq';
@@ -84,7 +87,7 @@ describe('SwapService', () => {
     repository = createMockRepository();
     gateway = createMockGateway();
     transactionRepository = createMockTransactionRepository();
-    service = new SwapService({swapRepository: repository, atomiqGateway: gateway, transactionRepository, logger: createTestLogger()});
+    service = new SwapService({swapRepository: repository, atomiqGateway: gateway, transactionRepository, logger: logger});
   });
 
   // =========================================================================

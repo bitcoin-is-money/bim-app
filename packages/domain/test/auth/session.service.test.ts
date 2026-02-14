@@ -8,8 +8,12 @@ import {
   SessionService,
 } from '@bim/domain/auth';
 import type {AccountRepository, SessionRepository} from '@bim/domain/ports';
+import {createLogger} from '@bim/lib/logger';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {createAccountRepoMock, createSessionRepoMock, createTestLogger} from "../helper";
+import {createAccountRepoMock, createSessionRepoMock} from "../helper";
+
+const LOG_LEVEL = 'silent';
+const logger = createLogger(LOG_LEVEL);
 
 describe('SessionService', () => {
   const accountId = AccountId.of('550e8400-e29b-41d4-a716-446655440000');
@@ -43,7 +47,7 @@ describe('SessionService', () => {
     service = new SessionService({
       sessionRepository: mockSessionRepo,
       accountRepository: mockAccountRepo,
-      logger: createTestLogger(),
+      logger: logger,
     });
   });
 

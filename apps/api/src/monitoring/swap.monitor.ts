@@ -49,6 +49,7 @@ export class SwapMonitor {
    */
   start(): void {
     if (this.running) return;
+    this.log.info('Starting SwapMonitor');
     this.running = true;
     this.timer = setInterval(() => this.runIteration(), this.config.pollInterval);
   }
@@ -59,6 +60,7 @@ export class SwapMonitor {
    */
   async stop(): Promise<void> {
     this.running = false;
+    this.log.info('Stopping SwapMonitor');
     if (this.timer) {
       clearInterval(this.timer);
       this.timer = null;
@@ -75,20 +77,23 @@ export class SwapMonitor {
   async runIteration(): Promise<void> {
     if (this.iterating) return;
     this.iterating = true;
-
+    this.log.trace('Running iteration');
     try {
       const activeSwaps = await this.swapService.getActiveSwaps();
-
       for (const swap of activeSwaps) {
         try {
           const {status} = await this.swapService.fetchStatus({swapId: swap.id});
+          this.log.trace({swapId: swap.id, status}, `Swap status`);
           await this.autoClaimIfNeeded(swap.id, status, swap.direction);
-        } catch {
+        } catch (err) {
           // Individual swap errors are non-fatal — continue with the next swap
+          this.log.warn({
+            cause: err instanceof Error ? err.message : String(err)
+          }, "Unexpected behavior fetching swap status, skipping");
         }
       }
-    } catch (error) {
-      this.log?.error({err: error instanceof Error ? {name: error.name, message: error.message} : error}, 'SwapMonitor iteration error');
+    } catch (err) {
+      this.log.error({err: err}, 'SwapMonitor iteration error');
     } finally {
       this.iterating = false;
     }
@@ -106,12 +111,15 @@ export class SwapMonitor {
     if (retries >= this.config.maxClaimRetries) return;
 
     try {
-      this.log?.info({swapId}, 'Auto-claiming swap');
+      this.log.info({swapId}, 'Auto-claiming swap');
       await this.swapService.claim({swapId});
       this.claimRetries.delete(swapId);
     } catch {
       this.claimRetries.set(swapId, retries + 1);
-      this.log?.warn({swapId, retries: retries + 1, maxRetries: this.config.maxClaimRetries}, 'Swap claim failed, will retry');
+      this.log.warn({
+        swapId, retries: retries + 1,
+        maxRetries: this.config.maxClaimRetries
+      }, 'Swap claim failed, will retry');
     }
   }
 }
