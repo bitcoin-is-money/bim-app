@@ -1,14 +1,6 @@
 import {Account, AccountId, type AccountStatus, CredentialId, StarknetAddress} from "@bim/domain/account";
-import {createLogger} from '@bim/lib/logger';
-import type {Logger} from "pino";
 import {vi} from "vitest";
 import type {AccountRepository, SessionRepository} from "../src/ports";
-
-const DEFAULT_LOG_LEVEL = 'info';
-
-export function createTestLogger(level: string = DEFAULT_LOG_LEVEL): Logger {
-  return createLogger(level);
-}
 
 export function createAccountRepoMock(): AccountRepository {
   return {

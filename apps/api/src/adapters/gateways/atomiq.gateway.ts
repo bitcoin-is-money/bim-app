@@ -71,7 +71,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     if (this.isInitialized) {
       return;
     }
-
+    this.log.debug('Initializing Atomiq gateway');
     try {
       // Create SwapperFactory with Starknet chain initializer
       this.swapperFactory = new SwapperFactory([StarknetInitializer]);
@@ -81,10 +81,10 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         ? BitcoinNetwork.MAINNET
         : BitcoinNetwork.TESTNET;
 
-      const { storagePath, autoCreateStorage } = this.config;
+      const {storagePath, autoCreateStorage} = this.config;
       if (!existsSync(storagePath)) {
         if (autoCreateStorage) {
-          mkdirSync(storagePath, { recursive: true });
+          mkdirSync(storagePath, {recursive: true});
         } else {
           throw new Error(
             `Atomiq storage directory does not exist: ${storagePath}. Create it manually or mount a persistent volume.`,
@@ -116,7 +116,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       await this.swapper.init();
 
       this.isInitialized = true;
-      this.log?.info('Atomiq SDK initialized');
+      this.log.info('Atomiq SDK initialized');
     } catch (error) {
       throw new ExternalServiceError(
         'Atomiq',
@@ -156,6 +156,10 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     amountSats: bigint;
     destinationAddress: StarknetAddress;
   }): Promise<AtomiqSwapResult> {
+    this.log.debug({
+      amountSats: params.amountSats.toString(),
+      destination: params.destinationAddress.toString()
+    }, 'Creating Lightning-to-Starknet swap');
     await this.ensureInitialized();
 
     try {
@@ -186,7 +190,10 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         createdAt: new Date()
       });
 
-      this.log?.info({swapId, amountSats: params.amountSats.toString()}, 'Lightning-to-Starknet swap created');
+      this.log.info({
+        swapId,
+        amountSats: params.amountSats.toString()
+      }, 'Lightning-to-Starknet swap created');
       return {
         swapId,
         invoice,
@@ -205,6 +212,10 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     amountSats: bigint;
     destinationAddress: StarknetAddress;
   }): Promise<AtomiqSwapResult> {
+    this.log.debug({
+      amountSats: params.amountSats.toString(),
+      destination: params.destinationAddress.toString()
+    }, 'Creating Bitcoin-to-Starknet swap');
     await this.ensureInitialized();
 
     try {
@@ -235,6 +246,10 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         createdAt: new Date()
       });
 
+      this.log.info({
+        swapId,
+        amountSats: params.amountSats.toString()
+      }, 'Bitcoin-to-Starknet swap created');
       return {
         swapId,
         depositAddress,
@@ -254,6 +269,8 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     invoice: LightningInvoice;
     sourceAddress: StarknetAddress;
   }): Promise<AtomiqReverseSwapResult> {
+    this.log.debug({source: params.sourceAddress.toString()},
+      'Creating Starknet-to-Lightning swap');
     await this.ensureInitialized();
 
     try {
@@ -291,6 +308,10 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         createdAt: new Date()
       });
 
+      this.log.info({
+        swapId,
+        amountSats: amountSats.toString()
+      }, 'Starknet-to-Lightning swap created');
       return {
         swapId,
         depositAddress,
@@ -311,6 +332,11 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     destinationAddress: BitcoinAddress;
     sourceAddress: StarknetAddress;
   }): Promise<AtomiqReverseSwapResult> {
+    this.log.debug({
+      amountSats: params.amountSats.toString(),
+      destination: params.destinationAddress.toString(),
+      source: params.sourceAddress.toString()
+    }, 'Creating Starknet-to-Bitcoin swap');
     await this.ensureInitialized();
 
     try {
@@ -340,6 +366,10 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         createdAt: new Date()
       });
 
+      this.log.info({
+        swapId,
+        amountSats: params.amountSats,
+      }, 'Starknet-to-Bitcoin swap created');
       return {
         swapId,
         depositAddress,
@@ -386,7 +416,9 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       }
     }
 
-    return lowestFee === Infinity ? DEFAULT_FEE : lowestFee;
+    const result: number = lowestFee === Infinity ? DEFAULT_FEE : lowestFee;
+    this.log.trace(`getSwapFeePercent: ${result}`);
+    return result;
   }
 
   async getLightningToStarknetLimits(): Promise<SwapLimits> {
@@ -396,11 +428,13 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       Tokens.BITCOIN.BTCLN,
       Tokens.STARKNET.WBTC
     );
-    return {
+    const result: SwapLimits = {
       minSats: limits.input.min.rawAmount ?? 0n,
       maxSats: limits.input.max?.rawAmount ?? 0n,
       feePercent: this.getSwapFeePercent(SwapType.FROM_BTCLN),
     };
+    this.log.debug({...result}, `getLightningToStarknetLimits result`);
+    return result;
   }
 
   async getBitcoinToStarknetLimits(): Promise<SwapLimits> {
@@ -410,11 +444,13 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       Tokens.BITCOIN.BTC,
       Tokens.STARKNET.WBTC
     );
-    return {
+    const result: SwapLimits = {
       minSats: limits.input.min.rawAmount ?? 0n,
       maxSats: limits.input.max?.rawAmount ?? 0n,
       feePercent: this.getSwapFeePercent(SwapType.FROM_BTC),
     };
+    this.log.debug({...result}, `getBitcoinToStarknetLimits result`);
+    return result;
   }
 
   async getStarknetToLightningLimits(): Promise<SwapLimits> {
@@ -424,11 +460,13 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       Tokens.STARKNET.WBTC,
       Tokens.BITCOIN.BTCLN
     );
-    return {
+    const result: SwapLimits = {
       minSats: limits.input.min.rawAmount ?? 0n,
       maxSats: limits.input.max?.rawAmount ?? 0n,
       feePercent: this.getSwapFeePercent(SwapType.TO_BTCLN),
     };
+    this.log.debug({...result}, `getStarknetToLightningLimits result`);
+    return result;
   }
 
   async getStarknetToBitcoinLimits(): Promise<SwapLimits> {
@@ -438,11 +476,13 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       Tokens.STARKNET.WBTC,
       Tokens.BITCOIN.BTC
     );
-    return {
+    const result: SwapLimits = {
       minSats: limits.input.min.rawAmount ?? 0n,
       maxSats: limits.input.max?.rawAmount ?? 0n,
       feePercent: this.getSwapFeePercent(SwapType.TO_BTC),
     };
+    this.log.debug({...result}, `getStarknetToBitcoinLimits result`);
+    return result;
   }
 
   // ===========================================================================
@@ -453,6 +493,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     swapId: SwapId,
     swapObject: unknown,
   ): Promise<void> {
+    this.log.info({swapId}, 'Registering swap for monitoring');
     // Determine the direction from swap the object if possible
     let direction: SwapInfo['direction'] = 'lightning_to_starknet';
 
@@ -474,6 +515,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
   }
 
   async getSwapStatus(swapId: SwapId): Promise<AtomiqSwapStatus> {
+    this.log.debug({swapId}, 'Getting swap status');
     const swapInfo = this.swapRegistry.get(swapId);
 
     if (!swapInfo) {
@@ -490,9 +532,8 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     const swap = swapInfo.swapObject;
     const state = swap.getState?.() ?? -1;
 
-    const { isPaid, isCompleted, isFailed, isExpired } = this.mapStateToStatus(state);
-
-    return {
+    const {isPaid, isCompleted, isFailed, isExpired} = this.mapStateToStatus(state);
+    const result: AtomiqSwapStatus = {
       state,
       isPaid,
       isCompleted,
@@ -500,6 +541,8 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       isExpired,
       txHash: swap.data?.getTxId?.(),
     };
+    this.log.debug({...result}, `getSwapStatus result`);
+    return result;
   }
 
   /**
@@ -544,6 +587,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
   // ===========================================================================
 
   async claimSwap(swapId: SwapId): Promise<ClaimResult> {
+    this.log.debug({swapId}, 'Claiming swap');
     const swapInfo = this.swapRegistry.get(swapId);
 
     if (!swapInfo) {
@@ -573,11 +617,12 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       }
 
       const txHash = swap.data?.getTxId?.() || `0x${crypto.randomUUID().replaceAll('-', '')}`;
-
-      return {
+      const result: ClaimResult = {
         txHash,
         success: true,
       };
+      this.log.debug({...result}, `claimSwap result`);
+      return result;
     } catch (error) {
       throw new ExternalServiceError(
         'Atomiq',
@@ -603,6 +648,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
   async getUnsignedClaimTransactions(
     swapId: SwapId,
   ): Promise<UnsignedClaimTransactions> {
+    this.log.debug({swapId}, 'Getting unsigned claim transactions');
     const swapInfo = this.swapRegistry.get(swapId);
 
     if (!swapInfo) {

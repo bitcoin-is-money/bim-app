@@ -9,7 +9,11 @@ import {
 import type {LightningDecoder} from '@bim/domain/ports';
 import {ValidationError} from '@bim/domain/shared';
 import {InvalidBitcoinAddressError, LightningInvoice} from '@bim/domain/swap';
+import {createLogger} from '@bim/lib/logger';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
+
+const LOG_LEVEL = 'trace';
+const logger = createLogger(LOG_LEVEL);
 
 // =============================================================================
 // Constants
@@ -67,6 +71,7 @@ describe('ParseService', () => {
       service = new ParseService({
         lightningDecoder: mockDecoder,
         starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS},
+        logger,
       });
     });
 
@@ -111,6 +116,7 @@ describe('ParseService', () => {
       const failingService = new ParseService({
         lightningDecoder: failingDecoder,
         starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS},
+        logger,
       });
 
       expect(() => failingService.parse(VALID_LIGHTNING_INVOICE)).toThrow(PaymentParsingError);
@@ -128,6 +134,7 @@ describe('ParseService', () => {
       service = new ParseService({
         lightningDecoder: createMockDecoder(),
         starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS},
+        logger,
       });
     });
 
@@ -228,6 +235,7 @@ describe('ParseService', () => {
       const service = new ParseService({
         lightningDecoder: createMockDecoder(),
         starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS},
+        logger,
       });
 
       const result = service.parse(VALID_LIGHTNING_INVOICE);
@@ -245,6 +253,7 @@ describe('ParseService', () => {
       const service = new ParseService({
         lightningDecoder: createMockDecoder({amountMSat: undefined}),
         starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS},
+        logger,
       });
 
       expectParsingErrorWithCause(
@@ -257,6 +266,7 @@ describe('ParseService', () => {
       const service = new ParseService({
         lightningDecoder: createMockDecoder({amountMSat: BigInt(-1)}),
         starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS},
+        logger,
       });
 
       expectParsingErrorWithCause(
@@ -277,6 +287,7 @@ describe('ParseService', () => {
       service = new ParseService({
         lightningDecoder: createMockDecoder(),
         starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS},
+        logger,
       });
     });
 

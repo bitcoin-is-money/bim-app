@@ -10,8 +10,11 @@ import {
   SwapId,
   type SwapService
 } from '@bim/domain/swap';
+import {createLogger} from '@bim/lib/logger';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {createTestLogger} from '../helper';
+
+const LOG_LEVEL = 'silent';
+const logger = createLogger(LOG_LEVEL);
 
 // =============================================================================
 // Constants
@@ -77,7 +80,7 @@ describe('ReceiveService', () => {
     service = new ReceiveService({
       swapService: mockSwapService,
       starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS},
-      logger: createTestLogger(),
+      logger: logger,
     });
   });
 

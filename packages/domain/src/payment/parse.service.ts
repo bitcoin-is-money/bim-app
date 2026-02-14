@@ -1,3 +1,4 @@
+import type {Logger} from 'pino';
 import {StarknetAddress} from '../account';
 import type {LightningDecoder} from '../ports';
 import {Amount, type StarknetConfig} from '../shared';
@@ -17,6 +18,7 @@ import {
 export interface ParseServiceDeps {
   lightningDecoder: LightningDecoder;
   starknetConfig: StarknetConfig;
+  logger: Logger;
 }
 
 // =============================================================================
@@ -45,12 +47,15 @@ export class ParseService {
     const trimmed = data.trim();
 
     if (LightningInvoice.isValid(trimmed)) {
+      this.deps.logger.info(`Parsing Lightning payment data`);
       return this.wrapParsingErrors(() => this.parseLightningInvoice(trimmed));
     }
     if (trimmed.toLowerCase().startsWith('bitcoin:')) {
+      this.deps.logger.info(`Parsing Bitcoin payment data`);
       return this.wrapParsingErrors(() => this.parseBitcoinUri(trimmed));
     }
     if (trimmed.toLowerCase().startsWith('starknet:')) {
+      this.deps.logger.info(`Parsing Starknet payment data`);
       return this.wrapParsingErrors(() => this.parseStarknetUri(trimmed));
     }
 

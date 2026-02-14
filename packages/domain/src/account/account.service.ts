@@ -76,7 +76,7 @@ export class AccountService {
    * @throws AccountAlreadyExistsError if username is taken
    */
   async create(input: CreateAccountInput): Promise<Account> {
-    // Ensure username uniqueness
+    this.log.info({accountId: input.accountId, username: input.username}, 'Creating account');
     const exists = await this.deps.accountRepository.existsByUsername(input.username);
     if (exists) {
       throw new AccountAlreadyExistsError(input.username);
@@ -90,9 +90,10 @@ export class AccountService {
       credentialPublicKey: input.credentialPublicKey,
     });
 
+    this.log.debug("Saving account");
     await this.deps.accountRepository.save(account);
 
-    this.log.info({accountId: input.accountId, username: input.username}, 'Account created');
+    this.log.info('Account created');
     return account;
   }
 
@@ -104,6 +105,7 @@ export class AccountService {
    * @throws InvalidAccountStateError if the account is not in 'pending' status
    */
   async deploy(input: DeployAccountInput): Promise<DeployAccountOutput> {
+    this.log.info({accountId: input.accountId}, 'Deploying account');
     const account = await this.deps.accountRepository.findById(input.accountId);
     if (!account) {
       throw new AccountNotFoundError(input.accountId);
@@ -128,15 +130,16 @@ export class AccountService {
     });
 
     // Execute via paymaster for gasless deployment
-    this.log.info({accountId: input.accountId, starknetAddress}, 'Deploying account via paymaster');
+    this.log.info('Deploying account via paymaster');
     const {txHash} = await this.deps.paymasterGateway.executeTransaction({
       transaction: deployTx,
       accountAddress: starknetAddress,
     });
 
     account.markAsDeploying(starknetAddress, txHash);
+    this.log.debug('Saving account');
     await this.deps.accountRepository.save(account);
-    this.log.info({accountId: input.accountId, txHash}, 'Account deployment submitted');
+    this.log.info({accountId: input.accountId, starknetAddress, txHash}, 'Account deployment submitted');
 
     if (input.sync) {
       // Wait for on-chain confirmation before returning

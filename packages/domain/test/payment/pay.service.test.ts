@@ -18,8 +18,11 @@ import {
   SwapId,
   type SwapService
 } from '@bim/domain/swap';
+import {createLogger} from '@bim/lib/logger';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {createTestLogger} from '../helper';
+
+const LOG_LEVEL = 'silent';
+const logger = createLogger(LOG_LEVEL);
 
 // =============================================================================
 // Constants
@@ -120,7 +123,7 @@ describe('PayService', () => {
         transactionRepository: mockTransactionRepository,
         starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS},
         feeConfig,
-        logger: createTestLogger(),
+        logger: logger,
       });
     });
 
@@ -251,7 +254,7 @@ describe('PayService', () => {
         transactionRepository: createMockTransactionRepository(),
         starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS},
         feeConfig,
-        logger: createTestLogger(),
+        logger: logger,
       });
     });
 
@@ -353,7 +356,7 @@ describe('PayService', () => {
         transactionRepository: createMockTransactionRepository(),
         starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS},
         feeConfig,
-        logger: createTestLogger(),
+        logger: logger,
       });
     });
 

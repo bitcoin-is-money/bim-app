@@ -205,6 +205,7 @@ export namespace AppContext {
     const parseService = new ParseService({
       lightningDecoder: gateways.lightningDecoder,
       starknetConfig,
+      logger: rootLogger,
     });
 
     const payService = new PayService({

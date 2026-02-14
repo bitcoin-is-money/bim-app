@@ -158,6 +158,8 @@ export class SwapService {
   async createLightningToStarknet(
     input: CreateLightningToStarknetInput,
   ): Promise<CreateLightningToStarknetOutput> {
+    this.log.debug({input}, 'Creating Lightning-to-Starknet swap');
+
     const destinationAddress = StarknetAddress.of(input.destinationAddress);
 
     // Validate amount against limits
@@ -190,7 +192,10 @@ export class SwapService {
       atomiqSwap.swapObject,
     );
 
-    this.log.info({swapId: atomiqSwap.swapId, amountSats: input.amount.toSatString()}, 'Lightning-to-Starknet swap created');
+    this.log.info({
+      swapId: atomiqSwap.swapId,
+      amountSats: input.amount.toSatString()
+    }, 'Lightning-to-Starknet swap created');
     return {swap, invoice: atomiqSwap.invoice};
   }
 
@@ -204,6 +209,7 @@ export class SwapService {
   async createBitcoinToStarknet(
     input: CreateBitcoinToStarknetInput,
   ): Promise<CreateBitcoinToStarknetOutput> {
+    this.log.debug({input}, 'Creating Bitcoin-to-Starknet swap');
     const destinationAddress = StarknetAddress.of(input.destinationAddress);
 
     // Validate amount against limits
@@ -236,7 +242,10 @@ export class SwapService {
       atomiqSwap.swapObject,
     );
 
-    this.log.info({swapId: atomiqSwap.swapId, amountSats: input.amount.toSatString()}, 'Bitcoin-to-Starknet swap created');
+    this.log.info({
+        swapId: atomiqSwap.swapId,
+        amountSats: input.amount.toSatString()
+      },'Bitcoin-to-Starknet swap created');
     return {
       swap,
       depositAddress: atomiqSwap.depositAddress,
@@ -258,6 +267,7 @@ export class SwapService {
   async createStarknetToLightning(
     input: CreateStarknetToLightningInput,
   ): Promise<CreateStarknetToLightningOutput> {
+    this.log.debug({input}, 'Creating Starknet-to-Lightning swap');
     const invoice = LightningInvoice.of(input.invoice);
     const sourceAddress = StarknetAddress.of(input.sourceAddress);
 
@@ -294,7 +304,10 @@ export class SwapService {
       atomiqSwap.swapObject,
     );
 
-    this.log.info({swapId: atomiqSwap.swapId, amountSats: swapAmount.toSatString()}, 'Starknet-to-Lightning swap created');
+    this.log.info({
+      swapId: atomiqSwap.swapId,
+      amountSats: swapAmount.toSatString()
+    }, 'Starknet-to-Lightning swap created');
     return {
       swap,
       depositAddress: atomiqSwap.depositAddress,
@@ -312,6 +325,7 @@ export class SwapService {
   async createStarknetToBitcoin(
     input: CreateStarknetToBitcoinInput,
   ): Promise<CreateStarknetToBitcoinOutput> {
+    this.log.debug({input}, 'Creating Starknet-to-Bitcoin swap');
     const destinationAddress = BitcoinAddress.of(input.destinationAddress);
     const sourceAddress = StarknetAddress.of(input.sourceAddress);
 
@@ -347,7 +361,10 @@ export class SwapService {
       atomiqSwap.swapObject,
     );
 
-    this.log.info({swapId: atomiqSwap.swapId, amountSats: input.amount.toSatString()}, 'Starknet-to-Bitcoin swap created');
+    this.log.info({
+      swapId: atomiqSwap.swapId,
+      amountSats: input.amount.toSatString()
+    }, 'Starknet-to-Bitcoin swap created');
     return {
       swap,
       depositAddress: atomiqSwap.depositAddress,
@@ -372,7 +389,7 @@ export class SwapService {
       throw new SwapNotFoundError(swapId);
     }
 
-    // Sync with Atomiq if not in terminal state
+    // Sync with Atomiq if not in the terminal state
     if (!swap.isTerminal()) {
       await this.syncWithAtomiq(swap);
     }
@@ -512,6 +529,7 @@ export class SwapService {
   private async syncWithAtomiq(swap: Swap): Promise<void> {
     try {
       const atomiqStatus = await this.deps.atomiqGateway.getSwapStatus(swap.id);
+      this.log.debug({atomiqStatus}, "Sync swap with Atomiq");
 
       if (atomiqStatus.isPaid && swap.getStatus() === 'pending') {
         swap.markAsPaid();
@@ -538,7 +556,12 @@ export class SwapService {
         } else {
           swap.markAsExpired();
         }
+
         await this.deps.swapRepository.save(swap);
+        this.log.debug({
+          swapId: swap.id,
+          status: swap.getStatus()
+        }, "New swap status");
       }
     } catch {
       // Ignore sync errors - return current local state
@@ -556,7 +579,7 @@ export class SwapService {
       await this.deps.swapRepository.save(swap);
       await this.persistDescriptionIfNeeded(swap);
     } catch {
-      // Don't mark as failed - let the monitor handle final state
+      // Don't mark as failed - let the monitor handle the final state
     }
   }
 }

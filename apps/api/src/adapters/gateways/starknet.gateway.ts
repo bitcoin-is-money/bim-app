@@ -43,6 +43,7 @@ export class StarknetRpcGateway implements StarknetGateway {
   async calculateAccountAddress(params: {
     publicKey: string;
   }): Promise<StarknetAddress> {
+    this.log.debug({publicKey: params.publicKey.slice(0, 10) + '...'}, 'Calculating account address');
     try {
       const calldata = buildArgentWebauthnCalldata({
         origin: this.config.webauthnOrigin,
@@ -69,6 +70,7 @@ export class StarknetRpcGateway implements StarknetGateway {
     starknetAddress: StarknetAddress;
     publicKey: string;
   }): Promise<DeployTransaction> {
+    this.log.debug({address: params.starknetAddress.toString()}, 'Building deploy transaction');
     const calldata = buildArgentWebauthnCalldata({
       origin: this.config.webauthnOrigin,
       rpId: this.config.webauthnRpId,
@@ -87,6 +89,7 @@ export class StarknetRpcGateway implements StarknetGateway {
   async waitForTransaction(
     txHash: string
   ): Promise<TransactionReceipt> {
+    this.log.debug({txHash}, 'Waiting for transaction');
     try {
       const receipt = await this.provider.waitForTransaction(txHash);
 
@@ -123,6 +126,7 @@ export class StarknetRpcGateway implements StarknetGateway {
   }
 
   async getNonce(address: StarknetAddress): Promise<bigint> {
+    this.log.debug({address: address.toString()}, 'Getting nonce');
     try {
       const nonce = await this.provider.getNonceForAddress(address.toString());
       return BigInt(nonce);
@@ -138,6 +142,7 @@ export class StarknetRpcGateway implements StarknetGateway {
     address: StarknetAddress;
     token: string;
   }): Promise<bigint> {
+    this.log.debug({address: params.address.toString(), token: params.token}, 'Getting balance');
     const tokenAddress = this.config.tokenAddresses[params.token];
     if (!tokenAddress) {
       throw new ExternalServiceError(
@@ -167,6 +172,7 @@ export class StarknetRpcGateway implements StarknetGateway {
   }
 
   async estimateFee(transaction: StarknetTransaction): Promise<bigint> {
+    this.log.debug({contractAddress: transaction.contractAddress}, 'Estimating fee');
     try {
       const invocation = {
         contractAddress: transaction.contractAddress,
@@ -196,7 +202,7 @@ export class StarknetRpcGateway implements StarknetGateway {
     calls: readonly StarknetCall[];
   }): Promise<{ txHash: string }> {
     try {
-      this.log?.info(
+      this.log.info(
         {senderAddress: params.senderAddress.toString(), callCount: params.calls.length},
         'Executing multicall');
       const calldata = this.encodeMulticall(params.calls);
@@ -216,7 +222,7 @@ export class StarknetRpcGateway implements StarknetGateway {
         throw new Error('Transaction execution failed');
       }
 
-      this.log?.info({txHash: result.txHash}, 'Multicall transaction submitted');
+      this.log.info({txHash: result.txHash}, 'Multicall transaction submitted');
       return {txHash: result.txHash};
     } catch (error) {
       if (error instanceof ExternalServiceError) throw error;

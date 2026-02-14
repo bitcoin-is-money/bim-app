@@ -45,7 +45,7 @@ export function getPool(): pg.Pool {
 
     pool.on('error', (err) => {
       if (poolLogger) {
-        poolLogger.error({err: {name: err.name, message: err.message}}, 'Unexpected database pool error');
+        poolLogger.error({err}, 'Unexpected database pool error');
       }
     });
   }
@@ -79,9 +79,9 @@ export async function testConnection(): Promise<boolean> {
   try {
     const result = await getPool().query('SELECT 1');
     return result.rowCount === 1;
-  } catch (error) {
+  } catch (err) {
     if (poolLogger) {
-      poolLogger.error({err: error instanceof Error ? {name: error.name, message: error.message} : error}, 'Database connection test failed');
+      poolLogger.error({err}, 'Database connection test failed');
     }
     return false;
   }
