@@ -37,6 +37,37 @@ describe('Amount', () => {
     });
   });
 
+  describe('format', () => {
+    it('should format with en-US locale by default', () => {
+      const amount = Amount.of(1234.56, 'USD');
+      expect(amount.format()).toBe('1,234.56');
+    });
+
+    it('should format with fr-FR locale', () => {
+      const amount = Amount.of(1234.56, 'USD');
+      // French uses narrow no-break space as group separator and comma as decimal
+      const formatted = amount.format('fr-FR');
+      expect(formatted).toContain('1');
+      expect(formatted).toContain('234');
+      expect(formatted).toContain(',');
+      expect(formatted).toContain('56');
+    });
+
+    it('should format SAT with no decimals', () => {
+      const amount = Amount.of(100000, 'SAT');
+      expect(amount.format()).toBe('100,000');
+      const formatted = amount.format('fr-FR');
+      expect(formatted).toContain('100');
+      expect(formatted).toContain('000');
+    });
+
+    it('should format BTC with 8 decimal places', () => {
+      const amount = Amount.of(1.5, 'BTC');
+      expect(amount.format()).toBe('1.50000000');
+      expect(amount.format('fr-FR')).toContain('1,50000000');
+    });
+  });
+
   describe('convert', () => {
     it('should return a clone when converting to same currency', () => {
       const amount = Amount.of(500, 'USD');

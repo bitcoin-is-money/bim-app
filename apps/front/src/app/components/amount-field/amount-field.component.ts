@@ -1,6 +1,7 @@
 import {Component, computed, effect, inject, input, model, signal} from '@angular/core';
 import {Amount} from '../../model';
 import {CurrencyService} from '../../services/currency.service';
+import {I18nService} from '../../services/i18n.service';
 import {CurrencyDisplayComponent} from '../currency-display/currency-display.component';
 import {FieldComponent} from '../field/field.component';
 
@@ -13,6 +14,7 @@ import {FieldComponent} from '../field/field.component';
 })
 export class AmountFieldComponent {
   private readonly currencyService = inject(CurrencyService);
+  private readonly i18nService = inject(I18nService);
 
   readonly amount = model<Amount>(Amount.zero());
   readonly editable = input(false);
@@ -35,7 +37,7 @@ export class AmountFieldComponent {
 
   readonly formattedAmount = computed(() => {
     const currency = this.displayCurrency();
-    return this.currencyService.convert(this.amount(), currency).format();
+    return this.currencyService.convert(this.amount(), currency).format(this.i18nService.currentLocale());
   });
 
   constructor() {
