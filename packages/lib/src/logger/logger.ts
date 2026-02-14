@@ -56,6 +56,7 @@ export function createLogger(
   return pino(
     {
       level,
+      name: 'root',
       mixin() {
         return logContext.getStore() ?? {};
       },
