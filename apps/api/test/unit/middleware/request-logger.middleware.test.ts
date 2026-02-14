@@ -85,10 +85,9 @@ describe('request-logger middleware', () => {
   it('logs method and path on incoming request', async () => {
     await app.request('/ok');
 
-    const incoming = entries.find(e => e['msg'] === 'Incoming request');
+    const incoming = entries.find(e => (e['msg'] as string).startsWith('Incoming request'));
     expect(incoming).toBeDefined();
-    expect(incoming!['method']).toBe('GET');
-    expect(incoming!['path']).toBe('/ok');
+    expect(incoming!['msg']).toBe('Incoming request - GET /ok');
   });
 
   it('logs status and duration on completed request', async () => {
@@ -100,12 +99,12 @@ describe('request-logger middleware', () => {
     expect(completed!['durationMs']).toEqual(expect.any(Number));
   });
 
-  it('uses info level for 2xx responses', async () => {
+  it('uses debug level for 2xx responses', async () => {
     await app.request('/ok');
 
     const completed = entries.find(e => e['msg'] === 'Request completed');
-    // pino info level = 30
-    expect(completed!['level']).toBe(30);
+    // pino debug level = 20
+    expect(completed!['level']).toBe(20);
   });
 
   it('uses warn level for 4xx responses', async () => {

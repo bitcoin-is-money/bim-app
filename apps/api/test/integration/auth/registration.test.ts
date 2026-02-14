@@ -30,12 +30,12 @@ describe('Registration Flow', () => {
 
   const rpId = 'localhost';
 
-  beforeAll(() => {
+  beforeAll(async () => {
     pool = TestDatabase.createPool();
     authenticator = new WebauthnVirtualAuthenticator();
     strkContext = StrkDevnetContext.create();
     db = TestDatabase.getClient(pool);
-    app = TestApp.createTestApp({
+    app = await TestApp.createTestApp({
       context: {
         gateways: {
           starknet: strkContext.getStarknetGateway(),

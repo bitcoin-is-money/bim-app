@@ -30,7 +30,7 @@ describe('Receive Flow — Starknet (Testnet)', () => {
     pool = TestDatabase.createPool();
     authenticator = new WebauthnVirtualAuthenticator();
     testnetContext = new TestnetContext();
-    app = TestnetApp.createTestApp();
+    app = await TestnetApp.createTestApp();
 
     // Register and deploy an account once, for all receive tests
     try {

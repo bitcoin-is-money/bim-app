@@ -6,11 +6,6 @@ import type {AppConfig} from '../../src/app-config.js';
 
 const logger = createLogger();
 
-// Mock the database module
-vi.mock('../../src/db.js', () => ({
-  getDb: vi.fn(() => ({})),
-}));
-
 // Mock adapters to avoid real implementations
 // Use class-style mocks that can be instantiated with 'new'
 vi.mock('../../src/adapters/index.js', () => {
@@ -34,7 +29,7 @@ function createMockConfig(): AppConfig.Config {
     nodeEnv: 'test',
     starknetNetwork: 'testnet',
     port: 8080,
-    databaseUrl: 'postgres://test',
+    database: {url: 'postgres://test', sslMode: 'off'},
     webauthnRpId: 'localhost',
     webauthnRpName: 'Test App',
     webauthnOrigin: 'http://localhost:8080',

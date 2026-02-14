@@ -1,6 +1,7 @@
 import type {Hono} from 'hono';
-import {type AppInstance, createApp, type CreateAppOptions} from '../../../src/app.js';
-import {DEVNET_ACCOUNT_CLASS_HASH} from './devnet-paymaster.gateway.js';
+import {type AppInstance, createApp, type CreateAppOptions} from '../../../src/app';
+import {DatabaseConnection} from '../../../src/db';
+import {DEVNET_ACCOUNT_CLASS_HASH} from './devnet-paymaster.gateway';
 
 export namespace TestApp {
 
@@ -21,15 +22,18 @@ export namespace TestApp {
     process.env.WEBAUTHN_ORIGIN ??= 'http://localhost:8080';
     process.env.FEE_TREASURY_ADDRESS ??= '0x027367ddd36d7efc4694e1af5742f8d26626369c07abf15d136ff422b9a40fa0';
     process.env.ATOMIQ_STORAGE_PATH ??= '/tmp/bim/atomiq';
+    process.env.DATABASE_SSL ??= 'off';
     process.env.NODE_ENV ??= 'test';
+    process.env.LOG_LEVEL ??= 'silent';
   }
 
   /**
    * Creates a test application instance with silent logging.
    */
-  export function createTestApp(options: CreateAppOptions = {}): Hono {
+  export async function createTestApp(options: CreateAppOptions = {}): Promise<Hono> {
     setupTestEnv();
-    const {app} = createApp({
+    DatabaseConnection.reset();
+    const {app} = await createApp({
       skipStaticFiles: true,
       skipMonitor: true,
       config: {logLevel: 'silent'},
@@ -42,8 +46,9 @@ export namespace TestApp {
    * Creates a test application with visible logging (logLevel: 'info').
    * Logs appear in the vitest console output.
    */
-  export function createTestAppWithLogger(options: CreateAppOptions = {}): AppInstance {
+  export async function createTestAppWithLogger(options: CreateAppOptions = {}): Promise<AppInstance> {
     setupTestEnv();
+    DatabaseConnection.reset();
     return createApp({
       skipStaticFiles: true,
       skipMonitor: true,
@@ -56,8 +61,9 @@ export namespace TestApp {
    * Creates a test application instance with a SwapMonitor.
    * Use this when tests need to call monitor.runIteration() directly.
    */
-  export function createTestAppWithSwapMonitor(options: CreateAppOptions = {}): AppInstance {
+  export async function createTestAppWithSwapMonitor(options: CreateAppOptions = {}): Promise<AppInstance> {
     setupTestEnv();
+    DatabaseConnection.reset();
     return createApp({
       skipStaticFiles: true,
       config: {logLevel: 'silent'},

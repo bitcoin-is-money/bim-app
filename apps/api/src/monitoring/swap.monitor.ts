@@ -52,7 +52,7 @@ export class SwapMonitor {
     this.log.info('Starting SwapMonitor');
     this.running = true;
     this.timer = setInterval(() => this.runIteration(), this.config.pollInterval);
-    this.log.info('SwapMonitor started');
+    this.log.debug('SwapMonitor started');
   }
 
   /**

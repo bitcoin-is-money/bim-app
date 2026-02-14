@@ -16,7 +16,7 @@ function getStatusLogFn(
 ): LogFn {
   if (httpStatus >= 500) return rootLogger.error.bind(rootLogger);
   if (httpStatus >= 400) return rootLogger.warn.bind(rootLogger);
-  return rootLogger.info.bind(rootLogger);
+  return rootLogger.debug.bind(rootLogger);
 }
 
 /**
@@ -38,7 +38,7 @@ export function createRequestLoggerMiddleware(rootLogger: Logger) {
     const path = ctx.req.path;
 
     await logContext.run({requestId}, async () => {
-      rootLogger.info({method, path}, 'Incoming request');
+      rootLogger.info(`Incoming request - ${method} ${path}`);
 
       await next();
 

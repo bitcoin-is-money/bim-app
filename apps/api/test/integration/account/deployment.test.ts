@@ -46,7 +46,7 @@ describe('Account Deployment Flow', () => {
     db = TestDatabase.getClient(pool);
     accountFixture = AccountFixture.create(db);
     authFixture = AuthFixture.create(db);
-    app = TestApp.createTestApp({
+    app = await TestApp.createTestApp({
       context: {
         gateways: {
           starknet: strkContext.getStarknetGateway(),

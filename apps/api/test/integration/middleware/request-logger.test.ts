@@ -5,8 +5,8 @@ import {TestApp} from '../helpers';
 describe('Request logger middleware (integration)', () => {
   let instance: AppInstance;
 
-  beforeAll(() => {
-    instance = TestApp.createTestAppWithLogger();
+  beforeAll(async () => {
+    instance = await TestApp.createTestAppWithLogger();
   });
 
   afterAll(async () => {
