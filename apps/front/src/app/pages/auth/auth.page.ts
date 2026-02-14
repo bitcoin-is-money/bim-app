@@ -3,7 +3,7 @@ import {Component, inject, signal} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {TranslateModule} from '@ngx-translate/core';
 import {ButtonComponent} from "../../components/button/button.component";
-import {FullPageLayoutComponent} from '../../layout/full-page-layout/full-page-layout.component';
+import {FullPageLayoutComponent} from '../../layout';
 import {AuthService} from '../../services/auth.service';
 
 @Component({

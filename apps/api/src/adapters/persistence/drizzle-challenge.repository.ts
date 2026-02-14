@@ -1,8 +1,8 @@
+import * as schema from '@bim/db';
 import {Challenge, ChallengeId, type ChallengePurpose} from "@bim/domain/auth";
 import type {ChallengeRepository} from "@bim/domain/ports";
 import {eq, lt} from 'drizzle-orm';
 import type {NodePgDatabase} from 'drizzle-orm/node-postgres';
-import * as schema from '@bim/db';
 
 /**
  * Drizzle-based implementation of ChallengeRepository.

@@ -3,11 +3,7 @@ import type {Logger} from 'pino';
 import type {StarknetAddress} from '../account';
 import {Amount, type StarknetConfig} from '../shared';
 import {BitcoinAddress, LightningInvoice, type SwapService} from '../swap';
-import {
-  InvalidPaymentAmountError,
-  type ReceivePaymentInput,
-  type ReceiveResult,
-} from './types';
+import {InvalidPaymentAmountError, type ReceivePaymentInput, type ReceiveResult,} from './types';
 
 // =============================================================================
 // Dependencies

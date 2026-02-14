@@ -3,8 +3,8 @@ import {FormsModule} from '@angular/forms';
 import {TranslateModule} from '@ngx-translate/core';
 import {GoBackHeaderComponent} from '../../components/go-back-header/go-back-header.component';
 import {FullPageLayoutComponent} from '../../layout';
-import {I18nService} from '../../services/i18n.service';
 import {Language} from '../../services/i18n.http.service';
+import {I18nService} from '../../services/i18n.service';
 
 interface LanguageOption {
   code: Language;

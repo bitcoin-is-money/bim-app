@@ -1,10 +1,9 @@
-import {loadEnv} from './load-env';
-
-loadEnv();
-
 import {serve} from '@hono/node-server';
 import {createApp} from './app';
 import {closeDb, setPoolLogger} from './db';
+import {loadEnv} from './load-env';
+
+loadEnv();
 
 // =============================================================================
 // Server Startup

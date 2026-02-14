@@ -1,7 +1,7 @@
 import {InvalidSessionIdError, SessionExpiredError, SessionNotFoundError} from "@bim/domain/auth";
 import type {Context, Next} from 'hono';
 import type {AppContext} from '../app-context';
-import {ErrorCode, type ApiErrorResponse} from '../errors';
+import {type ApiErrorResponse, ErrorCode} from '../errors';
 import type {AuthenticatedContext} from '../types';
 
 /**

@@ -1,5 +1,5 @@
-import {describe, expect, it} from 'vitest';
 import {colorize} from '@bim/lib/logger/ansi';
+import {describe, expect, it} from 'vitest';
 
 describe('colorize', () => {
   it('applies foreground color', () => {

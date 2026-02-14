@@ -1,9 +1,9 @@
+import * as schema from '@bim/db';
 import {AccountId, StarknetAddress} from '@bim/domain/account';
 import type {TransactionPaginationOptions, TransactionRepository} from "@bim/domain/ports";
 import {Transaction, TransactionHash, TransactionId, type TransactionType} from "@bim/domain/user";
 import {and, count, desc, eq} from 'drizzle-orm';
 import type {NodePgDatabase} from 'drizzle-orm/node-postgres';
-import * as schema from '@bim/db';
 
 /**
  * Drizzle-based implementation of TransactionRepository.

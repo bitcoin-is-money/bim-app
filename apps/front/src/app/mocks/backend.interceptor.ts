@@ -10,12 +10,12 @@ import {Observable, of, throwError} from 'rxjs';
 import {delay, mergeMap} from 'rxjs/operators';
 import {AccountHandlerMock} from './account/account-handler.mock';
 import {AuthHandlerMock} from './auth/auth-handler.mock';
+import {PricesHandlerMock} from './currency/prices-handler.mock';
 import {DataStoreMock} from "./data-store.mock";
 import {PaymentHandlerMock} from './payment/payment-handler.mock';
-import {PricesHandlerMock} from './currency/prices-handler.mock';
 import {ReceiveHandlerMock} from './receive/receive-handler.mock';
-import {SettingsHandlerMock} from './user/settings-handler.mock';
 import {SwapHandlerMock} from './swap/swap-handler.mock';
+import {SettingsHandlerMock} from './user/settings-handler.mock';
 import {TransactionHandlerMock} from './user/transaction-handler.mock';
 
 const store = new DataStoreMock();

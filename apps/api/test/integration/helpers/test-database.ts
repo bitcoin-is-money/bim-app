@@ -1,3 +1,4 @@
+import * as schema from '@bim/db';
 import {PostgreSqlContainer, type StartedPostgreSqlContainer} from '@testcontainers/postgresql';
 import {drizzle, type NodePgDatabase} from 'drizzle-orm/node-postgres';
 import {migrate} from 'drizzle-orm/node-postgres/migrator';
@@ -6,7 +7,6 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import pg from 'pg';
-import * as schema from '@bim/db';
 
 export type DbClient = NodePgDatabase<typeof schema>;
 

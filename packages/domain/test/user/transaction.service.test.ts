@@ -1,11 +1,6 @@
 import {AccountId, StarknetAddress} from '@bim/domain/account';
 import type {TransactionRepository} from '@bim/domain/ports';
-import {
-  Transaction,
-  TransactionHash,
-  TransactionId,
-  TransactionService,
-} from '@bim/domain/user';
+import {Transaction, TransactionHash, TransactionId, TransactionService,} from '@bim/domain/user';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
 describe('TransactionService', () => {

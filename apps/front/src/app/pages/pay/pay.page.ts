@@ -3,13 +3,13 @@ import {Component, inject, OnDestroy, signal} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {TranslateModule} from '@ngx-translate/core';
 import {Html5Qrcode, Html5QrcodeSupportedFormats} from 'html5-qrcode';
+import {environment} from '../../../environments/environment';
 import {ButtonComponent} from '../../components/button/button.component';
 import {GoBackHeaderComponent} from '../../components/go-back-header/go-back-header.component';
-import {FullPageLayoutComponent} from '../../layout/full-page-layout/full-page-layout.component';
+import {FullPageLayoutComponent} from '../../layout';
 import {I18nService} from '../../services/i18n.service';
 import {NotificationService} from '../../services/notification.service';
 import {PayService} from '../../services/pay.service';
-import {environment} from '../../../environments/environment';
 
 @Component({
   selector: 'app-pay',

@@ -1,8 +1,8 @@
-import {Hono} from 'hono';
 import type {TypedResponse} from 'hono';
+import {Hono} from 'hono';
 import {basename} from 'node:path';
 import type {AppContext} from '../../app-context';
-import {handleDomainError, type ApiErrorResponse} from '../../errors';
+import {type ApiErrorResponse, handleDomainError} from '../../errors';
 import {createAuthMiddleware} from '../../middleware/auth.middleware';
 import type {AuthenticatedHono} from '../../types.js';
 import {SwapDirectionSchema} from './swap.schemas';

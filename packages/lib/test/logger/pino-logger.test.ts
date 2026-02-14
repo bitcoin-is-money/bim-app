@@ -1,10 +1,12 @@
-import {describe, it} from 'vitest';
 import {createLogger} from '@bim/lib/logger';
+import {describe, it} from 'vitest';
 
 // Visual smoke tests — verify rendering in vitest console output
+// Change this log level to trace to see output when launching tests
+const LOG_LEVEL: string = 'silent';
 
 describe('createLogger rendering', () => {
-  const log = createLogger('trace');
+  const log = createLogger(LOG_LEVEL);
 
   it('with name', () => {
     const named = log.child({name: 'pay.service.ts'});

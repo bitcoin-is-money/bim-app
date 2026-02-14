@@ -1,5 +1,5 @@
-import {describe, expect, it} from 'vitest';
 import {createLogger, isValidLevel} from '@bim/lib/logger';
+import {describe, expect, it} from 'vitest';
 
 describe('isValidLevel', () => {
   it.each(['debug', 'info', 'warn', 'error', 'silent'])('accepts "%s"', (level) => {
@@ -23,9 +23,9 @@ describe('createLogger', () => {
     expect(typeof logger.child).toBe('function');
   });
 
-  it('defaults to silent level', () => {
+  it('defaults to info level', () => {
     const logger = createLogger();
-    expect(logger.level).toBe('silent');
+    expect(logger.level).toBe('info');
   });
 
   it('respects the level parameter', () => {

@@ -1,10 +1,10 @@
 import {Account} from '@bim/domain/account';
-import {Hono} from 'hono';
 import type {TypedResponse} from 'hono';
+import {Hono} from 'hono';
 import {basename} from 'node:path';
 import {z} from 'zod';
 import type {AppContext} from '../../../app-context';
-import {handleDomainError, type ApiErrorResponse} from '../../../errors';
+import {type ApiErrorResponse, handleDomainError} from '../../../errors';
 import type {AuthenticatedHono} from '../../../types.js';
 import type {DeleteDescriptionResponse, GetTransactionsResponse, SetDescriptionResponse} from './transaction.types';
 

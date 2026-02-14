@@ -1,5 +1,5 @@
-import {Hono} from 'hono';
 import type {TypedResponse} from 'hono';
+import {Hono} from 'hono';
 import {testConnection} from '../../db';
 import type {HealthCheckResponse, LiveResponse, ReadyResponse} from './health.types';
 

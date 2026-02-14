@@ -1,9 +1,9 @@
 import {type PaymentResult, type PreparedPayment} from '@bim/domain/payment';
-import {Hono} from 'hono';
 import type {TypedResponse} from 'hono';
+import {Hono} from 'hono';
 import {basename} from 'node:path';
 import type {AppContext} from '../../../app-context';
-import {ErrorCode, createErrorResponse, handleDomainError, type ApiErrorResponse} from '../../../errors';
+import {type ApiErrorResponse, createErrorResponse, ErrorCode, handleDomainError} from '../../../errors';
 import type {AuthenticatedHono} from '../../../types';
 import {ExecutePaymentSchema, ParsePaymentSchema} from './pay.schemas';
 import type {AmountResponse, PaymentResultResponse, PreparedPaymentResponse} from './pay.types';

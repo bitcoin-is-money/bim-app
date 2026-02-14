@@ -42,9 +42,9 @@ export function createLevelPrettifier(style: StyleConfig): LevelPrettifier {
     // Request ID prefix (padStart for right-alignment)
     let ridPrefix = '';
     if (style.requestId) {
-      const rid = log['requestId'] != null
-        ? String(log['requestId']).padStart(padding)
-        : ' '.repeat(padding);
+      const rid = log['requestId'] == null
+        ? ' '.repeat(padding)
+        : String(log['requestId']).padStart(padding);
       ridPrefix = "[" + colorize(style.requestId, rid) + '] ';
     }
 

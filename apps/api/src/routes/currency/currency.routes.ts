@@ -1,5 +1,5 @@
-import {Hono} from 'hono';
 import type {TypedResponse} from 'hono';
+import {Hono} from 'hono';
 import type {GetPricesResponse} from './currency.types';
 
 export function createCurrencyRoutes(): Hono {

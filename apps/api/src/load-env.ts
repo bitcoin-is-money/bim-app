@@ -1,7 +1,8 @@
+import {config} from 'dotenv';
+import {expand} from 'dotenv-expand';
 import {existsSync} from 'node:fs';
 import {resolve} from 'node:path';
-import {expand} from 'dotenv-expand';
-import {config} from 'dotenv';
+
 const dirname: string = import.meta.dirname;
 
 /**

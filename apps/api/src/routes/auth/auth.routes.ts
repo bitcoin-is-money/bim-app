@@ -1,9 +1,9 @@
 import {InvalidSessionIdError, SessionExpiredError, SessionNotFoundError} from '@bim/domain/auth';
-import {Hono} from 'hono';
 import type {TypedResponse} from 'hono';
+import {Hono} from 'hono';
 import {basename} from 'node:path';
 import type {AppContext} from '../../app-context';
-import {handleDomainError, type ApiErrorResponse} from '../../errors';
+import {type ApiErrorResponse, handleDomainError} from '../../errors';
 import {BeginRegistrationSchema, CompleteAuthenticationSchema, CompleteRegistrationSchema} from './auth.schemas';
 import type {
   BeginAuthenticationResponse,
