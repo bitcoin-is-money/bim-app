@@ -1,6 +1,6 @@
 <div class="amount-container">
   @if (displayedAmount(); as amount) {
-    <div class="amount-value">{{ amount.format() }}</div>
+    <div class="amount-value">{{ amount | formatAmount }}</div>
   } @else {
     <div class="amount-value">-</div>
   }

@@ -3,6 +3,7 @@ import {delay} from 'rxjs';
 import {TransactionHttpService} from './transaction.http.service';
 import type {Transaction} from './transaction.http.service';
 import {CurrencyService} from './currency.service';
+import {I18nService} from './i18n.service';
 import {Amount, ConversionRates, Currency} from '../model';
 
 export type {Transaction} from './transaction.http.service';
@@ -22,6 +23,7 @@ export class TransactionService {
 
   private readonly httpService: TransactionHttpService = inject(TransactionHttpService);
   private readonly currencyService: CurrencyService = inject(CurrencyService);
+  private readonly i18nService = inject(I18nService);
   private readonly _transactions = signal<Transaction[] | undefined>(undefined);
   private readonly _hasMore = signal(true);
   private readonly _isLoadingMore = signal(false);
@@ -39,19 +41,21 @@ export class TransactionService {
 
     const currency = this.currencyService.currentCurrency();
     const rates = this.currencyService.rates();
+    const locale = this.i18nService.currentLocale();
 
-    return txs.map(tx => this.toDisplayed(tx, currency, rates));
+    return txs.map(tx => this.toDisplayed(tx, currency, rates, locale));
   });
 
   private toDisplayed(
     tx: Transaction,
     currency: Currency,
-    rates: ConversionRates
+    rates: ConversionRates,
+    locale: string
   ): DisplayedTransaction {
     const sats = Number(tx.amount);
     const sign = tx.type === 'receive' ? '+' : '-';
     const amount = Amount.of(sats, 'SAT').convert(currency, rates);
-    const formattedAmount = `${sign}${amount.format()} ${Currency.symbol(currency)}`;
+    const formattedAmount = `${sign}${amount.format(locale)} ${Currency.symbol(currency)}`;
 
     return {
       original: tx,

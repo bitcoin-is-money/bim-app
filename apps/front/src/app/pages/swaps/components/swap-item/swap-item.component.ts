@@ -3,6 +3,7 @@ import {Component, computed, inject, input} from '@angular/core';
 import {TranslateModule} from '@ngx-translate/core';
 import {Amount, Currency, isTerminalStatus, type StoredSwap, SwapDirection} from '../../../../model';
 import {CurrencyService} from '../../../../services/currency.service';
+import {I18nService} from '../../../../services/i18n.service';
 import {SwapPollingService} from '../../../../services/swap-polling.service';
 
 const DIRECTION_KEYS: Record<SwapDirection, string> = {
@@ -22,6 +23,7 @@ const DIRECTION_KEYS: Record<SwapDirection, string> = {
 export class SwapItemComponent {
   private readonly pollingService = inject(SwapPollingService);
   private readonly currencyService = inject(CurrencyService);
+  private readonly i18nService = inject(I18nService);
 
   swap = input.required<StoredSwap>();
 
@@ -36,7 +38,7 @@ export class SwapItemComponent {
     const currency = this.currencyService.currentCurrency();
     const rates = this.currencyService.rates();
     const amount = Amount.of(s.amountSats, 'SAT').convert(currency, rates);
-    return `${sign}${amount.format()} ${Currency.symbol(currency)}`;
+    return `${sign}${amount.format(this.i18nService.currentLocale())} ${Currency.symbol(currency)}`;
   });
 
   readonly statusClass = computed(() => {

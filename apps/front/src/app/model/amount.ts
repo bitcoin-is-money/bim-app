@@ -22,9 +22,9 @@ export class Amount {
   }
 
   /** Returns the formatted value as a string with appropriate decimal places */
-  format(): string {
+  format(locale: string = 'en-US'): string {
     const decimals = Currency.decimals(this.currency);
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(locale, {
       minimumFractionDigits: decimals,
       maximumFractionDigits: decimals,
     }).format(this.value);
