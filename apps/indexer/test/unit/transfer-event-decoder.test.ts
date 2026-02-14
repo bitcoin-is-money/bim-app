@@ -13,7 +13,7 @@ const TX_HASH = '0x' + 'a'.repeat(64);
 const WBTC = '0x' + 'c'.repeat(64);
 const TRANSFER_SELECTOR = '0x99cd8bde557814842a3121e8ddfd433a539b8c9f14bf31ebf108d12e6196e9';
 
-const logger: Logger = createLogger(LOG_LEVEL, INDEXER_LOGGER_CONFIG, process.stdout);
+const logger: Logger = createLogger(LOG_LEVEL, INDEXER_LOGGER_CONFIG);
 const decoder = new TransferEventDecoder(logger);
 
 function makeEvent(
