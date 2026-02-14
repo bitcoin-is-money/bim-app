@@ -28,8 +28,8 @@
         <!-- QR code (animated) -->
         <div [class]="'swipe-content ' + animationSlideClass()">
           <div class="qr-container">
-            @if (qrImageUrl(); as url) {
-              <img [src]="url" alt="QR Code" class="qr-image"/>
+            @if (qrSvg(); as svg) {
+              <div class="qr-image" [innerHTML]="svg"></div>
             } @else {
               <div class="qr-placeholder">
                 <p>{{ qrPlaceholderMessage() }}</p>

@@ -1,6 +1,7 @@
 import {Component, computed, effect, inject, signal} from '@angular/core';
+import {DomSanitizer, SafeHtml} from '@angular/platform-browser';
 import {TranslateModule} from '@ngx-translate/core';
-import QRCode from 'qrcode';
+import {renderSVG} from 'uqr';
 import {AmountFieldComponent} from '../../components/amount-field/amount-field.component';
 import {ButtonComponent} from '../../components/button/button.component';
 import {FieldComponent} from '../../components/field/field.component';
@@ -36,6 +37,7 @@ const WBTC_TOKEN_ADDRESS = '0x00abbd7d98ad664568f204d6e1af6e02d6a5c55eb4e83c9fbb
 })
 export class ReceivePage {
 
+  private readonly sanitizer = inject(DomSanitizer);
   private readonly authService = inject(AuthService);
   private readonly currencyService = inject(CurrencyService);
   private readonly i18n = inject(I18nService);
@@ -49,7 +51,7 @@ export class ReceivePage {
   readonly description = signal('');
   readonly activeNetworkIndex = signal(0);
 
-  readonly qrImageUrl = signal<string | undefined>(undefined);
+  readonly qrSvg = signal<SafeHtml | undefined>(undefined);
 
   readonly animationSlideClass = signal('');
 
@@ -116,7 +118,7 @@ export class ReceivePage {
       const network = this.selectedNetwork();
 
       if (amt.value === 0) {
-        this.qrImageUrl.set(undefined);
+        this.qrSvg.set(undefined);
         this.qrData.set(undefined);
         return;
       }
@@ -126,20 +128,16 @@ export class ReceivePage {
           const uri = this.starknetUri();
           if (uri) {
             this.qrData.set(uri);
-            QRCode.toDataURL(uri, {
-              width: 256,
-              margin: 2,
-              color: {dark: '#000000', light: '#ffffff'},
-            }).then(url => this.qrImageUrl.set(url));
+            this.qrSvg.set(this.sanitizer.bypassSecurityTrustHtml(renderSVG(uri)));
           } else {
-            this.qrImageUrl.set(undefined);
+            this.qrSvg.set(undefined);
             this.qrData.set(undefined);
           }
           break;
         }
         case 'lightning':
         case 'bitcoin':
-          this.qrImageUrl.set(undefined);
+          this.qrSvg.set(undefined);
           this.qrData.set(undefined);
           break;
       }
@@ -163,11 +161,7 @@ export class ReceivePage {
       }
 
       this.qrData.set(data);
-      QRCode.toDataURL(data, {
-        width: 256,
-        margin: 2,
-        color: {dark: '#000000', light: '#ffffff'},
-      }).then(url => this.qrImageUrl.set(url));
+      this.qrSvg.set(this.sanitizer.bypassSecurityTrustHtml(renderSVG(data)));
     });
   }
 
