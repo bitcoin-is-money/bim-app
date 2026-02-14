@@ -32,4 +32,16 @@ describe('createLogger', () => {
     const logger = createLogger('debug');
     expect(logger.level).toBe('debug');
   });
+
+  it('reads LOG_LEVEL env var when no level is passed', () => {
+    const original = process.env.LOG_LEVEL;
+    try {
+      process.env.LOG_LEVEL = 'warn';
+      const logger = createLogger();
+      expect(logger.level).toBe('warn');
+    } finally {
+      if (original === undefined) delete process.env.LOG_LEVEL;
+      else process.env.LOG_LEVEL = original;
+    }
+  });
 });
