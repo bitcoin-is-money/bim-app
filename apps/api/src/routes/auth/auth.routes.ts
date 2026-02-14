@@ -127,7 +127,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
     try {
       const sessionId = getSessionId(honoCtx);
       if (!sessionId) {
-        return honoCtx.json({authenticated: false}, 401);
+        return honoCtx.json({authenticated: false});
       }
 
       const result = await sessionService.validate({sessionId});
@@ -148,7 +148,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
         error instanceof InvalidSessionIdError
       ) {
         clearCookie(honoCtx);
-        return honoCtx.json({authenticated: false}, 401);
+        return honoCtx.json({authenticated: false});
       }
       return handleDomainError(honoCtx, error, log);
     }

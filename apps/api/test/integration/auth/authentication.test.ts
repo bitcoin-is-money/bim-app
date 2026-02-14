@@ -231,24 +231,24 @@ describe('Authentication Flow', () => {
       expect(body.account.username).toBe(username);
     });
 
-    it('rejects access without session cookie', async () => {
+    it('returns unauthenticated without session cookie', async () => {
       const response = await TestApp
         .request(app)
         .get('/api/auth/session');
 
-      expect(response.status).toBe(401);
+      expect(response.status).toBe(200);
       const body = await response.json() as SessionUnauthenticatedResponse;
       expect(body.authenticated).toBe(false);
     });
 
-    it('rejects access with invalid session cookie', async () => {
+    it('returns unauthenticated with invalid session cookie', async () => {
       const response = await TestApp
         .request(app)
         .get('/api/auth/session', {
           headers: {Cookie: 'session=invalid-session-id'},
         });
 
-      expect(response.status).toBe(401);
+      expect(response.status).toBe(200);
       const body = await response.json() as SessionUnauthenticatedResponse;
       expect(body.authenticated).toBe(false);
     });
@@ -281,7 +281,7 @@ describe('Authentication Flow', () => {
         .get('/api/auth/session', {
           headers: {Cookie: sessionCookie},
         });
-      expect(afterLogoutResponse.status).toBe(401);
+      expect(afterLogoutResponse.status).toBe(200);
       const body = await afterLogoutResponse.json() as SessionUnauthenticatedResponse;
       expect(body.authenticated).toBe(false);
     });

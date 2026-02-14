@@ -208,7 +208,7 @@ describe('Registration Flow', () => {
         .request(app)
         .get('/api/auth/session');
 
-      expect(response.status).toBe(401);
+      expect(response.status).toBe(200);
       const body = await response.json() as SessionUnauthenticatedResponse;
       expect(body.authenticated).toBe(false);
     });
