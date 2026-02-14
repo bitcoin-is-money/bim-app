@@ -16,8 +16,8 @@ let poolLogger: Logger | undefined;
  * Sets the logger for pool error reporting.
  * Call this after creating the pino logger.
  */
-export function setPoolLogger(logger: Logger): void {
-  poolLogger = logger.child({name: basename(import.meta.filename)});
+export function initPoolLogger(rootLogger: Logger): void {
+  poolLogger = rootLogger.child({name: basename(import.meta.filename)});
 }
 
 /**

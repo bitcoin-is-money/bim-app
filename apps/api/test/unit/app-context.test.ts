@@ -2,7 +2,7 @@ import type {AccountRepository, PaymasterGateway,} from '@bim/domain/ports';
 import {createLogger} from '@bim/lib/logger';
 import {describe, expect, it, vi} from 'vitest';
 import {AppContext, type AppContextOverrides} from '../../src/app-context.js';
-import type {AppConfig} from '../../src/types.js';
+import type {AppConfig} from '../../src/app-config.js';
 
 const logger = createLogger();
 
@@ -29,7 +29,7 @@ vi.mock('../../src/adapters/index.js', () => {
   };
 });
 
-function createMockConfig(): AppConfig {
+function createMockConfig(): AppConfig.Config {
   return {
     nodeEnv: 'test',
     starknetNetwork: 'testnet',

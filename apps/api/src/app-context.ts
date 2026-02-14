@@ -32,7 +32,7 @@ import {
   StarknetRpcGateway
 } from "./adapters";
 import {type Database} from "./db";
-import {type AppConfig} from "./types";
+import {type AppConfig} from "./app-config";
 
 /**
  * Application context containing repositories, gateways, services, and configuration.
@@ -89,7 +89,7 @@ export namespace AppContext {
    * Services are created AFTER applying overrides, so they use the correct dependencies.
    */
   export function createDefault(
-    config: AppConfig,
+    config: AppConfig.Config,
     db: Database,
     rootLogger: Logger,
     overrides?: AppContextOverrides,

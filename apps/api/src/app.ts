@@ -2,6 +2,7 @@ import {createLogger} from "@bim/lib/logger";
 import {serveStatic} from '@hono/node-server/serve-static';
 import {Hono} from 'hono';
 import {cors} from 'hono/cors';
+import {basename} from "node:path";
 import type {Logger} from 'pino';
 import {AppContext, type AppContextOverrides} from "./app-context";
 import {getDb} from './db';
@@ -17,10 +18,10 @@ import {
   createSwapRoutes,
   createUserRoutes,
 } from './routes';
-import {type AppConfig, loadConfig} from './types';
+import {AppConfig} from './app-config';
 
 export interface CreateAppOptions {
-  config?: Partial<AppConfig>;
+  config?: Partial<AppConfig.Config>;
   context?: AppContextOverrides;
   skipStaticFiles?: boolean;
   skipMonitor?: boolean;
@@ -38,12 +39,13 @@ export interface AppInstance {
  */
 export function createApp(options: CreateAppOptions = {}): AppInstance {
   const rootLogger: Logger = createLogger('info');
+  const logger: Logger = rootLogger.child({name: basename(import.meta.filename)});
   const config = {
-    ...loadConfig(),
+    ...AppConfig.load(),
     ...options.config
   };
   rootLogger.level = config.logLevel;
-  rootLogger.info(config, "Application configuration:");
+  logger.info(AppConfig.redact(config), "Application configuration:");
   const db = getDb();
   const context = AppContext.createDefault(config, db, rootLogger, options.context);
   const app = new Hono();
