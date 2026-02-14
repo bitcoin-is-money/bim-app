@@ -1,7 +1,7 @@
 import {serve} from '@hono/node-server';
 import {basename} from "node:path";
 import {createApp} from './app';
-import {closeDb, initPoolLogger} from './db';
+import {DatabaseConnection} from './db';
 import {loadEnv} from './load-env';
 
 loadEnv();
@@ -10,12 +10,9 @@ loadEnv();
 // Server Startup
 // =============================================================================
 
-const {app, monitor, rootLogger} = createApp();
+const {app, monitor, rootLogger} = await createApp();
 const logger = rootLogger.child({name: basename(import.meta.filename)});
 const port = Number(process.env.PORT) || 8080;
-
-// Wire the logger to the database pool for error reporting
-initPoolLogger(rootLogger);
 
 logger.info('Starting server');
 
@@ -36,7 +33,7 @@ async function shutdown(signal: string): Promise<void> {
     await monitor.stop();
   }
   server.close();
-  await closeDb();
+  await DatabaseConnection.get().close();
   process.exit(0);
 }
 

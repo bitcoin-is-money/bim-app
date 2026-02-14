@@ -1,4 +1,5 @@
 import {redactUrl} from '@bim/lib/url';
+import type {DatabaseConfig, DatabaseSslMode} from './db';
 
 export namespace AppConfig {
 
@@ -6,7 +7,7 @@ export namespace AppConfig {
     port: number;
     nodeEnv: string;
     starknetNetwork: 'mainnet' | 'testnet' | 'devnet';
-    databaseUrl: string;
+    database: DatabaseConfig;
     starknetRpcUrl: string;
     accountClassHash: string;
     wbtcTokenAddress: string;
@@ -47,8 +48,11 @@ export namespace AppConfig {
     return {
       port: Number.parseInt(optional('PORT', '8080'), 10),
       nodeEnv: optional('NODE_ENV', 'development'),
-      starknetNetwork,
-      databaseUrl: required('DATABASE_URL'),
+      starknetNetwork: starknetNetwork,
+      database: {
+        url: required('DATABASE_URL'),
+        sslMode: parseSslMode(optional('DATABASE_SSL', 'strict')),
+      },
       starknetRpcUrl: required('STARKNET_RPC_URL'),
       accountClassHash: required('ACCOUNT_CLASS_HASH'),
       wbtcTokenAddress: optional('WBTC_TOKEN_ADDRESS', DEFAULT_WBTC_ADDRESS),
@@ -59,8 +63,16 @@ export namespace AppConfig {
       webauthnRpId: optional('WEBAUTHN_RP_ID', 'localhost'),
       webauthnRpName: optional('WEBAUTHN_RP_NAME', 'BIM'),
       webauthnOrigin: optional('WEBAUTHN_ORIGIN', 'http://localhost:8080'),
-      logLevel: optional('LOG_LEVEL', 'info'),
+      logLevel: optional('LOG_LEVEL', 'debug'),
     };
+  }
+
+  function parseSslMode(value: string): DatabaseSslMode {
+    const valid: DatabaseSslMode[] = ['off', 'allow-self-signed', 'strict'];
+    if (!valid.includes(value as DatabaseSslMode)) {
+      throw new Error(`Invalid DATABASE_SSL: "${value}". Must be one of: ${valid.join(', ')}.`);
+    }
+    return value as DatabaseSslMode;
   }
 
   /**
@@ -69,7 +81,10 @@ export namespace AppConfig {
   export function redact(config: Config): Record<string, unknown> {
     return {
       ...config,
-      databaseUrl: redactUrl(config.databaseUrl),
+      database: {
+        ...config.database,
+        url: redactUrl(config.database.url),
+      },
       starknetRpcUrl: redactUrl(config.starknetRpcUrl),
       avnuApiKey: config.avnuApiKey ? '***' : '',
     };

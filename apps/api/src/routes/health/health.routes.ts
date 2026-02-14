@@ -1,13 +1,13 @@
 import type {TypedResponse} from 'hono';
 import {Hono} from 'hono';
-import {testConnection} from '../../db';
+import {DatabaseConnection} from '../../db';
 import type {HealthCheckResponse, LiveResponse, ReadyResponse} from './health.types';
 
 export function createHealthRoutes(): Hono {
   const app = new Hono();
 
   app.get('/', async (honoCtx): Promise<TypedResponse<HealthCheckResponse>> => {
-    const dbOk = await testConnection();
+    const dbOk = await DatabaseConnection.get().testConnection();
 
     const status = dbOk ? 'healthy' : 'degraded';
     const statusCode = dbOk ? 200 : 503;
@@ -25,7 +25,7 @@ export function createHealthRoutes(): Hono {
   });
 
   app.get('/ready', async (honoCtx): Promise<TypedResponse<ReadyResponse>> => {
-    const dbOk = await testConnection();
+    const dbOk = await DatabaseConnection.get().testConnection();
 
     if (!dbOk) {
       return honoCtx.json<ReadyResponse>({ ready: false }, 503);

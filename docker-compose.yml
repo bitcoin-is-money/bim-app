@@ -6,13 +6,20 @@
 
 services:
   postgres:
-    image: postgres:16
+    image: postgres:16 # Debian Bookworm (include self-signed "snakeoil" certificate)
     ports:
       - "5432:5432"
     environment:
       POSTGRES_USER: bim_user
       POSTGRES_PASSWORD: bim_password
       POSTGRES_DB: bim
+    # Enable SSL using Debian's built-in self-signed "snakeoil" certificate.
+    # Requires DATABASE_SSL=allow-self-signed in the API config (.env.testnet).
+    command: >
+      postgres
+      -c ssl=on
+      -c ssl_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem
+      -c ssl_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
     volumes:
       - pgdata:/var/lib/postgresql/data
 

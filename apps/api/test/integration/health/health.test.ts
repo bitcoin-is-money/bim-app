@@ -5,8 +5,8 @@ import {TestApp} from '../helpers';
 describe('Health API', () => {
   let app: Hono;
 
-  beforeAll(() => {
-    app = TestApp.createTestApp();
+  beforeAll(async () => {
+    app = await TestApp.createTestApp();
   });
 
   afterAll(async () => {

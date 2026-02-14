@@ -34,10 +34,10 @@ describe('Authentication Flow', () => {
 
   const rpId = 'localhost';
 
-  beforeAll(() => {
+  beforeAll(async () => {
     authenticator = new WebauthnVirtualAuthenticator();
     strkContext = StrkDevnetContext.create();
-    app = TestApp.createTestApp({
+    app = await TestApp.createTestApp({
       context: {
         gateways: {
           starknet: strkContext.getStarknetGateway(),

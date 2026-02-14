@@ -28,12 +28,12 @@ describe('Deployment Flow (Testnet)', () => {
   let authenticator: WebauthnVirtualAuthenticator;
   let testnetContext: TestnetContext;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     pool = TestDatabase.createPool();
     db = TestDatabase.getClient(pool);
     authenticator = new WebauthnVirtualAuthenticator();
     testnetContext = new TestnetContext();
-    app = TestnetApp.createTestApp();
+    app = await TestnetApp.createTestApp();
   });
 
   beforeEach(async () => {

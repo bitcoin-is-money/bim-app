@@ -25,10 +25,10 @@ describe('Registration Flow (Testnet)', () => {
 
   const rpId = 'localhost';
 
-  beforeAll(() => {
+  beforeAll(async () => {
     pool = TestDatabase.createPool();
     authenticator = new WebauthnVirtualAuthenticator();
-    app = TestnetApp.createTestApp();
+    app = await TestnetApp.createTestApp();
   });
 
   beforeEach(async () => {

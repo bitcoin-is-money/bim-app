@@ -5,7 +5,7 @@ import {cors} from 'hono/cors';
 import {basename} from "node:path";
 import type {Logger} from 'pino';
 import {AppContext, type AppContextOverrides} from "./app-context";
-import {getDb} from './db';
+import {DatabaseConnection} from './db';
 import {createRequestLoggerMiddleware} from './middleware/request-logger.middleware';
 import {SwapMonitor} from './monitoring/swap.monitor';
 import {
@@ -37,8 +37,8 @@ export interface AppInstance {
  * Creates the Hono application.
  * Can be customized for testing by passing context overrides.
  */
-export function createApp(options: CreateAppOptions = {}): AppInstance {
-  const rootLogger: Logger = createLogger('info');
+export async function createApp(options: CreateAppOptions = {}): Promise<AppInstance> {
+  const rootLogger: Logger = createLogger('debug');
   const logger: Logger = rootLogger.child({name: basename(import.meta.filename)});
   const config = {
     ...AppConfig.load(),
@@ -46,7 +46,9 @@ export function createApp(options: CreateAppOptions = {}): AppInstance {
   };
   rootLogger.level = config.logLevel;
   logger.info(AppConfig.redact(config), "Application configuration:");
-  const db = getDb();
+  await DatabaseConnection.initialize(config.database, rootLogger);
+  const dbConnection = DatabaseConnection.get();
+  const db = dbConnection.getDb();
   const context = AppContext.createDefault(config, db, rootLogger, options.context);
   const app = new Hono();
 

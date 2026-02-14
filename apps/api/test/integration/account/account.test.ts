@@ -13,8 +13,8 @@ describe('Account API', () => {
   let accountFixture: AccountFixture;
   let authFixture: AuthFixture;
 
-  beforeAll(() => {
-    app = TestApp.createTestApp();
+  beforeAll(async () => {
+    app = await TestApp.createTestApp();
     pool = TestDatabase.createPool();
     db = TestDatabase.getClient(pool);
     accountFixture = AccountFixture.create(db);

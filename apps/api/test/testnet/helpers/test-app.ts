@@ -1,5 +1,6 @@
 import type {Hono} from 'hono';
 import {createApp, type CreateAppOptions} from '../../../src/app.js';
+import {DatabaseConnection} from '../../../src/db/index.js';
 
 /**
  * Testnet test app helper.
@@ -13,8 +14,9 @@ export namespace TestnetApp {
    * Creates a test application configured for Sepolia testnet.
    * Uses real Starknet RPC and AVNU paymaster (no devnet mocks).
    */
-  export function createTestApp(options: CreateAppOptions = {}): Hono {
-    const {app} = createApp({
+  export async function createTestApp(options: CreateAppOptions = {}): Promise<Hono> {
+    DatabaseConnection.reset();
+    const {app} = await createApp({
       skipStaticFiles: true,
       skipMonitor: true,
       config: {logLevel: 'silent'},

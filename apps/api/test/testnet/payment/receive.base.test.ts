@@ -20,7 +20,7 @@ describe('Receive Flow — Base (Testnet)', () => {
   beforeAll(async () => {
     pool = TestDatabase.createPool();
     authenticator = new WebauthnVirtualAuthenticator();
-    app = TestnetApp.createTestApp();
+    app = await TestnetApp.createTestApp();
   });
 
   afterAll(async () => {

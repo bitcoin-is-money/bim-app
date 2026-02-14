@@ -40,7 +40,7 @@ describe('Bitcoin Receive Swap Lifecycle', () => {
     accountFixture = AccountFixture.create(db);
     authFixture = AuthFixture.create(db);
 
-    appInstance = TestApp.createTestAppWithSwapMonitor({
+    appInstance = await TestApp.createTestAppWithSwapMonitor({
       context: {
         gateways: {atomiq: atomiqMock},
       },

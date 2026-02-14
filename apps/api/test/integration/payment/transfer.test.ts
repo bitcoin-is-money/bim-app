@@ -111,7 +111,7 @@ describe('Transfer Flow', () => {
     // Get reference to paymaster gateway
     paymasterGateway = strkContext.getDevnetPaymasterGateway();
     pool = TestDatabase.createPool();
-    app = TestApp.createTestApp({
+    app = await TestApp.createTestApp({
       context: {
         gateways: {
           starknet: strkContext.getStarknetGateway(),
