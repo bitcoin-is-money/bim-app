@@ -62,7 +62,7 @@ export class AccountHandlerMock {
       return createErrorResponse(401, ErrorCode.UNAUTHORIZED, 'Not authenticated');
     }
 
-    // Update account status to deploying and set registration date for polling
+    // Update account status to deploying and set the registration date for polling
     const starknetAddress = '0x' + '1'.repeat(64);
     this.store.setSession({...account, status: 'deploying', starknetAddress});
     this.store.setRegistrationDate(new Date());

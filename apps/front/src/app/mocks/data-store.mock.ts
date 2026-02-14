@@ -195,7 +195,7 @@ export class DataStoreMock {
     if (data) {
       return JSON.parse(data);
     }
-    // Default settings based on current mock user profile
+    // Default settings based on the current mock user profile
     const profile = this.getMockUserProfile();
     return {
       language: profile.language,

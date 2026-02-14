@@ -1,9 +1,14 @@
-import pino from 'pino';
 import type {Logger} from 'pino';
-import pinoPretty from 'pino-pretty';
+import pino from 'pino';
 import type PinoPretty from 'pino-pretty';
+import pinoPretty from 'pino-pretty';
 import {logContext} from './context';
-import {createErrorPrettifier, createLevelPrettifier, createMessageFormat, createTimestampPrettifier} from './prettifiers';
+import {
+  createErrorPrettifier,
+  createLevelPrettifier,
+  createMessageFormat,
+  createTimestampPrettifier
+} from './prettifiers';
 import {DEFAULT_LOGGER_CONFIG, type StyleConfig} from './style';
 
 type PrettyOptions = PinoPretty.PrettyOptions;

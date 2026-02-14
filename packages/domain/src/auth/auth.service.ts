@@ -1,6 +1,6 @@
+import {WebauthnUserHandleDecoder} from "@bim/lib/auth";
 import {basename} from 'node:path';
 import type {Logger} from 'pino';
-import {WebauthnUserHandleDecoder} from "@bim/lib/auth";
 import {Account, AccountAlreadyExistsError, AccountId, AccountNotFoundError, CredentialId} from '../account';
 import type {AccountRepository, ChallengeRepository, SessionRepository, WebAuthnGateway,} from '../ports';
 import {Challenge} from './challenge';

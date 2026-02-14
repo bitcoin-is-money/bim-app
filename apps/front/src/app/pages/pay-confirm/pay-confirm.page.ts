@@ -7,7 +7,7 @@ import {ButtonComponent} from '../../components/button/button.component';
 import {FieldComponent} from '../../components/field/field.component';
 import {GoBackHeaderComponent} from '../../components/go-back-header/go-back-header.component';
 import {NetworkLogoComponent} from '../../components/network-logo/network-logo.component';
-import {FullPageLayoutComponent} from '../../layout/full-page-layout/full-page-layout.component';
+import {FullPageLayoutComponent} from '../../layout';
 import {Amount} from "../../model";
 import {AccountService} from '../../services/account.service';
 import {CurrencyService} from '../../services/currency.service';

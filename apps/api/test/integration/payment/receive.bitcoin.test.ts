@@ -3,7 +3,7 @@ import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 import type {AppInstance} from '../../../src/app';
 import type {ApiErrorResponse} from '../../../src/errors';
 import type {SwapMonitor} from '../../../src/monitoring/swap.monitor';
-import type {BitcoinReceiveResponse, SwapClaimResponse, SwapStatusResponse} from '../../../src/routes';
+import type {BitcoinReceiveResponse, SwapStatusResponse} from '../../../src/routes';
 import {AtomiqGatewayMock} from '../../unit/mocks/atomiq.gateway.mock';
 import {type DbClient, TestApp, TestDatabase} from '../helpers';
 import {AccountFixture} from '../helpers/account';

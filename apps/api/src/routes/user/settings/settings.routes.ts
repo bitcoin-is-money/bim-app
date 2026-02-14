@@ -1,10 +1,10 @@
 import {Account} from '@bim/domain/account';
 import {FiatCurrency, Language} from '@bim/domain/user';
-import {Hono} from 'hono';
 import type {TypedResponse} from 'hono';
+import {Hono} from 'hono';
 import {basename} from 'node:path';
 import type {AppContext} from '../../../app-context';
-import {handleDomainError, type ApiErrorResponse} from '../../../errors';
+import {type ApiErrorResponse, handleDomainError} from '../../../errors';
 import type {AuthenticatedHono} from '../../../types.js';
 import type {GetSettingsResponse, UpdateSettingsResponse} from './settings.types';
 

@@ -1,7 +1,7 @@
 import {StarknetAddress} from '@bim/domain/account';
-import {createLogger} from '@bim/lib/logger';
 import {Amount} from '@bim/domain/shared';
 import {Swap, SwapId, type SwapService} from '@bim/domain/swap';
+import {createLogger} from '@bim/lib/logger';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {SwapMonitor} from '../../../src/monitoring/swap.monitor';
 

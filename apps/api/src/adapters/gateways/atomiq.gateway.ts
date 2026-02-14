@@ -12,10 +12,10 @@ import type {
   UnsignedClaimTransactions
 } from '@bim/domain/ports';
 import {ExternalServiceError} from "@bim/domain/shared";
-import {basename} from 'node:path';
 import type {SwapLimits} from "@bim/domain/swap";
 import {BitcoinAddress, LightningInvoice, SwapId} from '@bim/domain/swap';
-import { existsSync, mkdirSync } from 'node:fs';
+import {existsSync, mkdirSync} from 'node:fs';
+import {basename} from 'node:path';
 import type {Logger} from "pino";
 
 /**

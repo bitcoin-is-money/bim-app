@@ -1,8 +1,8 @@
 import {Account, AccountId, type AccountStatus, CredentialId, StarknetAddress} from "@bim/domain/account";
+import {createLogger} from '@bim/lib/logger';
 import type {Logger} from "pino";
 import {vi} from "vitest";
 import type {AccountRepository, SessionRepository} from "../src/ports";
-import {createLogger} from '@bim/lib/logger';
 
 const DEFAULT_LOG_LEVEL = 'info';
 

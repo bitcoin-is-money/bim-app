@@ -1,5 +1,5 @@
-import {describe, expect, it} from 'vitest';
 import {redactUrl} from '@bim/lib/url';
+import {describe, expect, it} from 'vitest';
 
 describe('redactUrl', () => {
   it('redacts password from postgresql URL', () => {

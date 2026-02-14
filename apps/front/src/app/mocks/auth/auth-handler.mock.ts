@@ -45,7 +45,7 @@ export class AuthHandlerMock {
   constructor(private readonly store: DataStoreMock) {}
 
   /**
-   * Load existing swaps from user profile into localStorage.
+   * Load existing swaps from the user profile into localStorage.
    * This simulates swaps that already exist for the user.
    */
   private loadExistingSwaps(profile: MockUserProfile): void {

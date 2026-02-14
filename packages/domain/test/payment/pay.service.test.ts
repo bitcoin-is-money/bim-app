@@ -1,9 +1,23 @@
 import {StarknetAddress} from '@bim/domain/account';
-import {Erc20CallFactory, FeeConfig, InvalidPaymentAmountError, type ParseService, PayService, SameAddressPaymentError} from '@bim/domain/payment';
+import {
+  Erc20CallFactory,
+  FeeConfig,
+  InvalidPaymentAmountError,
+  type ParseService,
+  PayService,
+  SameAddressPaymentError
+} from '@bim/domain/payment';
 import type {StarknetGateway, TransactionRepository} from '@bim/domain/ports';
 import {Amount} from '@bim/domain/shared';
-import {BitcoinAddress, LightningInvoice, Swap, SwapAmountError, SwapCreationError, SwapId, type SwapService} from '@bim/domain/swap';
-import type {Logger} from "pino";
+import {
+  BitcoinAddress,
+  LightningInvoice,
+  Swap,
+  SwapAmountError,
+  SwapCreationError,
+  SwapId,
+  type SwapService
+} from '@bim/domain/swap';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {createTestLogger} from '../helper';
 

@@ -1,5 +1,5 @@
 import type {Hono} from 'hono';
-import {createApp, type AppInstance, type CreateAppOptions} from '../../../src/app.js';
+import {type AppInstance, createApp, type CreateAppOptions} from '../../../src/app.js';
 import {DEVNET_ACCOUNT_CLASS_HASH} from './devnet-paymaster.gateway.js';
 
 export namespace TestApp {

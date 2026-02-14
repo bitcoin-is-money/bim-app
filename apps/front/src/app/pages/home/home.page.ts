@@ -5,7 +5,7 @@ import {TranslateModule} from '@ngx-translate/core';
 import {AmountHighlightComponent} from '../../components/amount-highlight/amount-highlight.component';
 import {ButtonComponent} from "../../components/button/button.component";
 import {SpinnerComponent} from '../../components/spinner/spinner.component';
-import {FullPageLayoutComponent} from '../../layout/full-page-layout/full-page-layout.component';
+import {FullPageLayoutComponent} from '../../layout';
 import {AccountService} from "../../services/account.service";
 import {AuthService} from '../../services/auth.service';
 import {TransactionService} from '../../services/transaction.service';

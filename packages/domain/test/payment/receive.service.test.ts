@@ -1,7 +1,15 @@
 import {StarknetAddress} from '@bim/domain/account';
 import {InvalidPaymentAmountError, ReceiveService} from '@bim/domain/payment';
 import {Amount} from '@bim/domain/shared';
-import {BitcoinAddress, LightningInvoice, Swap, SwapAmountError, SwapCreationError, SwapId, type SwapService} from '@bim/domain/swap';
+import {
+  BitcoinAddress,
+  LightningInvoice,
+  Swap,
+  SwapAmountError,
+  SwapCreationError,
+  SwapId,
+  type SwapService
+} from '@bim/domain/swap';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {createTestLogger} from '../helper';
 

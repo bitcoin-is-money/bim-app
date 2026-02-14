@@ -1,7 +1,7 @@
-import {createLogger, logContext, type StyleConfig} from '@bim/lib/logger';
+import {createLogger, logContext} from '@bim/lib/logger';
 import {Hono} from 'hono';
-import pino, {type Logger} from 'pino';
 import {Writable} from 'node:stream';
+import pino, {type Logger} from 'pino';
 import {beforeEach, describe, expect, it} from 'vitest';
 import {createRequestLoggerMiddleware, setRequestCounter} from '../../../src/middleware/request-logger.middleware';
 
