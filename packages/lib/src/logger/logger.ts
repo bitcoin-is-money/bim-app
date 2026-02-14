@@ -22,15 +22,16 @@ export function isValidLevel(level: string | undefined): level is LogLevel {
 /**
  * Creates a pino logger with pino-pretty formatting.
  *
- * @param level - Log level (default: 'silent')
+ * @param level - Log level, read from the `LOG_LEVEL` environment variable. Defaults to 'info'.
  * @param style - Style configuration for colors and formatting
  * @param destination - Optional writable destination. When omitted, writes to stdout.
  */
 export function createLogger(
-  level: string = 'info',
+  level?: string,
   style: StyleConfig = DEFAULT_LOGGER_CONFIG,
   destination?: NodeJS.WritableStream,
 ): Logger {
+  level = level ?? process.env.LOG_LEVEL ?? 'info';
   const prettyOptions: PrettyOptions = {
     singleLine: false,
     colorize: true,
