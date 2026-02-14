@@ -13,7 +13,7 @@ const STRANGER = '0x' + '9'.repeat(64);
 const TX_HASH = '0x' + 'a'.repeat(64);
 const WBTC = '0x' + 'c'.repeat(64);
 
-const logger: Logger = createLogger(LOG_LEVEL, INDEXER_LOGGER_CONFIG, process.stdout);
+const logger: Logger = createLogger(LOG_LEVEL, INDEXER_LOGGER_CONFIG);
 const matcher = new TransactionMatcher(WBTC, logger);
 
 const accounts: AccountMatch[] = [

@@ -8,7 +8,7 @@ const LOG_LEVEL = 'silent';
 const ALICE = {id: 'acc-alice', starknetAddress: '0x' + '1'.repeat(64)};
 const BOB = {id: 'acc-bob', starknetAddress: '0x' + '2'.repeat(64)};
 
-const logger = createLogger(LOG_LEVEL, INDEXER_LOGGER_CONFIG, process.stdout);
+const logger = createLogger(LOG_LEVEL, INDEXER_LOGGER_CONFIG);
 
 function makeMockDb(rows: {id: string; starknetAddress: string}[]) {
   return {

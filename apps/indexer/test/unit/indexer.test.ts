@@ -9,7 +9,7 @@ vi.mock('@bim/lib/logger', async (importOriginal) => {
   const LOG_LEVEL = 'silent';
 
   const mod = await importOriginal<typeof import('@bim/lib/logger')>();
-  const logger = mod.createLogger(LOG_LEVEL);
+  const logger = mod.createLogger(LOG_LEVEL, {...mod.DEFAULT_LOGGER_CONFIG, requestId: undefined});
   for (const m of ['fatal', 'error', 'warn', 'info', 'debug', 'trace']) {
     vi.spyOn(logger, m as any);
   }
@@ -76,8 +76,9 @@ vi.mock('../../src/wbtc-transfer/transaction-writer.js', () => ({
 // Imports (resolved against mocks above)
 // ---------------------------------------------------------------------------
 
-import {createLogger} from '@bim/lib/logger';
+import {createLogger, DEFAULT_LOGGER_CONFIG} from '@bim/lib/logger';
 import {drizzle} from 'drizzle-orm/node-postgres';
+import {INDEXER_LOGGER_CONFIG} from "../../src/wbtc-transfer/logger-config";
 import {TransferEventDecoder} from '../../src/wbtc-transfer/transfer-event-decoder.js';
 import {AccountCache} from '../../src/wbtc-transfer/account-cache.js';
 import {TransactionWriter} from '../../src/wbtc-transfer/transaction-writer.js';

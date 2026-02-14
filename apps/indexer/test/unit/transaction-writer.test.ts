@@ -7,7 +7,7 @@ import {TransactionWriter} from '../../src/wbtc-transfer/transaction-writer.js';
 
 const LOG_LEVEL = 'silent';
 
-const logger: Logger = createLogger(LOG_LEVEL, INDEXER_LOGGER_CONFIG, process.stdout);
+const logger: Logger = createLogger(LOG_LEVEL, INDEXER_LOGGER_CONFIG);
 const writer = new TransactionWriter(logger);
 
 function mockDb(insertThrows = false) {
