@@ -18,6 +18,10 @@ export class MenuPage {
     private readonly authService: AuthService
   ) {}
 
+  navigateToMyAccount(): void {
+    this.router.navigate(['/my-account']);
+  }
+
   navigateToSettings(): void {
     this.router.navigate(['/settings']);
   }

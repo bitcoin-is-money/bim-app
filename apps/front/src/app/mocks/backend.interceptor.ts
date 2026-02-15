@@ -70,7 +70,9 @@ export const backendInterceptor: HttpInterceptorFn = (
   }
 
   // Account routes
-  else if (url === '/api/account/deploy' && method === 'POST') {
+  else if (url === '/api/account/me' && method === 'GET') {
+    response = mockAccountHandler.getMe();
+  } else if (url === '/api/account/deploy' && method === 'POST') {
     response = mockAccountHandler.deploy();
   } else if (url === '/api/account/deployment-status' && method === 'GET') {
     response = mockAccountHandler.getDeploymentStatus();

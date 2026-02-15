@@ -1,3 +1,5 @@
+import {registerLocaleData} from '@angular/common';
+import localeFr from '@angular/common/locales/fr';
 import {provideHttpClient, withInterceptors} from '@angular/common/http';
 import {ApplicationConfig, importProvidersFrom, inject, provideAppInitializer, provideBrowserGlobalErrorListeners} from '@angular/core';
 import {provideRouter} from '@angular/router';
@@ -16,6 +18,8 @@ import {backendInterceptor} from './mocks/backend.interceptor';
 const httpProviders = environment.useMockBackend
   ? provideHttpClient(withInterceptors([httpNotificationInterceptor, backendInterceptor]))
   : provideHttpClient(withInterceptors([httpNotificationInterceptor]));
+
+registerLocaleData(localeFr);
 
 export const appConfig: ApplicationConfig = {
   providers: [

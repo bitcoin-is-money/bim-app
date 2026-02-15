@@ -4,6 +4,9 @@
     <main class="menu-main">
       <nav class="menu-nav">
         <p>{{ 'menu.general' | translate }}</p>
+        <button class="menu-item" (click)="navigateToMyAccount()">
+          {{ 'menu.myAccount' | translate }}
+        </button>
         <button class="menu-item" (click)="navigateToAbout()">
           {{ 'menu.about' | translate }}
         </button>

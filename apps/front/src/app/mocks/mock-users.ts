@@ -9,6 +9,9 @@ export interface MockSwapConfig {
 
 export interface MockUserProfile {
   username: string;
+  starknetAddress: string;
+  deploymentTxHash: string | null;
+  createdAt: string; // ISO date
   deployAccountSuccess: boolean;
   hasTransactions: boolean;
   balance: string; // raw WBTC amount (8 decimals), e.g. "125050000" = 1.2505 BTC
@@ -27,6 +30,9 @@ export const MOCK_USERS: MockUserProfile[] = [
   {
     // STARKNET USER - NO SWAPS (starknet doesn't create swaps)
     username: 'alice',
+    starknetAddress: '0x04a3b2c1d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8',
+    deploymentTxHash: '0x01ab23cd45ef6789ab01cd23ef4567890123456789abcdef0123456789abcdef',
+    createdAt: '2025-11-15T10:30:00.000Z',
     deployAccountSuccess: true,
     hasTransactions: true,
     balance: '100000000', // 1 BTC in sats
@@ -47,6 +53,9 @@ export const MOCK_USERS: MockUserProfile[] = [
   {
     // LIGHTNING USER - HAS EXISTING SWAPS WITH ALL STATUSES
     username: 'bob',
+    starknetAddress: '0x05b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a1b0c9d8e7f6a5',
+    deploymentTxHash: '0x02bc34de56fa7890bc02de34fa5678901234567890abcdef1234567890abcdef',
+    createdAt: '2025-12-01T14:00:00.000Z',
     deployAccountSuccess: true,
     hasTransactions: true,
     balance: '125050000', // ~1.25 BTC in sats
@@ -74,6 +83,9 @@ export const MOCK_USERS: MockUserProfile[] = [
   {
     // BITCOIN USER - NO SWAPS YET, swap will progress to completed
     username: 'charlie',
+    starknetAddress: '0x06c5d4e3f2a1b0c9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6',
+    deploymentTxHash: '0x03cd45ef67ab8901cd03ef45ab6789012345678901abcdef2345678901abcdef',
+    createdAt: '2026-01-10T08:15:00.000Z',
     deployAccountSuccess: true,
     hasTransactions: false,
     balance: '1000000', // sats
@@ -93,6 +105,9 @@ export const MOCK_USERS: MockUserProfile[] = [
   {
     // BALANCE 0 USER - UNABLE TO PAY
     username: 'eve',
+    starknetAddress: '0x07d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a1b0c9d8e7f6a5b4c3d2e1f0a9b8c7',
+    deploymentTxHash: '0x04de56fa78bc9012de04fa56bc7890123456789012abcdef3456789012abcdef',
+    createdAt: '2026-01-20T16:45:00.000Z',
     deployAccountSuccess: true,
     hasTransactions: false,
     balance: '0',  // sats
@@ -113,6 +128,9 @@ export const MOCK_USERS: MockUserProfile[] = [
   {
     // PAYMENT ERROR USER - swaps will fail - FRENCH USER
     username: 'marc',
+    starknetAddress: '0x08e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a1b0c9d8',
+    deploymentTxHash: '0x05ef67ab89cd0123ef05ab67cd8901234567890123abcdef4567890123abcdef',
+    createdAt: '2026-02-01T09:00:00.000Z',
     deployAccountSuccess: true,
     hasTransactions: false,
     balance: '100000',  // sats
@@ -133,6 +151,9 @@ export const MOCK_USERS: MockUserProfile[] = [
   {
     // INVALID USER - swaps will expire - FRENCH USER
     username: 'mallory',
+    starknetAddress: '0x09f8a7b6c5d4e3f2a1b0c9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9',
+    deploymentTxHash: null,
+    createdAt: '2026-02-10T12:30:00.000Z',
     deployAccountSuccess: false,
     hasTransactions: false,
     balance: '0',

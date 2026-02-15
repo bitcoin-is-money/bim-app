@@ -1,0 +1,32 @@
+<app-full-page-layout [showFooter]="true">
+  <div class="my-account-page">
+    <app-go-back-header [title]="'myAccount.title' | translate"></app-go-back-header>
+
+    <main class="my-account-main">
+      @if (!loading() && accountInfo(); as info) {
+        <div class="info-list">
+          <div class="info-item">
+            <span class="info-label">{{ 'myAccount.username' | translate }}</span>
+            <span class="info-value">{{ info.username }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">{{ 'myAccount.starknetAddress' | translate }}</span>
+            <span class="info-value info-value--mono">{{ info.starknetAddress ?? '-' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">{{ 'myAccount.status' | translate }}</span>
+            <span class="info-value">{{ 'myAccount.statusValue.' + info.status | translate }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">{{ 'myAccount.deploymentTxHash' | translate }}</span>
+            <span class="info-value info-value--mono">{{ info.deploymentTxHash ?? '-' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">{{ 'myAccount.createdAt' | translate }}</span>
+            <span class="info-value">{{ info.createdAt | date:'medium':'':locale() }}</span>
+          </div>
+        </div>
+      }
+    </main>
+  </div>
+</app-full-page-layout>

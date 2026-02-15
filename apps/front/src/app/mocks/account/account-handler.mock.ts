@@ -1,6 +1,6 @@
 import {HttpResponse} from '@angular/common/http';
 import {type ApiErrorResponse, ErrorCode} from '../../model';
-import {BalanceResponse, DeployAccountResponse, DeploymentStatusResponse,} from '../../services/account.http.service';
+import {AccountInfoResponse, BalanceResponse, DeployAccountResponse, DeploymentStatusResponse,} from '../../services/account.http.service';
 import {DataStoreMock} from '../data-store.mock';
 import {createErrorResponse} from '../mock-error';
 
@@ -8,6 +8,27 @@ const MOCK_DEPLOYMENT_DELAY_MS = 2000;
 
 export class AccountHandlerMock {
   constructor(private readonly store: DataStoreMock) {}
+
+  // GET /api/account/me
+  getMe(): HttpResponse<AccountInfoResponse | ApiErrorResponse> {
+    const account = this.store.getSession();
+    if (!account) {
+      return createErrorResponse(401, ErrorCode.UNAUTHORIZED, 'Not authenticated');
+    }
+
+    const profile = this.store.getMockUserProfile();
+    return new HttpResponse({
+      status: 200,
+      body: {
+        id: account.id,
+        username: account.username,
+        starknetAddress: profile.starknetAddress,
+        status: account.status as AccountInfoResponse['status'],
+        deploymentTxHash: profile.deploymentTxHash,
+        createdAt: profile.createdAt,
+      },
+    });
+  }
 
   // GET /api/account/deployment-status
   getDeploymentStatus(): HttpResponse<DeploymentStatusResponse | ApiErrorResponse> {
