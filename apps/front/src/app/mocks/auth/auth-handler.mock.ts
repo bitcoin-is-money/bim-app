@@ -228,7 +228,7 @@ export class AuthHandlerMock {
       id: storedCredential.userId,
       username: storedCredential.username,
       starknetAddress: generateStarknetAddress(storedCredential.username),
-      status: 'active',
+      status: 'deployed',
     };
 
     const mockProfile = getMockUser(storedCredential.username);

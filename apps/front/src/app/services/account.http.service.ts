@@ -20,6 +20,15 @@ export interface TokenBalance {
   decimals: number;
 }
 
+export interface AccountInfoResponse {
+  id: string;
+  username: string;
+  starknetAddress: string | null;
+  status: 'pending' | 'deploying' | 'deployed' | 'failed';
+  deploymentTxHash: string | null;
+  createdAt: string;
+}
+
 export interface BalanceResponse {
   wbtcBalance: {
     symbol: string;
@@ -33,6 +42,10 @@ export interface BalanceResponse {
 })
 export class AccountHttpService {
   private readonly http = inject(HttpClient);
+
+  getMe(): Observable<AccountInfoResponse> {
+    return this.http.get<AccountInfoResponse>('/api/account/me');
+  }
 
   getBalance(): Observable<BalanceResponse> {
     return this.http.get<BalanceResponse>('/api/account/balance');

@@ -2,7 +2,7 @@ import {Injectable, signal} from '@angular/core';
 import {map, Observable} from 'rxjs';
 import {environment} from "../../environments/environment";
 import {Amount} from "../model";
-import {AccountHttpService, DeployAccountResponse, DeploymentStatusResponse} from './account.http.service';
+import {AccountHttpService, AccountInfoResponse, DeployAccountResponse, DeploymentStatusResponse} from './account.http.service';
 
 @Injectable({
   providedIn: 'root',
@@ -32,6 +32,10 @@ export class AccountService {
           return Amount.of(sats, 'SAT');
         })
       );
+  }
+
+  getAccountInfo(): Observable<AccountInfoResponse> {
+    return this.httpService.getMe();
   }
 
   getDeploymentStatus(): Observable<DeploymentStatusResponse> {

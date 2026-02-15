@@ -70,11 +70,26 @@
   "menu": {
     "title": "Menu",
     "general": "General",
+    "myAccount": "My Account",
     "settings": "Settings",
     "about": "About",
     "advanced": "Advanced",
     "swaps": "Swaps",
     "logout": "Logout"
+  },
+  "myAccount": {
+    "title": "My Account",
+    "username": "Username",
+    "starknetAddress": "Starknet Address",
+    "status": "Deployment Status",
+    "deploymentTxHash": "Deployment Transaction",
+    "createdAt": "Account Created",
+    "statusValue": {
+      "pending": "Pending",
+      "deploying": "Deploying...",
+      "deployed": "Deployed",
+      "failed": "Failed"
+    }
   },
   "settings": {
     "title": "Settings",

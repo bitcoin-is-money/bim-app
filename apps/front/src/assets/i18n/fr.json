@@ -70,11 +70,26 @@
   "menu": {
     "title": "Menu",
     "general": "Général",
+    "myAccount": "Mon Compte",
     "settings": "Paramètres",
     "about": "À propos",
     "advanced": "Avancé",
     "swaps": "Échanges",
     "logout": "Déconnexion"
+  },
+  "myAccount": {
+    "title": "Mon Compte",
+    "username": "Nom d'utilisateur",
+    "starknetAddress": "Adresse Starknet",
+    "status": "Statut de déploiement",
+    "deploymentTxHash": "Transaction de déploiement",
+    "createdAt": "Compte créé le",
+    "statusValue": {
+      "pending": "En attente",
+      "deploying": "Déploiement...",
+      "deployed": "Déployé",
+      "failed": "Échoué"
+    }
   },
   "settings": {
     "title": "Paramètres",
