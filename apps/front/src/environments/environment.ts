@@ -1,5 +1,6 @@
 export const environment = {
   production: true,
   useMockBackend: false,
-  useQRCodeScanner: true
+  useQRCodeScanner: true,
+  waitForAccountDeployment: true,
 };

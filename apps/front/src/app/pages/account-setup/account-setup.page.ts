@@ -36,7 +36,7 @@ export class AccountSetupPage implements OnInit {
   }
 
   private triggerDeployment(): void {
-    this.accountService.deploy(false).subscribe({
+    this.accountService.deploy().subscribe({
       next: () => {
         // Deployment started, begin polling for status
         this.startPolling();

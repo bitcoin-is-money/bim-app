@@ -1,5 +1,6 @@
 import {Injectable, signal} from '@angular/core';
 import {map, Observable} from 'rxjs';
+import {environment} from "../../environments/environment";
 import {Amount} from "../model";
 import {AccountHttpService, DeployAccountResponse, DeploymentStatusResponse} from './account.http.service';
 
@@ -37,7 +38,7 @@ export class AccountService {
     return this.httpService.getDeploymentStatus();
   }
 
-  deploy(sync: boolean = false): Observable<DeployAccountResponse> {
-    return this.httpService.deploy(sync);
+  deploy(): Observable<DeployAccountResponse> {
+    return this.httpService.deploy(environment.waitForAccountDeployment);
   }
 }
