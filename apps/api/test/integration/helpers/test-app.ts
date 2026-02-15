@@ -21,7 +21,9 @@ export namespace TestApp {
     process.env.WEBAUTHN_RP_NAME ??= 'BIM Test';
     process.env.WEBAUTHN_ORIGIN ??= 'http://localhost:8080';
     process.env.FEE_TREASURY_ADDRESS ??= '0x027367ddd36d7efc4694e1af5742f8d26626369c07abf15d136ff422b9a40fa0';
+    process.env.WBTC_TOKEN_ADDRESS ??= '0x00123';
     process.env.ATOMIQ_STORAGE_PATH ??= '/tmp/bim/atomiq';
+    process.env.ATOMIQ_AUTO_CREATE_STORAGE ??= 'true';
     process.env.DATABASE_SSL ??= 'off';
     process.env.NODE_ENV ??= 'test';
     process.env.LOG_LEVEL ??= 'silent';

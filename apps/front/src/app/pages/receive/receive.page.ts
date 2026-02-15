@@ -14,11 +14,11 @@ import {CurrencyService} from '../../services/currency.service';
 import {I18nService} from '../../services/i18n.service';
 import {NotificationService} from '../../services/notification.service';
 import {ReceiveService} from '../../services/receive.service';
+import {environment} from '../../../environments/environment';
 
 type PaymentNetwork = 'starknet' | 'lightning' | 'bitcoin';
 
 const NETWORKS: PaymentNetwork[] = ['starknet', 'lightning', 'bitcoin'];
-const WBTC_TOKEN_ADDRESS = '0x00abbd7d98ad664568f204d6e1af6e02d6a5c55eb4e83c9fbbfc3ed8514efc09';
 
 @Component({
   selector: 'app-receive',
@@ -79,7 +79,7 @@ export class ReceivePage {
     if (hasAmount) {
       const satAmount = this.currencyService.convert(amt, 'SAT');
       params.set('amount', String(Math.round(satAmount.value)));
-      params.set('token', WBTC_TOKEN_ADDRESS);
+      params.set('token', environment.wbtcTokenAddress);
     }
     if (desc) {
       params.set('summary', desc);

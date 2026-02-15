@@ -134,8 +134,8 @@ export namespace AppContext {
         {
           network: config.starknetNetwork === 'mainnet' ? 'mainnet' : 'testnet',
           starknetRpcUrl: config.starknetRpcUrl,
-          storagePath: config.atomiqStoragePath,
-          autoCreateStorage: config.nodeEnv !== 'production',
+          storagePath: config.atomiq.storagePath,
+          autoCreateStorage: config.atomiq.createIfNotExists,
         },
         rootLogger,
       ),

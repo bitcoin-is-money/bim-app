@@ -3,5 +3,5 @@ export const environment = {
   useMockBackend: false,
   useQRCodeScanner: true,
   waitForAccountDeployment: true,
-  wbtcTokenAddress: '0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac', // wbtc mainnet
+  wbtcTokenAddress: '0x00452bd5c0512a61df7c7be8cfea5e4f893cb40e126bdc40aee6054db955129e', // wbtc sepolia
 };
