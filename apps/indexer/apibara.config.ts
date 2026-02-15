@@ -20,7 +20,7 @@ export default defineConfig({
       runtimeConfig: {
         connectionString: 'postgresql://bim_user:bim_password@localhost:5432/bim',
         streamUrl: 'https://sepolia.starknet.a5a.ch',
-        contractAddress: '0x00abbd7d98ad664568f204d6e1af6e02d6a5c55eb4e83c9fbbfc3ed8514efc09',
+        contractAddress: '0x00452bd5c0512a61df7c7be8cfea5e4f893cb40e126bdc40aee6054db955129e', // wbtc
       },
     },
     // Production against Starknet mainnet.
@@ -28,7 +28,7 @@ export default defineConfig({
     mainnet: {
       runtimeConfig: {
         streamUrl: 'https://mainnet.starknet.a5a.ch',
-        contractAddress: '0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac',
+        contractAddress: '0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac',  // wbtc
       },
     },
   },

@@ -1,3 +1,4 @@
+import {accessSync, constants, mkdirSync} from 'node:fs';
 import {redactUrl} from '@bim/lib/url';
 import type {DatabaseConfig, DatabaseSslMode} from './db';
 
@@ -8,6 +9,11 @@ export interface WebAuthnConfig {
   rpName: string;
   origin: string;
   authenticatorAttachment?: AuthenticatorAttachment;
+}
+
+export interface AtomiqConfig {
+  storagePath: string;
+  createIfNotExists: boolean;
 }
 
 export namespace AppConfig {
@@ -23,7 +29,7 @@ export namespace AppConfig {
     avnuApiUrl: string;
     avnuApiKey: string;
     feeTreasuryAddress: string;
-    atomiqStoragePath: string;
+    atomiq: AtomiqConfig;
     webauthn: WebAuthnConfig;
     logLevel: string;
   }
@@ -44,9 +50,6 @@ export namespace AppConfig {
       return process.env[name] || defaultValue;
     };
 
-    // WBTC token address on Starknet Sepolia (default for development/testing)
-    const DEFAULT_WBTC_ADDRESS = '0x00abbd7d98ad664568f204d6e1af6e02d6a5c55eb4e83c9fbbfc3ed8514efc09';
-
     const starknetNetwork = optional('STARKNET_NETWORK', 'testnet') as 'mainnet' | 'testnet' | 'devnet';
     if (!['mainnet', 'testnet', 'devnet'].includes(starknetNetwork)) {
       throw new Error(`Invalid STARKNET_NETWORK: ${starknetNetwork}. Must be 'mainnet', 'testnet', or 'devnet'.`);
@@ -62,10 +65,10 @@ export namespace AppConfig {
       },
       starknetRpcUrl: required('STARKNET_RPC_URL'),
       accountClassHash: required('ACCOUNT_CLASS_HASH'),
-      wbtcTokenAddress: optional('WBTC_TOKEN_ADDRESS', DEFAULT_WBTC_ADDRESS),
+      wbtcTokenAddress: required('WBTC_TOKEN_ADDRESS'),
       avnuApiUrl: optional('AVNU_API_URL', 'https://starknet.paymaster.avnu.fi'),
       avnuApiKey: optional('AVNU_API_KEY', ''),
-      atomiqStoragePath: required('ATOMIQ_STORAGE_PATH'),
+      atomiq: loadAtomiqConfig(required, optional),
       feeTreasuryAddress: required('FEE_TREASURY_ADDRESS'),
       webauthn: {
         rpId: optional('WEBAUTHN_RP_ID', 'localhost'),
@@ -75,6 +78,37 @@ export namespace AppConfig {
       },
       logLevel: optional('LOG_LEVEL', 'debug'),
     };
+  }
+
+  function loadAtomiqConfig(
+    required: (name: string) => string,
+    optional: (name: string, defaultValue: string) => string,
+  ): AtomiqConfig {
+    const storagePath = required('ATOMIQ_STORAGE_PATH');
+    const createIfNotExists = optional('ATOMIQ_AUTO_CREATE_STORAGE', 'false') === 'true';
+
+    let exists = false;
+    try {
+      accessSync(storagePath, constants.F_OK);
+      exists = true;
+    } catch {
+      // Directory does not exist
+    }
+
+    if (!exists) {
+      if (!createIfNotExists) {
+        throw new Error(`ATOMIQ_STORAGE_PATH does not exist: ${storagePath}. Set ATOMIQ_AUTO_CREATE_STORAGE=true to create it automatically.`);
+      }
+      mkdirSync(storagePath, {recursive: true});
+    }
+
+    try {
+      accessSync(storagePath, constants.R_OK | constants.W_OK);
+    } catch {
+      throw new Error(`ATOMIQ_STORAGE_PATH is not writable: ${storagePath}`);
+    }
+
+    return {storagePath, createIfNotExists};
   }
 
   function parseAuthenticatorAttachment(value: string | undefined): AuthenticatorAttachment | undefined {

@@ -10,7 +10,7 @@ sleep 2
 DATABASE_URL=postgresql://bim_user:bim_password@localhost:5432/bim npm run db:push -w @bim/api
 
 # Build and copy front
-npm run build -w @bim/front
+npm run build:testnet -w @bim/front
 npm run copy:front -w @bim/api
 
 # Start app
