@@ -52,7 +52,7 @@ export async function createApp(options: CreateAppOptions = {}): Promise<AppInst
   const context = AppContext.createDefault(config, db, rootLogger, options.context);
   const app = new Hono();
 
-  app.use('*', createRequestLoggerMiddleware(context.logger));
+  app.use('*', createRequestLoggerMiddleware(context.logger, {apiOnly: true}));
   app.use('/api/*', cors({
       origin: config.webauthnOrigin,
       credentials: true,

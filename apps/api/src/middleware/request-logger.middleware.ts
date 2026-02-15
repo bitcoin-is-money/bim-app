@@ -1,5 +1,6 @@
 import {logContext} from '@bim/lib/logger';
 import type {Context, Next} from 'hono';
+import {basename} from "node:path";
 import type {LogFn, Logger} from 'pino';
 
 const MAX_REQUEST_ID = 999;
@@ -11,12 +12,12 @@ export function setRequestCounter(value: number) {
 }
 
 function getStatusLogFn(
-  rootLogger: Logger,
+  logger: Logger,
   httpStatus: number
 ): LogFn {
-  if (httpStatus >= 500) return rootLogger.error.bind(rootLogger);
-  if (httpStatus >= 400) return rootLogger.warn.bind(rootLogger);
-  return rootLogger.debug.bind(rootLogger);
+  if (httpStatus >= 500) return logger.error.bind(logger);
+  if (httpStatus >= 400) return logger.warn.bind(logger);
+  return logger.debug.bind(logger);
 }
 
 /**
@@ -25,7 +26,13 @@ function getStatusLogFn(
  * 2. Stores it in the async-scoped logContext (pino mixin picks it up automatically)
  * 3. Logs the request/response (method, path, status, duration)
  */
-export function createRequestLoggerMiddleware(rootLogger: Logger) {
+export function createRequestLoggerMiddleware(
+  rootLogger: Logger,
+  options?: { apiOnly?: boolean },
+) {
+  const logger = rootLogger.child({name: basename(import.meta.filename)});
+  const apiOnly = options?.apiOnly ?? false;
+
   return async (ctx: Context, next: Next) => {
     requestCounter = requestCounter >= MAX_REQUEST_ID ? 1 : requestCounter + 1;
     const requestId = String(requestCounter);
@@ -36,17 +43,22 @@ export function createRequestLoggerMiddleware(rootLogger: Logger) {
     const start = performance.now();
     const {method} = ctx.req;
     const path = ctx.req.path;
+    const isApiRoute = path.startsWith('/api');
 
     await logContext.run({requestId}, async () => {
-      rootLogger.info(`Incoming request - ${method} ${path}`);
+      if (isApiRoute || !apiOnly) {
+        logger.info(`Incoming request - ${method} ${path}`);
+      }
 
       await next();
 
       const durationMs = Math.round(performance.now() - start);
       const httpStatus = ctx.res.status;
-      const logFn = getStatusLogFn(rootLogger, httpStatus);
 
-      logFn({method, path, status: httpStatus, durationMs}, 'Request completed');
+      if (isApiRoute || !apiOnly || httpStatus >= 400) {
+        const logFn = getStatusLogFn(logger, httpStatus);
+        logFn({method, path, status: httpStatus, durationMs}, 'Request completed');
+      }
     });
   };
 }
