@@ -177,8 +177,8 @@ export class AccountService {
         address,
         token: WBTCToken.symbol,
       });
-    } catch {
-      this.log.warn({address}, 'Failed to fetch balance');
+    } catch (err) {
+      this.log.warn({address}, `Failed to fetch balance (${err instanceof Error ? err.message : String(err)})`);
       amount = BigInt(0);
     }
 
