@@ -54,7 +54,7 @@ export async function createApp(options: CreateAppOptions = {}): Promise<AppInst
 
   app.use('*', createRequestLoggerMiddleware(context.logger, {apiOnly: true}));
   app.use('/api/*', cors({
-      origin: config.webauthnOrigin,
+      origin: config.webauthn.origin,
       credentials: true,
       allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
       allowHeaders: ['Content-Type', 'Authorization'],

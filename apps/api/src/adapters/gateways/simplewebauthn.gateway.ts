@@ -9,6 +9,7 @@ import {type Uint8Array_, verifyAuthenticationResponse, verifyRegistrationRespon
 import {cose, decodeCredentialPublicKey,} from '@simplewebauthn/server/helpers';
 import {basename} from 'node:path';
 import type {Logger} from "pino";
+import type {WebAuthnConfig} from '../../app-config';
 
 /**
  * SimpleWebAuthn-based implementation of WebAuthnGateway.
@@ -17,6 +18,7 @@ export class SimpleWebAuthnGateway implements WebAuthnGateway {
   private readonly log: Logger;
 
   constructor(
+    private readonly config: Pick<WebAuthnConfig, 'authenticatorAttachment'>,
     rootLogger: Logger,
   ) {
     this.log = rootLogger.child({name: basename(import.meta.filename)});
@@ -37,7 +39,7 @@ export class SimpleWebAuthnGateway implements WebAuthnGateway {
           },
           type: params.credential.type,
           clientExtensionResults: {},
-          authenticatorAttachment: 'platform',
+          authenticatorAttachment: this.config.authenticatorAttachment,
         },
         expectedChallenge: params.expectedChallenge,
         expectedOrigin: params.expectedOrigin,
@@ -121,7 +123,7 @@ export class SimpleWebAuthnGateway implements WebAuthnGateway {
           },
           type: params.credential.type,
           clientExtensionResults: {},
-          authenticatorAttachment: 'platform',
+          authenticatorAttachment: this.config.authenticatorAttachment,
         },
         expectedChallenge: params.expectedChallenge,
         expectedOrigin: params.expectedOrigin,

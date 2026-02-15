@@ -117,14 +117,14 @@ export namespace AppContext {
 
     // Initialize gateways (with optional overrides)
     const gateways: AppContext['gateways'] = {
-      webAuthn: new SimpleWebAuthnGateway(rootLogger),
+      webAuthn: new SimpleWebAuthnGateway(config.webauthn, rootLogger),
       starknet: new StarknetRpcGateway(
         {
           rpcUrl: config.starknetRpcUrl,
           accountClassHash: config.accountClassHash,
           tokenAddresses: {WBTC: config.wbtcTokenAddress},
-          webauthnOrigin: config.webauthnOrigin,
-          webauthnRpId: config.webauthnRpId,
+          webauthnOrigin: config.webauthn.origin,
+          webauthnRpId: config.webauthn.rpId,
         },
         paymasterGateway,
         rootLogger,
@@ -145,9 +145,9 @@ export namespace AppContext {
 
     // WebAuthn configuration (with optional overrides)
     const webauthn: AppContext['webauthn'] = {
-      rpId: config.webauthnRpId,
-      rpName: config.webauthnRpName,
-      origin: config.webauthnOrigin,
+      rpId: config.webauthn.rpId,
+      rpName: config.webauthn.rpName,
+      origin: config.webauthn.origin,
       ...overrides?.webauthn,
     };
 

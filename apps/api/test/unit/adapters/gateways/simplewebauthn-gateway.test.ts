@@ -23,7 +23,7 @@ describe('SimpleWebAuthnGateway', () => {
   let authenticator: WebauthnVirtualAuthenticator;
 
   beforeEach(() => {
-    gateway = new SimpleWebAuthnGateway(createLogger());
+    gateway = new SimpleWebAuthnGateway({}, createLogger());
     authenticator = new WebauthnVirtualAuthenticator();
   });
 
