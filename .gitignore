@@ -14,8 +14,7 @@ bazel-out
 .svelte-kit
 
 # Frontend build output in api (served in production)
-apps/api/public/*
-!apps/api/public/.gitkeep
+apps/api/public/app
 
 # Node
 node_modules

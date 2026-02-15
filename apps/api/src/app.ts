@@ -73,8 +73,8 @@ export async function createApp(options: CreateAppOptions = {}): Promise<AppInst
 
   // Serve static files (frontend) - skip for tests
   if (!options.skipStaticFiles) {
-    app.use('/*', serveStatic({root: './public'}));
-    app.get('*', serveStatic({path: './public/index.html'}));
+    app.use('/*', serveStatic({root: './public/app'}));
+    app.get('*', serveStatic({path: './public/app/index.html'}));
   }
 
   // Swap monitor (background polling + auto-claim)
