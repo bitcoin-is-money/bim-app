@@ -1,6 +1,15 @@
 import {redactUrl} from '@bim/lib/url';
 import type {DatabaseConfig, DatabaseSslMode} from './db';
 
+export type AuthenticatorAttachment = 'platform' | 'cross-platform';
+
+export interface WebAuthnConfig {
+  rpId: string;
+  rpName: string;
+  origin: string;
+  authenticatorAttachment?: AuthenticatorAttachment;
+}
+
 export namespace AppConfig {
 
   export interface Config {
@@ -15,9 +24,7 @@ export namespace AppConfig {
     avnuApiKey: string;
     feeTreasuryAddress: string;
     atomiqStoragePath: string;
-    webauthnRpId: string;
-    webauthnRpName: string;
-    webauthnOrigin: string;
+    webauthn: WebAuthnConfig;
     logLevel: string;
   }
 
@@ -60,11 +67,23 @@ export namespace AppConfig {
       avnuApiKey: optional('AVNU_API_KEY', ''),
       atomiqStoragePath: required('ATOMIQ_STORAGE_PATH'),
       feeTreasuryAddress: required('FEE_TREASURY_ADDRESS'),
-      webauthnRpId: optional('WEBAUTHN_RP_ID', 'localhost'),
-      webauthnRpName: optional('WEBAUTHN_RP_NAME', 'BIM'),
-      webauthnOrigin: optional('WEBAUTHN_ORIGIN', 'http://localhost:8080'),
+      webauthn: {
+        rpId: optional('WEBAUTHN_RP_ID', 'localhost'),
+        rpName: optional('WEBAUTHN_RP_NAME', 'BIM'),
+        origin: optional('WEBAUTHN_ORIGIN', 'http://localhost:8080'),
+        authenticatorAttachment: parseAuthenticatorAttachment(process.env.WEBAUTHN_AUTHENTICATOR_ATTACHMENT),
+      },
       logLevel: optional('LOG_LEVEL', 'debug'),
     };
+  }
+
+  function parseAuthenticatorAttachment(value: string | undefined): AuthenticatorAttachment | undefined {
+    if (!value) return undefined;
+    const valid: AuthenticatorAttachment[] = ['platform', 'cross-platform'];
+    if (!valid.includes(value as AuthenticatorAttachment)) {
+      throw new Error(`Invalid WEBAUTHN_AUTHENTICATOR_ATTACHMENT: "${value}". Must be one of: ${valid.join(', ')}.`);
+    }
+    return value as AuthenticatorAttachment;
   }
 
   function parseSslMode(value: string): DatabaseSslMode {

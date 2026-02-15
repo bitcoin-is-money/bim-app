@@ -3,7 +3,6 @@ import {inject, Injectable, signal} from '@angular/core';
 import {Router} from '@angular/router';
 import {Base64Url, UuidCodec} from "@bim/lib/encoding";
 import {catchError, firstValueFrom, map, Observable} from 'rxjs';
-import {environment} from '../../environments/environment';
 import {Account} from "../model";
 import {
   AuthHttpService,
@@ -247,13 +246,6 @@ export class AuthService {
   }
 
   private convertRegistrationOptions(options: BeginRegisterResponse['options']): PublicKeyCredentialCreationOptions {
-    // In production, require platform authenticator (TouchID, FaceID, fingerprint)
-    // In development, allow any authenticator (including security keys) for testing
-    // residentKey: 'required' enables discoverable credentials for username-less login
-    const authenticatorSelection: AuthenticatorSelectionCriteria = environment.production
-      ? { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'required' }
-      : { userVerification: 'preferred', residentKey: 'required' };
-
     return {
       challenge: Base64Url.decode(options.challenge),
       rp: {
@@ -271,7 +263,11 @@ export class AuthService {
       ],
       timeout: options.timeout || 60000,
       attestation: 'none',
-      authenticatorSelection,
+      authenticatorSelection: {
+        authenticatorAttachment: 'platform',
+        userVerification: 'required',
+        residentKey: 'required'
+      },
     } as PublicKeyCredentialCreationOptions;
   }
 }
