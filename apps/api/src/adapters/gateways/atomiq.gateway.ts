@@ -235,16 +235,18 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     await this.ensureInitialized();
 
     try {
-      const Tokens = this.getTokens();
+      const swapToken = this.getSwapToken();
 
-      // Create swap: Bitcoin (BTC) → Starknet (WBTC)
-      const swap = await this.swapper!.swap(
-        Tokens.BITCOIN.BTC,
-        this.getSwapToken(),
+      // Force escrow-based swap (FromBTCSwap) instead of SPV vault swap,
+      // because SPV vault swaps use a PSBT-based flow with no deposit address,
+      // which is incompatible with BIM's "show QR code" receive flow.
+      const exactOut = false; // i.e. exactIn = true
+      const swap = await this.swapper!.createFromBTCSwap(
+        'STARKNET',
+        params.destinationAddress.toString(),
+        swapToken.address,
         params.amountSats,
-        true, // exactIn = true
-        undefined, // No source address for Bitcoin
-        params.destinationAddress
+        exactOut,
       );
 
       if (!swap) {
@@ -252,7 +254,9 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       }
 
       const swapId = swap.getId();
-      const depositAddress = swap.getAddress();
+      // Access .address directly: getAddress() throws in PR_CREATED state,
+      // but the LP-provided deposit address is already available as a property.
+      const depositAddress = swap.address;
       const bip21Uri = `bitcoin:${depositAddress}?amount=${Number(params.amountSats) / 100000000}`;
 
       // Register swap for tracking
