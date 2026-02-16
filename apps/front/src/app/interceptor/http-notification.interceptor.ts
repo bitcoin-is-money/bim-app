@@ -1,9 +1,11 @@
-import {HttpErrorResponse, HttpHandlerFn, HttpInterceptorFn, HttpRequest} from '@angular/common/http';
+import {HttpContextToken, HttpErrorResponse, HttpHandlerFn, HttpInterceptorFn, HttpRequest} from '@angular/common/http';
 import {inject, Injector} from '@angular/core';
 import {catchError, throwError} from 'rxjs';
 import {isApiErrorResponse} from '../model';
 import {I18nService} from '../services/i18n.service';
 import {NotificationService} from '../services/notification.service';
+
+export const SUPPRESS_ERROR_NOTIFICATION = new HttpContextToken<boolean>(() => false);
 
 export const httpNotificationInterceptor: HttpInterceptorFn = (
   req: HttpRequest<unknown>,
@@ -16,6 +18,10 @@ export const httpNotificationInterceptor: HttpInterceptorFn = (
 
   return next(req).pipe(
     catchError((response: HttpErrorResponse) => {
+      if (req.context.get(SUPPRESS_ERROR_NOTIFICATION)) {
+        return throwError(() => response);
+      }
+
       const i18n = injector.get(I18nService);
       let message: string;
 
