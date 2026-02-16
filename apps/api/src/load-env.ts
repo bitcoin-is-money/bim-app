@@ -6,32 +6,32 @@ import {resolve} from 'node:path';
 const dirname: string = import.meta.dirname;
 
 /**
- * Loads environment variables for the given BIM environment.
+ * Loads environment variables for the given network.
  *
  * Loading order (dotenv does NOT override existing vars):
- *   1. .env.{bimEnv}.local  — secrets (git ignored)
- *   2. .env.{bimEnv}        — defaults (committed)
+ *   1. .env.{network}.secret  — secrets (git ignored)
+ *   2. .env.{network}         — defaults (committed)
  *
- * @param env - Environment name (e.g. 'testnet', 'mainnet'). Falls back to BIM_ENV.
+ * @param env - Environment name (e.g. 'testnet', 'mainnet'). Falls back to NETWORK.
  */
 export function loadEnv(env?: string): void {
-  const bimEnv = env ?? process.env.BIM_ENV;
-  if (!bimEnv) {
+  const network = env ?? process.env.NETWORK;
+  if (!network) {
     throw new Error(
-      'BIM_ENV is not set. Use BIM_ENV=testnet or BIM_ENV=mainnet.',
+      'NETWORK is not set. Use NETWORK=testnet or NETWORK=mainnet.',
     );
   }
 
-  const base = resolve(dirname, `../.env.${bimEnv}`);
-  const local = `${base}.local`;
+  const base = resolve(dirname, `../.env.${network}`);
+  const secret = `${base}.secret`;
 
-  if (!existsSync(local)) {
+  if (!existsSync(secret)) {
     throw new Error(
-      `Missing ${local}\nCreate it with your secrets (e.g. AVNU_API_KEY=xxx). See .env.${bimEnv} for reference.`,
+      `Missing ${secret}\nCreate it with your secrets (e.g. AVNU_API_KEY=xxx). See .env.${network} for reference.`,
     );
   }
 
-  // Load .local first (secrets), then base (defaults — won't override)
-  expand(config({path: local}));
+  // Load .secret first (secrets), then base (defaults — won't override)
+  expand(config({path: secret}));
   expand(config({path: base}));
 }
