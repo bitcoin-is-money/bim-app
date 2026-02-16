@@ -14,6 +14,8 @@ export interface WebAuthnConfig {
 export interface AtomiqConfig {
   storagePath: string;
   createIfNotExists: boolean;
+  intermediaryUrl?: string;
+  swapToken: string;
 }
 
 export namespace AppConfig {
@@ -108,7 +110,10 @@ export namespace AppConfig {
       throw new Error(`ATOMIQ_STORAGE_PATH is not writable: ${storagePath}`);
     }
 
-    return {storagePath, createIfNotExists};
+    const intermediaryUrl = process.env.ATOMIQ_INTERMEDIARY_URL || undefined;
+    const swapToken = required('ATOMIQ_SWAP_TOKEN');
+
+    return {storagePath, createIfNotExists, intermediaryUrl, swapToken};
   }
 
   function parseAuthenticatorAttachment(value: string | undefined): AuthenticatorAttachment | undefined {

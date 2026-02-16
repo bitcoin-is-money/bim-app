@@ -136,6 +136,8 @@ export namespace AppContext {
           starknetRpcUrl: config.starknetRpcUrl,
           storagePath: config.atomiq.storagePath,
           autoCreateStorage: config.atomiq.createIfNotExists,
+          intermediaryUrl: config.atomiq.intermediaryUrl,
+          swapToken: config.atomiq.swapToken,
         },
         rootLogger,
       ),

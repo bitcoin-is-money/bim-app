@@ -27,6 +27,7 @@ export interface AtomiqGatewayConfig {
   intermediaryUrl?: string;
   storagePath: string;
   autoCreateStorage?: boolean;
+  swapToken: string;
 }
 
 /**
@@ -148,6 +149,20 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     return this.swapperFactory.Tokens;
   }
 
+  /**
+   * Returns the configured Starknet swap token from the SDK's token registry.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private getSwapToken(): any {
+    const Tokens = this.getTokens();
+    const token = Tokens.STARKNET[this.config.swapToken];
+    if (!token) {
+      const available = Object.keys(Tokens.STARKNET).join(', ');
+      throw new ExternalServiceError('Atomiq', `Unknown swap token: ${this.config.swapToken}. Available: ${available}`);
+    }
+    return token;
+  }
+
   // ===========================================================================
   // Swap Creation
   // ===========================================================================
@@ -164,11 +179,12 @@ export class AtomiqSdkGateway implements AtomiqGateway {
 
     try {
       const Tokens = this.getTokens();
+      const swapToken = this.getSwapToken();
 
-      // Create swap: Lightning (BTCLN) → Starknet (WBTC)
+      // Create swap: Lightning (BTCLN) → Starknet
       const swap = await this.swapper!.swap(
         Tokens.BITCOIN.BTCLN,
-        Tokens.STARKNET.WBTC,
+        swapToken,
         params.amountSats,
         true, // exactIn = true (we specify input amount)
         undefined, // No source address for Lightning
@@ -224,7 +240,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       // Create swap: Bitcoin (BTC) → Starknet (WBTC)
       const swap = await this.swapper!.swap(
         Tokens.BITCOIN.BTC,
-        Tokens.STARKNET.WBTC,
+        this.getSwapToken(),
         params.amountSats,
         true, // exactIn = true
         undefined, // No source address for Bitcoin
@@ -278,7 +294,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
 
       // Create reverse the swap: Starknet (WBTC) → Lightning (BTCLN)
       const swap = await this.swapper!.swap(
-        Tokens.STARKNET.WBTC,
+        this.getSwapToken(),
         Tokens.BITCOIN.BTCLN,
         "", // Amount determined by invoice
         false, // exactIn = false for reverse swaps
@@ -344,7 +360,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
 
       // Create reverse the swap: Starknet (WBTC) → Bitcoin (BTC)
       const swap = await this.swapper!.swap(
-        Tokens.STARKNET.WBTC,
+        this.getSwapToken(),
         Tokens.BITCOIN.BTC,
         params.amountSats,
         true, // exactIn = true
@@ -426,8 +442,9 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     const Tokens = this.getTokens();
     const limits = this.swapper!.getSwapLimits(
       Tokens.BITCOIN.BTCLN,
-      Tokens.STARKNET.WBTC
+      this.getSwapToken()
     );
+    this.log.debug({...limits}, `swapper.getSwapLimits`);
     const result: SwapLimits = {
       minSats: limits.input.min.rawAmount ?? 0n,
       maxSats: limits.input.max?.rawAmount ?? 0n,
@@ -442,7 +459,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     const Tokens = this.getTokens();
     const limits = this.swapper!.getSwapLimits(
       Tokens.BITCOIN.BTC,
-      Tokens.STARKNET.WBTC
+      this.getSwapToken()
     );
     const result: SwapLimits = {
       minSats: limits.input.min.rawAmount ?? 0n,
@@ -457,7 +474,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     await this.ensureInitialized();
     const Tokens = this.getTokens();
     const limits = this.swapper!.getSwapLimits(
-      Tokens.STARKNET.WBTC,
+      this.getSwapToken(),
       Tokens.BITCOIN.BTCLN
     );
     const result: SwapLimits = {
@@ -473,7 +490,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     await this.ensureInitialized();
     const Tokens = this.getTokens();
     const limits = this.swapper!.getSwapLimits(
-      Tokens.STARKNET.WBTC,
+      this.getSwapToken(),
       Tokens.BITCOIN.BTC
     );
     const result: SwapLimits = {
