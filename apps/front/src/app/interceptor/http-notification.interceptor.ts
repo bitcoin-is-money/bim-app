@@ -1,7 +1,8 @@
 import {HttpErrorResponse, HttpHandlerFn, HttpInterceptorFn, HttpRequest} from '@angular/common/http';
-import {inject} from '@angular/core';
+import {inject, Injector} from '@angular/core';
 import {catchError, throwError} from 'rxjs';
-import {getErrorMessage, isApiErrorResponse} from '../model';
+import {isApiErrorResponse} from '../model';
+import {I18nService} from '../services/i18n.service';
 import {NotificationService} from '../services/notification.service';
 
 export const httpNotificationInterceptor: HttpInterceptorFn = (
@@ -9,15 +10,18 @@ export const httpNotificationInterceptor: HttpInterceptorFn = (
   next: HttpHandlerFn
 ) => {
   const notifications = inject(NotificationService);
+  // Lazy injection to avoid circular dependency:
+  // TranslateHttpLoader → HttpClient → interceptor → I18nService → TranslateService → TranslateHttpLoader
+  const injector = inject(Injector);
 
   return next(req).pipe(
     catchError((response: HttpErrorResponse) => {
-      // Extract message from the new API error format
+      const i18n = injector.get(I18nService);
       let message: string;
 
       if (isApiErrorResponse(response.error)) {
-        // New format: { error: { code, message, args? } }
-        message = getErrorMessage(response.error);
+        // Structured format: { error: { code, message, args? } } — translate via i18n
+        message = i18n.translateError(response.error.error);
       } else if (response.error?.error?.message) {
         // Legacy format: { error: { message } }
         message = response.error.error.message;
@@ -25,13 +29,13 @@ export const httpNotificationInterceptor: HttpInterceptorFn = (
         // Simple format: { message }
         message = response.error.message;
       } else {
-        message = response.message || 'An error occurred';
+        message = response.message || i18n.t('errors.INTERNAL_ERROR');
       }
 
       if (response.status >= 400 && response.status < 500) {
         notifications.error({message});
       } else if (response.status >= 500) {
-        notifications.error({message: 'Server error, please try later.'});
+        notifications.error({message: i18n.t('errors.INTERNAL_ERROR')});
       }
 
       return throwError(() => response);

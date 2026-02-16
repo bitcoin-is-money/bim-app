@@ -134,6 +134,23 @@
       "send": "Sent"
     }
   },
+  "notifications": {
+    "usernameTooShort": "Username must be at least 3 characters",
+    "registrationCancelled": "Registration cancelled",
+    "authenticationCancelled": "Authentication cancelled",
+    "registrationFailed": "Registration failed",
+    "authenticationFailed": "Authentication failed",
+    "invoiceCreated": "Invoice created",
+    "invoiceCreationFailed": "Invoice creation failed",
+    "paymentFailed": "Payment failed",
+    "swapDetected": "{{type}} detected, confirming...",
+    "swapConfirming": "{{type}} confirming on-chain...",
+    "swapCompleted": "{{type}} completed!",
+    "swapExpired": "{{type}} expired",
+    "swapFailed": "{{type}} failed",
+    "swapTypeReceive": "Receive",
+    "swapTypePayment": "Payment"
+  },
   "common": {
     "loading": "Loading",
     "back": "Back",

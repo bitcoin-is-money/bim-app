@@ -134,6 +134,23 @@
       "send": "Envoyé"
     }
   },
+  "notifications": {
+    "usernameTooShort": "Le nom d'utilisateur doit contenir au moins 3 caractères",
+    "registrationCancelled": "Inscription annulée",
+    "authenticationCancelled": "Authentification annulée",
+    "registrationFailed": "L'inscription a échoué",
+    "authenticationFailed": "L'authentification a échoué",
+    "invoiceCreated": "Facture créée",
+    "invoiceCreationFailed": "Échec de la création de la facture",
+    "paymentFailed": "Le paiement a échoué",
+    "swapDetected": "{{type}} détecté, confirmation...",
+    "swapConfirming": "{{type}} en confirmation on-chain...",
+    "swapCompleted": "{{type}} terminé !",
+    "swapExpired": "{{type}} expiré",
+    "swapFailed": "{{type}} échoué",
+    "swapTypeReceive": "Réception",
+    "swapTypePayment": "Paiement"
+  },
   "common": {
     "loading": "Chargement",
     "back": "Retour",

@@ -53,7 +53,7 @@ export class AuthService {
     if (this.isLoading()) return;
 
     if (!username || username.length < 3) {
-      this.notifications.error({ message: 'Username must be at least 3 characters' });
+      this.notifications.error({ message: this.i18n.t('notifications.usernameTooShort') });
       return;
     }
 
@@ -65,7 +65,7 @@ export class AuthService {
       const credential = await navigator.credentials.create({ publicKey: options }) as PublicKeyCredential | null;
 
       if (!credential) {
-        this.notifications.error({ message: 'Registration cancelled' });
+        this.notifications.error({ message: this.i18n.t('notifications.registrationCancelled') });
         return;
       }
 
@@ -82,7 +82,7 @@ export class AuthService {
       // HTTP errors are already handled by the interceptor
       // Only handle non-HTTP errors here
       if (!(error instanceof HttpErrorResponse)) {
-        const message = error instanceof Error ? error.message : 'Registration failed';
+        const message = error instanceof Error ? error.message : this.i18n.t('notifications.registrationFailed');
         this.notifications.error({ message });
       }
     } finally {
@@ -111,7 +111,7 @@ export class AuthService {
       const credential = await navigator.credentials.get({ publicKey: options }) as PublicKeyCredential | null;
 
       if (!credential) {
-        this.notifications.error({ message: 'Authentication cancelled' });
+        this.notifications.error({ message: this.i18n.t('notifications.authenticationCancelled') });
         return;
       }
 
@@ -125,7 +125,7 @@ export class AuthService {
       // HTTP errors are already handled by the interceptor
       // Only handle non-HTTP errors here
       if (!(error instanceof HttpErrorResponse)) {
-        const message = error instanceof Error ? error.message : 'Authentication failed';
+        const message = error instanceof Error ? error.message : this.i18n.t('notifications.authenticationFailed');
         this.notifications.error({ message });
       }
     } finally {
