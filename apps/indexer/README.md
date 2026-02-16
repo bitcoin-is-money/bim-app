@@ -10,14 +10,14 @@ Apibara-based Starknet indexer that watches ERC20 Transfer events and stores mat
 
 ## Secret files
 
-Secrets are loaded via `dotenv-cli` from `.local` files (gitignored by `*.local`).
+Secrets are loaded via `dotenv-cli` from `.secret` files (gitignored by `*.local`).
 
-**`.env.testnet.local`** (for dev):
+**`.env.testnet.secret`** (for dev):
 ```
 DNA_TOKEN=dna_your_testnet_key
 ```
 
-**`.env.mainnet.local`** (for prod):
+**`.env.mainnet.secret`** (for prod):
 ```
 DNA_TOKEN=dna_your_mainnet_key
 DATABASE_URL=postgresql://user:password@host:5432/bim
@@ -38,7 +38,7 @@ npm run test -w @bim/indexer
 
 ## Configuration
 
-Network-specific config (stream URL, contract addresses) is managed via **presets** in `apibara.config.ts`, not env files. Only secrets go in `.local` files.
+Network-specific config (stream URL, contract addresses) is managed via **presets** in `apibara.config.ts`, not env files. Only secrets go in `.secret` files.
 
 | Preset | Stream | WBTC contract |
 |--------|--------|---------------|

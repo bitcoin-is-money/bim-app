@@ -15,7 +15,7 @@ export default defineConfig({
   },
   presets: {
     // Local dev against Starknet Sepolia + docker-compose PostgreSQL.
-    // DNA_TOKEN must be set via .env.testnet.local (git ignored).
+    // DNA_TOKEN must be set via .env.testnet.secret (git ignored).
     testnet: {
       runtimeConfig: {
         connectionString: 'postgresql://bim_user:bim_password@localhost:5432/bim',

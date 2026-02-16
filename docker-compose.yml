@@ -1,14 +1,10 @@
-# Start PostgreSQL
-# docker compose up -d
-
-# Stop PostgreSQL
-# docker compose down -v
+# Avoid to use docker compose directly, use npm run local:testnet (or testnet)
 
 services:
   postgres:
     image: postgres:16 # Debian Bookworm (include self-signed "snakeoil" certificate)
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5432}:5432"
     environment:
       POSTGRES_USER: bim_user
       POSTGRES_PASSWORD: bim_password
@@ -21,7 +17,4 @@ services:
       -c ssl_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem
       -c ssl_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
     volumes:
-      - pgdata:/var/lib/postgresql/data
-
-volumes:
-  pgdata:
+      - ./data/${NETWORK:-testnet}/pgdata:/var/lib/postgresql/data

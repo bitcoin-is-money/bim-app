@@ -47,8 +47,11 @@ testem.log
 # Scripts secrets (deployer private keys)
 scripts/.deployer-account.json
 
-# Local env overrides (secrets)
-*.local
+# Environment secrets (per-network)
+*.secret
+
+# Local database volumes (Docker)
+data/
 
 # System files
 .DS_Store

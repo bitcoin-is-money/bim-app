@@ -6,9 +6,9 @@
   "scripts": {
     "clean": "rm -rf .apibara",
     "clean:all": "npm run clean && rm -rf node_modules",
-    "dev": "dotenv -e .env.testnet.local -- apibara dev --preset testnet",
+    "dev": "dotenv -e .env.testnet.secret -- apibara dev --preset testnet",
     "build": "apibara build",
-    "start": "dotenv -e .env.mainnet.local -- apibara start --preset mainnet --indexer wbtc-transfers",
+    "start": "dotenv -e .env.mainnet.secret -- apibara start --preset mainnet --indexer wbtc-transfers",
     "test": "vitest run",
     "test:watch": "vitest"
   },
