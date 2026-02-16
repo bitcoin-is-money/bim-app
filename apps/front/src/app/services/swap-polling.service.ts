@@ -1,3 +1,4 @@
+import {HttpErrorResponse} from '@angular/common/http';
 import {inject, Injectable, OnDestroy} from '@angular/core';
 import {catchError, filter, interval, of, Subscription, switchMap, takeWhile, tap} from 'rxjs';
 import {isTerminalStatus, type StoredSwap, type SwapStatus} from '../model';
@@ -52,9 +53,9 @@ export class SwapPollingService implements OnDestroy {
         takeWhile(() => Date.now() - startedAt < POLL_DURATION_MS),
         filter(() => document.visibilityState === 'visible'),
         switchMap(() =>
-          this.httpService.getStatus(swapId).pipe(
+          this.httpService.getStatus(swapId, {silent: true}).pipe(
             catchError((err) => {
-              console.error(`Failed to poll swap ${swapId}:`, err);
+              this.logSwapError(swapId, err);
               return of(null);
             })
           )
@@ -106,12 +107,12 @@ export class SwapPollingService implements OnDestroy {
   }
 
   fetchStatusOnce(swapId: string): void {
-    this.httpService.getStatus(swapId).subscribe({
+    this.httpService.getStatus(swapId, {silent: true}).subscribe({
       next: (response) => {
         this.storageService.updateSwapStatus(swapId, response.status as SwapStatus);
       },
       error: (err) => {
-        console.error(`Failed to fetch swap status ${swapId}:`, err);
+        this.logSwapError(swapId, err);
       },
     });
   }
@@ -148,6 +149,14 @@ export class SwapPollingService implements OnDestroy {
           message: this.i18n.t('notifications.swapFailed', {type}),
         });
         break;
+    }
+  }
+
+  private logSwapError(swapId: string, err: unknown): void {
+    if (err instanceof HttpErrorResponse && err.status === 404) {
+      console.info(`Swap ${swapId} not found`);
+    } else {
+      console.error(`Failed to fetch swap status ${swapId}:`, err);
     }
   }
 
