@@ -1,5 +1,6 @@
 import {inject, Injectable, signal} from '@angular/core';
 import type {StoredSwap} from '../model';
+import {I18nService} from './i18n.service';
 import {NotificationService} from './notification.service';
 import {ReceiveHttpService, ReceiveNetwork, ReceiveResponse} from './receive.http.service';
 import {SwapPollingService} from './swap-polling.service';
@@ -11,6 +12,7 @@ import {SwapStorageService} from './swap-storage.service';
 export class ReceiveService {
   private readonly httpService = inject(ReceiveHttpService);
   private readonly notificationService = inject(NotificationService);
+  private readonly i18n = inject(I18nService);
   private readonly swapStorageService = inject(SwapStorageService);
   private readonly swapPollingService = inject(SwapPollingService);
 
@@ -25,7 +27,7 @@ export class ReceiveService {
       next: (response) => {
         this.invoice.set(response);
         this.isLoading.set(false);
-        this.notificationService.success({message: 'Invoice created'});
+        this.notificationService.success({message: this.i18n.t('notifications.invoiceCreated')});
 
         if (response.network !== 'starknet' && 'swapId' in response) {
           const swap: StoredSwap = {
@@ -42,7 +44,7 @@ export class ReceiveService {
       },
       error: () => {
         this.isLoading.set(false);
-        this.notificationService.error({message: 'Invoice creation failed'});
+        // Error notification is handled by the HTTP interceptor
       },
     });
   }

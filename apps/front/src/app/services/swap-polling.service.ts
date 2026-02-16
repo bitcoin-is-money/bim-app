@@ -1,6 +1,7 @@
 import {inject, Injectable, OnDestroy} from '@angular/core';
 import {catchError, filter, interval, of, Subscription, switchMap, takeWhile, tap} from 'rxjs';
 import {isTerminalStatus, type StoredSwap, type SwapStatus} from '../model';
+import {I18nService} from './i18n.service';
 import {NotificationService} from './notification.service';
 import {SwapHttpService} from './swap.http.service';
 import {SwapStorageService} from './swap-storage.service';
@@ -21,6 +22,7 @@ export class SwapPollingService implements OnDestroy {
   private readonly httpService = inject(SwapHttpService);
   private readonly storageService = inject(SwapStorageService);
   private readonly notificationService = inject(NotificationService);
+  private readonly i18n = inject(I18nService);
 
   private readonly activePolls = new Map<string, ActivePoll>();
 
@@ -115,33 +117,35 @@ export class SwapPollingService implements OnDestroy {
   }
 
   private showStatusNotification(storedSwap: StoredSwap | undefined, newStatus: SwapStatus): void {
-    const type = storedSwap?.type === 'receive' ? 'Receive' : 'Payment';
+    const type = storedSwap?.type === 'receive'
+      ? this.i18n.t('notifications.swapTypeReceive')
+      : this.i18n.t('notifications.swapTypePayment');
 
     switch (newStatus) {
       case 'paid':
         this.notificationService.info({
-          message: `${type} detected, confirming...`,
+          message: this.i18n.t('notifications.swapDetected', {type}),
         });
         break;
       case 'confirming':
         this.notificationService.info({
-          message: `${type} confirming on-chain...`,
+          message: this.i18n.t('notifications.swapConfirming', {type}),
         });
         break;
       case 'completed':
         this.notificationService.success({
-          message: `${type} completed!`,
+          message: this.i18n.t('notifications.swapCompleted', {type}),
           useConfetti: true,
         });
         break;
       case 'expired':
         this.notificationService.error({
-          message: `${type} expired`,
+          message: this.i18n.t('notifications.swapExpired', {type}),
         });
         break;
       case 'failed':
         this.notificationService.error({
-          message: `${type} failed`,
+          message: this.i18n.t('notifications.swapFailed', {type}),
         });
         break;
     }

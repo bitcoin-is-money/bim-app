@@ -91,7 +91,10 @@ export function handleDomainError(ctx: Context, error: unknown, logger: Logger):
     });
   }
   if (error instanceof InvalidAccountStateError) {
-    return createErrorResponse(ctx, 400, ErrorCode.INVALID_ACCOUNT_STATE, error.message);
+    return createErrorResponse(ctx, 400, ErrorCode.INVALID_ACCOUNT_STATE, error.message, {
+      status: error.currentStatus,
+      action: error.attemptedAction,
+    });
   }
   if (error instanceof AccountDeploymentError) {
     return createErrorResponse(ctx, 500, ErrorCode.ACCOUNT_DEPLOYMENT_FAILED, 'Account deployment failed');
@@ -114,7 +117,9 @@ export function handleDomainError(ctx: Context, error: unknown, logger: Logger):
     return createErrorResponse(ctx, 401, ErrorCode.AUTHENTICATION_FAILED, 'Authentication failed');
   }
   if (error instanceof RegistrationFailedError) {
-    return createErrorResponse(ctx, 400, ErrorCode.REGISTRATION_FAILED, error.message);
+    return createErrorResponse(ctx, 400, ErrorCode.REGISTRATION_FAILED, error.message, {
+      reason: error.reason,
+    });
   }
   if (error instanceof SessionNotFoundError) {
     return createErrorResponse(ctx, 401, ErrorCode.SESSION_NOT_FOUND, 'Session not found');
@@ -139,20 +144,24 @@ export function handleDomainError(ctx: Context, error: unknown, logger: Logger):
       amount: Number(error.amount.getSat()),
       min: Number(error.min.getSat()),
       max: Number(error.max.getSat()),
+      unit: 'sats',
     });
   }
   if (error instanceof SwapCreationError) {
-    return createErrorResponse(ctx, 500, ErrorCode.SWAP_CREATION_FAILED, error.message);
+    return createErrorResponse(ctx, 500, ErrorCode.SWAP_CREATION_FAILED, error.message, {
+      reason: error.reason,
+    });
   }
   if (error instanceof SwapClaimError) {
     return createErrorResponse(ctx, 500, ErrorCode.SWAP_CLAIM_FAILED, error.message, {
       swapId: error.swapId,
+      reason: error.reason,
     });
   }
   if (error instanceof InvalidSwapStateError) {
     return createErrorResponse(ctx, 400, ErrorCode.INVALID_SWAP_STATE, error.message, {
-      currentStatus: error.currentStatus,
-      attemptedAction: error.attemptedAction,
+      status: error.currentStatus,
+      action: error.attemptedAction,
     });
   }
 
@@ -164,6 +173,7 @@ export function handleDomainError(ctx: Context, error: unknown, logger: Logger):
     return createErrorResponse(ctx, 400, ErrorCode.INVALID_PAYMENT_AMOUNT, error.message, {
       network: error.network,
       amount: Number(error.amount),
+      unit: 'sats',
     });
   }
   if (error instanceof MissingPaymentAmountError) {
@@ -206,6 +216,7 @@ export function handleDomainError(ctx: Context, error: unknown, logger: Logger):
   if (error instanceof ValidationError) {
     return createErrorResponse(ctx, 400, ErrorCode.VALIDATION_ERROR, error.message, {
       field: error.field,
+      reason: error.reason,
     });
   }
   if (error instanceof UnauthorizedError) {

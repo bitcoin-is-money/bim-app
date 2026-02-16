@@ -1,7 +1,6 @@
 import {inject, Injectable, signal} from '@angular/core';
 import {Router} from '@angular/router';
 import {ParsedPayment, type StoredSwap} from '../model';
-import {NotificationService} from './notification.service';
 import {PayHttpService} from './pay.http.service';
 import {SwapPollingService} from './swap-polling.service';
 import {SwapStorageService} from './swap-storage.service';
@@ -12,7 +11,6 @@ import {SwapStorageService} from './swap-storage.service';
 export class PayService {
   private readonly httpService = inject(PayHttpService);
   private readonly router = inject(Router);
-  private readonly notificationService = inject(NotificationService);
   private readonly swapStorageService = inject(SwapStorageService);
   private readonly swapPollingService = inject(SwapPollingService);
 
@@ -74,7 +72,7 @@ export class PayService {
         },
         error: () => {
           this.isProcessing.set(false);
-          this.notificationService.error({message: 'Payment failed'});
+          // Error notification is handled by the HTTP interceptor
         },
       });
   }
