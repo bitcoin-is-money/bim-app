@@ -37,7 +37,9 @@ export class AccountSetupPage implements OnInit {
 
   private triggerDeployment(): void {
     this.accountService.deploy().subscribe({
-      next: () => {
+      next: (response) => {
+        // Address is known as soon as deploy responds — update the auth signal
+        this.authService.updateStarknetAddress(response.starknetAddress);
         // Deployment started, begin polling for status
         this.startPolling();
       },

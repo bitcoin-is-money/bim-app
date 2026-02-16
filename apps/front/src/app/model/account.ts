@@ -3,7 +3,7 @@
 export interface Account {
   id: string;
   username: string;
-  starknetAddress: string;
+  starknetAddress: string | null;
   status: string;
 }
 

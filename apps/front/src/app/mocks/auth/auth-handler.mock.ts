@@ -133,7 +133,7 @@ export class AuthHandlerMock {
     const account: Account = {
       id: accountId,
       username,
-      starknetAddress: generateStarknetAddress(username),
+      starknetAddress: null, // Not yet set — will be set on deploy
       status: 'pending',
     };
 

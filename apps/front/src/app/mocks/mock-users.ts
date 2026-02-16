@@ -9,7 +9,7 @@ export interface MockSwapConfig {
 
 export interface MockUserProfile {
   username: string;
-  starknetAddress: string;
+  starknetAddress: string | null;
   deploymentTxHash: string | null;
   createdAt: string; // ISO date
   deployAccountSuccess: boolean;

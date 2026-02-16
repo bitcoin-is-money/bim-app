@@ -134,6 +134,14 @@ export class AuthService {
   }
 
   /**
+   * Updates the Starknet address on the current user signal.
+   * Called after account deployment when the address becomes known.
+   */
+  updateStarknetAddress(address: string): void {
+    this.currentUser.update(user => user ? {...user, starknetAddress: address} : null);
+  }
+
+  /**
    * Logs out the current user and navigates to the auth page.
    */
   async signOut(): Promise<void> {
