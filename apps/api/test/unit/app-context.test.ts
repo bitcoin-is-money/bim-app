@@ -29,7 +29,7 @@ function createMockConfig(): AppConfig.Config {
     nodeEnv: 'test',
     starknetNetwork: 'testnet',
     port: 8080,
-    database: {url: 'postgres://test', sslMode: 'off'},
+    database: {url: 'postgres://test', sslMode: 'disable'},
     webauthn: {rpId: 'localhost', rpName: 'Test App', origin: 'http://localhost:8080'},
     starknetRpcUrl: 'http://localhost:5050',
     accountClassHash: '0x123',

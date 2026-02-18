@@ -64,7 +64,7 @@ export namespace AppConfig {
       starknetNetwork: starknetNetwork,
       database: {
         url: required('DATABASE_URL'),
-        sslMode: parseSslMode(optional('DATABASE_SSL', 'strict')),
+        sslMode: parseSslMode(optional('DATABASE_SSL', 'verify-full')),
         startupRequiredTable: schema.accounts,
       },
       starknetRpcUrl: required('STARKNET_RPC_URL'),
@@ -128,7 +128,7 @@ export namespace AppConfig {
   }
 
   function parseSslMode(value: string): DatabaseSslMode {
-    const valid: DatabaseSslMode[] = ['off', 'allow-self-signed', 'strict'];
+    const valid: DatabaseSslMode[] = ['disable', 'require', 'verify-full'];
     if (!valid.includes(value as DatabaseSslMode)) {
       throw new Error(`Invalid DATABASE_SSL: "${value}". Must be one of: ${valid.join(', ')}.`);
     }

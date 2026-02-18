@@ -31,7 +31,7 @@ services:
     environment:
       NETWORK: ${NETWORK:-testnet}
       DATABASE_URL: postgresql://bim_user:bim_password@postgres:5432/bim
-      DATABASE_SSL: allow-self-signed
+      DATABASE_SSL: require
     env_file:
       - apps/api/.env.${NETWORK:-testnet}.secret
     depends_on:
