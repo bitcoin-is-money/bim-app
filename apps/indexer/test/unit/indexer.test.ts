@@ -21,10 +21,13 @@ vi.mock('@bim/lib/url', () => ({
   redactUrl: vi.fn((url: string) => '***'),
 }));
 
-vi.mock('drizzle-orm/node-postgres', () => ({drizzle: vi.fn()}));
-vi.mock('drizzle-orm', () => ({
-  getTableName: vi.fn(() => 'transactions'),
-  sql: vi.fn(),
+const {mockCheckAvailability} = vi.hoisted(() => ({
+  mockCheckAvailability: vi.fn(),
+}));
+vi.mock('@bim/db/connection', () => ({
+  DatabaseConnection: {
+    checkAvailability: mockCheckAvailability,
+  },
 }));
 
 vi.mock('@apibara/plugin-drizzle', () => ({
@@ -77,7 +80,6 @@ vi.mock('../../src/wbtc-transfer/transaction-writer.js', () => ({
 // ---------------------------------------------------------------------------
 
 import {createLogger, DEFAULT_LOGGER_CONFIG} from '@bim/lib/logger';
-import {drizzle} from 'drizzle-orm/node-postgres';
 import {INDEXER_LOGGER_CONFIG} from "../../src/wbtc-transfer/logger-config";
 import {TransferEventDecoder} from '../../src/wbtc-transfer/transfer-event-decoder.js';
 import {AccountCache} from '../../src/wbtc-transfer/account-cache.js';
@@ -107,23 +109,19 @@ function makeConfig(
 }
 
 function mockDbSuccess() {
-  vi.mocked(drizzle).mockReturnValue({
-    execute: vi.fn().mockResolvedValue({rowCount: 1}),
-  } as unknown as ReturnType<typeof drizzle>);
+  mockCheckAvailability.mockResolvedValue(undefined);
 }
 
 function mockDatabaseNotStarted() {
-  vi.mocked(drizzle).mockReturnValue({
-    execute: vi.fn().mockRejectedValue(new Error('connection refused')),
-  } as unknown as ReturnType<typeof drizzle>);
+  mockCheckAvailability.mockRejectedValue(
+    new Error('Database connection failed after 5 attempts'),
+  );
 }
 
 function mockTableDoesNotExist() {
-  const dbStarted = {execute: vi.fn().mockResolvedValue({rowCount: 1})};
-  const dbNoTable = {execute: vi.fn().mockResolvedValue({rowCount: 0})};
-  vi.mocked(drizzle)
-    .mockReturnValueOnce(dbStarted as unknown as ReturnType<typeof drizzle>)
-    .mockReturnValueOnce(dbNoTable as unknown as ReturnType<typeof drizzle>);
+  mockCheckAvailability.mockRejectedValue(
+    new Error('Table "bim_transactions" does not exist.'),
+  );
 }
 
 // Prevent real process termination; throw so execution stops like a real exit.
@@ -170,20 +168,24 @@ describe('createWbtcTransferIndexer', () => {
   });
 
   it('exits when connectionString is missing', async () => {
+    mockCheckAvailability.mockRejectedValue(new Error('DATABASE_URL is not set'));
     const cfg = makeConfig({connectionString: '' as string});
 
     await expect(createWbtcTransferIndexer(cfg)).rejects.toThrow('process.exit');
-    expect(getLogger().fatal).toHaveBeenCalledWith('DATABASE_URL environment variable is not set');
+    expect(getLogger().fatal).toHaveBeenCalledWith(
+      expect.objectContaining({message: 'DATABASE_URL is not set'}),
+      'Fatal startup error',
+    );
     expect(exitSpy).toHaveBeenCalledWith(1);
   });
 
-  it('exits when database is not started', async () => {
+  it('exits when database is not started after retries', async () => {
     mockDatabaseNotStarted();
 
     await expect(createWbtcTransferIndexer(makeConfig())).rejects.toThrow('process.exit');
     expect(getLogger().fatal).toHaveBeenCalledWith(
-      expect.objectContaining({message: 'connection refused'}),
-      'PostgreSQL database is not started',
+      expect.objectContaining({message: expect.stringContaining('connection failed after')}),
+      'Fatal startup error',
     );
     expect(exitSpy).toHaveBeenCalledWith(1);
   });
@@ -192,7 +194,10 @@ describe('createWbtcTransferIndexer', () => {
     mockTableDoesNotExist();
 
     await expect(createWbtcTransferIndexer(makeConfig())).rejects.toThrow('process.exit');
-    expect(getLogger().fatal).toHaveBeenCalledWith(expect.stringContaining('does not exist'));
+    expect(getLogger().fatal).toHaveBeenCalledWith(
+      expect.objectContaining({message: expect.stringContaining('does not exist')}),
+      'Fatal startup error',
+    );
     expect(exitSpy).toHaveBeenCalledWith(1);
   });
 

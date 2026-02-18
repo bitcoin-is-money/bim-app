@@ -23,8 +23,5 @@
     "pino-pretty": "^13.0.0",
     "starknet": "^9.3.0",
     "drizzle-orm": "^0.45.1"
-  },
-  "devDependencies": {
-    "dotenv-cli": "^11.0.0"
   }
 }

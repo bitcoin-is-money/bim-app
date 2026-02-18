@@ -1,6 +1,6 @@
+import {DatabaseConnection} from "@bim/db/connection";
 import type {Hono} from 'hono';
 import {createApp, type CreateAppOptions} from '../../../src/app.js';
-import {DatabaseConnection} from '../../../src/db/index.js';
 
 /**
  * Testnet test app helper.

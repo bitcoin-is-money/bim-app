@@ -1,7 +1,7 @@
 import {serve} from '@hono/node-server';
 import {basename} from "node:path";
 import {createApp} from './app';
-import {DatabaseConnection} from './db';
+import {DatabaseConnection} from '@bim/db/connection';
 import {loadEnv} from './load-env';
 
 loadEnv();

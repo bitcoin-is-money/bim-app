@@ -2,11 +2,10 @@ import {defineIndexer, type HandlerArgs} from '@apibara/indexer';
 import {drizzle as apibaraDrizzle, drizzleStorage, useDrizzleStorage} from '@apibara/plugin-drizzle';
 import {type Block, getSelector, StarknetStream} from '@apibara/starknet';
 import * as schema from '@bim/db';
+import {DatabaseConnection} from '@bim/db/connection';
 import {createLogger} from '@bim/lib/logger';
 import {redactUrl} from '@bim/lib/url';
 import type {ApibaraRuntimeConfig} from 'apibara/types';
-import {getTableName, sql} from 'drizzle-orm';
-import {drizzle} from 'drizzle-orm/node-postgres';
 import {basename} from "node:path";
 import type {Logger} from 'pino';
 import {AccountCache} from './account-cache.js';
@@ -46,9 +45,8 @@ async function createWbtcTransferIndexerInternal(
   logger: Logger,
 ) {
   const connectionString: string = runtimeConfig.connectionString;
-  assertConnectionStringSet(connectionString, logger);
-  await assertDatabaseStarted(connectionString, logger);
-  await assertTransactionTableExists(connectionString, logger);
+  logger.info({connectionString: redactUrl(connectionString)}, 'Checking database availability');
+  await DatabaseConnection.checkAvailability({url: connectionString}, logger);
   logger.info('Database connectivity verified');
 
   const decoder = new TransferEventDecoder(logger);
@@ -142,52 +140,3 @@ function createRootLogger(): Logger {
   }
 }
 
-function assertConnectionStringSet(
-  connectionString: string | undefined,
-  logger: Logger,
-): void {
-  if (!connectionString) {
-    logger.fatal('DATABASE_URL environment variable is not set');
-    process.kill(process.ppid, 'SIGTERM');
-    process.exit(1);
-  }
-  logger.info(`connectionString set to ${redactUrl(connectionString)}`);
-}
-
-async function assertDatabaseStarted(
-  connectionString: string,
-  logger: Logger,
-): Promise<void> {
-  try {
-    const db = drizzle(connectionString);
-    await db.execute(sql`SELECT 1`);
-  } catch (err) {
-    logger.fatal(err, 'PostgreSQL database is not started');
-    process.kill(process.ppid, 'SIGTERM');
-    process.exit(1);
-  }
-}
-
-async function assertTransactionTableExists(
-  connectionString: string,
-  logger: Logger,
-): Promise<void> {
-  const db = drizzle(connectionString);
-  const tableName = getTableName(schema.transactions);
-  const schemaName = 'public';
-
-  const result = await db.execute(sql`
-    SELECT 1
-    FROM information_schema.tables
-    WHERE table_schema = ${schemaName}
-      AND table_name = ${tableName}
-  `);
-
-  if (result.rowCount === 0) {
-    logger.fatal(
-      `Table "${tableName}" does not exist. Push the schema first:\nDATABASE_URL=... npm run db:push -w @bim/api`,
-    );
-    process.kill(process.ppid, 'SIGTERM');
-    process.exit(1);
-  }
-}

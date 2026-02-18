@@ -7,6 +7,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./connection": {
+      "types": "./dist/connection.d.ts",
+      "import": "./dist/connection.js"
     }
   },
   "scripts": {
@@ -15,9 +19,19 @@
     "build": "tsc -p tsconfig.build.json",
     "dev": "tsc --watch",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "db:generate": "drizzle-kit generate --config drizzle.config.ts",
+    "db:migrate": "drizzle-kit migrate --config drizzle.config.ts",
+    "db:push": "drizzle-kit push --config drizzle.config.ts",
+    "db:studio": "drizzle-kit studio --config drizzle.config.ts"
   },
   "dependencies": {
-    "drizzle-orm": "^0.45.1"
+    "drizzle-orm": "^0.45.1",
+    "pg": "^8.18.0",
+    "pino": "^10.3.1"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.16.0",
+    "drizzle-kit": "^0.31.8"
   }
 }
