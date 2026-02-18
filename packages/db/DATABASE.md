@@ -80,6 +80,20 @@ DATABASE_URL="..." npm run db:studio -w @bim/db
 DATABASE_URL=$(terraform output -raw database_url) ...
 ```
 
+## SSL Configuration
+
+The `DATABASE_SSL` env var controls SSL for `node-postgres` (`pg`). The `pg` driver
+does **not** parse `?sslmode=` from connection strings — it requires explicit config.
+
+| `DATABASE_SSL` | `pg` option | PostgreSQL standard |
+|----------------|-------------|---------------------|
+| `disable` | no `ssl` | `sslmode=disable` |
+| `require` | `ssl: { rejectUnauthorized: false }` | `sslmode=require` |
+| `verify-full` | `ssl: { rejectUnauthorized: true }` | `sslmode=verify-full` |
+
+Scaleway Serverless SQL endpoints include `?sslmode=require` in the URL, but this is
+silently ignored by `pg`. You must set `DATABASE_SSL=verify-full` explicitly.
+
 ## Push vs Generate + Migrate
 
 Two strategies to apply schema changes to a database:

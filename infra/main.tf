@@ -82,7 +82,7 @@ resource "scaleway_container" "api" {
   environment_variables = merge(
     {
       NETWORK                           = var.network
-      DATABASE_SSL                      = "strict"
+      DATABASE_SSL                      = "verify-full"
       WEBAUTHN_AUTHENTICATOR_ATTACHMENT = "cross-platform"
     },
     # WebAuthn domain is only set once we know the container's domain (after first apply).
@@ -118,7 +118,8 @@ resource "scaleway_container" "indexer" {
   region         = var.region
 
   environment_variables = {
-    PRESET = var.network
+    PRESET       = var.network
+    DATABASE_SSL = "verify-full"
   }
 
   secret_environment_variables = {

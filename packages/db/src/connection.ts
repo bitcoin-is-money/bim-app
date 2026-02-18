@@ -7,7 +7,7 @@ import type {Logger} from 'pino';
 
 export type Database = ReturnType<typeof drizzle<typeof schema>>;
 
-export type DatabaseSslMode = 'off' | 'allow-self-signed' | 'strict';
+export type DatabaseSslMode = 'disable' | 'require' | 'verify-full';
 
 export type DatabaseConfig = {
   url: string;
@@ -22,8 +22,8 @@ export type DatabaseConfig = {
 
 const DEFAULT_CONFIG = {
   url: '',
-  sslMode: 'off' as DatabaseSslMode,
-  poolMax: 20,
+  sslMode: 'disable' as DatabaseSslMode,
+  poolMax: 5,
   poolIdleTimeoutMillis: 30000,
   connectionTimeoutMillis: 20000,
   startupMaxRetries: 5,
@@ -113,8 +113,8 @@ export class DatabaseConnection {
       this.logger.debug('Creating connection pool');
       this.pool = new pg.Pool({
         connectionString: this.config.url,
-        ...(this.config.sslMode !== 'off' && {
-          ssl: {rejectUnauthorized: this.config.sslMode === 'strict'},
+        ...(this.config.sslMode !== 'disable' && {
+          ssl: {rejectUnauthorized: this.config.sslMode === 'verify-full'},
         }),
         max: this.config.poolMax,
         idleTimeoutMillis: this.config.poolIdleTimeoutMillis,
