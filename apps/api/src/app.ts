@@ -52,7 +52,14 @@ export async function createApp(options: CreateAppOptions = {}): Promise<AppInst
   const context = AppContext.createDefault(config, db, rootLogger, options.context);
   const app = new Hono();
 
-  app.use('*', createRequestLoggerMiddleware(context.logger, {apiOnly: true}));
+  app.use('*', createRequestLoggerMiddleware(context.logger, {
+    apiOnly: true,
+    silencedPaths: [
+      '/api/auth',
+      '/api/user/settings',
+      '/api/currency/prices'
+    ],
+  }));
   app.use('/api/*', cors({
       origin: config.webauthn.origin,
       credentials: true,
