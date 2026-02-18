@@ -2,6 +2,7 @@ import {accessSync, constants, mkdirSync} from 'node:fs';
 import * as schema from '@bim/db';
 import {redactUrl} from '@bim/lib/url';
 import type {DatabaseConfig, DatabaseSslMode} from '@bim/db/connection';
+import {getTableName} from 'drizzle-orm';
 
 export type AuthenticatorAttachment = 'platform' | 'cross-platform';
 
@@ -144,6 +145,9 @@ export namespace AppConfig {
       database: {
         ...config.database,
         url: redactUrl(config.database.url!),
+        ...(config.database.startupRequiredTable && {
+          startupRequiredTable: getTableName(config.database.startupRequiredTable)
+        })
       },
       starknetRpcUrl: redactUrl(config.starknetRpcUrl),
       avnuApiKey: config.avnuApiKey ? '***' : '',
