@@ -31,7 +31,7 @@ import {
   SimpleWebAuthnGateway,
   StarknetRpcGateway
 } from "./adapters";
-import {type Database} from "./db";
+import {type Database} from "@bim/db/connection";
 import {type AppConfig} from "./app-config";
 
 /**

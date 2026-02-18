@@ -1,6 +1,6 @@
 import type {TypedResponse} from 'hono';
 import {Hono} from 'hono';
-import {DatabaseConnection} from '../../db';
+import {DatabaseConnection} from '@bim/db/connection';
 import type {HealthCheckResponse, LiveResponse, ReadyResponse} from './health.types';
 
 export function createHealthRoutes(): Hono {

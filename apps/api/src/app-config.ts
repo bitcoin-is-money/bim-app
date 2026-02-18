@@ -1,6 +1,7 @@
 import {accessSync, constants, mkdirSync} from 'node:fs';
+import * as schema from '@bim/db';
 import {redactUrl} from '@bim/lib/url';
-import type {DatabaseConfig, DatabaseSslMode} from './db';
+import type {DatabaseConfig, DatabaseSslMode} from '@bim/db/connection';
 
 export type AuthenticatorAttachment = 'platform' | 'cross-platform';
 
@@ -24,7 +25,7 @@ export namespace AppConfig {
     port: number;
     nodeEnv: string;
     starknetNetwork: 'mainnet' | 'testnet' | 'devnet';
-    database: DatabaseConfig;
+    database: Partial<DatabaseConfig>;
     starknetRpcUrl: string;
     accountClassHash: string;
     wbtcTokenAddress: string;
@@ -64,6 +65,7 @@ export namespace AppConfig {
       database: {
         url: required('DATABASE_URL'),
         sslMode: parseSslMode(optional('DATABASE_SSL', 'strict')),
+        startupRequiredTable: schema.accounts,
       },
       starknetRpcUrl: required('STARKNET_RPC_URL'),
       accountClassHash: required('ACCOUNT_CLASS_HASH'),
@@ -141,7 +143,7 @@ export namespace AppConfig {
       ...config,
       database: {
         ...config.database,
-        url: redactUrl(config.database.url),
+        url: redactUrl(config.database.url!),
       },
       starknetRpcUrl: redactUrl(config.starknetRpcUrl),
       avnuApiKey: config.avnuApiKey ? '***' : '',

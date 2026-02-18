@@ -1,6 +1,6 @@
+import {DatabaseConnection} from "@bim/db/connection";
 import type {Hono} from 'hono';
 import {type AppInstance, createApp, type CreateAppOptions} from '../../../src/app';
-import {DatabaseConnection} from '../../../src/db';
 import {DEVNET_ACCOUNT_CLASS_HASH} from './devnet-paymaster.gateway';
 
 export namespace TestApp {

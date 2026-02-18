@@ -15,8 +15,9 @@ export type DbClient = NodePgDatabase<typeof schema>;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const apiPath = path.resolve(__dirname, '../../..');
 const projectPath = path.resolve(apiPath, '../..');
-const migrationsFolder: string = path.resolve(apiPath, 'drizzle');
-const configPath = path.join(apiPath, 'drizzle.config.ts');
+const dbPackagePath = path.resolve(projectPath, 'packages/db');
+const migrationsFolder: string = path.resolve(dbPackagePath, 'drizzle');
+const configPath = path.join(dbPackagePath, 'drizzle.config.ts');
 const tsx = path.resolve(projectPath, 'node_modules/.bin/tsx');
 const drizzleKit = path.resolve(projectPath, 'node_modules/drizzle-kit/bin.cjs');
 
@@ -122,7 +123,7 @@ export class TestDatabase {
   private pushSchema(connectionString: string): void {
     const cmd = `${tsx} ${drizzleKit} push --force --config ${configPath}`;
     execSync(cmd, {
-      cwd: apiPath,
+      cwd: dbPackagePath,
       env: {...process.env, DATABASE_URL: connectionString},
       stdio: 'pipe',
     });

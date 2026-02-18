@@ -5,7 +5,7 @@ import {cors} from 'hono/cors';
 import {basename} from "node:path";
 import type {Logger} from 'pino';
 import {AppContext, type AppContextOverrides} from "./app-context";
-import {DatabaseConnection} from './db';
+import {DatabaseConnection} from '@bim/db/connection';
 import {createRequestLoggerMiddleware} from './middleware/request-logger.middleware';
 import {SwapMonitor} from './monitoring/swap.monitor';
 import {
