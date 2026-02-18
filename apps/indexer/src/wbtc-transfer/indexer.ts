@@ -68,6 +68,11 @@ async function createWbtcTransferIndexerInternal(
     }
   });
 
+  // Prevent unhandled pg pool 'error' event from crashing the process (and give more info about the error)
+  (db as any).$client?.on('error', (err: Error) => {
+    logger.error({err}, 'Unexpected pg pool error');
+  });
+
   logger.info({
     streamUrl: runtimeConfig.streamUrl,
     contractAddress: runtimeConfig.contractAddress,
