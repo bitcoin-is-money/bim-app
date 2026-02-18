@@ -84,7 +84,7 @@ export class PayPage implements OnDestroy {
     try {
       this.scanner = new Html5Qrcode('qr-reader', {
         formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
-        useBarCodeDetectorIfSupported: true,
+        useBarCodeDetectorIfSupported: false,
         verbose: false,
       });
 
