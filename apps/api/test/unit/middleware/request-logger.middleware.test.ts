@@ -137,4 +137,43 @@ describe('request-logger middleware', () => {
 
     expect(true).toBe(true);
   });
+
+  describe('silencedPaths', () => {
+    let silencedApp: Hono;
+
+    beforeEach(() => {
+      silencedApp = new Hono();
+      silencedApp.use('*', createRequestLoggerMiddleware(logger, {silencedPaths: ['/api/auth']}));
+      silencedApp.get('/api/auth/session', (c) => c.json({ok: true}));
+      silencedApp.post('/api/auth/login/begin', (c) => c.json({ok: true}));
+      silencedApp.get('/api/account', (c) => c.json({ok: true}));
+      silencedApp.get('/api/auth/fail', (c) => c.json({error: 'unauthorized'}, 401));
+    });
+
+    it('does not log silenced paths on success', async () => {
+      await silencedApp.request('/api/auth/session');
+
+      expect(entries).toHaveLength(0);
+    });
+
+    it('does not log silenced paths with nested routes', async () => {
+      await silencedApp.request('/api/auth/login/begin', {method: 'POST'});
+
+      expect(entries).toHaveLength(0);
+    });
+
+    it('still logs non-silenced paths', async () => {
+      await silencedApp.request('/api/account');
+
+      expect(entries.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('still logs silenced paths on error (4xx+)', async () => {
+      await silencedApp.request('/api/auth/fail');
+
+      const completed = entries.find(e => e['msg'] === 'Request completed');
+      expect(completed).toBeDefined();
+      expect(completed!['status']).toBe(401);
+    });
+  });
 });

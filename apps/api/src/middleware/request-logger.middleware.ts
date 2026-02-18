@@ -28,10 +28,11 @@ function getStatusLogFn(
  */
 export function createRequestLoggerMiddleware(
   rootLogger: Logger,
-  options?: { apiOnly?: boolean },
+  options?: { apiOnly?: boolean; silencedPaths?: string[] },
 ) {
   const logger = rootLogger.child({name: basename(import.meta.filename)});
   const apiOnly = options?.apiOnly ?? false;
+  const silencedPaths = options?.silencedPaths ?? [];
 
   return async (ctx: Context, next: Next) => {
     requestCounter = requestCounter >= MAX_REQUEST_ID ? 1 : requestCounter + 1;
@@ -44,9 +45,10 @@ export function createRequestLoggerMiddleware(
     const {method} = ctx.req;
     const path = ctx.req.path;
     const isApiRoute = path.startsWith('/api');
+    const isSilenced = silencedPaths.some(prefix => path.startsWith(prefix));
 
     await logContext.run({requestId}, async () => {
-      if (isApiRoute || !apiOnly) {
+      if (!isSilenced && (isApiRoute || !apiOnly)) {
         logger.info(`Incoming request - ${method} ${path}`);
       }
 
@@ -55,7 +57,7 @@ export function createRequestLoggerMiddleware(
       const durationMs = Math.round(performance.now() - start);
       const httpStatus = ctx.res.status;
 
-      if (isApiRoute || !apiOnly || httpStatus >= 400) {
+      if (httpStatus >= 400 || (!isSilenced && (isApiRoute || !apiOnly))) {
         const logFn = getStatusLogFn(logger, httpStatus);
         logFn({method, path, status: httpStatus, durationMs}, 'Request completed');
       }
