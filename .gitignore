@@ -66,3 +66,9 @@ tmp
 # Misc
 .apibara/
 /scripts/utils/localhost*
+
+# Terraform
+infra/.terraform/
+infra/*.tfstate
+infra/*.tfstate.*
+infra/terraform.tfvars

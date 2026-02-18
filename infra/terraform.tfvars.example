@@ -1,0 +1,24 @@
+# =============================================================================
+# BIM — Terraform Variables
+# =============================================================================
+# Copy this file to terraform.tfvars and fill in your values.
+# terraform.tfvars is gitignored — never commit secrets.
+
+network = "testnet"
+
+# After first `terraform apply`, copy the api_domain output here:
+# api_domain = "bimxxxxxxxx-bim-api.functions.fnc.fr-par.scw.cloud"
+
+# ---------- Scaleway IAM (for database authentication) ----------
+# Get your user ID:  scw iam api-key get $(scw config get access-key) -o json | jq -r '.user_id'
+# Get your secret key: scw config get secret-key
+scw_user_id    = ""
+scw_secret_key = ""
+
+# ---------- Secrets ----------
+
+# AVNU paymaster API key — https://portal.avnu.fi
+# avnu_api_key = ""
+
+# Apibara DNA token — https://www.apibara.com
+# dna_token = ""

@@ -18,6 +18,7 @@
       "@bim/lib/*": ["packages/lib/src/*"],
       "@bim/test-toolkit/*": ["packages/test-toolkit/src/*"],
       "@bim/db": ["packages/db/src/index.ts"],
+      "@bim/db/connection": ["packages/db/src/connection.ts"],
       "@bim/domain/*": ["packages/domain/src/*"]
     }
   }
