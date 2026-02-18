@@ -84,6 +84,7 @@ resource "scaleway_container" "api" {
       NETWORK                           = var.network
       DATABASE_SSL                      = "verify-full"
       WEBAUTHN_AUTHENTICATOR_ATTACHMENT = "cross-platform"
+      LOG_LEVEL                         = var.api_log_level
     },
     # WebAuthn domain is only set once we know the container's domain (after first apply).
     # Until then, the image defaults (localhost) apply — WebAuthn won't work until next apply.
@@ -120,6 +121,7 @@ resource "scaleway_container" "indexer" {
   environment_variables = {
     PRESET       = var.network
     DATABASE_SSL = "verify-full"
+    LOG_LEVEL    = var.indexer_log_level
   }
 
   secret_environment_variables = {
