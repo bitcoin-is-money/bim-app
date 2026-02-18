@@ -84,7 +84,7 @@ export class SwapMonitor {
       for (const swap of activeSwaps) {
         try {
           const {status} = await this.swapService.fetchStatus({swapId: swap.id});
-          this.log.trace({swapId: swap.id, status}, `Swap status`);
+          this.log.debug({swapId: swap.id, status}, `Swap status`);
           await this.autoClaimIfNeeded(swap.id, status, swap.direction);
         } catch (err) {
           // Individual swap errors are non-fatal — continue with the next swap
