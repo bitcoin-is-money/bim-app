@@ -2,7 +2,7 @@ import {inject, Injectable, OnDestroy, signal} from '@angular/core';
 import {Amount, ConversionRates, Currency} from "../model";
 import {CurrencyHttpService} from './currency.http.service';
 
-const REFRESH_INTERVAL_MS = 60_000;
+const REFRESH_INTERVAL_MS = 3_600_000 * 6;
 
 @Injectable({providedIn: 'root'})
 export class CurrencyService implements OnDestroy {
