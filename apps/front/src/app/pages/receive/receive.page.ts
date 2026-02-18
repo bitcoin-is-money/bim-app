@@ -113,6 +113,11 @@ export class ReceivePage {
   });
 
   constructor() {
+    for (const network of NETWORKS) {
+      const img = new Image();
+      img.src = `/network-${network}.png`;
+    }
+
     effect(() => {
       const amt = this.amount();
       const network = this.selectedNetwork();
