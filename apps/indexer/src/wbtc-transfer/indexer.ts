@@ -80,6 +80,7 @@ async function createWbtcTransferIndexerInternal(
     plugins: [drizzleStorage({db})],
 
     async transform(args: HandlerArgs<Block>) {
+      process.send?.({type: 'heartbeat'});
       try {
         const {blockNumber, blockTimestamp, events} = extractBlockContext(args, logger);
         if (events.length === 0) return;
