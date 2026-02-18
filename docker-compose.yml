@@ -1,16 +1,16 @@
-# Avoid to use docker compose directly, use npm run local:testnet (or testnet)
+# Usage:
+#   docker compose up -d postgres          # DB only (for local dev with npm run dev)
+#   docker compose up -d                   # All services (full stack via Docker)
 
 services:
   postgres:
-    image: postgres:16 # Debian Bookworm (include self-signed "snakeoil" certificate)
+    image: postgres:16
     ports:
       - "${DB_PORT:-5432}:5432"
     environment:
       POSTGRES_USER: bim_user
       POSTGRES_PASSWORD: bim_password
       POSTGRES_DB: bim
-    # Enable SSL using Debian's built-in self-signed "snakeoil" certificate.
-    # Requires DATABASE_SSL=allow-self-signed in the API config (.env.testnet).
     command: >
       postgres
       -c ssl=on
@@ -18,3 +18,33 @@ services:
       -c ssl_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
     volumes:
       - ./data/${NETWORK:-testnet}/pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bim_user -d bim"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  api:
+    image: bim-api
+    ports:
+      - "8080:8080"
+    environment:
+      NETWORK: ${NETWORK:-testnet}
+      DATABASE_URL: postgresql://bim_user:bim_password@postgres:5432/bim
+      DATABASE_SSL: allow-self-signed
+    env_file:
+      - apps/api/.env.${NETWORK:-testnet}.secret
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  indexer:
+    image: bim-indexer
+    environment:
+      PRESET: ${NETWORK:-testnet}
+      APIBARA_RUNTIME_CONFIG: '{"connectionString":"postgresql://bim_user:bim_password@postgres:5432/bim"}'
+    env_file:
+      - apps/indexer/.env.${NETWORK:-testnet}.secret
+    depends_on:
+      postgres:
+        condition: service_healthy

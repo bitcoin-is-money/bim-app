@@ -1,0 +1,94 @@
+name: Deploy to Scaleway
+
+on:
+  push:
+    branches: [main]
+
+env:
+  REGISTRY: ${{ secrets.SCW_REGISTRY_ENDPOINT }}
+  API_IMAGE: ${{ secrets.SCW_REGISTRY_ENDPOINT }}/bim-api
+  INDEXER_IMAGE: ${{ secrets.SCW_REGISTRY_ENDPOINT }}/bim-indexer
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ---- Build & Push Docker images ----
+
+      - name: Login to Scaleway Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: nologin
+          password: ${{ secrets.SCW_SECRET_KEY }}
+
+      - name: Build & push API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          push: true
+          tags: |
+            ${{ env.API_IMAGE }}:${{ github.sha }}
+            ${{ env.API_IMAGE }}:latest
+
+      - name: Build & push Indexer image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/indexer/Dockerfile
+          push: true
+          tags: |
+            ${{ env.INDEXER_IMAGE }}:${{ github.sha }}
+            ${{ env.INDEXER_IMAGE }}:latest
+
+      # ---- Database migration ----
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies for migration
+        run: npm ci
+        env:
+          npm_config_ignore_scripts: true
+
+      - name: Run database migration
+        run: npx drizzle-kit push --config apps/api/drizzle.config.ts
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      # ---- Deploy containers ----
+
+      - name: Install Scaleway CLI
+        run: |
+          curl -sL https://github.com/scaleway/scaleway-cli/releases/latest/download/scaleway-cli_linux_amd64 -o /usr/local/bin/scw
+          chmod +x /usr/local/bin/scw
+
+      - name: Deploy API container
+        run: |
+          scw container container update ${{ secrets.SCW_API_CONTAINER_ID }} \
+            registry-image=${{ env.API_IMAGE }}:${{ github.sha }} \
+            region=fr-par
+          scw container container deploy ${{ secrets.SCW_API_CONTAINER_ID }} \
+            region=fr-par
+        env:
+          SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
+          SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
+          SCW_DEFAULT_PROJECT_ID: ${{ secrets.SCW_PROJECT_ID }}
+
+      - name: Deploy Indexer container
+        run: |
+          scw container container update ${{ secrets.SCW_INDEXER_CONTAINER_ID }} \
+            registry-image=${{ env.INDEXER_IMAGE }}:${{ github.sha }} \
+            region=fr-par
+          scw container container deploy ${{ secrets.SCW_INDEXER_CONTAINER_ID }} \
+            region=fr-par
+        env:
+          SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
+          SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
+          SCW_DEFAULT_PROJECT_ID: ${{ secrets.SCW_PROJECT_ID }}

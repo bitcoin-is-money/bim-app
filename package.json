@@ -11,18 +11,26 @@
     "postinstall": "patch-package",
     "clean": "npm run clean --workspaces --if-present",
     "clean:all": "npm run clean:all --workspaces --if-present && rm -rf node_modules",
-    "build": "npm run build -w @bim/test-toolkit && npm run build -w @bim/lib && npm run build -w @bim/domain && npm run build -w @bim/db && npm run build -w @bim/indexer && npm run build -w @bim/api",
+    "build:libs": "npm run build -w @bim/test-toolkit && npm run build -w @bim/lib && npm run build -w @bim/domain && npm run build -w @bim/db",
     "build:front": "npm run build -w @bim/front",
-    "build:all": "npm run build && npm run build:front && npm run copy:front -w @bim/api",
+    "build:api": "npm run build:libs && npm run build -w @bim/api && npm run build:front && npm run copy:front -w @bim/api",
+    "build:indexer": "npm run build:libs && npm run build -w @bim/indexer",
     "dev": "npm run dev:testnet -w @bim/api",
     "dev:front": "npm run dev -w front",
     "test": "npm run test -w @bim/test-toolkit && npm run test -w @bim/lib && npm run test -w @bim/domain && npm run test -w @bim/indexer && npm run test -w @bim/api && npm run test -w @bim/front",
     "test:integration": "npm run test:integration -w @bim/api",
     "local:testnet": "./scripts/local.sh testnet",
     "local:mainnet": "./scripts/local.sh mainnet",
-    "test:e2e": "echo TODO"
+    "test:e2e": "echo TODO",
+    "deploy:build": "./infra/deploy.sh build",
+    "deploy:push": "./infra/deploy.sh push",
+    "deploy:ship": "./infra/deploy.sh ship",
+    "db:push": "npm run db:push -w @bim/db",
+    "db:generate": "npm run db:generate -w @bim/db",
+    "db:migrate": "npm run db:migrate -w @bim/db",
+    "db:studio": "npm run db:studio -w @bim/db"
   },
-  "packageManager": "npm@11.9.0",
+  "packageManager": "npm@11.10.0",
   "engines": {
     "node": ">=22.0.0"
   },
@@ -33,6 +41,7 @@
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vite-tsconfig-paths": "^6.1.0",
-    "vitest": "^4.0.18"
+    "vitest": "^4.0.18",
+    "dotenv-cli": "^11.0.0"
   }
 }
