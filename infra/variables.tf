@@ -47,6 +47,18 @@ variable "avnu_api_key" {
   default     = ""
 }
 
+variable "api_log_level" {
+  description = "Log level for the API container (trace, debug, info, warn, error, fatal)"
+  type        = string
+  default     = "info"
+}
+
+variable "indexer_log_level" {
+  description = "Log level for the indexer container (trace, debug, info, warn, error, fatal)"
+  type        = string
+  default     = "info"
+}
+
 variable "dna_token" {
   description = "Apibara DNA token for the indexer (https://www.apibara.com)"
   type        = string
