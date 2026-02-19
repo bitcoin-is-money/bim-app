@@ -23,8 +23,8 @@ case "${1:-}" in
   redeploy)
     API_ID=$(terraform -chdir="$INFRA_DIR" output -raw api_container_id)
     INDEXER_ID=$(terraform -chdir="$INFRA_DIR" output -raw indexer_container_id)
-    scw container container deploy "$API_ID"
-    scw container container deploy "$INDEXER_ID"
+    scw container container deploy "${API_ID##*/}" region=fr-par
+    scw container container deploy "${INDEXER_ID##*/}" region=fr-par
     ;;
   ship)
     "$0" build
