@@ -4,8 +4,11 @@
 
     <main class="about-main">
       <div class="about-content">
-        <p class="about-text">{{ 'about.description' | translate }}</p>
+        <p class="about-text">{{ 'about.app.description' | translate }}</p>
       </div>
+      <app-info-field [label]="'about.app.version' | translate" variant="mono">
+        {{ version }}
+      </app-info-field>
     </main>
   </div>
 </app-full-page-layout>

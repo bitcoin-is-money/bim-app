@@ -33,6 +33,11 @@ RUN npm ci
 
 # Code layers
 COPY . .
+
+# Inject app version (git hash) into frontend build
+ARG APP_VERSION=dev
+RUN echo "export const APP_VERSION = '${APP_VERSION}';" > apps/front/src/environments/version.ts
+
 RUN npm run build:api
 
 # Create minimal node_modules with only sqlite3 (the only external native dep)
