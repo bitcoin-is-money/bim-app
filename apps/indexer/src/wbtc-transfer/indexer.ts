@@ -6,7 +6,6 @@ import {DatabaseConnection} from '@bim/db/connection';
 import {createLogger} from '@bim/lib/logger';
 import {redactUrl} from '@bim/lib/url';
 import type {ApibaraRuntimeConfig} from 'apibara/types';
-import {basename} from "node:path";
 import type {Logger} from 'pino';
 import {AccountCache} from './account-cache.js';
 import {INDEXER_LOGGER_CONFIG} from "./logger-config";
@@ -29,7 +28,7 @@ export interface WbtcRuntimeConfig extends ApibaraRuntimeConfig {
 // Validates DB connectivity at startup, then delegates per-block processing to the chain:
 // decode → cache → match → write.
 export async function createWbtcTransferIndexer(cfg: WbtcRuntimeConfig) {
-  const logger: Logger = createRootLogger().child({name: basename(import.meta.filename)});
+  const logger: Logger = createRootLogger().child({name: "indexer.ts"});
   try {
     logger.info('Indexer initializing');
     return await createWbtcTransferIndexerInternal(cfg, logger);
@@ -69,6 +68,10 @@ async function createWbtcTransferIndexerInternal(
     setTimeout(() => process.exit(1), 1000);
   });
 
+  const PROGRESS_LOG_INTERVAL_MS = 3600_000;
+  let lastProgressLog = Date.now();
+  let blocksProcessed = 0;
+
   logger.info({
     streamUrl: runtimeConfig.streamUrl,
     contractAddress: runtimeConfig.contractAddress,
@@ -95,6 +98,13 @@ async function createWbtcTransferIndexerInternal(
 
     async transform(args: HandlerArgs<Block>) {
       process.send?.({type: 'heartbeat'});
+      blocksProcessed++;
+      const now = Date.now();
+      if (now - lastProgressLog >= PROGRESS_LOG_INTERVAL_MS) {
+        logger.info(`Indexer alive (${blocksProcessed} processed blocks)`);
+        lastProgressLog = now;
+        blocksProcessed = 0;
+      }
       try {
         const {blockNumber, blockTimestamp, events} = extractBlockContext(args, logger);
         if (events.length === 0) return;
@@ -141,7 +151,6 @@ function extractBlockContext(
     blockTimestamp = new Date();
   }
 
-  logger.debug({blockNumber, eventCount: events.length}, 'Processing block');
   return {blockNumber, blockTimestamp, events};
 }
 
