@@ -12,22 +12,6 @@
 
     .info-list {
       @apply flex flex-col gap-4;
-
-      .info-item {
-        @apply flex flex-col gap-1 bg-neutral-800 rounded-lg px-4 py-3;
-
-        .info-label {
-          @apply text-neutral-400 text-sm;
-        }
-
-        .info-value {
-          @apply text-white text-base break-all;
-
-          &--mono {
-            @apply font-mono text-sm;
-          }
-        }
-      }
     }
   }
 }

@@ -5,26 +5,21 @@
     <main class="my-account-main">
       @if (!loading() && accountInfo(); as info) {
         <div class="info-list">
-          <div class="info-item">
-            <span class="info-label">{{ 'myAccount.username' | translate }}</span>
-            <span class="info-value">{{ info.username }}</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">{{ 'myAccount.starknetAddress' | translate }}</span>
-            <span class="info-value info-value--mono">{{ info.starknetAddress ?? '-' }}</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">{{ 'myAccount.status' | translate }}</span>
-            <span class="info-value">{{ 'myAccount.statusValue.' + info.status | translate }}</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">{{ 'myAccount.deploymentTxHash' | translate }}</span>
-            <span class="info-value info-value--mono">{{ info.deploymentTxHash ?? '-' }}</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">{{ 'myAccount.createdAt' | translate }}</span>
-            <span class="info-value">{{ info.createdAt | date:'medium':'':locale() }}</span>
-          </div>
+          <app-info-field [label]="'myAccount.username' | translate">
+            {{ info.username }}
+          </app-info-field>
+          <app-info-field [label]="'myAccount.starknetAddress' | translate" variant="mono">
+            {{ info.starknetAddress ?? '-' }}
+          </app-info-field>
+          <app-info-field [label]="'myAccount.status' | translate">
+            {{ 'myAccount.statusValue.' + info.status | translate }}
+          </app-info-field>
+          <app-info-field [label]="'myAccount.deploymentTxHash' | translate" variant="mono">
+            {{ info.deploymentTxHash ?? '-' }}
+          </app-info-field>
+          <app-info-field [label]="'myAccount.createdAt' | translate">
+            {{ info.createdAt | date:'medium':'':locale() }}
+          </app-info-field>
         </div>
       }
     </main>
