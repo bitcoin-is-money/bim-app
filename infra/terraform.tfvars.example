@@ -9,11 +9,8 @@ network = "testnet"
 # After first `terraform apply`, copy the api_domain output here:
 # api_domain = "bimxxxxxxxx-bim-api.functions.fnc.fr-par.scw.cloud"
 
-# ---------- Scaleway IAM (for database authentication) ----------
-# Get your user ID:  scw iam api-key get $(scw config get access-key) -o json | jq -r '.user_id'
-# Get your secret key: scw config get secret-key
-scw_user_id    = ""
-scw_secret_key = ""
+# ---------- Database ----------
+db_password = ""
 
 # ---------- Secrets ----------
 

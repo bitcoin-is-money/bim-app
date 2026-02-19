@@ -2,7 +2,7 @@ import {defineIndexer, type HandlerArgs} from '@apibara/indexer';
 import {drizzle as apibaraDrizzle, drizzleStorage, useDrizzleStorage} from '@apibara/plugin-drizzle';
 import {type Block, getSelector, StarknetStream} from '@apibara/starknet';
 import * as schema from '@bim/db';
-import {DatabaseConnection, type DatabaseSslMode} from '@bim/db/connection';
+import {DatabaseConnection} from '@bim/db/connection';
 import {createLogger} from '@bim/lib/logger';
 import {redactUrl} from '@bim/lib/url';
 import type {ApibaraRuntimeConfig} from 'apibara/types';
@@ -45,13 +45,9 @@ async function createWbtcTransferIndexerInternal(
   logger: Logger,
 ) {
   const connectionString: string = runtimeConfig.connectionString;
-  const sslMode = (process.env.DATABASE_SSL ?? 'disable') as DatabaseSslMode;
-  const ssl = sslMode !== 'disable'
-    ? {rejectUnauthorized: sslMode === 'verify-full'}
-    : undefined;
 
-  logger.info({connectionString: redactUrl(connectionString), sslMode}, 'Checking database availability');
-  await DatabaseConnection.checkAvailability({url: connectionString, sslMode}, logger);
+  logger.info({connectionString: redactUrl(connectionString)}, 'Checking database availability');
+  await DatabaseConnection.checkAvailability({url: connectionString}, logger);
   logger.info('Database connectivity verified');
 
   const decoder = new TransferEventDecoder(logger);
@@ -63,8 +59,7 @@ async function createWbtcTransferIndexerInternal(
     connectionString,
     schema,
     poolConfig: {
-      max: 2,
-      ssl: ssl ?? false,
+      max: 10,
     }
   });
 
