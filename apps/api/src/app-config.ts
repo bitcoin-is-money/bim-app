@@ -1,7 +1,7 @@
 import {accessSync, constants, mkdirSync} from 'node:fs';
 import * as schema from '@bim/db';
 import {redactUrl} from '@bim/lib/url';
-import type {DatabaseConfig, DatabaseSslMode} from '@bim/db/connection';
+import type {DatabaseConfig} from '@bim/db/connection';
 import {getTableName} from 'drizzle-orm';
 
 export type AuthenticatorAttachment = 'platform' | 'cross-platform';
@@ -65,7 +65,6 @@ export namespace AppConfig {
       starknetNetwork: starknetNetwork,
       database: {
         url: required('DATABASE_URL'),
-        sslMode: parseSslMode(optional('DATABASE_SSL', 'verify-full')),
         startupRequiredTable: schema.accounts,
       },
       starknetRpcUrl: required('STARKNET_RPC_URL'),
@@ -116,7 +115,7 @@ export namespace AppConfig {
     const intermediaryUrl = process.env.ATOMIQ_INTERMEDIARY_URL || undefined;
     const swapToken = required('ATOMIQ_SWAP_TOKEN');
 
-    return {storagePath, createIfNotExists, intermediaryUrl, swapToken};
+    return {storagePath, createIfNotExists: createIfNotExists, intermediaryUrl, swapToken};
   }
 
   function parseAuthenticatorAttachment(value: string | undefined): AuthenticatorAttachment | undefined {
@@ -126,14 +125,6 @@ export namespace AppConfig {
       throw new Error(`Invalid WEBAUTHN_AUTHENTICATOR_ATTACHMENT: "${value}". Must be one of: ${valid.join(', ')}.`);
     }
     return value as AuthenticatorAttachment;
-  }
-
-  function parseSslMode(value: string): DatabaseSslMode {
-    const valid: DatabaseSslMode[] = ['disable', 'require', 'verify-full'];
-    if (!valid.includes(value as DatabaseSslMode)) {
-      throw new Error(`Invalid DATABASE_SSL: "${value}". Must be one of: ${valid.join(', ')}.`);
-    }
-    return value as DatabaseSslMode;
   }
 
   /**

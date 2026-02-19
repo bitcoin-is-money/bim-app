@@ -25,15 +25,10 @@ variable "api_domain" {
   default     = ""
 }
 
-# ---------- Scaleway IAM (for database authentication) ----------
+# ---------- Database ----------
 
-variable "scw_user_id" {
-  description = "IAM User ID or Application ID — used as database username. Get it with: scw iam api-key get $(scw config get access-key) -o json | jq -r '.user_id'"
-  type        = string
-}
-
-variable "scw_secret_key" {
-  description = "IAM Secret Key — used as database password"
+variable "db_password" {
+  description = "PostgreSQL admin password for the managed database"
   type        = string
   sensitive   = true
 }

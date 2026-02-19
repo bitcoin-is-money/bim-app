@@ -1,7 +1,7 @@
 # =============================================================================
 # BIM — Scaleway Infrastructure (Pre-prod)
 # =============================================================================
-# Manages: Container Registry, Serverless SQL Database, Serverless Containers.
+# Manages: Container Registry, Managed PostgreSQL Database, Serverless Containers.
 #
 # Workflow:
 #   cd infra
@@ -36,24 +36,33 @@ resource "scaleway_registry_namespace" "bim" {
   region    = var.region
 }
 
-# ---------- Serverless SQL Database (PostgreSQL) ----------
-# https://www.scaleway.com/en/docs/serverless-sql-databases/quickstart/
-resource "scaleway_sdb_sql_database" "bim" {
-  name    = "bim-prod"
-  min_cpu = 0
-  max_cpu = 4
-  region  = var.region
+# ---------- Managed PostgreSQL Database ----------
+resource "scaleway_rdb_instance" "bim" {
+  name           = "bim-prod"
+  node_type      = "DB-DEV-S"
+  engine         = "PostgreSQL-16"
+  is_ha_cluster  = false
+  disable_backup = false # Snapshots auto
+  user_name      = "bim"
+  password       = var.db_password
+  volume_type    = "lssd" # 20 GB included with DB-DEV-S
+  region         = var.region
 }
 
-# ---------- Database URL (IAM authentication) ----------
-# Scaleway SDB endpoint has no credentials. IAM auth uses User/Application ID + Secret Key.
-# Format: postgres://<user_id>:<secret_key>@<host>:5432/<db>?sslmode=require
+resource "scaleway_rdb_database" "bim" {
+  instance_id = scaleway_rdb_instance.bim.id
+  name        = "bim"
+}
+
+resource "scaleway_rdb_privilege" "bim" {
+  instance_id   = scaleway_rdb_instance.bim.id
+  user_name     = scaleway_rdb_instance.bim.user_name
+  database_name = scaleway_rdb_database.bim.name
+  permission    = "all"
+}
+
 locals {
-  database_url = replace(
-    scaleway_sdb_sql_database.bim.endpoint,
-    "postgres://",
-    "postgres://${var.scw_user_id}:${urlencode(var.scw_secret_key)}@"
-  )
+  database_url = "postgres://${scaleway_rdb_instance.bim.user_name}:${urlencode(var.db_password)}@${scaleway_rdb_instance.bim.load_balancer[0].ip}:${scaleway_rdb_instance.bim.load_balancer[0].port}/${scaleway_rdb_database.bim.name}?uselibpqcompat=true&sslmode=require"
 }
 
 # ---------- Serverless Containers ----------
@@ -82,7 +91,6 @@ resource "scaleway_container" "api" {
   environment_variables = merge(
     {
       NETWORK                           = var.network
-      DATABASE_SSL                      = "verify-full"
       WEBAUTHN_AUTHENTICATOR_ATTACHMENT = "cross-platform"
       LOG_LEVEL                         = var.api_log_level
     },
@@ -119,9 +127,8 @@ resource "scaleway_container" "indexer" {
   region         = var.region
 
   environment_variables = {
-    PRESET       = var.network
-    DATABASE_SSL = "verify-full"
-    LOG_LEVEL    = var.indexer_log_level
+    PRESET    = var.network
+    LOG_LEVEL = var.indexer_log_level
   }
 
   secret_environment_variables = {

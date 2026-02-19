@@ -8,13 +8,12 @@ output "registry_endpoint" {
 }
 
 output "database_endpoint" {
-  description = "Serverless SQL Database endpoint (without credentials)"
-  value       = scaleway_sdb_sql_database.bim.endpoint
-  sensitive   = true
+  description = "PostgreSQL endpoint (host:port)"
+  value       = "${scaleway_rdb_instance.bim.load_balancer[0].ip}:${scaleway_rdb_instance.bim.load_balancer[0].port}"
 }
 
 output "database_url" {
-  description = "Full DATABASE_URL with IAM credentials (for migrations)"
+  description = "Full DATABASE_URL (for migrations)"
   value       = local.database_url
   sensitive   = true
 }
