@@ -23,6 +23,7 @@ export interface AtomiqConfig {
 export namespace AppConfig {
 
   export interface Config {
+    appVersion: string;
     port: number;
     nodeEnv: string;
     starknetNetwork: 'mainnet' | 'testnet' | 'devnet';
@@ -60,6 +61,7 @@ export namespace AppConfig {
     }
 
     return {
+      appVersion: optional('APP_VERSION', 'dev'),
       port: Number.parseInt(optional('PORT', '8080'), 10),
       nodeEnv: optional('NODE_ENV', 'development'),
       starknetNetwork: starknetNetwork,

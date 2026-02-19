@@ -26,6 +26,7 @@ vi.mock('../../src/adapters/index.js', () => {
 
 function createMockConfig(): AppConfig.Config {
   return {
+    appVersion: '0.0.0',
     nodeEnv: 'test',
     starknetNetwork: 'testnet',
     port: 8080,
