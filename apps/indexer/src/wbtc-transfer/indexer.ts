@@ -147,7 +147,7 @@ function extractBlockContext(
 
 function createRootLogger(): Logger {
   try {
-    return createLogger('info', INDEXER_LOGGER_CONFIG);
+    return createLogger(undefined, INDEXER_LOGGER_CONFIG);
   } catch (error) {
     console.error('[indexer] Unable to create logger', error);
     process.kill(process.ppid, 'SIGTERM');
