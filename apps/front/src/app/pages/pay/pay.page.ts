@@ -99,9 +99,10 @@ export class PayPage implements OnDestroy {
           qrbox: {width: qrBoxSize, height: qrBoxSize},
         },
         (decodedText) => {
-          console.log("[QRCode] decodedText = ", decodedText);
+          const sanitized = this.stripUrlPrefix(decodedText);
+          console.log("[QRCode] decodedText = ", decodedText, "sanitized = ", sanitized);
           this.stopScanner();
-          this.paymentService.parseAndNavigate(decodedText);
+          this.paymentService.parseAndNavigate(sanitized);
         },
         () => {
           // QR decode attempts - expected, no action needed
@@ -117,6 +118,11 @@ export class PayPage implements OnDestroy {
         this.scannerError.set(this.i18n.t('pay.scannerFailed'));
       }
     }
+  }
+
+  /** Strip spurious http(s):// prefix that some BarcodeDetector implementations prepend. */
+  private stripUrlPrefix(data: string): string {
+    return data.replace(/^https?:\/\//i, '');
   }
 
   private async stopScanner(): Promise<void> {
