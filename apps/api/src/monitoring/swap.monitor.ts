@@ -105,14 +105,23 @@ export class SwapMonitor {
     status: SwapStatus,
     direction: SwapDirection,
   ): Promise<void> {
-    if (status !== 'paid') return;
-    if (!isForwardSwap(direction)) return;
+    if (status !== 'paid') {
+      this.log.debug(`autoClaimIfNeeded, status !== paid, skipping (status: ${status})`);
+      return;
+    }
+    if (!isForwardSwap(direction)) {
+      this.log.debug(`isForwardSwap(${direction}) is false, skipping (status: ${status})`);
+      return;
+    }
 
     const retries = this.claimRetries.get(swapId) ?? 0;
-    if (retries >= this.config.maxClaimRetries) return;
+    if (retries >= this.config.maxClaimRetries) {
+      this.log.warn(`maxClaim retries (${retries}), skipping (status: ${status})`);
+      return;
+    }
 
     try {
-      this.log.info({swapId}, 'Auto-claiming swap');
+      this.log.info({swapId}, 'Auto-claiming swap (paid)');
       await this.swapService.claim({swapId});
       this.claimRetries.delete(swapId);
     } catch {
