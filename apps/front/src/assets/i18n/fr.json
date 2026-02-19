@@ -97,7 +97,10 @@
   },
   "about": {
     "title": "À propos",
-    "description": "BIM est une application de portefeuille numérique qui vous permet de payer et recevoir en Bitcoin via le réseau Lightning et Starknet."
+    "app": {
+      "description": "BIM est une application de portefeuille numérique qui vous permet de payer et recevoir en Bitcoin via le réseau Lightning et Starknet."
+      "version": "Version de l'application"
+    }
   },
   "swaps": {
     "title": "Échanges",

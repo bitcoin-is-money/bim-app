@@ -97,7 +97,10 @@
   },
   "about": {
     "title": "About",
-    "description": "BIM is a digital wallet application that allows you to pay and receive in Bitcoin using the Lightning Network and Starknet."
+    "app": {
+      "description": "BIM is a digital wallet application that allows you to pay and receive in Bitcoin using the Lightning Network and Starknet.",
+      "version": "Application version"
+    }
   },
   "swaps": {
     "title": "Swaps",

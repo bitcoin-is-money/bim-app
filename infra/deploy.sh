@@ -12,7 +12,8 @@ registry() {
 case "${1:-}" in
   build)
     REG=$(registry)
-    docker build -f "$PROJECT_ROOT/apps/api/Dockerfile"     -t "$REG/bim-api:latest"     "$PROJECT_ROOT"
+    APP_VERSION=$(git -C "$PROJECT_ROOT" rev-parse --short HEAD)
+    docker build -f "$PROJECT_ROOT/apps/api/Dockerfile"     --build-arg APP_VERSION="$APP_VERSION"     -t "$REG/bim-api:latest"     "$PROJECT_ROOT"
     docker build -f "$PROJECT_ROOT/apps/indexer/Dockerfile"  -t "$REG/bim-indexer:latest"  "$PROJECT_ROOT"
     ;;
   push)
