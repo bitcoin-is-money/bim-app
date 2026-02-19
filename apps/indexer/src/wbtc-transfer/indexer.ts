@@ -68,9 +68,10 @@ async function createWbtcTransferIndexerInternal(
     }
   });
 
-  // Prevent unhandled pg pool 'error' event from crashing the process (and give more info about the error)
-  (db as any).$client?.on('error', (err: Error) => {
-    logger.error({err}, 'Unexpected pg pool error');
+  // properly log error (otherwise we do not have root cause on Apibara error)
+  process.on('uncaughtException', (err: Error) => {
+    logger.fatal({err}, 'Uncaught exception — shutting down');
+    setTimeout(() => process.exit(1), 1000);
   });
 
   logger.info({
