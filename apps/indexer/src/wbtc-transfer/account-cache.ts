@@ -1,4 +1,4 @@
-import {basename} from 'node:path';
+
 import * as schema from '@bim/db';
 import {isNotNull} from 'drizzle-orm';
 import type {Logger} from 'pino';
@@ -12,7 +12,7 @@ export class AccountCache {
 
   constructor(ttlMs: number, logger: Logger) {
     this.ttlMs = ttlMs;
-    this.logger = logger.child({name: basename(import.meta.filename)});
+    this.logger = logger.child({name: 'account-cache.ts'});
   }
 
   // Returns cached accounts, refreshing from DB when TTL has expired.

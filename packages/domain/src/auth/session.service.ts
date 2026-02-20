@@ -1,4 +1,4 @@
-import {basename} from 'node:path';
+
 import type {Logger} from 'pino';
 import {Account} from '../account';
 import type {AccountRepository, SessionRepository} from '../ports';
@@ -43,7 +43,7 @@ export class SessionService {
   private readonly log: Logger;
 
   constructor(private readonly deps: SessionServiceDeps) {
-    this.log = deps.logger.child({name: basename(import.meta.filename)});
+    this.log = deps.logger.child({name: 'session.service.ts'});
   }
 
   /**

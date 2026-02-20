@@ -1,4 +1,4 @@
-import {basename} from 'node:path';
+
 import type {Logger} from 'pino';
 import type {StarknetAddress} from '../account';
 import {Amount, type StarknetConfig} from '../shared';
@@ -29,7 +29,7 @@ export class ReceiveService {
   private readonly log: Logger;
 
   constructor(private readonly deps: ReceiveServiceDeps) {
-    this.log = deps.logger.child({name: basename(import.meta.filename)});
+    this.log = deps.logger.child({name: 'receive.service.ts'});
   }
 
   /**

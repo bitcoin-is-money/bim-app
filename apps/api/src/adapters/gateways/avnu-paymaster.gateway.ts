@@ -7,7 +7,7 @@ import type {
   StarknetTransaction
 } from "@bim/domain/ports";
 import {ExternalServiceError} from "@bim/domain/shared";
-import {basename} from 'node:path';
+
 import type {Logger} from "pino";
 
 /**
@@ -47,7 +47,7 @@ export class AvnuPaymasterGateway implements PaymasterGateway {
     private readonly config: AvnuPaymasterConfig,
     rootLogger: Logger,
   ) {
-    this.log = rootLogger.child({name: basename(import.meta.filename)});
+    this.log = rootLogger.child({name: 'avnu-paymaster.gateway.ts'});
   }
 
   async executeTransaction(params: {

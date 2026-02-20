@@ -1,6 +1,6 @@
 import type {TypedResponse} from 'hono';
 import {Hono} from 'hono';
-import {basename} from 'node:path';
+
 import type {AppContext} from '../../app-context';
 import {type ApiErrorResponse, handleDomainError} from '../../errors';
 import {createAuthMiddleware} from '../../middleware/auth.middleware';
@@ -13,7 +13,7 @@ import type {SwapClaimResponse, SwapLimitsResponse, SwapStatusResponse} from './
 // =============================================================================
 
 export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
-  const log = appContext.logger.child({name: basename(import.meta.filename)});
+  const log = appContext.logger.child({name: 'swap.routes.ts'});
   const app: AuthenticatedHono = new Hono();
 
   app.use('*', createAuthMiddleware(appContext));

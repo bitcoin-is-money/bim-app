@@ -1,4 +1,4 @@
-import {basename} from 'node:path';
+
 import type {Logger} from 'pino';
 import {AccountId, StarknetAddress} from '../account';
 import type {StarknetGateway, TransactionRepository} from '../ports';
@@ -47,7 +47,7 @@ export class PayService {
   private readonly log: Logger;
 
   constructor(private readonly deps: PayServiceDeps) {
-    this.log = deps.logger.child({name: basename(import.meta.filename)});
+    this.log = deps.logger.child({name: 'pay.service.ts'});
   }
 
   // ===========================================================================

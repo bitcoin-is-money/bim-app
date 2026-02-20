@@ -1,4 +1,4 @@
-import {basename} from 'node:path';
+
 import type {NewTransactionRecord} from '@bim/db';
 import type {Logger} from 'pino';
 import type {AccountMatch, TransferEvent} from './types.js';
@@ -9,7 +9,7 @@ export class TransactionMatcher {
 
   constructor(contractAddress: string, logger: Logger) {
     this.contractAddress = contractAddress;
-    this.logger = logger.child({name: basename(import.meta.filename)});
+    this.logger = logger.child({name: 'transaction-matcher.ts'});
   }
 
   /**

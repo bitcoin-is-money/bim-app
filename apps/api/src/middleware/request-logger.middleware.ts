@@ -1,6 +1,6 @@
 import {logContext} from '@bim/lib/logger';
 import type {Context, Next} from 'hono';
-import {basename} from "node:path";
+
 import type {LogFn, Logger} from 'pino';
 
 const MAX_REQUEST_ID = 999;
@@ -30,7 +30,7 @@ export function createRequestLoggerMiddleware(
   rootLogger: Logger,
   options?: { apiOnly?: boolean; silencedPaths?: string[] },
 ) {
-  const logger = rootLogger.child({name: basename(import.meta.filename)});
+  const logger = rootLogger.child({name: 'request-logger.middleware.ts'});
   const apiOnly = options?.apiOnly ?? false;
   const silencedPaths = options?.silencedPaths ?? [];
 

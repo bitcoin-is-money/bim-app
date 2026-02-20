@@ -1,7 +1,7 @@
 import {InvalidSessionIdError, SessionExpiredError, SessionNotFoundError} from '@bim/domain/auth';
 import type {TypedResponse} from 'hono';
 import {Hono} from 'hono';
-import {basename} from 'node:path';
+
 import type {AppContext} from '../../app-context';
 import {type ApiErrorResponse, handleDomainError} from '../../errors';
 import {BeginRegistrationSchema, CompleteAuthenticationSchema, CompleteRegistrationSchema} from './auth.schemas';
@@ -20,7 +20,7 @@ import type {
 
 export function createAuthRoutes(appContext: AppContext): Hono {
   const app = new Hono();
-  const log = appContext.logger.child({name: basename(import.meta.filename)});
+  const log = appContext.logger.child({name: 'auth.routes.ts'});
 
   // Services from AppContext (initialized once at startup)
   const {auth: authService, session: sessionService} = appContext.services;
