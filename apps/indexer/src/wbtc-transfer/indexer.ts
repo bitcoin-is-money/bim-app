@@ -53,10 +53,14 @@ async function createWbtcTransferIndexerInternal(
   const accountCache = new AccountCache(Number(runtimeConfig.accountCacheTtlMs), logger);
   const matcher = new TransactionMatcher(runtimeConfig.contractAddress, logger);
   const writer = new TransactionWriter(logger);
+  // Only expose tables the indexer writes to. drizzleStorage creates blockchain
+  // reorganization triggers on every table in the schema, which causes deadlocks
+  // with tables managed by other services.
+  // Read-only tables (accounts) work fine via schema.accounts in queries.
   const db = apibaraDrizzle({
     type: 'node-postgres',
     connectionString,
-    schema,
+    schema: {transactions: schema.transactions},
     poolConfig: {
       max: 10,
     }
