@@ -1,5 +1,5 @@
-import {StarknetInitializer, type StarknetInitializerType} from '@atomiqlabs/chain-starknet';
-import type {TypedSwapper, TypedSwapperOptions} from '@atomiqlabs/sdk';
+import {type StarknetChainType, StarknetInitializer, type StarknetInitializerType} from '@atomiqlabs/chain-starknet';
+import {type FromBTCSwap, type TypedSwapper, type TypedSwapperOptions} from '@atomiqlabs/sdk';
 import {BitcoinNetwork, SwapperFactory, SwapType} from '@atomiqlabs/sdk';
 import {SqliteStorageManager, SqliteUnifiedStorage} from '@atomiqlabs/storage-sqlite';
 import {StarknetAddress} from "@bim/domain/account";
@@ -12,7 +12,7 @@ import type {
   UnsignedClaimTransactions
 } from '@bim/domain/ports';
 import {ExternalServiceError} from "@bim/domain/shared";
-import type {SwapLimits} from "@bim/domain/swap";
+import type {SwapDirection, SwapLimits} from "@bim/domain/swap";
 import {BitcoinAddress, LightningInvoice, SwapId} from '@bim/domain/swap';
 import {existsSync, mkdirSync} from 'node:fs';
 
@@ -171,24 +171,23 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     amountSats: bigint;
     destinationAddress: StarknetAddress;
   }): Promise<AtomiqSwapResult> {
+    const direction: SwapDirection = 'lightning_to_starknet';
     this.log.debug({
       amountSats: params.amountSats.toString(),
       destination: params.destinationAddress.toString()
-    }, 'Creating Lightning-to-Starknet swap');
+    }, `Creating ${direction} swap`);
     await this.ensureInitialized();
 
     try {
-      const Tokens = this.getTokens();
       const swapToken = this.getSwapToken();
 
       // Create swap: Lightning (BTCLN) → Starknet
-      const swap = await this.swapper!.swap(
-        Tokens.BITCOIN.BTCLN,
-        swapToken,
+      const swap = await this.swapper!.createFromBTCLNSwapNew(
+        'STARKNET',
+        params.destinationAddress.toString(),
+        swapToken.address,
         params.amountSats,
-        true, // exactIn = true (we specify input amount)
-        undefined, // No source address for Lightning
-        params.destinationAddress
+        false, // exactOut = false (i.e. exactIn)
       );
 
       if (!swap) {
@@ -197,29 +196,105 @@ export class AtomiqSdkGateway implements AtomiqGateway {
 
       const swapId = swap.getId();
       const invoice = swap.getAddress();
-      const hyperlink = swap.getHyperlink?.();
+      const quoteExpiry: any = swap.getQuoteExpiry();
+
+      this.logSwapExpiry(
+        swap.getId(),
+        quoteExpiry,
+        direction);
 
       // Register swap for tracking
       this.swapRegistry.set(swapId, {
         swapObject: swap,
-        direction: 'lightning_to_starknet',
+        direction: direction,
         createdAt: new Date()
       });
 
       this.log.info({
         swapId,
         amountSats: params.amountSats.toString()
-      }, 'Lightning-to-Starknet swap created');
+      }, `${direction} swap created`);
       return {
         swapId,
         invoice,
-        expiresAt: new Date(Date.now() + 30 * 60 * 1000), // 30 minutes
+        expiresAt: new Date(quoteExpiry),
         swapObject: swap,
       };
     } catch (error) {
       throw new ExternalServiceError(
         'Atomiq',
-        `Failed to create Lightning swap: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to create ${direction} swap: ${error instanceof Error
+          ? error.message
+          : String(error)}`,
+      );
+    }
+  }
+
+
+  async createStarknetToLightningSwap(params: {
+    invoice: LightningInvoice;
+    sourceAddress: StarknetAddress;
+  }): Promise<AtomiqReverseSwapResult> {
+    const direction: SwapDirection = 'starknet_to_lightning';
+    this.log.debug({source: params.sourceAddress.toString()},
+      `Creating ${direction} swap`);
+    await this.ensureInitialized();
+
+    try {
+      // Create reverse swap: Starknet (WBTC) → Lightning (BTCLN)
+      const swapToken = this.getSwapToken();
+      const swap = await this.swapper!.createToBTCLNSwap(
+        'STARKNET',
+        params.sourceAddress.toString(),
+        swapToken.address,
+        params.invoice.toString(),
+      );
+
+      if (!swap) {
+        throw new Error('SDK returned null swap object');
+      }
+
+      const swapId = swap.getId();
+      const depositAddress = swap.data?.getOfferer?.() ?? '';
+
+      // Try to extract the amount from swap data
+      let amountSats = 0n;
+      try {
+        amountSats = BigInt(swap.data?.getAmount?.() || 0);
+      } catch {
+        this.log.warn("Unable to get amount from swap data, using 0.");
+      }
+
+      const quoteExpiry: any = swap.getQuoteExpiry();
+      this.logSwapExpiry(
+        swap.getId(),
+        quoteExpiry,
+        direction);
+
+      // Register swap for tracking
+      this.swapRegistry.set(swapId, {
+        swapObject: swap,
+        direction: direction,
+        createdAt: new Date()
+      });
+
+      this.log.info({
+        swapId,
+        amountSats: amountSats.toString()
+      }, `${direction} swap created`);
+      return {
+        swapId,
+        depositAddress,
+        amountSats,
+        expiresAt: new Date(quoteExpiry),
+        swapObject: swap,
+      };
+    } catch (error) {
+      throw new ExternalServiceError(
+        'Atomiq',
+        `Failed to create ${direction} swap: ${error instanceof Error
+          ? error.message
+          : String(error)}`,
       );
     }
   }
@@ -228,10 +303,11 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     amountSats: bigint;
     destinationAddress: StarknetAddress;
   }): Promise<AtomiqSwapResult> {
+    const direction: SwapDirection = 'bitcoin_to_starknet';
     this.log.debug({
       amountSats: params.amountSats.toString(),
       destination: params.destinationAddress.toString()
-    }, 'Creating Bitcoin-to-Starknet swap');
+    }, `Creating ${direction} swap`);
     await this.ensureInitialized();
 
     try {
@@ -241,7 +317,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       // because SPV vault swaps use a PSBT-based flow with no deposit address,
       // which is incompatible with BIM's "show QR code" receive flow.
       const exactOut = false; // i.e. exactIn = true
-      const swap = await this.swapper!.createFromBTCSwap(
+      const swap: FromBTCSwap<StarknetChainType> = await this.swapper!.createFromBTCSwap(
         'STARKNET',
         params.destinationAddress.toString(),
         swapToken.address,
@@ -259,90 +335,37 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       const depositAddress = swap.address;
       const bip21Uri = `bitcoin:${depositAddress}?amount=${Number(params.amountSats) / 100000000}`;
 
+
+      const quoteExpiry: any = swap.getQuoteExpiry();
+      this.logSwapExpiry(
+        swap.getId(),
+        quoteExpiry,
+        direction);
+
       // Register swap for tracking
       this.swapRegistry.set(swapId, {
         swapObject: swap,
-        direction: 'bitcoin_to_starknet',
+        direction,
         createdAt: new Date()
       });
 
       this.log.info({
         swapId,
         amountSats: params.amountSats.toString()
-      }, 'Bitcoin-to-Starknet swap created');
+      }, `${direction} swap created`);
       return {
         swapId,
         depositAddress,
         bip21Uri,
-        expiresAt: new Date(Date.now() + 3 * 60 * 60 * 1000), // 3 hours
+        expiresAt: new Date(quoteExpiry),
         swapObject: swap,
       };
     } catch (error) {
       throw new ExternalServiceError(
         'Atomiq',
-        `Failed to create Bitcoin swap: ${error instanceof Error ? error.message : String(error)}`,
-      );
-    }
-  }
-
-  async createStarknetToLightningSwap(params: {
-    invoice: LightningInvoice;
-    sourceAddress: StarknetAddress;
-  }): Promise<AtomiqReverseSwapResult> {
-    this.log.debug({source: params.sourceAddress.toString()},
-      'Creating Starknet-to-Lightning swap');
-    await this.ensureInitialized();
-
-    try {
-      const Tokens = this.getTokens();
-
-      // Create reverse the swap: Starknet (WBTC) → Lightning (BTCLN)
-      const swap = await this.swapper!.swap(
-        this.getSwapToken(),
-        Tokens.BITCOIN.BTCLN,
-        "", // Amount determined by invoice
-        false, // exactIn = false for reverse swaps
-        params.sourceAddress,
-        params.invoice
-      );
-
-      if (!swap) {
-        throw new Error('SDK returned null swap object');
-      }
-
-      const swapId = swap.getId();
-      const depositAddress = swap.getAddress?.() || swap.data?.getOfferer?.() || '';
-
-      // Try to extract the amount from swap data
-      let amountSats = 0n;
-      try {
-        amountSats = BigInt(swap.data?.getAmount?.() || 0);
-      } catch {
-        // Amount extraction failed, use 0
-      }
-
-      // Register swap for tracking
-      this.swapRegistry.set(swapId, {
-        swapObject: swap,
-        direction: 'starknet_to_lightning',
-        createdAt: new Date()
-      });
-
-      this.log.info({
-        swapId,
-        amountSats: amountSats.toString()
-      }, 'Starknet-to-Lightning swap created');
-      return {
-        swapId,
-        depositAddress,
-        amountSats,
-        expiresAt: new Date(Date.now() + 30 * 60 * 1000), // 30 minutes
-        swapObject: swap,
-      };
-    } catch (error) {
-      throw new ExternalServiceError(
-        'Atomiq',
-        `Failed to create reverse Lightning swap: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to create ${direction} swap: ${error instanceof Error
+          ? error.message
+          : String(error)}`,
       );
     }
   }
@@ -352,24 +375,24 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     destinationAddress: BitcoinAddress;
     sourceAddress: StarknetAddress;
   }): Promise<AtomiqReverseSwapResult> {
+    const direction: SwapDirection = 'starknet_to_bitcoin';
     this.log.debug({
       amountSats: params.amountSats.toString(),
       destination: params.destinationAddress.toString(),
       source: params.sourceAddress.toString()
-    }, 'Creating Starknet-to-Bitcoin swap');
+    }, `Creating ${direction} swap`);
     await this.ensureInitialized();
 
     try {
-      const Tokens = this.getTokens();
-
-      // Create reverse the swap: Starknet (WBTC) → Bitcoin (BTC)
-      const swap = await this.swapper!.swap(
-        this.getSwapToken(),
-        Tokens.BITCOIN.BTC,
+      // Create reverse swap: Starknet (WBTC) → Bitcoin (BTC)
+      const swapToken = this.getSwapToken();
+      const swap = await this.swapper!.createToBTCSwap(
+        'STARKNET',
+        params.sourceAddress.toString(),
+        swapToken.address,
+        params.destinationAddress.toString(),
         params.amountSats,
-        true, // exactIn = true
-        params.sourceAddress,
-        params.destinationAddress
+        true, // exactIn
       );
 
       if (!swap) {
@@ -377,31 +400,67 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       }
 
       const swapId = swap.getId();
-      const depositAddress = swap.getAddress?.() || swap.data?.getOfferer?.() || '';
+      const depositAddress = swap.data?.getOfferer?.() ?? '';
+
+      const quoteExpiry = swap.getQuoteExpiry();
+      this.logSwapExpiry(
+        swap.getId(),
+        quoteExpiry,
+        direction);
 
       // Register swap for tracking
       this.swapRegistry.set(swapId, {
         swapObject: swap,
-        direction: 'starknet_to_bitcoin',
+        direction: direction,
         createdAt: new Date()
       });
 
       this.log.info({
         swapId,
         amountSats: params.amountSats,
-      }, 'Starknet-to-Bitcoin swap created');
+      }, `${direction} swap created`);
       return {
         swapId,
         depositAddress,
         amountSats: params.amountSats,
-        expiresAt: new Date(Date.now() + 3 * 60 * 60 * 1000), // 3 hours
+        expiresAt: new Date(quoteExpiry),
         swapObject: swap,
       };
     } catch (error) {
       throw new ExternalServiceError(
         'Atomiq',
-        `Failed to create reverse Bitcoin swap: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to create ${direction} swap: ${error instanceof Error
+          ? error.message
+          : String(error)}`,
       );
+    }
+  }
+
+  /**
+   * Log the real invoice expiry from the SDK (LP-determined)
+   */
+  private logSwapExpiry(
+    swapId: string,
+    expiryMs: number | undefined,
+    direction: SwapDirection
+  ): void {
+    try {
+      if (expiryMs) {
+        const sdkExpiryDate = new Date(expiryMs);
+        const now = new Date();
+        const remainingSeconds = Math.round((expiryMs - Date.now()) / 1000);
+        this.log.info({
+          swapId,
+          expiryTime: sdkExpiryDate.toISOString(),
+          now: now.toISOString(),
+          remainingSec: remainingSeconds,
+        }, `${direction} swap real expiry from LP invoice`);
+      }
+    } catch (e) {
+      this.log.warn({
+        swapId,
+        error: String(e)
+      }, 'Could not read SDK expiry time');
     }
   }
 
