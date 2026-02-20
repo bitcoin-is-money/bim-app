@@ -101,6 +101,38 @@ export const transactionDescriptions = pgTable('bim_transaction_descriptions', {
 ]);
 
 // =============================================================================
+// Swaps Table
+// =============================================================================
+
+export const swaps = pgTable('bim_swaps', {
+  id: uuid('id').primaryKey(),
+  direction: text('direction').notNull(),
+  amountSats: text('amount_sats').notNull(),
+  destinationAddress: text('destination_address').notNull(),
+  sourceAddress: text('source_address'),
+  invoice: text('invoice'),
+  depositAddress: text('deposit_address'),
+  description: text('description'),
+  accountId: text('account_id'),
+
+  // Swap state (flat columns)
+  status: text('status').notNull().default('pending'),
+  txHash: text('tx_hash'),
+  errorMessage: text('error_message'),
+
+  // State transition timestamps
+  paidAt: timestamp('paid_at'),
+  confirmedAt: timestamp('confirmed_at'),
+  completedAt: timestamp('completed_at'),
+  expiredAt: timestamp('expired_at'),
+  failedAt: timestamp('failed_at'),
+
+  // Core timestamps
+  expiresAt: timestamp('expires_at').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// =============================================================================
 // Type Exports
 // =============================================================================
 
@@ -121,3 +153,6 @@ export type NewTransactionRecord = typeof transactions.$inferInsert;
 
 export type TransactionDescriptionRecord = typeof transactionDescriptions.$inferSelect;
 export type NewTransactionDescriptionRecord = typeof transactionDescriptions.$inferInsert;
+
+export type SwapRecord = typeof swaps.$inferSelect;
+export type NewSwapRecord = typeof swaps.$inferInsert;

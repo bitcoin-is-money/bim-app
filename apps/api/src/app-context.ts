@@ -27,7 +27,7 @@ import {
   DrizzleSessionRepository,
   DrizzleTransactionRepository,
   DrizzleUserSettingsRepository,
-  InMemorySwapRepository,
+  DrizzleSwapRepository,
   SimpleWebAuthnGateway,
   StarknetRpcGateway
 } from "./adapters";
@@ -100,7 +100,7 @@ export namespace AppContext {
       account: new DrizzleAccountRepository(db),
       session: new DrizzleSessionRepository(db),
       challenge: new DrizzleChallengeRepository(db),
-      swap: new InMemorySwapRepository(),
+      swap: new DrizzleSwapRepository(db),
       userSettings: new DrizzleUserSettingsRepository(db),
       transaction: new DrizzleTransactionRepository(db),
       ...overrides?.repositories,
