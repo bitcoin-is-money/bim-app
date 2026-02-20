@@ -43,15 +43,9 @@ export class DrizzleSwapRepository implements SwapRepository {
   }
 
   async findById(id: SwapId): Promise<Swap | undefined> {
-    let record;
-    try {
-      record = await this.db.query.swaps.findFirst({
-        where: eq(schema.swaps.id, id),
-      });
-    } catch {
-      // Invalid UUID format — treat as not found
-      return undefined;
-    }
+    const record = await this.db.query.swaps.findFirst({
+      where: eq(schema.swaps.id, id),
+    });
 
     if (!record) {
       return undefined;
