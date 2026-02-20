@@ -15,6 +15,7 @@
     "build:front": "npm run build -w @bim/front",
     "build:api": "npm run build:libs && npm run build -w @bim/api && npm run build:front && npm run copy:front -w @bim/api",
     "build:indexer": "npm run build:libs && npm run build -w @bim/indexer",
+    "build": "npm run build:api && npm run build:indexer",
     "dev": "npm run dev -w @bim/api",
     "dev:front": "npm run dev -w front",
     "test": "npm run test -w @bim/test-toolkit && npm run test -w @bim/lib && npm run test -w @bim/domain && npm run test -w @bim/indexer && npm run test -w @bim/api && npm run test -w @bim/front",

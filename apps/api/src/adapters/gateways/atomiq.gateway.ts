@@ -30,15 +30,6 @@ export interface AtomiqGatewayConfig {
   swapToken: string;
 }
 
-/**
- * Internal swap info stored in the registry.
- */
-interface SwapInfo {
-  swapObject: any;
-  direction: 'lightning_to_starknet' | 'bitcoin_to_starknet' | 'starknet_to_lightning' | 'starknet_to_bitcoin';
-  createdAt: Date;
-}
-
 type StarknetChainInitializers = readonly [StarknetInitializerType];
 
 /**
@@ -50,7 +41,6 @@ type StarknetChainInitializers = readonly [StarknetInitializerType];
 export class AtomiqSdkGateway implements AtomiqGateway {
   private swapperFactory: SwapperFactory<StarknetChainInitializers> | null = null;
   private swapper: TypedSwapper<StarknetChainInitializers> | null = null;
-  private readonly swapRegistry: Map<string, SwapInfo> = new Map();
   private isInitialized: boolean = false;
   private readonly log: Logger;
 
@@ -198,17 +188,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       const invoice = swap.getAddress();
       const quoteExpiry: any = swap.getQuoteExpiry();
 
-      this.logSwapExpiry(
-        swap.getId(),
-        quoteExpiry,
-        direction);
-
-      // Register swap for tracking
-      this.swapRegistry.set(swapId, {
-        swapObject: swap,
-        direction: direction,
-        createdAt: new Date()
-      });
+      this.logSwapExpiry(swapId, quoteExpiry, direction);
 
       this.log.info({
         swapId,
@@ -218,7 +198,6 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         swapId,
         invoice,
         expiresAt: new Date(quoteExpiry),
-        swapObject: swap,
       };
     } catch (error) {
       throw new ExternalServiceError(
@@ -266,17 +245,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       }
 
       const quoteExpiry: any = swap.getQuoteExpiry();
-      this.logSwapExpiry(
-        swap.getId(),
-        quoteExpiry,
-        direction);
-
-      // Register swap for tracking
-      this.swapRegistry.set(swapId, {
-        swapObject: swap,
-        direction: direction,
-        createdAt: new Date()
-      });
+      this.logSwapExpiry(swapId, quoteExpiry, direction);
 
       this.log.info({
         swapId,
@@ -287,7 +256,6 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         depositAddress,
         amountSats,
         expiresAt: new Date(quoteExpiry),
-        swapObject: swap,
       };
     } catch (error) {
       throw new ExternalServiceError(
@@ -337,17 +305,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
 
 
       const quoteExpiry: any = swap.getQuoteExpiry();
-      this.logSwapExpiry(
-        swap.getId(),
-        quoteExpiry,
-        direction);
-
-      // Register swap for tracking
-      this.swapRegistry.set(swapId, {
-        swapObject: swap,
-        direction,
-        createdAt: new Date()
-      });
+      this.logSwapExpiry(swapId, quoteExpiry, direction);
 
       this.log.info({
         swapId,
@@ -358,7 +316,6 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         depositAddress,
         bip21Uri,
         expiresAt: new Date(quoteExpiry),
-        swapObject: swap,
       };
     } catch (error) {
       throw new ExternalServiceError(
@@ -403,17 +360,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       const depositAddress = swap.data?.getOfferer?.() ?? '';
 
       const quoteExpiry = swap.getQuoteExpiry();
-      this.logSwapExpiry(
-        swap.getId(),
-        quoteExpiry,
-        direction);
-
-      // Register swap for tracking
-      this.swapRegistry.set(swapId, {
-        swapObject: swap,
-        direction: direction,
-        createdAt: new Date()
-      });
+      this.logSwapExpiry(swapId, quoteExpiry, direction);
 
       this.log.info({
         swapId,
@@ -424,7 +371,6 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         depositAddress,
         amountSats: params.amountSats,
         expiresAt: new Date(quoteExpiry),
-        swapObject: swap,
       };
     } catch (error) {
       throw new ExternalServiceError(
@@ -569,60 +515,45 @@ export class AtomiqSdkGateway implements AtomiqGateway {
   // Swap Monitoring
   // ===========================================================================
 
-  async registerSwapForMonitoring(
-    swapId: SwapId,
-    swapObject: unknown,
-  ): Promise<void> {
-    this.log.info({swapId}, 'Registering swap for monitoring');
-    // Determine the direction from swap the object if possible
-    let direction: SwapInfo['direction'] = 'lightning_to_starknet';
-
-    const swap = swapObject as any;
-    if (swap?.getType) {
-      const swapType = swap.getType();
-      if (swapType?.includes?.('ToBTC')) {
-        direction = swapType.includes('LN') ? 'starknet_to_lightning' : 'starknet_to_bitcoin';
-      } else if (swapType?.includes?.('FromBTC')) {
-        direction = swapType.includes('LN') ? 'lightning_to_starknet' : 'bitcoin_to_starknet';
-      }
-    }
-
-    this.swapRegistry.set(swapId, {
-      swapObject,
-      direction,
-      createdAt: new Date()
-    });
+  /**
+   * Retrieves a swap object from the SDK's persistent storage.
+   * Returns any because subclass methods (txsClaim, claim, etc.) are
+   * not on the ISwap base type — we use duck-typing to call them.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async getSwapObject(swapId: string): Promise<any> {
+    await this.ensureInitialized();
+    return this.swapper!.getSwapById(swapId, 'STARKNET');
   }
 
   async getSwapStatus(swapId: SwapId): Promise<AtomiqSwapStatus> {
     this.log.debug({swapId}, 'Getting swap status');
-    const swapInfo = this.swapRegistry.get(swapId);
 
-    if (!swapInfo) {
+    try {
+      const swap = await this.getSwapObject(swapId);
+      const state = swap.getState();
+
+      const {isPaid, isCompleted, isFailed, isExpired} = this.mapStateToStatus(state);
+      const result: AtomiqSwapStatus = {
+        state,
+        isPaid,
+        isCompleted,
+        isFailed,
+        isExpired,
+        txHash: swap.getOutputTxId() ?? swap.getInputTxId() ?? undefined,
+      };
+      this.log.debug({...result}, 'getSwapStatus result');
+      return result;
+    } catch {
       return {
         state: -1,
         isPaid: false,
         isCompleted: false,
         isFailed: false,
         isExpired: true,
-        error: 'Swap not found',
+        error: 'Swap not found in SDK storage',
       };
     }
-
-    const swap = swapInfo.swapObject;
-    const state = swap.getState?.() ?? -1;
-
-    const {isPaid, isCompleted, isFailed, isExpired} = this.mapStateToStatus(state);
-    const result: AtomiqSwapStatus = {
-      state,
-      isPaid,
-      isCompleted,
-      isFailed,
-      isExpired,
-      txHash: swap.data?.getTxId?.(),
-    };
-    this.log.debug({...result}, `getSwapStatus result`);
-    return result;
   }
 
   /**
@@ -668,40 +599,29 @@ export class AtomiqSdkGateway implements AtomiqGateway {
 
   async claimSwap(swapId: SwapId): Promise<ClaimResult> {
     this.log.debug({swapId}, 'Claiming swap');
-    const swapInfo = this.swapRegistry.get(swapId);
-
-    if (!swapInfo) {
-      throw new ExternalServiceError('Atomiq', `Swap not found: ${swapId}`);
-    }
-
-    const swap = swapInfo.swapObject;
+    const swap = await this.getSwapObject(swapId);
 
     try {
-      // Get claim transactions
       if (typeof swap.txsClaim !== 'function') {
         throw new TypeError('Swap does not support claiming');
       }
 
-      const claimTxs = await swap.txsClaim();
+      await swap.txsClaim();
 
-      // Execute claim transactions
-      // Note: In a real implementation, this would execute the transactions
-      // For now, we'll use the SDK's claim method if available
       if (typeof swap.claim === 'function') {
         await swap.claim();
       }
 
-      // Wait for claim confirmation
       if (typeof swap.waitTillClaimed === 'function') {
         await swap.waitTillClaimed();
       }
 
-      const txHash = swap.data?.getTxId?.() || `0x${crypto.randomUUID().replaceAll('-', '')}`;
+      const txHash = swap.getOutputTxId() ?? swap.getInputTxId() ?? `0x${crypto.randomUUID().replaceAll('-', '')}`;
       const result: ClaimResult = {
         txHash,
         success: true,
       };
-      this.log.debug({...result}, `claimSwap result`);
+      this.log.debug({...result}, 'claimSwap result');
       return result;
     } catch (error) {
       throw new ExternalServiceError(
@@ -712,13 +632,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
   }
 
   async waitForClaimConfirmation(swapId: SwapId): Promise<void> {
-    const swapInfo = this.swapRegistry.get(swapId);
-
-    if (!swapInfo) {
-      throw new ExternalServiceError('Atomiq', `Swap not found: ${swapId}`);
-    }
-
-    const swap = swapInfo.swapObject;
+    const swap = await this.getSwapObject(swapId);
 
     if (typeof swap.waitTillClaimed === 'function') {
       await swap.waitTillClaimed();
@@ -729,33 +643,27 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     swapId: SwapId,
   ): Promise<UnsignedClaimTransactions> {
     this.log.debug({swapId}, 'Getting unsigned claim transactions');
-    const swapInfo = this.swapRegistry.get(swapId);
-
-    if (!swapInfo) {
-      throw new ExternalServiceError('Atomiq', `Swap not found: ${swapId}`);
-    }
-
-    const swap = swapInfo.swapObject;
-    const state = swap.getState?.() ?? -1;
+    const swap = await this.getSwapObject(swapId);
+    const state = swap.getState();
+    const swapType = swap.getType();
 
     try {
       let transactions: unknown[] = [];
       let message = '';
 
-      // Determine which transactions to get based on direction and state
-      if (swapInfo.direction === 'starknet_to_lightning' || swapInfo.direction === 'starknet_to_bitcoin') {
+      // Determine which transactions to get based on swap type and state
+      if (swapType === SwapType.TO_BTCLN || swapType === SwapType.TO_BTC) {
+        // Reverse swaps (Starknet → BTC/Lightning)
         if (state === 0 && typeof swap.txsCommit === 'function') {
-          // Commit phase
           transactions = await swap.txsCommit();
           message = 'Commit transactions ready';
         } else if (state === 1 && typeof swap.txsRefund === 'function') {
-          // Refund phase (if needed)
           transactions = await swap.txsRefund();
           message = 'Refund transactions ready';
         }
-      } else if (swapInfo.direction === 'lightning_to_starknet' || swapInfo.direction === 'bitcoin_to_starknet') {
+      } else {
+        // Forward swaps (BTC/Lightning → Starknet)
         if (state === 2 && typeof swap.txsClaim === 'function') {
-          // Claim phase
           transactions = await swap.txsClaim();
           message = 'Claim transactions ready';
         }
@@ -781,7 +689,6 @@ export class AtomiqSdkGateway implements AtomiqGateway {
    * Cleans up resources. Call when shutting down.
    */
   async cleanup(): Promise<void> {
-    this.swapRegistry.clear();
     this.swapper = null;
     this.swapperFactory = null;
     this.isInitialized = false;
