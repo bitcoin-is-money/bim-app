@@ -187,10 +187,6 @@ export class SwapService {
     });
 
     await this.deps.swapRepository.save(swap);
-    await this.deps.atomiqGateway.registerSwapForMonitoring(
-      SwapId.of(atomiqSwap.swapId),
-      atomiqSwap.swapObject,
-    );
 
     this.log.info({
       swapId: atomiqSwap.swapId,
@@ -237,10 +233,6 @@ export class SwapService {
     });
 
     await this.deps.swapRepository.save(swap);
-    await this.deps.atomiqGateway.registerSwapForMonitoring(
-      SwapId.of(atomiqSwap.swapId),
-      atomiqSwap.swapObject,
-    );
 
     this.log.info({
         swapId: atomiqSwap.swapId,
@@ -299,10 +291,6 @@ export class SwapService {
     });
 
     await this.deps.swapRepository.save(swap);
-    await this.deps.atomiqGateway.registerSwapForMonitoring(
-      SwapId.of(atomiqSwap.swapId),
-      atomiqSwap.swapObject,
-    );
 
     this.log.info({
       swapId: atomiqSwap.swapId,
@@ -356,10 +344,6 @@ export class SwapService {
     });
 
     await this.deps.swapRepository.save(swap);
-    await this.deps.atomiqGateway.registerSwapForMonitoring(
-      SwapId.of(atomiqSwap.swapId),
-      atomiqSwap.swapObject,
-    );
 
     this.log.info({
       swapId: atomiqSwap.swapId,

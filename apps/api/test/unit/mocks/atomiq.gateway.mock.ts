@@ -14,13 +14,14 @@ import {BitcoinAddress, LightningInvoice, SwapId, type SwapLimits} from '@bim/do
  * Mock implementation of AtomiqGateway for testing purposes.
  *
  * This implementation does not use the real Atomiq SDK. It generates
- * fake data and stores swaps in memory. Use this for:
+ * fake data and stores swap status in memory. Use this for:
  * - Unit tests
  * - Integration tests without external dependencies
  * - Development without Atomiq SDK setup
  */
 export class AtomiqGatewayMock implements AtomiqGateway {
-  private readonly swapRegistry = new Map<string, unknown>();
+  private readonly mockStatuses = new Map<string, Partial<AtomiqSwapStatus>>();
+  private readonly knownSwapIds = new Set<string>();
 
   // ===========================================================================
   // Swap Creation
@@ -30,110 +31,43 @@ export class AtomiqGatewayMock implements AtomiqGateway {
     amountSats: bigint;
     destinationAddress: StarknetAddress;
   }): Promise<AtomiqSwapResult> {
-    try {
-      const swapId = crypto.randomUUID();
-      const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+    const swapId = crypto.randomUUID();
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
+    const hex = swapId.replaceAll('-', '');
+    const invoice = `lnbc${params.amountSats}n1p${hex}${hex}`;
 
-      // Mock: Generate a valid-looking BOLT11 invoice (alphanumeric only, no dots/underscores)
-      const hex = swapId.replaceAll('-', '');
-      const invoice = `lnbc${params.amountSats}n1p${hex}${hex}`;
+    this.knownSwapIds.add(swapId);
 
-      const swapObject = {
-        id: swapId,
-        type: 'lightning_to_starknet',
-        amount: params.amountSats.toString(),
-        destination: params.destinationAddress,
-      };
-
-      this.swapRegistry.set(swapId, swapObject);
-
-      return {
-        swapId,
-        invoice,
-        expiresAt,
-        swapObject,
-      };
-    } catch (error) {
-      throw new ExternalServiceError(
-        'Atomiq',
-        `Failed to create Lightning swap: ${error}`,
-      );
-    }
+    return {swapId, invoice, expiresAt};
   }
 
   async createBitcoinToStarknetSwap(params: {
     amountSats: bigint;
     destinationAddress: StarknetAddress;
   }): Promise<AtomiqSwapResult> {
-    try {
-      const swapId = crypto.randomUUID();
-      const expiresAt = new Date(Date.now() + 3 * 60 * 60 * 1000); // 3 hours
+    const swapId = crypto.randomUUID();
+    const expiresAt = new Date(Date.now() + 3 * 60 * 60 * 1000);
+    const hex = swapId.replaceAll('-', '');
+    const depositAddress = `tb1q${hex}${hex}`.slice(0, 42);
+    const bip21Uri = `bitcoin:${depositAddress}?amount=${Number(params.amountSats) / 100000000}`;
 
-      // Mock: Generate a valid-looking testnet bech32 address (tb1 + 39 alphanumeric chars)
-      const hex = swapId.replaceAll('-', '');
-      const depositAddress = `tb1q${hex}${hex}`.slice(0, 42);
-      const bip21Uri = `bitcoin:${depositAddress}?amount=${Number(params.amountSats) / 100000000}`;
+    this.knownSwapIds.add(swapId);
 
-      const swapObject = {
-        id: swapId,
-        type: 'bitcoin_to_starknet',
-        amount: params.amountSats.toString(),
-        destination: params.destinationAddress,
-      };
-
-      this.swapRegistry.set(swapId, swapObject);
-
-      return {
-        swapId,
-        depositAddress,
-        bip21Uri,
-        expiresAt,
-        swapObject,
-      };
-    } catch (error) {
-      throw new ExternalServiceError(
-        'Atomiq',
-        `Failed to create Bitcoin swap: ${error}`,
-      );
-    }
+    return {swapId, depositAddress, bip21Uri, expiresAt};
   }
 
   async createStarknetToLightningSwap(params: {
     invoice: LightningInvoice;
     sourceAddress: StarknetAddress;
   }): Promise<AtomiqReverseSwapResult> {
-    try {
-      const swapId = crypto.randomUUID();
-      const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+    const swapId = crypto.randomUUID();
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
+    const amountSats = 100000n;
+    const depositAddress = `0x${'0'.repeat(62)}${swapId.slice(0, 2)}`;
 
-      // Mock: Parse amount from invoice (in production, decode the BOLT11)
-      const amountSats = 100000n; // Placeholder
+    this.knownSwapIds.add(swapId);
 
-      // Mock: Generate deposit address (Starknet contract)
-      const depositAddress = `0x${'0'.repeat(62)}${swapId.slice(0, 2)}`;
-
-      const swapObject = {
-        id: swapId,
-        type: 'starknet_to_lightning',
-        invoice: params.invoice,
-        source: params.sourceAddress,
-      };
-
-      this.swapRegistry.set(swapId, swapObject);
-
-      return {
-        swapId,
-        depositAddress,
-        amountSats,
-        expiresAt,
-        swapObject,
-      };
-    } catch (error) {
-      throw new ExternalServiceError(
-        'Atomiq',
-        `Failed to create reverse Lightning swap: ${error}`,
-      );
-    }
+    return {swapId, depositAddress, amountSats, expiresAt};
   }
 
   async createStarknetToBitcoinSwap(params: {
@@ -141,36 +75,13 @@ export class AtomiqGatewayMock implements AtomiqGateway {
     destinationAddress: BitcoinAddress;
     sourceAddress: StarknetAddress;
   }): Promise<AtomiqReverseSwapResult> {
-    try {
-      const swapId = crypto.randomUUID();
-      const expiresAt = new Date(Date.now() + 3 * 60 * 60 * 1000); // 3 hours
+    const swapId = crypto.randomUUID();
+    const expiresAt = new Date(Date.now() + 3 * 60 * 60 * 1000);
+    const depositAddress = `0x${'0'.repeat(62)}${swapId.slice(0, 2)}`;
 
-      // Mock: Generate deposit address (Starknet contract)
-      const depositAddress = `0x${'0'.repeat(62)}${swapId.slice(0, 2)}`;
+    this.knownSwapIds.add(swapId);
 
-      const swapObject = {
-        id: swapId,
-        type: 'starknet_to_bitcoin',
-        amount: params.amountSats.toString(),
-        destination: params.destinationAddress,
-        source: params.sourceAddress,
-      };
-
-      this.swapRegistry.set(swapId, swapObject);
-
-      return {
-        swapId,
-        depositAddress,
-        amountSats: params.amountSats,
-        expiresAt,
-        swapObject,
-      };
-    } catch (error) {
-      throw new ExternalServiceError(
-        'Atomiq',
-        `Failed to create reverse Bitcoin swap: ${error}`,
-      );
-    }
+    return {swapId, depositAddress, amountSats: params.amountSats, expiresAt};
   }
 
   // ===========================================================================
@@ -178,50 +89,26 @@ export class AtomiqGatewayMock implements AtomiqGateway {
   // ===========================================================================
 
   async getLightningToStarknetLimits(): Promise<SwapLimits> {
-    return {
-      minSats: 10000n,        // 10k sats
-      maxSats: 10000000n,     // 0.1 BTC
-      feePercent: 0.5,
-    };
+    return {minSats: 10000n, maxSats: 10000000n, feePercent: 0.5};
   }
 
   async getBitcoinToStarknetLimits(): Promise<SwapLimits> {
-    return {
-      minSats: 50000n,        // 50k sats
-      maxSats: 100000000n,    // 1 BTC
-      feePercent: 0.3,
-    };
+    return {minSats: 50000n, maxSats: 100000000n, feePercent: 0.3};
   }
 
   async getStarknetToLightningLimits(): Promise<SwapLimits> {
-    return {
-      minSats: 10000n,        // 10k sats
-      maxSats: 5000000n,      // 0.05 BTC
-      feePercent: 0.5,
-    };
+    return {minSats: 10000n, maxSats: 5000000n, feePercent: 0.5};
   }
 
   async getStarknetToBitcoinLimits(): Promise<SwapLimits> {
-    return {
-      minSats: 50000n,        // 50k sats
-      maxSats: 50000000n,     // 0.5 BTC
-      feePercent: 0.3,
-    };
+    return {minSats: 50000n, maxSats: 50000000n, feePercent: 0.3};
   }
 
   // ===========================================================================
   // Swap Monitoring
   // ===========================================================================
 
-  async registerSwapForMonitoring(
-    swapId: SwapId,
-    swapObject: unknown,
-  ): Promise<void> {
-    this.swapRegistry.set(swapId, swapObject);
-  }
-
   async getSwapStatus(swapId: SwapId): Promise<AtomiqSwapStatus> {
-    const swap = this.swapRegistry.get(swapId) as Record<string, unknown> | undefined;
     const defaults: AtomiqSwapStatus = {
       state: 0,
       isPaid: false,
@@ -230,7 +117,7 @@ export class AtomiqGatewayMock implements AtomiqGateway {
       isExpired: false,
     };
 
-    if (!swap) {
+    if (!this.knownSwapIds.has(swapId)) {
       return {
         ...defaults,
         state: -1,
@@ -239,9 +126,9 @@ export class AtomiqGatewayMock implements AtomiqGateway {
       };
     }
 
-    // Return overridden status if set via setSwapStatus()
-    if (swap._mockStatus) {
-      return {...defaults, ...(swap._mockStatus as Partial<AtomiqSwapStatus>)};
+    const overrides = this.mockStatuses.get(swapId);
+    if (overrides) {
+      return {...defaults, ...overrides};
     }
 
     return defaults;
@@ -257,60 +144,37 @@ export class AtomiqGatewayMock implements AtomiqGateway {
   // ===========================================================================
 
   async claimSwap(swapId: SwapId): Promise<ClaimResult> {
-    const swap = this.swapRegistry.get(swapId);
-
-    if (!swap) {
+    if (!this.knownSwapIds.has(swapId)) {
       throw new ExternalServiceError('Atomiq', `Swap not found: ${swapId}`);
     }
-
-    // Mock: Return a fake transaction hash
-    const txHash = `0x${crypto.randomUUID().replaceAll('-', '')}`;
-
     return {
-      txHash,
+      txHash: `0x${crypto.randomUUID().replaceAll('-', '')}`,
       success: true,
     };
   }
 
-  async waitForClaimConfirmation(swapId: SwapId): Promise<void> {
-    // Mock: Wait for a short delay
-    await new Promise((resolve) => setTimeout(resolve, 100));
+  async waitForClaimConfirmation(_swapId: SwapId): Promise<void> {
+    await new Promise((resolve) => setTimeout(resolve, 10));
   }
 
-  async getUnsignedClaimTransactions(
-    swapId: SwapId,
-  ): Promise<UnsignedClaimTransactions> {
-    const swap = this.swapRegistry.get(swapId);
-
-    if (!swap) {
+  async getUnsignedClaimTransactions(swapId: SwapId): Promise<UnsignedClaimTransactions> {
+    if (!this.knownSwapIds.has(swapId)) {
       throw new ExternalServiceError('Atomiq', `Swap not found: ${swapId}`);
     }
-
-    // Mock: Return empty transactions
-    return {
-      transactions: [],
-      message: 'Mock claim transactions ready',
-    };
+    return {transactions: [], message: 'Mock claim transactions ready'};
   }
 
   // ===========================================================================
   // Test Helpers
   // ===========================================================================
 
-  /**
-   * Clears all registered swaps. Useful for test cleanup.
-   */
   clearSwaps(): void {
-    this.swapRegistry.clear();
+    this.knownSwapIds.clear();
+    this.mockStatuses.clear();
   }
 
-  /**
-   * Sets a specific swap status for testing.
-   */
   setSwapStatus(swapId: string, status: Partial<AtomiqSwapStatus>): void {
-    const swap = this.swapRegistry.get(swapId);
-    if (swap) {
-      this.swapRegistry.set(swapId, { ...swap, _mockStatus: status });
-    }
+    this.knownSwapIds.add(swapId);
+    this.mockStatuses.set(swapId, status);
   }
 }

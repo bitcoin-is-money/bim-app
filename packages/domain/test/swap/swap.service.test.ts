@@ -54,7 +54,6 @@ function createMockGateway(): AtomiqGateway {
     getBitcoinToStarknetLimits: vi.fn(),
     getStarknetToLightningLimits: vi.fn(),
     getStarknetToBitcoinLimits: vi.fn(),
-    registerSwapForMonitoring: vi.fn(),
     getSwapStatus: vi.fn(),
     isSwapPaid: vi.fn(),
     claimSwap: vi.fn(),

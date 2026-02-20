@@ -71,11 +71,6 @@ export interface AtomiqGateway {
   // ===========================================================================
 
   /**
-   * Registers a swap for monitoring.
-   */
-  registerSwapForMonitoring(swapId: SwapId, swapObject: unknown): Promise<void>;
-
-  /**
    * Gets the current status of a swap from Atomiq.
    */
   getSwapStatus(swapId: SwapId): Promise<AtomiqSwapStatus>;
@@ -115,7 +110,6 @@ export interface AtomiqSwapResult {
   depositAddress?: string;
   bip21Uri?: string;
   expiresAt: Date;
-  swapObject: unknown;
 }
 
 export interface AtomiqReverseSwapResult {
@@ -123,7 +117,6 @@ export interface AtomiqReverseSwapResult {
   depositAddress: string;
   amountSats: bigint;
   expiresAt: Date;
-  swapObject: unknown;
 }
 
 export interface AtomiqSwapStatus {
