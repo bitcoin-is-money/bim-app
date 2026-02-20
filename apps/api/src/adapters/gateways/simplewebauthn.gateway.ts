@@ -7,7 +7,7 @@ import type {
 } from '@bim/domain/ports';
 import {type Uint8Array_, verifyAuthenticationResponse, verifyRegistrationResponse,} from '@simplewebauthn/server';
 import {cose, decodeCredentialPublicKey,} from '@simplewebauthn/server/helpers';
-import {basename} from 'node:path';
+
 import type {Logger} from "pino";
 import type {WebAuthnConfig} from '../../app-config';
 
@@ -21,7 +21,7 @@ export class SimpleWebAuthnGateway implements WebAuthnGateway {
     private readonly config: Pick<WebAuthnConfig, 'authenticatorAttachment'>,
     rootLogger: Logger,
   ) {
-    this.log = rootLogger.child({name: basename(import.meta.filename)});
+    this.log = rootLogger.child({name: 'simplewebauthn.gateway.ts'});
   }
 
   async verifyRegistration(

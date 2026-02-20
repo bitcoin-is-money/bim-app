@@ -1,7 +1,7 @@
 import {isValidLevel} from "@bim/lib/logger";
 import type {TypedResponse} from 'hono';
 import {Hono} from 'hono';
-import {basename} from 'node:path';
+
 import type {Logger} from "pino";
 import type {AppContext} from "../../app-context";
 import type {ApiErrorResponse} from '../../errors';
@@ -10,7 +10,7 @@ import type {GetLogLevelResponse, UpdateLogLevelResponse} from './admin.types';
 
 export function createAdminRoutes(appContext: AppContext): Hono {
   const rootLogger: Logger = appContext.logger;
-  const log: Logger = rootLogger.child({name: basename(import.meta.filename)});
+  const log: Logger = rootLogger.child({name: 'admin.routes.ts'});
   const app = new Hono();
 
   app.get('/log-level', (honoCtx): TypedResponse<GetLogLevelResponse> => {

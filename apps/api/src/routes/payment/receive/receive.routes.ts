@@ -2,7 +2,7 @@ import {type ReceiveResult} from '@bim/domain/payment';
 import {Amount} from '@bim/domain/shared';
 import type {TypedResponse} from 'hono';
 import {Hono} from 'hono';
-import {basename} from 'node:path';
+
 import type {AppContext} from '../../../app-context';
 import {type ApiErrorResponse, createErrorResponse, ErrorCode, handleDomainError} from '../../../errors';
 import type {AuthenticatedHono} from '../../../types';
@@ -14,7 +14,7 @@ import type {ReceiveResponse} from './receive.types';
 // =============================================================================
 
 export function createReceiveRoutes(appContext: AppContext): AuthenticatedHono {
-  const log = appContext.logger.child({name: basename(import.meta.filename)});
+  const log = appContext.logger.child({name: 'receive.routes.ts'});
   const app: AuthenticatedHono = new Hono();
 
   const {receive: receiveService} = appContext.services;

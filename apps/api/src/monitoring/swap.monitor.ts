@@ -1,5 +1,5 @@
 import {isForwardSwap, type SwapDirection, type SwapService, type SwapStatus} from '@bim/domain/swap';
-import {basename} from 'node:path';
+
 import type {Logger} from 'pino';
 
 /**
@@ -41,7 +41,7 @@ export class SwapMonitor {
     config?: SwapMonitorConfig,
   ) {
     this.config = {...DEFAULT_CONFIG, ...config};
-    this.log = rootLogger.child({name: basename(import.meta.filename)});
+    this.log = rootLogger.child({name: 'swap.monitor.ts'});
   }
 
   /**

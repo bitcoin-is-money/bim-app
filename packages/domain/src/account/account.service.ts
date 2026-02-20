@@ -1,4 +1,4 @@
-import {basename} from 'node:path';
+
 import type {Logger} from 'pino';
 import type {AccountRepository, PaymasterGateway, StarknetGateway} from '../ports';
 import {Account} from './account';
@@ -65,7 +65,7 @@ export class AccountService {
   private readonly log: Logger;
 
   constructor(private readonly deps: AccountServiceDeps) {
-    this.log = deps.logger.child({name: basename(import.meta.filename)});
+    this.log = deps.logger.child({name: 'account.service.ts'});
   }
 
   /**

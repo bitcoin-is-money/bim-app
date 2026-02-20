@@ -1,4 +1,4 @@
-import {basename} from 'node:path';
+
 import type {Event} from '@apibara/starknet';
 import type {Logger} from 'pino';
 import {addAddressPadding, uint256} from 'starknet';
@@ -8,7 +8,7 @@ export class TransferEventDecoder {
   private readonly logger: Logger;
 
   constructor(logger: Logger) {
-    this.logger = logger.child({name: basename(import.meta.filename)});
+    this.logger = logger.child({name: 'transfer-event-decoder.ts'});
   }
 
   /**

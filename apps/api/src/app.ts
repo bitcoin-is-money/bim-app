@@ -2,7 +2,7 @@ import {createLogger} from "@bim/lib/logger";
 import {serveStatic} from '@hono/node-server/serve-static';
 import {Hono} from 'hono';
 import {cors} from 'hono/cors';
-import {basename} from "node:path";
+
 import type {Logger} from 'pino';
 import {AppContext, type AppContextOverrides} from "./app-context";
 import {DatabaseConnection} from '@bim/db/connection';
@@ -39,7 +39,7 @@ export interface AppInstance {
  */
 export async function createApp(options: CreateAppOptions = {}): Promise<AppInstance> {
   const rootLogger: Logger = createLogger('debug');
-  const logger: Logger = rootLogger.child({name: basename(import.meta.filename)});
+  const logger: Logger = rootLogger.child({name: 'app.ts'});
   const config = {
     ...AppConfig.load(),
     ...options.config

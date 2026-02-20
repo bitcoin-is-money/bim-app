@@ -25,6 +25,7 @@
     "deploy:build": "./infra/deploy.sh build",
     "deploy:push": "./infra/deploy.sh push",
     "deploy:ship": "./infra/deploy.sh ship",
+    "deploy:redeploy": "./infra/deploy.sh redeploy",
     "db:up": "docker compose up -d postgres && until docker compose exec postgres pg_isready -U bim_user -d bim; do sleep 1; done && DATABASE_URL=postgresql://bim_user:bim_password@localhost:5432/bim npm run db:push",
     "db:push": "npm run db:push -w @bim/db",
     "db:generate": "npm run db:generate -w @bim/db",

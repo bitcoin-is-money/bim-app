@@ -1,5 +1,5 @@
 import {serve} from '@hono/node-server';
-import {basename} from "node:path";
+
 import {createApp} from './app';
 import {DatabaseConnection} from '@bim/db/connection';
 import {loadEnv} from './load-env';
@@ -11,7 +11,7 @@ loadEnv();
 // =============================================================================
 
 const {app, monitor, rootLogger} = await createApp();
-const logger = rootLogger.child({name: basename(import.meta.filename)});
+const logger = rootLogger.child({name: 'main.ts'});
 const port = Number(process.env.PORT) || 8080;
 
 logger.info('Starting server');

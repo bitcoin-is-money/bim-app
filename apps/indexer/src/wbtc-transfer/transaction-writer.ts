@@ -1,4 +1,4 @@
-import {basename} from 'node:path';
+
 import type {NewTransactionRecord} from '@bim/db';
 import * as schema from '@bim/db';
 import type {Logger} from 'pino';
@@ -7,7 +7,7 @@ export class TransactionWriter {
   private readonly logger: Logger;
 
   constructor(logger: Logger) {
-    this.logger = logger.child({name: basename(import.meta.filename)});
+    this.logger = logger.child({name: 'transaction-writer.ts'});
   }
 
   /**

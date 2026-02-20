@@ -1,7 +1,7 @@
 import {Account, AccountId} from '@bim/domain/account';
 import type {TypedResponse} from 'hono';
 import {Hono} from 'hono';
-import {basename} from 'node:path';
+
 import type {AppContext} from '../../app-context';
 import {type ApiErrorResponse, createErrorResponse, ErrorCode, handleDomainError} from '../../errors';
 import {createAuthMiddleware} from '../../middleware/auth.middleware';
@@ -19,7 +19,7 @@ import type {
 // =============================================================================
 
 export function createAccountRoutes(appCtx: AppContext): AuthenticatedHono {
-  const log = appCtx.logger.child({name: basename(import.meta.filename)});
+  const log = appCtx.logger.child({name: 'account.routes.ts'});
   const app: AuthenticatedHono = new Hono();
 
   app.use('*', createAuthMiddleware(appCtx));

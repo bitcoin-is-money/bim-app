@@ -8,7 +8,7 @@ import type {
   TransactionReceipt,
 } from "@bim/domain/ports";
 import {ExternalServiceError} from "@bim/domain/shared";
-import {basename} from 'node:path';
+
 import type {Logger} from "pino";
 import {CallData, hash, RpcProvider} from 'starknet';
 import {ARGENT_WEBAUTHN_SALT, buildArgentWebauthnCalldata} from './argent-calldata.js';
@@ -37,7 +37,7 @@ export class StarknetRpcGateway implements StarknetGateway {
     rootLogger: Logger,
   ) {
     this.provider = new RpcProvider({nodeUrl: config.rpcUrl});
-    this.log = rootLogger.child({name: basename(import.meta.filename)});
+    this.log = rootLogger.child({name: 'starknet.gateway.ts'});
   }
 
   async calculateAccountAddress(params: {

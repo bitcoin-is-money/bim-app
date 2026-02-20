@@ -1,7 +1,7 @@
 import {type PaymentResult, type PreparedPayment} from '@bim/domain/payment';
 import type {TypedResponse} from 'hono';
 import {Hono} from 'hono';
-import {basename} from 'node:path';
+
 import type {AppContext} from '../../../app-context';
 import {type ApiErrorResponse, createErrorResponse, ErrorCode, handleDomainError} from '../../../errors';
 import type {AuthenticatedHono} from '../../../types';
@@ -13,7 +13,7 @@ import type {AmountResponse, PaymentResultResponse, PreparedPaymentResponse} fro
 // =============================================================================
 
 export function createPayRoutes(appContext: AppContext): AuthenticatedHono {
-  const log = appContext.logger.child({name: basename(import.meta.filename)});
+  const log = appContext.logger.child({name: 'pay.routes.ts'});
   const app: AuthenticatedHono = new Hono();
 
   const {pay: payService} = appContext.services;

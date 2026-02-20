@@ -1,7 +1,7 @@
 import {Account} from '@bim/domain/account';
 import type {TypedResponse} from 'hono';
 import {Hono} from 'hono';
-import {basename} from 'node:path';
+
 import {z} from 'zod';
 import type {AppContext} from '../../../app-context';
 import {type ApiErrorResponse, handleDomainError} from '../../../errors';
@@ -17,7 +17,7 @@ const SetDescriptionSchema = z.object({
 // =============================================================================
 
 export function createTransactionRoutes(appContext: AppContext): AuthenticatedHono {
-  const log = appContext.logger.child({name: basename(import.meta.filename)});
+  const log = appContext.logger.child({name: 'transaction.routes.ts'});
   const app: AuthenticatedHono = new Hono();
 
   // Service from AppContext (initialized once at startup)

@@ -1,5 +1,5 @@
 import {WebauthnUserHandleDecoder} from "@bim/lib/auth";
-import {basename} from 'node:path';
+
 import type {Logger} from 'pino';
 import {Account, AccountAlreadyExistsError, AccountId, AccountNotFoundError, CredentialId} from '../account';
 import type {AccountRepository, ChallengeRepository, SessionRepository, WebAuthnGateway,} from '../ports';
@@ -109,7 +109,7 @@ export class AuthService {
     private readonly deps: AuthServiceDeps,
     private readonly config: WebAuthnConfig,
   ) {
-    this.log = deps.logger.child({name: basename(import.meta.filename)});
+    this.log = deps.logger.child({name: 'auth.service.ts'});
   }
 
   // ===========================================================================

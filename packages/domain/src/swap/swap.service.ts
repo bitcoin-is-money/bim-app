@@ -1,4 +1,4 @@
-import {basename} from 'node:path';
+
 import type {Logger} from 'pino';
 import {AccountId, StarknetAddress} from '../account';
 import type {AtomiqGateway, SwapRepository, TransactionRepository} from '../ports';
@@ -141,7 +141,7 @@ export class SwapService {
   private readonly log: Logger;
 
   constructor(private readonly deps: SwapServiceDeps) {
-    this.log = deps.logger.child({name: basename(import.meta.filename)});
+    this.log = deps.logger.child({name: 'swap.service.ts'});
   }
 
   // ===========================================================================
