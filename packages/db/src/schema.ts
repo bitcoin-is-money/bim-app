@@ -105,7 +105,7 @@ export const transactionDescriptions = pgTable('bim_transaction_descriptions', {
 // =============================================================================
 
 export const swaps = pgTable('bim_swaps', {
-  id: uuid('id').primaryKey(),
+  id: text('id').primaryKey(),
   direction: text('direction').notNull(),
   amountSats: text('amount_sats').notNull(),
   destinationAddress: text('destination_address').notNull(),
