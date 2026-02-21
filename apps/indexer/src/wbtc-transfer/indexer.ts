@@ -30,7 +30,7 @@ export interface WbtcRuntimeConfig extends ApibaraRuntimeConfig {
 export async function createWbtcTransferIndexer(cfg: WbtcRuntimeConfig) {
   const logger: Logger = createRootLogger().child({name: "indexer.ts"});
   try {
-    logger.info('Indexer initializing');
+    logger.info({version: process.env.APP_VERSION ?? 'dev'}, 'Indexer initializing');
     return await createWbtcTransferIndexerInternal(cfg, logger);
   } catch (error) {
     logger.fatal(error, 'Fatal startup error');

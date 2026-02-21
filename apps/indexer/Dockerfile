@@ -47,5 +47,8 @@ COPY --from=builder /app/apps/indexer/.apibara/build/ ./.apibara/build/
 # Copy health entrypoint
 COPY apps/indexer/src/health-entrypoint.mjs ./health-entrypoint.mjs
 
+ARG APP_VERSION=dev
+ENV APP_VERSION=${APP_VERSION}
+
 EXPOSE 8080
 CMD ["node", "health-entrypoint.mjs"]
