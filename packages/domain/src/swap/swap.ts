@@ -1,10 +1,9 @@
-import {Amount, InvalidStateTransitionError} from '../shared';
+import {Amount} from '../shared';
 import {
   type CreateBitcoinToStarknetParams,
   type CreateLightningToStarknetParams,
   type CreateStarknetToBitcoinParams,
   type CreateStarknetToLightningParams,
-  InvalidSwapStateError,
   isForwardSwap,
   type SwapData,
   type SwapDirection,
@@ -191,9 +190,11 @@ export class Swap {
 
   /**
    * Checks if the swap has expired.
+   * Expiration is determined solely by Atomiq (via syncWithAtomiq → markAsExpired).
+   * We never second-guess Atomiq with a local date check.
    */
   isExpired(): boolean {
-    return new Date() > this.expiresAt || this.state.status === 'expired';
+    return this.state.status === 'expired';
   }
 
   /**
@@ -207,7 +208,7 @@ export class Swap {
    * Checks if the swap can be claimed.
    */
   canClaim(): boolean {
-    return this.state.status === 'paid' && !this.isExpired();
+    return this.state.status === 'paid';
   }
 
   // ===========================================================================
@@ -215,29 +216,19 @@ export class Swap {
   // ===========================================================================
 
   /**
-   * Marks the swap as paid (payment received for forward swaps,
-   * or deposit detected for reverse swaps).
+   * All mark* methods are pure state setters — Atomiq is the source of truth.
+   * We transcribe states, we don't validate transition coherence.
+   * Protection against regressing a terminal swap is in fetchStatus() (isTerminal guard).
    */
+
   markAsPaid(): void {
-    if (this.state.status !== 'pending') {
-      throw new InvalidStateTransitionError(this.state.status, 'paid');
-    }
-    if (this.isExpired()) {
-      throw new InvalidSwapStateError(this.state.status, 'mark as paid (expired)');
-    }
     this.state = {
       status: 'paid',
       paidAt: new Date(),
     };
   }
 
-  /**
-   * Marks the swap as confirming (claim transaction submitted).
-   */
   markAsConfirming(txHash: string): void {
-    if (this.state.status !== 'paid') {
-      throw new InvalidStateTransitionError(this.state.status, 'confirming');
-    }
     this.state = {
       status: 'confirming',
       txHash,
@@ -245,52 +236,22 @@ export class Swap {
     };
   }
 
-  /**
-   * Marks the swap as completed.
-   */
-  markAsCompleted(txHash?: string): void {
-    if (this.state.status !== 'confirming' && this.state.status !== 'paid') {
-      throw new InvalidStateTransitionError(this.state.status, 'completed');
-    }
-
-    const finalTxHash =
-      txHash ||
-      (this.state.status === 'confirming' ? this.state.txHash : undefined);
-
-    if (!finalTxHash) {
-      throw new InvalidSwapStateError(
-        this.state.status,
-        'complete without transaction hash',
-      );
-    }
-
+  markAsCompleted(txHash: string): void {
     this.state = {
       status: 'completed',
-      txHash: finalTxHash,
+      txHash,
       completedAt: new Date(),
     };
   }
 
-  /**
-   * Marks the swap as expired.
-   */
   markAsExpired(): void {
-    if (this.isTerminal()) {
-      throw new InvalidStateTransitionError(this.state.status, 'expired');
-    }
     this.state = {
       status: 'expired',
       expiredAt: new Date(),
     };
   }
 
-  /**
-   * Marks the swap as failed.
-   */
   markAsFailed(error: string): void {
-    if (this.isTerminal()) {
-      throw new InvalidStateTransitionError(this.state.status, 'failed');
-    }
     this.state = {
       status: 'failed',
       error,

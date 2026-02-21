@@ -430,13 +430,6 @@ export class SwapService {
       throw new SwapNotFoundError(swapId);
     }
 
-    // Check expiration
-    if (swap.isExpired()) {
-      swap.markAsExpired();
-      await this.deps.swapRepository.save(swap);
-      throw new InvalidSwapStateError('expired', 'claim');
-    }
-
     if (!swap.canClaim()) {
       throw new InvalidSwapStateError(swap.getStatus(), 'claim');
     }
@@ -509,47 +502,34 @@ export class SwapService {
 
   /**
    * Syncs local swap state with Atomiq.
+   * Atomiq is the source of truth — we transcribe its state without
+   * checking local state coherence. Priority: completed > paid > failed > expired.
+   * Protection against regressing a terminal swap is in fetchStatus() (isTerminal guard).
    */
   private async syncWithAtomiq(swap: Swap): Promise<void> {
     try {
       const atomiqStatus = await this.deps.atomiqGateway.getSwapStatus(swap.id);
-      this.log.debug({atomiqStatus}, "Sync swap with Atomiq");
+      this.log.debug({atomiqStatus}, 'Sync swap with Atomiq');
 
-      if (atomiqStatus.isPaid && swap.getStatus() === 'pending') {
-        swap.markAsPaid();
-        await this.deps.swapRepository.save(swap);
-      } else if (atomiqStatus.isCompleted && swap.getStatus() !== 'completed') {
-        if (swap.getStatus() === 'pending') {
-          swap.markAsPaid();
-        }
-        if (swap.getStatus() === 'paid') {
-          swap.markAsConfirming(atomiqStatus.txHash || 'unknown');
-        }
-        swap.markAsCompleted(atomiqStatus.txHash);
+      if (atomiqStatus.isCompleted) {
+        swap.markAsCompleted(atomiqStatus.txHash || 'unknown');
         await this.deps.swapRepository.save(swap);
         await this.persistDescriptionIfNeeded(swap);
+      } else if (atomiqStatus.isPaid) {
+        swap.markAsPaid();
+        await this.deps.swapRepository.save(swap);
       } else if (atomiqStatus.isFailed) {
         swap.markAsFailed(atomiqStatus.error || 'Unknown error');
         await this.deps.swapRepository.save(swap);
       } else if (atomiqStatus.isExpired) {
-        // Bitcoin deposit edge case: if the user already sent BTC on-chain
-        // and the deposit is confirmed (isPaid), do NOT mark as expired.
-        // Bitcoin transactions are irreversible — treat as paid so claim can proceed.
-        if (atomiqStatus.isPaid && swap.direction === 'bitcoin_to_starknet') {
-          swap.markAsPaid();
-        } else {
-          swap.markAsExpired();
-        }
-
+        swap.markAsExpired();
         await this.deps.swapRepository.save(swap);
-        this.log.debug({
-          swapId: swap.id,
-          status: swap.getStatus()
-        }, "New swap status");
       }
-    } catch {
-      // Ignore sync errors - return current local state
-      this.log.warn({swapId: swap.id}, 'Failed to sync swap with Atomiq');
+    } catch (error) {
+      this.log.warn({
+        swapId: swap.id,
+        cause: error,
+      }, 'Failed to sync swap with Atomiq');
     }
   }
 
