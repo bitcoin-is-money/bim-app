@@ -85,6 +85,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
 
       const swapperOptions: TypedSwapperOptions<StarknetChainInitializers> = {
         bitcoinNetwork: bitcoinNetworkEnum,
+        saveUninitializedSwaps: true,
         chains: {
           STARKNET: {
             rpcUrl: this.config.starknetRpcUrl
@@ -551,7 +552,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         isCompleted: false,
         isFailed: false,
         isExpired: true,
-        error: 'Swap not found in SDK storage',
+        error: `Swap ${swapId} not found in SDK storage`,
       };
     }
   }
