@@ -1,0 +1,18 @@
+diff --git a/node_modules/@apibara/plugin-drizzle/dist/index.mjs b/node_modules/@apibara/plugin-drizzle/dist/index.mjs
+index 1bdf312..e16a4b2 100644
+--- a/node_modules/@apibara/plugin-drizzle/dist/index.mjs
++++ b/node_modules/@apibara/plugin-drizzle/dist/index.mjs
+@@ -448,10 +448,13 @@ async function registerTriggers(tx, tables, endCursor, idColumnMap, indexerId) {
+       );
+       await tx.execute(
+         sql.raw(`
++          DO $$ BEGIN
+           CREATE CONSTRAINT TRIGGER ${getReorgTriggerName(table, indexerId)}
+           AFTER INSERT OR UPDATE OR DELETE ON ${table}
+           DEFERRABLE INITIALLY DEFERRED
+           FOR EACH ROW EXECUTE FUNCTION ${SCHEMA_NAME}.reorg_checkpoint('${table}', '${tableIdColumn}', ${Number(endCursor.orderKey)}, '${indexerId}');
++          EXCEPTION WHEN duplicate_object THEN NULL;
++          END $$;
+         `)
+       );
+     }
