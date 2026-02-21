@@ -41,6 +41,8 @@ jobs:
           context: .
           file: apps/indexer/Dockerfile
           push: true
+          build-args: |
+            APP_VERSION=${{ github.sha }}
           tags: |
             ${{ env.INDEXER_IMAGE }}:${{ github.sha }}
             ${{ env.INDEXER_IMAGE }}:latest
@@ -81,10 +83,22 @@ jobs:
           SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
           SCW_DEFAULT_PROJECT_ID: ${{ secrets.SCW_PROJECT_ID }}
 
+      - name: Stop Indexer (avoid concurrent instances during deploy)
+        run: |
+          scw container container update ${{ secrets.SCW_INDEXER_CONTAINER_ID }} \
+            min-scale=0 \
+            region=fr-par
+          sleep 15
+        env:
+          SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
+          SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
+          SCW_DEFAULT_PROJECT_ID: ${{ secrets.SCW_PROJECT_ID }}
+
       - name: Deploy Indexer container
         run: |
           scw container container update ${{ secrets.SCW_INDEXER_CONTAINER_ID }} \
             registry-image=${{ env.INDEXER_IMAGE }}:${{ github.sha }} \
+            min-scale=1 \
             region=fr-par
           scw container container deploy ${{ secrets.SCW_INDEXER_CONTAINER_ID }} \
             region=fr-par
