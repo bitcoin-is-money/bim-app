@@ -124,9 +124,10 @@ export class SwapMonitor {
       this.log.info({swapId}, 'Auto-claiming swap (paid)');
       await this.swapService.claim({swapId});
       this.claimRetries.delete(swapId);
-    } catch {
+    } catch (err) {
       this.claimRetries.set(swapId, retries + 1);
       this.log.warn({
+        err,
         swapId, retries: retries + 1,
         maxRetries: this.config.maxClaimRetries
       }, 'Swap claim failed, will retry');

@@ -446,8 +446,9 @@ export class SwapService {
 
       return {swap, txHash: result.txHash};
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      swap.markAsFailed(message);
+      const message = error instanceof Error
+        ? error.message
+        : String(error);
       await this.deps.swapRepository.save(swap);
       throw new SwapClaimError(swapId, message);
     }
