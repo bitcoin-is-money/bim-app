@@ -194,10 +194,8 @@ describe('SwapService', () => {
       expect(result.progress).toBe(33);
     });
 
-    it('reaches completed status from Atomiq over two polls', async () => {
-      // When Atomiq reports isCompleted+isPaid, the first poll transitions to 'paid'.
-      // The second poll (where status is now 'paid') transitions through to 'completed'.
-      // This is correct for a polling-based monitor.
+    it('reaches completed directly when Atomiq reports isCompleted', async () => {
+      // isCompleted has highest priority — no intermediate steps needed
       const swap = createPendingLightningSwap();
       vi.mocked(repository.findById).mockResolvedValue(swap);
       vi.mocked(gateway.getSwapStatus).mockResolvedValue({
@@ -209,15 +207,10 @@ describe('SwapService', () => {
         txHash: '0xabc',
       });
 
-      // First poll: pending → paid
-      const result1 = await service.fetchStatus({swapId: swap.id});
-      expect(result1.status).toBe('paid');
-
-      // Second poll: paid → completed (isCompleted branch matches now)
-      const result2 = await service.fetchStatus({swapId: swap.id});
-      expect(result2.status).toBe('completed');
-      expect(result2.progress).toBe(100);
-      expect(result2.txHash).toBe('0xabc');
+      const result = await service.fetchStatus({swapId: swap.id});
+      expect(result.status).toBe('completed');
+      expect(result.progress).toBe(100);
+      expect(result.txHash).toBe('0xabc');
     });
 
     it('detects failed status from Atomiq', async () => {
