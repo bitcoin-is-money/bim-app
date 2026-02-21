@@ -235,15 +235,8 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       }
 
       const swapId = swap.getId();
-      const depositAddress = swap.data?.getOfferer?.() ?? '';
-
-      // Try to extract the amount from swap data
-      let amountSats = 0n;
-      try {
-        amountSats = BigInt(swap.data?.getAmount?.() || 0);
-      } catch {
-        this.log.warn("Unable to get amount from swap data, using 0.");
-      }
+      const depositAddress = swap.getInputAddress() ?? '';
+      const amountSats = swap.getInput().rawAmount ?? 0n;
 
       const quoteExpiry: any = swap.getQuoteExpiry();
       this.logSwapExpiry(swapId, quoteExpiry, direction);
@@ -299,9 +292,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       }
 
       const swapId = swap.getId();
-      // Access .address directly: getAddress() throws in PR_CREATED state,
-      // but the LP-provided deposit address is already available as a property.
-      const depositAddress = swap.address;
+      const depositAddress = swap.getAddress();
       const bip21Uri = `bitcoin:${depositAddress}?amount=${Number(params.amountSats) / 100000000}`;
 
 
@@ -358,7 +349,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       }
 
       const swapId = swap.getId();
-      const depositAddress = swap.data?.getOfferer?.() ?? '';
+      const depositAddress = swap.getInputAddress() ?? '';
 
       const quoteExpiry = swap.getQuoteExpiry();
       this.logSwapExpiry(swapId, quoteExpiry, direction);
