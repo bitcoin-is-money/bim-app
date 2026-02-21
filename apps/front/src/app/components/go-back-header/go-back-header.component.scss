@@ -1,7 +1,7 @@
 @reference "tailwindcss";
 
 .go-back-header {
-  @apply flex items-center gap-4 p-4 border-b border-neutral-800;
+  @apply flex items-center gap-4 px-4 border-b border-neutral-800;
 
   .back-button {
     @apply p-2 rounded-lg bg-transparent border-none cursor-pointer;
