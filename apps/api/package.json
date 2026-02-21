@@ -5,7 +5,6 @@
   "type": "module",
   "scripts": {
     "clean": "rm -rf dist public/app",
-    "clean:all": "npm run clean && rm -rf node_modules",
     "typecheck": "tsc --noEmit",
     "typecheck:watch": "tsc --watch --noEmit",
     "dev": "NETWORK=testnet tsx watch src/main.ts",
