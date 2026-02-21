@@ -1,4 +1,4 @@
-import {isForwardSwap, type SwapDirection, type SwapService, type SwapStatus} from '@bim/domain/swap';
+import type {SwapService} from '@bim/domain/swap';
 
 import type {Logger} from 'pino';
 
@@ -8,13 +8,10 @@ import type {Logger} from 'pino';
 export interface SwapMonitorConfig {
   /** Polling interval in milliseconds (default: 5000) */
   pollInterval?: number;
-  /** Maximum claim retries per swap before giving up (default: 3) */
-  maxClaimRetries?: number;
 }
 
 const DEFAULT_CONFIG: Required<SwapMonitorConfig> = {
   pollInterval: 5000,
-  maxClaimRetries: 3,
 };
 
 /**
@@ -32,7 +29,6 @@ export class SwapMonitor {
   private running = false;
   private iterating = false;
   private readonly config: Required<SwapMonitorConfig>;
-  private readonly claimRetries = new Map<string, number>();
   private readonly log: Logger;
 
   constructor(
@@ -83,9 +79,12 @@ export class SwapMonitor {
       const activeSwaps = await this.swapService.getActiveSwaps();
       for (const swap of activeSwaps) {
         try {
+          // syncWithAtomiq (inside fetchStatus) detects state transitions:
+          // pending → paid → completed, or expired/failed.
+          // For forward swaps, the LP/watchtower claims cooperatively —
+          // no active claiming needed from BIM (no Starknet signer).
           const {status} = await this.swapService.fetchStatus({swapId: swap.id});
           this.log.debug({swapId: swap.id, status}, `Swap status`);
-          await this.autoClaimIfNeeded(swap.id, status, swap.direction);
         } catch (err) {
           // Individual swap errors are non-fatal — continue with the next swap
           this.log.warn({
@@ -97,40 +96,6 @@ export class SwapMonitor {
       this.log.error({err: err}, 'SwapMonitor iteration error');
     } finally {
       this.iterating = false;
-    }
-  }
-
-  private async autoClaimIfNeeded(
-    swapId: string,
-    status: SwapStatus,
-    direction: SwapDirection,
-  ): Promise<void> {
-    if (status !== 'paid') {
-      this.log.debug(`autoClaimIfNeeded, status !== paid, skipping (status: ${status})`);
-      return;
-    }
-    if (!isForwardSwap(direction)) {
-      this.log.debug(`isForwardSwap(${direction}) is false, skipping (status: ${status})`);
-      return;
-    }
-
-    const retries = this.claimRetries.get(swapId) ?? 0;
-    if (retries >= this.config.maxClaimRetries) {
-      this.log.warn(`maxClaim retries (${retries}), skipping (status: ${status})`);
-      return;
-    }
-
-    try {
-      this.log.info({swapId}, 'Auto-claiming swap (paid)');
-      await this.swapService.claim({swapId});
-      this.claimRetries.delete(swapId);
-    } catch (err) {
-      this.claimRetries.set(swapId, retries + 1);
-      this.log.warn({
-        err,
-        swapId, retries: retries + 1,
-        maxRetries: this.config.maxClaimRetries
-      }, 'Swap claim failed, will retry');
     }
   }
 }

@@ -589,21 +589,18 @@ export class AtomiqSdkGateway implements AtomiqGateway {
   // Swap Claiming
   // ===========================================================================
 
+  /**
+   * Waits for the intermediary/watchtower cooperative claim to complete.
+   *
+   * BIM has no Starknet signer (WebAuthn accounts), so we cannot call
+   * txsClaim()/claim() ourselves. Instead we rely on the LP or watchtower
+   * network to claim on-chain, and just wait for completion.
+   */
   async claimSwap(swapId: SwapId): Promise<ClaimResult> {
-    this.log.debug({swapId}, 'Claiming swap');
+    this.log.debug({swapId}, 'Waiting for cooperative claim');
     const swap = await this.getSwapObject(swapId);
 
     try {
-      if (typeof swap.txsClaim !== 'function') {
-        throw new TypeError('Swap does not support claiming');
-      }
-
-      await swap.txsClaim();
-
-      if (typeof swap.claim === 'function') {
-        await swap.claim();
-      }
-
       if (typeof swap.waitTillClaimed === 'function') {
         await swap.waitTillClaimed();
       }
@@ -613,12 +610,12 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         txHash,
         success: true,
       };
-      this.log.debug({...result}, 'claimSwap result');
+      this.log.debug({...result}, 'claimSwap result (cooperative claim completed)');
       return result;
     } catch (error) {
       throw new ExternalServiceError(
         'Atomiq',
-        `Failed to claim swap: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to wait for cooperative claim: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
