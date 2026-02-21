@@ -1,7 +1,7 @@
 
 import type {Logger} from 'pino';
 import {AccountId, StarknetAddress} from '../account';
-import type {AtomiqGateway, SwapRepository, TransactionRepository} from '../ports';
+import type {AtomiqGateway, ClaimResult, SwapRepository, TransactionRepository} from '../ports';
 import {Amount} from '../shared';
 import {TransactionHash} from '../user/types';
 import {Swap} from './swap';
@@ -415,12 +415,12 @@ export class SwapService {
   // ===========================================================================
 
   /**
-   * Claims a swap after payment has been received.
-   * Triggers the final transfer to the destination address.
+   * Waits for a swap to be cooperatively claimed by the LP/watchtower.
+   * BIM has no Starknet signer, so the gateway just waits for on-chain completion.
    *
    * @throws SwapNotFoundError if swap doesn't exist
    * @throws InvalidSwapStateError if swap cannot be claimed
-   * @throws SwapClaimError if claim fails
+   * @throws SwapClaimError if the cooperative claim times out or fails
    */
   async claim(input: ClaimSwapInput): Promise<ClaimSwapOutput> {
     const swapId = SwapId.of(input.swapId);
@@ -436,7 +436,7 @@ export class SwapService {
 
     try {
       this.log.info({swapId: swap.id}, 'Claiming swap');
-      const result = await this.deps.atomiqGateway.claimSwap(swapId);
+      const result: ClaimResult = await this.deps.atomiqGateway.claimSwap(swapId);
 
       swap.markAsConfirming(result.txHash);
       await this.deps.swapRepository.save(swap);
