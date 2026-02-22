@@ -9,6 +9,7 @@ export interface CreateInvoiceRequest {
   amount: number;
   tokenAddress?: string;
   description?: string;
+  useUriPrefix?: boolean;
 }
 
 export interface StarknetReceiveResponse {
@@ -52,6 +53,7 @@ export class ReceiveHttpService {
       amount: String(request.amount),
       tokenAddress: request.tokenAddress,
       ...(request.description ? {description: request.description} : {}),
+      ...(request.useUriPrefix !== undefined ? {useUriPrefix: request.useUriPrefix} : {}),
     });
   }
 }

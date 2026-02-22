@@ -9,4 +9,5 @@ export const ReceiveSchema = z.object({
   amount: z.string().optional(),
   tokenAddress: z.string().optional(),
   description: z.string().max(100).optional(),
+  useUriPrefix: z.boolean().default(true),
 });

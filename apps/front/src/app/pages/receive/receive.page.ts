@@ -10,12 +10,10 @@ import {GoBackHeaderComponent} from '../../components/go-back-header/go-back-hea
 import {NetworkLogoComponent} from '../../components/network-logo/network-logo.component';
 import {FullPageLayoutComponent} from '../../layout';
 import {Amount} from '../../model';
-import {AuthService} from '../../services/auth.service';
 import {CurrencyService} from '../../services/currency.service';
 import {I18nService} from '../../services/i18n.service';
 import {NotificationService} from '../../services/notification.service';
 import {ReceiveService} from '../../services/receive.service';
-import {environment} from '../../../environments/environment';
 
 type PaymentNetwork = 'starknet' | 'lightning' | 'bitcoin';
 
@@ -40,7 +38,6 @@ const NETWORKS: PaymentNetwork[] = ['starknet', 'lightning', 'bitcoin'];
 export class ReceivePage {
 
   private readonly sanitizer = inject(DomSanitizer);
-  private readonly authService = inject(AuthService);
   private readonly currencyService = inject(CurrencyService);
   private readonly i18n = inject(I18nService);
   private readonly notifications = inject(NotificationService);
@@ -58,37 +55,8 @@ export class ReceivePage {
 
   readonly animationSlideClass = signal('');
 
-  readonly starknetAddress = computed(() => {
-    return this.authService.currentUser()?.starknetAddress ?? ''
-  });
-
   readonly selectedNetwork = computed<PaymentNetwork>(() => {
     return NETWORKS[this.activeNetworkIndex()] ?? 'starknet'
-  });
-
-  readonly starknetUri = computed(() => {
-    const addr = this.starknetAddress();
-    if (!addr) return '';
-
-    const amt = this.amount();
-    const desc = this.description();
-    const hasAmount = amt.value > 0;
-
-    if (!hasAmount && !desc) {
-      return `starknet:${addr}`;
-    }
-
-    const params = new URLSearchParams();
-    if (hasAmount) {
-      const satAmount = this.currencyService.convert(amt, 'SAT');
-      params.set('amount', String(Math.round(satAmount.value)));
-      params.set('token', environment.wbtcTokenAddress);
-    }
-    if (desc) {
-      params.set('summary', desc);
-    }
-
-    return `starknet:${addr}?${params.toString()}`;
   });
 
   readonly qrData = signal<string | undefined>(undefined);
@@ -97,21 +65,14 @@ export class ReceivePage {
     if (this.amount().value === 0) {
       return this.i18n.t('receive.enterAmount');
     }
-    if (this.selectedNetwork() !== 'starknet') {
-      return this.i18n.t('receive.createInvoiceForQr');
-    }
-    if (!this.starknetAddress()) {
-      return this.i18n.t('receive.noStarknetAddress');
-    }
-    return '';
+    return this.i18n.t('receive.createInvoiceForQr');
   });
 
   readonly isCreatingInvoice = this.receiveService.isLoading;
   readonly invoiceCreated = computed(() => this.receiveService.invoice() !== null);
 
   readonly showCreateInvoice = computed(() => {
-    return this.selectedNetwork() !== 'starknet'
-      && this.qrData() === undefined
+    return this.qrData() === undefined
       && this.amount().isPositive();
   });
 
@@ -122,33 +83,12 @@ export class ReceivePage {
     }
 
     effect(() => {
-      const amt = this.amount();
-      const network = this.selectedNetwork();
+      this.amount();
+      this.selectedNetwork();
+      this.useUriPrefix();
 
-      if (amt.value === 0) {
-        this.qrSvg.set(undefined);
-        this.qrData.set(undefined);
-        return;
-      }
-
-      switch (network) {
-        case 'starknet': {
-          const uri = this.starknetUri();
-          if (uri) {
-            this.qrData.set(uri);
-            this.qrSvg.set(this.sanitizer.bypassSecurityTrustHtml(renderSVG(uri)));
-          } else {
-            this.qrSvg.set(undefined);
-            this.qrData.set(undefined);
-          }
-          break;
-        }
-        case 'lightning':
-        case 'bitcoin':
-          this.qrSvg.set(undefined);
-          this.qrData.set(undefined);
-          break;
-      }
+      this.qrSvg.set(undefined);
+      this.qrData.set(undefined);
     });
 
     effect(() => {
@@ -230,11 +170,9 @@ export class ReceivePage {
 
   createInvoice(): void {
     const network = this.selectedNetwork();
-    if (network === 'starknet') return;
-
     const satAmount = this.currencyService.convert(this.amount(), 'SAT');
     const desc = this.description() || undefined;
-    this.receiveService.createInvoice(network, Math.round(satAmount.value), desc);
+    this.receiveService.createInvoice(network, Math.round(satAmount.value), desc, this.useUriPrefix());
   }
 
   async share(): Promise<void> {
