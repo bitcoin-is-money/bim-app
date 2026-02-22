@@ -43,6 +43,7 @@ export function createReceiveRoutes(appContext: AppContext): AuthenticatedHono {
         tokenAddress: input.tokenAddress,
         description: input.description,
         accountId: account.id,
+        useUriPrefix: input.useUriPrefix,
       });
 
       return honoCtx.json<ReceiveResponse>(serializeReceiveResult(result));

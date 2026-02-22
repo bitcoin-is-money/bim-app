@@ -92,6 +92,7 @@ export interface ReceiveStarknetInput {
   starknetAddress: StarknetAddress;
   amount?: Amount;
   tokenAddress?: string;
+  useUriPrefix?: boolean;
 }
 
 // =============================================================================
@@ -180,6 +181,7 @@ export interface ReceivePaymentInput {
   tokenAddress?: string;
   description?: string;
   accountId?: string;
+  useUriPrefix?: boolean;
 }
 
 // =============================================================================

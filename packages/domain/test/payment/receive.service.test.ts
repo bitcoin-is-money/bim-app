@@ -138,6 +138,30 @@ describe('ReceiveService', () => {
       if (result.network !== 'starknet') throw new Error('Expected starknet result');
       expect(result.uri).toBe(`starknet:${SENDER_ADDRESS}?amount=1000&token=${ETH_TOKEN_ADDRESS}`);
     });
+
+    it('omits the starknet: prefix when useUriPrefix is false', async () => {
+      const result = await service.receive({
+        network: 'starknet',
+        destinationAddress: SENDER_ADDRESS,
+        amount: Amount.ofSatoshi(50_000n),
+        useUriPrefix: false,
+      });
+
+      if (result.network !== 'starknet') throw new Error('Expected starknet result');
+      expect(result.uri).toBe(`${SENDER_ADDRESS}?amount=50000&token=${WBTC_TOKEN_ADDRESS}`);
+    });
+
+    it('includes the starknet: prefix when useUriPrefix is true', async () => {
+      const result = await service.receive({
+        network: 'starknet',
+        destinationAddress: SENDER_ADDRESS,
+        amount: Amount.ofSatoshi(50_000n),
+        useUriPrefix: true,
+      });
+
+      if (result.network !== 'starknet') throw new Error('Expected starknet result');
+      expect(result.uri).toBe(`starknet:${SENDER_ADDRESS}?amount=50000&token=${WBTC_TOKEN_ADDRESS}`);
+    });
   });
 
   // ===========================================================================
@@ -252,6 +276,30 @@ describe('ReceiveService', () => {
           amount: Amount.ofSatoshi(200_000n),
         }),
       ).rejects.toThrow(SwapCreationError);
+    });
+
+    it('omits the bitcoin: prefix when useUriPrefix is false', async () => {
+      const result = await service.receive({
+        network: 'bitcoin',
+        destinationAddress: DESTINATION_ADDRESS,
+        amount: Amount.ofSatoshi(200_000n),
+        useUriPrefix: false,
+      });
+
+      if (result.network !== 'bitcoin') throw new Error('Expected bitcoin result');
+      expect(result.bip21Uri).toBe(`${BTC_DEPOSIT_ADDRESS}?amount=0.002`);
+    });
+
+    it('includes the bitcoin: prefix when useUriPrefix is true', async () => {
+      const result = await service.receive({
+        network: 'bitcoin',
+        destinationAddress: DESTINATION_ADDRESS,
+        amount: Amount.ofSatoshi(200_000n),
+        useUriPrefix: true,
+      });
+
+      if (result.network !== 'bitcoin') throw new Error('Expected bitcoin result');
+      expect(result.bip21Uri).toBe(`bitcoin:${BTC_DEPOSIT_ADDRESS}?amount=0.002`);
     });
   });
 });

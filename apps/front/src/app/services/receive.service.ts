@@ -2,7 +2,7 @@ import {inject, Injectable, signal} from '@angular/core';
 import type {StoredSwap} from '../model';
 import {I18nService} from './i18n.service';
 import {NotificationService} from './notification.service';
-import {ReceiveHttpService, ReceiveNetwork, ReceiveResponse} from './receive.http.service';
+import {CreateInvoiceRequest, ReceiveHttpService, ReceiveNetwork, ReceiveResponse} from './receive.http.service';
 import {SwapPollingService} from './swap-polling.service';
 import {SwapStorageService} from './swap-storage.service';
 
@@ -19,11 +19,16 @@ export class ReceiveService {
   readonly isLoading = signal(false);
   readonly invoice = signal<ReceiveResponse | null>(null);
 
-  createInvoice(network: ReceiveNetwork, amount: number, description?: string): void {
+  createInvoice(network: ReceiveNetwork, amount: number, description?: string, useUriPrefix?: boolean): void {
     this.isLoading.set(true);
     this.invoice.set(null);
-
-    this.httpService.createInvoice({network, amount, ...(description ? {description} : {})}).subscribe({
+    const request: CreateInvoiceRequest = {
+      network,
+      amount,
+      ...(description ? {description} : {}),
+      ...(useUriPrefix !== undefined ? {useUriPrefix} : {})
+    };
+    this.httpService.createInvoice(request).subscribe({
       next: (response) => {
         this.invoice.set(response);
         this.isLoading.set(false);

@@ -51,15 +51,13 @@
           [editable]="true"
           [placeholder]="'receive.optionalDescription' | translate"
           (valueChange)="onDescriptionChange($event)"/>
-
-      </div>
-<!--
         @if (selectedNetwork() !== 'lightning') {
           <app-checkbox-field
             [(checked)]="useUriPrefix"
             [label]="'receive.useUriPrefix' | translate"/>
         }
-        -->
+      </div>
+
       <!-- Action buttons -->
       <div class="action-buttons">
         @if (showCreateInvoice()) {

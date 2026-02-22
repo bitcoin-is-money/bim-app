@@ -47,11 +47,11 @@ export class ReceiveService {
     this.log.info({network: input.network, amountSats: input.amount.toSatString()}, 'Creating receive request');
     switch (input.network) {
       case 'starknet':
-        return {network: 'starknet', ...this.receiveStarknet(input.destinationAddress, input.amount, input.tokenAddress)};
+        return {network: 'starknet', ...this.receiveStarknet(input.destinationAddress, input.amount, input.tokenAddress, input.useUriPrefix)};
       case 'lightning':
         return {network: 'lightning', ...(await this.receiveLightning(input.destinationAddress, input.amount, input.description, input.accountId))};
       case 'bitcoin':
-        return {network: 'bitcoin', ...(await this.receiveBitcoin(input.destinationAddress, input.amount, input.description, input.accountId))};
+        return {network: 'bitcoin', ...(await this.receiveBitcoin(input.destinationAddress, input.amount, input.description, input.accountId, input.useUriPrefix))};
     }
   }
 
@@ -59,10 +59,11 @@ export class ReceiveService {
   // Starknet — generate starknet: URI
   // ===========================================================================
 
-  private receiveStarknet(address: StarknetAddress, amount?: Amount, tokenAddress?: string) {
+  private receiveStarknet(address: StarknetAddress, amount?: Amount, tokenAddress?: string, useUriPrefix?: boolean) {
     const token = tokenAddress ?? this.deps.starknetConfig.wbtcTokenAddress;
+    const prefix = useUriPrefix !== false ? 'starknet:' : '';
 
-    let uri = `starknet:${address}`;
+    let uri = `${prefix}${address}`;
     if (amount) {
       uri += `?amount=${amount.toSatString()}&token=${token}`;
     }
@@ -94,7 +95,7 @@ export class ReceiveService {
   // Bitcoin — Bitcoin → Starknet swap (returns deposit address)
   // ===========================================================================
 
-  private async receiveBitcoin(destinationAddress: StarknetAddress, amount: Amount, description?: string, accountId?: string) {
+  private async receiveBitcoin(destinationAddress: StarknetAddress, amount: Amount, description?: string, accountId?: string, useUriPrefix?: boolean) {
     const result = await this.deps.swapService.createBitcoinToStarknet({
       amount,
       destinationAddress,
@@ -102,10 +103,14 @@ export class ReceiveService {
       accountId,
     });
 
+    const bip21Uri = useUriPrefix !== false
+      ? result.bip21Uri
+      : result.bip21Uri.replace(/^bitcoin:/i, '');
+
     return {
       swapId: result.swap.id,
       depositAddress: BitcoinAddress.of(result.depositAddress),
-      bip21Uri: result.bip21Uri,
+      bip21Uri,
       amount,
       expiresAt: result.swap.expiresAt,
     };

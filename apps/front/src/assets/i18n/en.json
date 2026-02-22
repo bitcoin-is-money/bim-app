@@ -24,7 +24,7 @@
     "sharingFailed": "Sharing failed",
     "copiedToClipboard": "Copied to clipboard",
     "couldNotCopy": "Could not copy to clipboard",
-    "useUriPrefix": "Include URI prefix",
+    "useUriPrefix": "Standard QR format",
     "goToNetwork": "Go to {{network}}",
     "network": {
       "lightning": "Lightning",
