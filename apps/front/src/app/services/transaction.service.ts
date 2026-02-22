@@ -53,7 +53,7 @@ export class TransactionService {
     locale: string
   ): DisplayedTransaction {
     const sats = Number(tx.amount);
-    const sign = tx.type === 'receive' ? '+' : '-';
+    const sign = tx.type === 'receipt' ? '+' : '-';
     const amount = Amount.of(sats, 'SAT').convert(currency, rates);
     const formattedAmount = `${sign}${amount.format(locale)} ${Currency.symbol(currency)}`;
 

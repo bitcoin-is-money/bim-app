@@ -134,8 +134,8 @@
       "step3": "3. Enjoy BIM!"
     },
     "type": {
-      "receive": "Received",
-      "send": "Sent"
+      "receipt": "Received",
+      "spent": "Sent"
     }
   },
   "notifications": {
