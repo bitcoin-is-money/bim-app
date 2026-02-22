@@ -1,5 +1,8 @@
 @use 'styles-colors.scss';
 @use 'styles-notifications.scss';
+
+// Do NOT import tailwindcss !
+// Tailwind is automatically imported in postcss, we just have to use reference to avoid duplication
 @reference "tailwindcss";
 
 // MEMO
@@ -13,6 +16,7 @@ button {
   border: none;
   border-radius: 0;
   box-shadow: none;
+  padding: 0;
 }
 
 *, *::before, *::after {
