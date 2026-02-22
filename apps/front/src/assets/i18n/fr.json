@@ -24,6 +24,7 @@
     "sharingFailed": "Échec du partage",
     "copiedToClipboard": "Copié dans le presse-papiers",
     "couldNotCopy": "Impossible de copier dans le presse-papiers",
+    "useUriPrefix": "Inclure le préfixe URI",
     "goToNetwork": "Aller à {{network}}",
     "network": {
       "lightning": "Lightning",

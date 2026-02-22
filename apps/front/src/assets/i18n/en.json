@@ -24,6 +24,7 @@
     "sharingFailed": "Sharing failed",
     "copiedToClipboard": "Copied to clipboard",
     "couldNotCopy": "Could not copy to clipboard",
+    "useUriPrefix": "Include URI prefix",
     "goToNetwork": "Go to {{network}}",
     "network": {
       "lightning": "Lightning",

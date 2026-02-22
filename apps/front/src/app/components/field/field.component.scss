@@ -8,23 +8,23 @@
   @apply flex items-center gap-3 px-4 py-3 rounded-xl bg-neutral-800;
 
   .field-label {
-    @apply text-sm text-neutral-500 whitespace-nowrap;
+    @apply text-sm text-neutral-500 whitespace-nowrap leading-6;
   }
 
   .field-icon {
-    @apply text-neutral-500 text-sm;
+    @apply text-neutral-500 text-sm leading-6;
   }
 
   .field-input {
-    @apply flex-1 min-w-0 bg-transparent text-neutral-300 outline-none placeholder-neutral-600 text-sm;
+    @apply flex-1 min-w-0 bg-transparent text-neutral-300 outline-none placeholder-neutral-600 text-sm leading-6 p-0;
     text-align: center;
   }
 
   .field-text {
-    @apply flex flex-1 min-w-0 text-neutral-300 text-sm truncate justify-center;
+    @apply flex flex-1 min-w-0 text-neutral-300 text-sm truncate justify-center leading-6;
   }
 
   .field-suffix {
-    @apply text-sm text-neutral-500 font-medium whitespace-nowrap;
+    @apply text-sm text-neutral-500 font-medium whitespace-nowrap leading-6;
   }
 }
