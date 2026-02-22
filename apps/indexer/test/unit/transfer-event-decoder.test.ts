@@ -16,7 +16,8 @@ const TRANSFER_SELECTOR = '0x99cd8bde557814842a3121e8ddfd433a539b8c9f14bf31ebf10
 const logger: Logger = createLogger(LOG_LEVEL, INDEXER_LOGGER_CONFIG);
 const decoder = new TransferEventDecoder(logger);
 
-function makeEvent(
+/** Cairo 1 format: from/to in keys (indexed) */
+function makeCairo1Event(
   from: string,
   to: string,
   amountLow = '0x1000',
@@ -35,58 +36,136 @@ function makeEvent(
   };
 }
 
-describe('TransferEventDecoder', () => {
-  it('decodes a valid Transfer event', () => {
-    const result = decoder.decode([makeEvent(ALICE, BOB)]);
+/** Cairo 0 (legacy) format: from/to in data (non-indexed) */
+function makeCairo0Event(
+  from: string,
+  to: string,
+  amountLow = '0x1000',
+  amountHigh = '0x0',
+): Event {
+  return {
+    filterIds: [0],
+    address: WBTC as `0x${string}`,
+    keys: [TRANSFER_SELECTOR] as `0x${string}`[],
+    data: [from, to, amountLow, amountHigh] as `0x${string}`[],
+    eventIndex: 0,
+    transactionIndex: 0,
+    transactionHash: TX_HASH as `0x${string}`,
+    transactionStatus: 'succeeded',
+    eventIndexInTransaction: 0,
+  };
+}
 
-    expect(result).toHaveLength(1);
-    expect(result[0]).toEqual({
-      from: ALICE,
-      to: BOB,
-      amount: '4096',
-      txHash: TX_HASH,
+describe('TransferEventDecoder', () => {
+  describe('Cairo 1 format (indexed from/to in keys)', () => {
+    it('decodes a valid Transfer event', () => {
+      const result = decoder.decode([makeCairo1Event(ALICE, BOB)]);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({
+        from: ALICE,
+        to: BOB,
+        amount: '4096',
+        txHash: TX_HASH,
+      });
+    });
+
+    it('decodes u256 amount with high part', () => {
+      const result = decoder.decode([makeCairo1Event(ALICE, BOB, '0x5', '0x2')]);
+
+      expect(result[0].amount).toBe((5n + (2n << 128n)).toString());
+    });
+
+    it('skips events with insufficient keys and data', () => {
+      const events: Event[] = [
+        {
+          ...makeCairo1Event(ALICE, BOB),
+          keys: [TRANSFER_SELECTOR, ALICE] as `0x${string}`[],
+          data: ['0x1000'] as `0x${string}`[],
+        },
+      ];
+      expect(decoder.decode(events)).toHaveLength(0);
+    });
+
+    it('handles multiple events', () => {
+      const result = decoder.decode([
+        makeCairo1Event(ALICE, BOB),
+        makeCairo1Event(BOB, ALICE),
+      ]);
+      expect(result).toHaveLength(2);
+    });
+
+    it('normalizes addresses to lowercase padded hex', () => {
+      const result = decoder.decode([makeCairo1Event('0xABC', '0xDEF')]);
+
+      expect(result[0].from).toBe('0x' + '0'.repeat(61) + 'abc');
+      expect(result[0].to).toBe('0x' + '0'.repeat(61) + 'def');
     });
   });
 
-  it('decodes u256 amount with high part', () => {
-    const result = decoder.decode([makeEvent(ALICE, BOB, '0x5', '0x2')]);
+  describe('Cairo 0 format (non-indexed from/to in data)', () => {
+    it('decodes a valid Transfer event', () => {
+      const result = decoder.decode([makeCairo0Event(ALICE, BOB)]);
 
-    expect(result[0].amount).toBe((5n + (2n << 128n)).toString());
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({
+        from: ALICE,
+        to: BOB,
+        amount: '4096',
+        txHash: TX_HASH,
+      });
+    });
+
+    it('decodes u256 amount with high part', () => {
+      const result = decoder.decode([makeCairo0Event(ALICE, BOB, '0x5', '0x2')]);
+
+      expect(result[0].amount).toBe((5n + (2n << 128n)).toString());
+    });
+
+    it('normalizes addresses to lowercase padded hex', () => {
+      const result = decoder.decode([makeCairo0Event('0xABC', '0xDEF')]);
+
+      expect(result[0].from).toBe('0x' + '0'.repeat(61) + 'abc');
+      expect(result[0].to).toBe('0x' + '0'.repeat(61) + 'def');
+    });
+
+    it('decodes real mainnet WBTC event (from Atomiq swap)', () => {
+      const event: Event = {
+        filterIds: [0],
+        address: '0x3fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac' as `0x${string}`,
+        keys: [TRANSFER_SELECTOR] as `0x${string}`[],
+        data: [
+          '0x4f278e1f19e495c3b1dd35ef307c4f7510768ed95481958fbae588bd173f79a',
+          '0x633162ad5ea84dfd99a8e0d6792ef9fed972cdf490f08dbd2cdb5fc84306fe5',
+          '0x28',
+          '0x0',
+        ] as `0x${string}`[],
+        eventIndex: 0,
+        transactionIndex: 0,
+        transactionHash: '0x4959b38b2ea17df393065d7c8ef422d62759222db14b26723b075d28d215adc' as `0x${string}`,
+        transactionStatus: 'succeeded',
+        eventIndexInTransaction: 0,
+      };
+
+      const result = decoder.decode([event]);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].from).toBe('0x04f278e1f19e495c3b1dd35ef307c4f7510768ed95481958fbae588bd173f79a');
+      expect(result[0].to).toBe('0x0633162ad5ea84dfd99a8e0d6792ef9fed972cdf490f08dbd2cdb5fc84306fe5');
+      expect(result[0].amount).toBe('40');
+    });
   });
 
-  it('skips events with insufficient keys', () => {
-    const events: Event[] = [
-      {
-        ...makeEvent(ALICE, BOB),
-        keys: [TRANSFER_SELECTOR, ALICE] as `0x${string}`[],
-      },
-    ];
-    expect(decoder.decode(events)).toHaveLength(0);
-  });
-
-  it('skips events with insufficient data', () => {
-    const events: Event[] = [
-      {
-        ...makeEvent(ALICE, BOB),
-        data: ['0x1000'] as `0x${string}`[],
-      },
-    ];
-    expect(decoder.decode(events)).toHaveLength(0);
-  });
-
-  it('handles multiple events', () => {
-    const result = decoder.decode([
-      makeEvent(ALICE, BOB),
-      makeEvent(BOB, ALICE),
-    ]);
-    expect(result).toHaveLength(2);
-  });
-
-  it('normalizes addresses to lowercase padded hex', () => {
-    const result = decoder.decode([makeEvent('0xABC', '0xDEF')]);
-
-    expect(result[0].from).toBe('0x' + '0'.repeat(61) + 'abc');
-    expect(result[0].to).toBe('0x' + '0'.repeat(61) + 'def');
+  describe('mixed formats', () => {
+    it('handles Cairo 0 and Cairo 1 events together', () => {
+      const result = decoder.decode([
+        makeCairo1Event(ALICE, BOB),
+        makeCairo0Event(BOB, ALICE),
+      ]);
+      expect(result).toHaveLength(2);
+      expect(result[0]).toEqual({from: ALICE, to: BOB, amount: '4096', txHash: TX_HASH});
+      expect(result[1]).toEqual({from: BOB, to: ALICE, amount: '4096', txHash: TX_HASH});
+    });
   });
 
   it('returns empty for empty input', () => {
