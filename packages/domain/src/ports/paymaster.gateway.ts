@@ -1,12 +1,13 @@
 import {StarknetAddress} from '../account';
-import type {DeployTransaction, StarknetTransaction} from './starknet.gateway';
+import type {DeployTransaction, StarknetCall, StarknetTransaction} from './starknet.gateway';
 
 /**
  * Gateway interface for AVNU Paymaster interactions (gasless transactions).
  */
 export interface PaymasterGateway {
   /**
-   * Executes a transaction via the paymaster (gasless).
+   * Executes a deploy transaction via the paymaster (gasless).
+   * Deploy transactions don't need client-side signing.
    */
   executeTransaction(params: {
     transaction: StarknetTransaction | DeployTransaction;
@@ -14,7 +15,26 @@ export interface PaymasterGateway {
   }): Promise<PaymasterResult>;
 
   /**
-   * Builds a transaction with paymaster sponsorship.
+   * Builds an invoke transaction via SNIP-29 paymaster_buildTransaction.
+   * Returns OutsideExecution typed data that must be signed by the user.
+   */
+  buildInvokeTransaction(params: {
+    calls: readonly StarknetCall[];
+    accountAddress: StarknetAddress;
+  }): Promise<{typedData: unknown}>;
+
+  /**
+   * Executes a signed invoke transaction via SNIP-29 paymaster_executeTransaction.
+   * The signature must be in Argent compact_no_legacy format.
+   */
+  executeInvokeTransaction(params: {
+    typedData: unknown;
+    signature: string[];
+    accountAddress: StarknetAddress;
+  }): Promise<PaymasterResult>;
+
+  /**
+   * Builds a transaction with paymaster sponsorship (legacy).
    */
   buildPaymasterTransaction(params: {
     transaction: StarknetTransaction;

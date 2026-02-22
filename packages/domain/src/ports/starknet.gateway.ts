@@ -45,10 +45,30 @@ export interface StarknetGateway {
   /**
    * Executes a multicall transaction from the given account.
    * The adapter handles signing (WebAuthn / paymaster) and submission.
+   * @deprecated Use buildCalls + executeSignedCalls for the SNIP-29 flow.
    */
   executeCalls(params: {
     senderAddress: StarknetAddress;
     calls: readonly StarknetCall[];
+  }): Promise<{txHash: string}>;
+
+  /**
+   * Builds a multicall transaction via the paymaster.
+   * Returns OutsideExecution typed data and the message hash to use as WebAuthn challenge.
+   */
+  buildCalls(params: {
+    senderAddress: StarknetAddress;
+    calls: readonly StarknetCall[];
+  }): Promise<{typedData: unknown; messageHash: string}>;
+
+  /**
+   * Executes a signed multicall transaction via the paymaster.
+   * The signature must be in Argent compact_no_legacy format.
+   */
+  executeSignedCalls(params: {
+    senderAddress: StarknetAddress;
+    typedData: unknown;
+    signature: string[];
   }): Promise<{txHash: string}>;
 }
 

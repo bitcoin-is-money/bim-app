@@ -55,6 +55,22 @@ export type ExecutePaymentResponse =
       expiresAt: string;
     };
 
+export interface BuildPaymentResponse {
+  buildId: string;
+  /** Starknet message hash as hex string (0x-prefixed), used as WebAuthn challenge */
+  messageHash: string;
+  /** Account's credential ID (base64url-encoded) for WebAuthn allowCredentials */
+  credentialId: string;
+  /** Parsed payment info for display */
+  payment: ParsePaymentResponse;
+}
+
+export interface WebAuthnAssertionJson {
+  authenticatorData: string;
+  clientDataJSON: string;
+  signature: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -66,13 +82,17 @@ export class PayHttpService {
     return this.http.post<ParsePaymentResponse>(`${this.apiUrl}/parse`, {paymentPayload});
   }
 
-  execute(
-    paymentPayload: string,
-    description?: string
-  ): Observable<ExecutePaymentResponse> {
-    return this.http.post<ExecutePaymentResponse>(`${this.apiUrl}/execute`, {
+  build(paymentPayload: string, description?: string): Observable<BuildPaymentResponse> {
+    return this.http.post<BuildPaymentResponse>(`${this.apiUrl}/build`, {
       paymentPayload,
       ...(description ? {description} : {}),
+    });
+  }
+
+  executeSigned(buildId: string, assertion: WebAuthnAssertionJson): Observable<ExecutePaymentResponse> {
+    return this.http.post<ExecutePaymentResponse>(`${this.apiUrl}/execute`, {
+      buildId,
+      assertion,
     });
   }
 }

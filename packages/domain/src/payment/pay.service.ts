@@ -13,6 +13,7 @@ import {
   InvalidPaymentAmountError,
   type ParsedPaymentData,
   type PaymentResult,
+  type PreparedCalls,
   type PreparedPayment,
   SameAddressPaymentError,
 } from './types';
@@ -40,8 +41,9 @@ export interface PayServiceDeps {
  * Pay service — handles outgoing payments (send).
  *
  * Provides:
- * - `prepare()`: parse + fee calculation
- * - `execute()`: parse + execute payment on the detected network
+ * - `prepare()`: parse + fee calculation (for display)
+ * - `prepareCalls()`: parse + create Starknet calls (for SNIP-29 build step)
+ * - `savePaymentResult()`: persist transaction metadata after execution
  */
 export class PayService {
   private readonly log: Logger;
@@ -51,7 +53,7 @@ export class PayService {
   }
 
   // ===========================================================================
-  // PREPARE (parse + fee calculation)
+  // PREPARE (parse + fee calculation, for display)
   // ===========================================================================
 
   /**
@@ -69,16 +71,140 @@ export class PayService {
   }
 
   // ===========================================================================
-  // EXECUTE (parse + pay)
+  // PREPARE CALLS (parse + create Starknet calls for SNIP-29 build)
   // ===========================================================================
 
   /**
-   * Execute a payment: auto-detect the network, then execute.
+   * Parse payment data and create Starknet calls to execute.
+   * For Lightning/Bitcoin, this also creates the swap (which has a timeout).
    *
-   * @throws UnsupportedNetworkError if the input format is not recognized
-   * @throws PaymentParsingError if network-specific parsing fails
-   * @throws InvalidPaymentAmountError if amount <= 0
-   * @throws SameAddressPaymentError if sender === recipient (Starknet)
+   * Returns the calls + metadata needed for the execute step.
+   */
+  async prepareCalls(paymentPayload: string, senderAddress: StarknetAddress): Promise<PreparedCalls> {
+    this.log.info({paymentPayload, senderAddress: senderAddress.toString()}, 'Preparing payment calls');
+    const parsed = this.deps.parseService.parse(paymentPayload);
+
+    switch (parsed.network) {
+      case 'starknet':
+        return this.prepareStarknetCalls(senderAddress, parsed);
+      case 'lightning':
+        return this.prepareLightningCalls(senderAddress, parsed);
+      case 'bitcoin':
+        return this.prepareBitcoinCalls(senderAddress, parsed);
+    }
+  }
+
+  private prepareStarknetCalls(
+    senderAddress: StarknetAddress,
+    parsed: Extract<ParsedPaymentData, {network: 'starknet'}>,
+  ): PreparedCalls {
+    if (!parsed.amount.isPositive()) {
+      throw new InvalidPaymentAmountError('starknet', parsed.amount.getSat());
+    }
+    if (senderAddress.toString() === parsed.address.toString()) {
+      throw new SameAddressPaymentError();
+    }
+
+    const {calls, feeAmount} = this.deps.erc20CallFactory.createTransfer({
+      tokenAddress: parsed.tokenAddress,
+      recipientAddress: parsed.address.toString(),
+      amount: parsed.amount,
+      applyFee: true,
+    });
+
+    return {
+      network: 'starknet',
+      calls,
+      amount: parsed.amount,
+      feeAmount,
+      recipientAddress: parsed.address,
+      tokenAddress: parsed.tokenAddress,
+    };
+  }
+
+  private async prepareLightningCalls(
+    senderAddress: StarknetAddress,
+    parsed: Extract<ParsedPaymentData, {network: 'lightning'}>,
+  ): Promise<PreparedCalls> {
+    const swapResult = await this.deps.swapService.createStarknetToLightning({
+      invoice: parsed.invoice,
+      sourceAddress: senderAddress,
+    });
+
+    const depositAddress = StarknetAddress.of(swapResult.depositAddress);
+    const {calls} = this.deps.erc20CallFactory.createTransfer({
+      tokenAddress: this.deps.starknetConfig.wbtcTokenAddress,
+      recipientAddress: depositAddress.toString(),
+      amount: swapResult.amount,
+      applyFee: false,
+    });
+
+    return {
+      network: 'lightning',
+      calls,
+      amount: swapResult.amount,
+      swapId: swapResult.swap.id,
+      invoice: parsed.invoice,
+      expiresAt: swapResult.swap.expiresAt,
+    };
+  }
+
+  private async prepareBitcoinCalls(
+    senderAddress: StarknetAddress,
+    parsed: Extract<ParsedPaymentData, {network: 'bitcoin'}>,
+  ): Promise<PreparedCalls> {
+    if (!parsed.amount.isPositive()) {
+      throw new InvalidPaymentAmountError('bitcoin', parsed.amount.getSat());
+    }
+
+    const swapResult = await this.deps.swapService.createStarknetToBitcoin({
+      amount: parsed.amount,
+      destinationAddress: parsed.address,
+      sourceAddress: senderAddress,
+    });
+
+    const depositAddress = StarknetAddress.of(swapResult.depositAddress);
+    const {calls} = this.deps.erc20CallFactory.createTransfer({
+      tokenAddress: this.deps.starknetConfig.wbtcTokenAddress,
+      recipientAddress: depositAddress.toString(),
+      amount: parsed.amount,
+      applyFee: false,
+    });
+
+    return {
+      network: 'bitcoin',
+      calls,
+      amount: parsed.amount,
+      swapId: swapResult.swap.id,
+      destinationAddress: parsed.address,
+      expiresAt: swapResult.swap.expiresAt,
+    };
+  }
+
+  // ===========================================================================
+  // SAVE RESULT (persist transaction metadata after execute)
+  // ===========================================================================
+
+  async savePaymentResult(params: {
+    txHash: string;
+    accountId: string;
+    description?: string;
+  }): Promise<void> {
+    if (params.description && params.txHash) {
+      await this.deps.transactionRepository.saveDescription(
+        TransactionHash.of(params.txHash),
+        AccountId.of(params.accountId),
+        params.description,
+      );
+    }
+  }
+
+  // ===========================================================================
+  // LEGACY EXECUTE (deprecated — use prepareCalls + build/execute flow)
+  // ===========================================================================
+
+  /**
+   * @deprecated Use prepareCalls() + starknetGateway.buildCalls/executeSignedCalls
    */
   async execute(input: ExecutePaymentInput): Promise<PaymentResult> {
     this.log.info(input, 'Executing payment');

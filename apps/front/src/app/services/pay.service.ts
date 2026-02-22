@@ -1,7 +1,9 @@
 import {inject, Injectable, signal} from '@angular/core';
 import {Router} from '@angular/router';
+import {Base64Url} from '@bim/lib/encoding';
+import {firstValueFrom} from 'rxjs';
 import {ParsedPayment, type StoredSwap} from '../model';
-import {PayHttpService} from './pay.http.service';
+import {type ExecutePaymentResponse, PayHttpService} from './pay.http.service';
 import {SwapPollingService} from './swap-polling.service';
 import {SwapStorageService} from './swap-storage.service';
 
@@ -43,37 +45,97 @@ export class PayService {
     this.description = value || null;
   }
 
-  executeAndNavigate(): void {
+  /**
+   * Executes a payment using the 3-step SNIP-29 WebAuthn flow:
+   * 1. Build: backend prepares calls + typed data, returns challenge
+   * 2. Sign: user approves with biometrics (WebAuthn assertion)
+   * 3. Execute: backend verifies signature + submits transaction
+   */
+  async executeAndNavigate(): Promise<void> {
     if (!this.rawData) return;
     this.isProcessing.set(true);
-    this.httpService
-      .execute(this.rawData, this.description ?? undefined)
-      .subscribe({
-        next: (response) => {
-          this.isProcessing.set(false);
-          this.parsedPayment.set(null);
-          this.rawData = null;
-          this.description = null;
 
-          if (response.network !== 'starknet' && 'swapId' in response) {
-            const swap: StoredSwap = {
-              id: response.swapId,
-              type: 'send',
-              direction: response.network === 'lightning' ? 'starknet_to_lightning' : 'starknet_to_bitcoin',
-              amountSats: response.amount.value,
-              createdAt: new Date().toISOString(),
-              lastKnownStatus: 'pending',
-            };
-            this.swapStorageService.saveSwap(swap);
-            this.swapPollingService.startPolling(swap.id);
-          }
+    try {
+      // 1. Build (get challenge from backend)
+      const buildResponse = await firstValueFrom(
+        this.httpService.build(this.rawData, this.description ?? undefined),
+      );
 
-          this.router.navigate(['/pay/success']);
+      // 2. WebAuthn sign (user approves with biometrics)
+      const challenge = hexToBytes(buildResponse.messageHash).buffer as ArrayBuffer;
+      const credentialIdBytes = Base64Url.decode(buildResponse.credentialId).buffer as ArrayBuffer;
+      const credential = (await navigator.credentials.get({
+        publicKey: {
+          challenge,
+          allowCredentials: [
+            {
+              id: credentialIdBytes,
+              type: 'public-key',
+            },
+          ],
+          userVerification: 'required',
+          timeout: 60000,
         },
-        error: () => {
-          this.isProcessing.set(false);
-          // Error notification is handled by the HTTP interceptor
-        },
-      });
+      })) as PublicKeyCredential | null;
+
+      if (!credential) {
+        // User cancelled WebAuthn prompt
+        return;
+      }
+
+      // 3. Encode assertion for backend
+      const assertionResponse = credential.response as AuthenticatorAssertionResponse;
+      const assertion = {
+        authenticatorData: Base64Url.encode(assertionResponse.authenticatorData),
+        clientDataJSON: Base64Url.encode(assertionResponse.clientDataJSON),
+        signature: Base64Url.encode(assertionResponse.signature),
+      };
+
+      // 4. Execute (send signed data to backend)
+      const response = await firstValueFrom(
+        this.httpService.executeSigned(buildResponse.buildId, assertion),
+      );
+
+      // 5. Handle success
+      this.handleSuccess(response);
+    } catch {
+      // HTTP errors are handled by the interceptor
+    } finally {
+      this.isProcessing.set(false);
+    }
   }
+
+  private handleSuccess(response: ExecutePaymentResponse): void {
+    this.parsedPayment.set(null);
+    this.rawData = null;
+    this.description = null;
+
+    if (response.network !== 'starknet' && 'swapId' in response) {
+      const swap: StoredSwap = {
+        id: response.swapId,
+        type: 'send',
+        direction: response.network === 'lightning' ? 'starknet_to_lightning' : 'starknet_to_bitcoin',
+        amountSats: response.amount.value,
+        createdAt: new Date().toISOString(),
+        lastKnownStatus: 'pending',
+      };
+      this.swapStorageService.saveSwap(swap);
+      this.swapPollingService.startPolling(swap.id);
+    }
+
+    this.router.navigate(['/pay/success']);
+  }
+}
+
+/**
+ * Converts a 0x-prefixed hex string to Uint8Array (for WebAuthn challenge).
+ */
+function hexToBytes(hex: string): Uint8Array {
+  const clean = hex.startsWith('0x') ? hex.slice(2) : hex;
+  const padded = clean.length % 2 === 0 ? clean : '0' + clean;
+  const bytes = new Uint8Array(padded.length / 2);
+  for (let i = 0; i < bytes.length; i++) {
+    bytes[i] = parseInt(padded.substring(i * 2, i * 2 + 2), 16);
+  }
+  return bytes;
 }

@@ -10,7 +10,7 @@ import type {
 import {ExternalServiceError} from "@bim/domain/shared";
 
 import type {Logger} from "pino";
-import {CallData, hash, RpcProvider} from 'starknet';
+import {CallData, hash, RpcProvider, typedData as starknetTypedData} from 'starknet';
 import {ARGENT_WEBAUTHN_SALT, buildArgentWebauthnCalldata} from './argent-calldata.js';
 
 /**
@@ -232,6 +232,83 @@ export class StarknetRpcGateway implements StarknetGateway {
       );
     }
   }
+
+  // ===========================================================================
+  // SNIP-29 Build / Execute (with WebAuthn signing)
+  // ===========================================================================
+
+  async buildCalls(params: {
+    senderAddress: StarknetAddress;
+    calls: readonly StarknetCall[];
+  }): Promise<{typedData: unknown; messageHash: string}> {
+    try {
+      this.log.info(
+        {senderAddress: params.senderAddress.toString(), callCount: params.calls.length},
+        'Building calls via paymaster',
+      );
+
+      const {typedData} = await this.paymasterGateway.buildInvokeTransaction({
+        calls: params.calls,
+        accountAddress: params.senderAddress,
+      });
+
+      // Compute the Starknet message hash from the typed data.
+      // This hash is used as the WebAuthn challenge for signing.
+      const messageHash = starknetTypedData.getMessageHash(
+        typedData as Parameters<typeof starknetTypedData.getMessageHash>[0],
+        params.senderAddress.toString(),
+      );
+
+      this.log.info(
+        {senderAddress: params.senderAddress.toString(), messageHash},
+        'Calls built successfully',
+      );
+
+      return {typedData, messageHash};
+    } catch (error) {
+      if (error instanceof ExternalServiceError) throw error;
+      throw new ExternalServiceError(
+        'Starknet',
+        `Failed to build calls: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  async executeSignedCalls(params: {
+    senderAddress: StarknetAddress;
+    typedData: unknown;
+    signature: string[];
+  }): Promise<{txHash: string}> {
+    try {
+      this.log.info(
+        {senderAddress: params.senderAddress.toString(), signatureLength: params.signature.length},
+        'Executing signed calls via paymaster',
+      );
+
+      const result = await this.paymasterGateway.executeInvokeTransaction({
+        typedData: params.typedData,
+        signature: params.signature,
+        accountAddress: params.senderAddress,
+      });
+
+      if (!result.success) {
+        throw new Error('Transaction execution failed');
+      }
+
+      this.log.info({txHash: result.txHash}, 'Signed calls transaction submitted');
+      return {txHash: result.txHash};
+    } catch (error) {
+      if (error instanceof ExternalServiceError) throw error;
+      throw new ExternalServiceError(
+        'Starknet',
+        `Failed to execute signed calls: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  // ===========================================================================
+  // Private helpers
+  // ===========================================================================
 
   /**
    * Encodes an array of calls into Cairo 1 __execute__ calldata format:
