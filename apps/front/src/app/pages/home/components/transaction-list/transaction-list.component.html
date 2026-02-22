@@ -9,8 +9,8 @@
         </div>
         <div
           class="transaction-amount"
-          [class.credit]="transaction.original.type === 'receive'"
-          [class.debit]="transaction.original.type === 'send'">
+          [class.credit]="transaction.original.type === 'receipt'"
+          [class.debit]="transaction.original.type === 'spent'">
           {{ transaction.formattedAmount }}
         </div>
       </div>

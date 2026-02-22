@@ -134,8 +134,8 @@
       "step3": "3. Profitez de BIM !"
     },
     "type": {
-      "receive": "Reçu",
-      "send": "Envoyé"
+      "receipt": "Reçu",
+      "spent": "Envoyé"
     }
   },
   "notifications": {
