@@ -162,6 +162,28 @@ describe('ReceiveService', () => {
       if (result.network !== 'starknet') throw new Error('Expected starknet result');
       expect(result.uri).toBe(`starknet:${SENDER_ADDRESS}?amount=50000&token=${WBTC_TOKEN_ADDRESS}`);
     });
+
+    it('returns address-only URI when amount is omitted', async () => {
+      const result = await service.receive({
+        network: 'starknet',
+        destinationAddress: SENDER_ADDRESS,
+      });
+
+      if (result.network !== 'starknet') throw new Error('Expected starknet result');
+      expect(result.address).toBe(SENDER_ADDRESS);
+      expect(result.uri).toBe(`starknet:${SENDER_ADDRESS}`);
+    });
+
+    it('returns address-only URI when amount is zero', async () => {
+      const result = await service.receive({
+        network: 'starknet',
+        destinationAddress: SENDER_ADDRESS,
+        amount: Amount.zero(),
+      });
+
+      if (result.network !== 'starknet') throw new Error('Expected starknet result');
+      expect(result.uri).toBe(`starknet:${SENDER_ADDRESS}`);
+    });
   });
 
   // ===========================================================================
