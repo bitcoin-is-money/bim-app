@@ -77,3 +77,17 @@ export type PaymentResultResponse =
   | LightningPaymentResultResponse
   | BitcoinPaymentResultResponse
   | StarknetPaymentResultResponse;
+
+// =============================================================================
+// POST /api/pay/build
+// =============================================================================
+
+export interface BuildPaymentResponse {
+  buildId: string;
+  /** Starknet message hash as hex string (0x-prefixed), used as WebAuthn challenge */
+  messageHash: string;
+  /** Account's credential ID (base64url-encoded) for WebAuthn allowCredentials */
+  credentialId: string;
+  /** Parsed payment info for display */
+  payment: PreparedPaymentResponse;
+}

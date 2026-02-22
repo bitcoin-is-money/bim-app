@@ -4,6 +4,7 @@ import type {
   PaymasterGateway,
   PaymasterResult,
   PaymasterTransaction,
+  StarknetCall,
   StarknetTransaction,
 } from '@bim/domain/ports';
 import {ExternalServiceError} from "@bim/domain/shared";
@@ -349,6 +350,63 @@ export class DevnetPaymasterGateway implements PaymasterGateway {
       txHash: result.transaction_hash,
       success: true,
     };
+  }
+
+  async buildInvokeTransaction(params: {
+    calls: readonly StarknetCall[];
+    accountAddress: StarknetAddress;
+  }): Promise<{typedData: unknown}> {
+    // On devnet, return dummy typed data — the actual execution uses the funding account
+    return {
+      typedData: {
+        _devnet: true,
+        calls: params.calls,
+        accountAddress: params.accountAddress.toString(),
+      },
+    };
+  }
+
+  async executeInvokeTransaction(params: {
+    typedData: unknown;
+    signature: string[];
+    accountAddress: StarknetAddress;
+  }): Promise<PaymasterResult> {
+    try {
+      // On devnet, execute the calls directly through the funding account
+      // (bypasses the SNIP-29 typed data / WebAuthn signature flow)
+      const td = params.typedData as {calls?: StarknetCall[]};
+      if (!td.calls || td.calls.length === 0) {
+        throw new Error('No calls in typed data');
+      }
+
+      const fundingAccount = await this.getFundingAccount();
+      const result = await fundingAccount.execute(
+        td.calls.map(c => ({
+          contractAddress: c.contractAddress,
+          entrypoint: c.entrypoint,
+          calldata: [...c.calldata],
+        })),
+        {
+          resourceBounds: {
+            l1_gas: {max_amount: 100000n, max_price_per_unit: 1000000000000000n},
+            l2_gas: {max_amount: 1000000n, max_price_per_unit: 1000000000000n},
+            l1_data_gas: {max_amount: 10000n, max_price_per_unit: 1000000000000n},
+          },
+        }
+      );
+
+      await this.provider.waitForTransaction(result.transaction_hash);
+
+      return {
+        txHash: result.transaction_hash,
+        success: true,
+      };
+    } catch (error) {
+      throw new ExternalServiceError(
+        'DevnetPaymaster',
+        `Invoke execute failed: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
   }
 
   async buildPaymasterTransaction(params: {

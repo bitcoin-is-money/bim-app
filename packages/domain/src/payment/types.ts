@@ -1,4 +1,5 @@
 import {type StarknetAddress} from '../account';
+import type {StarknetCall} from '../ports/starknet.gateway';
 import {Amount, DomainError} from '../shared';
 import {type BitcoinAddress, type LightningInvoice, type SwapId} from '../swap';
 
@@ -7,6 +8,46 @@ import {type BitcoinAddress, type LightningInvoice, type SwapId} from '../swap';
 // =============================================================================
 
 export type PaymentNetwork = 'lightning' | 'bitcoin' | 'starknet';
+
+// =============================================================================
+// WebAuthn Assertion (base64url-encoded raw data from navigator.credentials.get)
+// =============================================================================
+
+export interface WebAuthnAssertion {
+  authenticatorData: string;
+  clientDataJSON: string;
+  signature: string;
+}
+
+// =============================================================================
+// Prepared Calls (result of preparing payment calls before AVNU build)
+// =============================================================================
+
+export type PreparedCalls =
+  | {
+      network: 'starknet';
+      calls: readonly StarknetCall[];
+      amount: Amount;
+      feeAmount: Amount;
+      recipientAddress: StarknetAddress;
+      tokenAddress: string;
+    }
+  | {
+      network: 'lightning';
+      calls: readonly StarknetCall[];
+      amount: Amount;
+      swapId: SwapId;
+      invoice: LightningInvoice;
+      expiresAt: Date;
+    }
+  | {
+      network: 'bitcoin';
+      calls: readonly StarknetCall[];
+      amount: Amount;
+      swapId: SwapId;
+      destinationAddress: BitcoinAddress;
+      expiresAt: Date;
+    };
 
 // =============================================================================
 // Parsed Payment Data (result of parsing QR codes, invoices, addresses)

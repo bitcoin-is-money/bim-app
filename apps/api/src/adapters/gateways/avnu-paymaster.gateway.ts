@@ -4,11 +4,13 @@ import type {
   PaymasterGateway,
   PaymasterResult,
   PaymasterTransaction,
+  StarknetCall,
   StarknetTransaction
 } from "@bim/domain/ports";
 import {ExternalServiceError} from "@bim/domain/shared";
 
 import type {Logger} from "pino";
+import {type ExecutableUserTransaction, type ExecutionParameters, PaymasterRpc, type UserTransaction} from 'starknet';
 
 /**
  * Configuration for AVNU Paymaster gateway.
@@ -37,17 +39,27 @@ interface SNIP29ExecuteResponse {
 /**
  * AVNU Paymaster gateway implementation for gasless transactions.
  *
- * Deploy path uses SNIP-29 JSON-RPC (paymaster_executeTransaction).
- * Invoke path uses legacy REST API (TODO: migrate to SNIP-29 build/sign/execute).
+ * Deploy path uses raw SNIP-29 JSON-RPC (paymaster_executeTransaction).
+ * Invoke path uses starknet.js PaymasterRpc (buildTransaction + executeTransaction).
  */
 export class AvnuPaymasterGateway implements PaymasterGateway {
   private readonly log: Logger;
+  private readonly paymasterRpc: PaymasterRpc;
 
   constructor(
     private readonly config: AvnuPaymasterConfig,
     rootLogger: Logger,
   ) {
     this.log = rootLogger.child({name: 'avnu-paymaster.gateway.ts'});
+
+    const headers: Record<string, string> = {};
+    if (config.apiKey) {
+      headers['x-paymaster-api-key'] = config.apiKey;
+    }
+    this.paymasterRpc = new PaymasterRpc({
+      nodeUrl: config.apiUrl,
+      headers,
+    });
   }
 
   async executeTransaction(params: {
@@ -66,13 +78,125 @@ export class AvnuPaymasterGateway implements PaymasterGateway {
       );
     }
 
-    // TODO: Migrate invoke path to SNIP-29 build/sign/execute flow.
-    // This requires frontend WebAuthn signing of OutsideExecutionTypedData.
-    return this.executeInvokeViaREST(
-      params.transaction as StarknetTransaction,
-      params.accountAddress,
+    throw new ExternalServiceError(
+      'AVNU Paymaster',
+      'Direct invoke execution is not supported. Use buildInvokeTransaction + executeInvokeTransaction instead.',
     );
   }
+
+  // ===========================================================================
+  // SNIP-29 Invoke (build + execute with WebAuthn signature)
+  // ===========================================================================
+
+  /**
+   * Builds an invoke transaction via SNIP-29 paymaster_buildTransaction.
+   * Returns OutsideExecution typed data that must be signed by the user.
+   */
+  async buildInvokeTransaction(params: {
+    calls: readonly StarknetCall[];
+    accountAddress: StarknetAddress;
+  }): Promise<{typedData: unknown}> {
+    const accountAddress = params.accountAddress.toString();
+    this.log.info(
+      {accountAddress, callCount: params.calls.length},
+      'Building invoke transaction via SNIP-29',
+    );
+
+    try {
+      const payload: UserTransaction = {
+        type: 'invoke' as const,
+        invoke: {
+          userAddress: accountAddress,
+          calls: params.calls.map(c => ({
+            contractAddress: c.contractAddress,
+            entrypoint: c.entrypoint,
+            calldata: [...c.calldata],
+          })),
+        },
+      };
+
+      const parameters: ExecutionParameters = {
+        feeMode: {mode: 'sponsored' as const},
+        version: '0x1' as const,
+      };
+
+      const response = await this.paymasterRpc.buildTransaction(payload, parameters);
+
+      if (response.type !== 'invoke') {
+        throw new ExternalServiceError(
+          'AVNU Paymaster',
+          `Expected invoke response but got ${response.type}`,
+        );
+      }
+
+      this.log.info(
+        {accountAddress, responseType: response.type},
+        'SNIP-29 buildTransaction succeeded',
+      );
+
+      return {typedData: response.typed_data};
+    } catch (err) {
+      if (err instanceof ExternalServiceError) throw err;
+      throw new ExternalServiceError(
+        'AVNU Paymaster',
+        `SNIP-29 buildTransaction failed: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+  }
+
+  /**
+   * Executes a signed invoke transaction via SNIP-29 paymaster_executeTransaction.
+   * The signature must be in Argent compact_no_legacy format.
+   */
+  async executeInvokeTransaction(params: {
+    typedData: unknown;
+    signature: string[];
+    accountAddress: StarknetAddress;
+  }): Promise<PaymasterResult> {
+    const accountAddress = params.accountAddress.toString();
+    this.log.info(
+      {accountAddress, signatureLength: params.signature.length},
+      'Executing signed invoke via SNIP-29',
+    );
+
+    try {
+      const payload: ExecutableUserTransaction = {
+        type: 'invoke' as const,
+        invoke: {
+          userAddress: accountAddress,
+          typedData: params.typedData as import('@starknet-io/starknet-types-010').WALLET_API.OutsideExecutionTypedData,
+          signature: params.signature,
+        },
+      };
+
+      const parameters: ExecutionParameters = {
+        feeMode: {mode: 'sponsored' as const},
+        version: '0x1' as const,
+      };
+
+      const response = await this.paymasterRpc.executeTransaction(payload, parameters);
+
+      this.log.info(
+        {txHash: response.transaction_hash},
+        'SNIP-29 invoke transaction submitted',
+      );
+
+      return {
+        txHash: response.transaction_hash,
+        success: true,
+      };
+    } catch (err) {
+      if (err instanceof ExternalServiceError) throw err;
+      throw new ExternalServiceError(
+        'AVNU Paymaster',
+        `SNIP-29 executeTransaction failed: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+  }
+
+  // ===========================================================================
+  // SNIP-29 Deploy (direct execution, no client signing)
+  // ===========================================================================
 
   /**
    * Deploys an account via SNIP-29 JSON-RPC (paymaster_executeTransaction).
@@ -170,53 +294,9 @@ export class AvnuPaymasterGateway implements PaymasterGateway {
     }
   }
 
-  /**
-   * Executes an invoke transaction via the legacy REST API.
-   * TODO: Migrate to SNIP-29 build/sign/execute flow.
-   */
-  private async executeInvokeViaREST(
-    tx: StarknetTransaction,
-    accountAddress: StarknetAddress,
-  ): Promise<PaymasterResult> {
-    this.log.debug({accountAddress: accountAddress.toString()}, 'Executing invoke via REST');
-    try {
-      const response = await fetch(`${this.config.apiUrl}/paymaster/execute`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-API-Key': this.config.apiKey,
-        },
-        body: JSON.stringify({
-          transaction: tx,
-          accountAddress: accountAddress.toString(),
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.text();
-        throw new ExternalServiceError('AVNU Paymaster', `Execute failed: ${error}`);
-      }
-
-      const result = await response.json() as { txHash: string; success: boolean };
-
-      this.log.debug({
-        txHash: result.txHash,
-        success: result.success
-      }, 'Invoke via REST result');
-      return {
-        txHash: result.txHash,
-        success: result.success,
-      };
-    } catch (error) {
-      if (error instanceof ExternalServiceError) {
-        throw error;
-      }
-      throw new ExternalServiceError(
-        'AVNU Paymaster',
-        `Execute failed: ${error instanceof Error ? error.message : String(error)}`,
-      );
-    }
-  }
+  // ===========================================================================
+  // Legacy methods (kept for backward compatibility)
+  // ===========================================================================
 
   async buildPaymasterTransaction(params: {
     transaction: StarknetTransaction;
