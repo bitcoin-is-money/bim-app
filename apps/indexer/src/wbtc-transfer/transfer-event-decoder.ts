@@ -14,28 +14,45 @@ export class TransferEventDecoder {
   /**
    * Decode raw Starknet events into typed TransferEvents.
    *
-   * ERC20 Transfer event layout (Cairo):
-   *   keys: [selector, from_address, to_address]
-   *   data: [amount_low, amount_high] ← uint256 split into two felt252
+   * Supports two ERC-20 Transfer event layouts:
    *
-   * Events that don't match this layout (e.g. different event types included
-   * in the same filter, or malformed events) are silently skipped.
+   * Cairo 1 (indexed from/to):
+   *   keys: [selector, from_address, to_address]
+   *   data: [amount_low, amount_high]
+   *
+   * Cairo 0 / legacy (non-indexed from/to):
+   *   keys: [selector]
+   *   data: [from_address, to_address, amount_low, amount_high]
+   *
+   * Events with an unrecognized layout emit a warning and are skipped.
    */
   decode(events: readonly Event[]): TransferEvent[] {
     const transfers: TransferEvent[] = [];
 
     for (const event of events) {
-      // Skip non-Transfer events: a valid Transfer must have at least
-      // 3 keys (selector + from + to) and 2 data fields (u256 low + high).
-      if (event.keys.length < 3 || event.data.length < 2) continue;
-
-      transfers.push({
-        from: addAddressPadding(event.keys[1]),
-        to: addAddressPadding(event.keys[2]),
-        // Reconstruct the uint256 amount from its low/high felt252 parts
-        amount: uint256.uint256ToBN({low: event.data[0], high: event.data[1]}).toString(),
-        txHash: addAddressPadding(event.transactionHash),
-      });
+      // Cairo 1: keys=[selector, from, to], data=[amount_low, amount_high]
+      if (event.keys.length >= 3 && event.data.length >= 2) {
+        transfers.push({
+          from: addAddressPadding(event.keys[1]),
+          to: addAddressPadding(event.keys[2]),
+          amount: uint256.uint256ToBN({low: event.data[0], high: event.data[1]}).toString(),
+          txHash: addAddressPadding(event.transactionHash),
+        });
+      }
+      // Cairo 0 (legacy): keys=[selector], data=[from, to, amount_low, amount_high]
+      else if (event.keys.length >= 1 && event.data.length >= 4) {
+        transfers.push({
+          from: addAddressPadding(event.data[0]),
+          to: addAddressPadding(event.data[1]),
+          amount: uint256.uint256ToBN({low: event.data[2], high: event.data[3]}).toString(),
+          txHash: addAddressPadding(event.transactionHash),
+        });
+      } else {
+        this.logger.warn(
+          {keys: event.keys.length, data: event.data.length, txHash: event.transactionHash},
+          'Unrecognized Transfer event layout — skipping',
+        );
+      }
     }
 
     this.logger.debug(`Transfer events decoded (${transfers.length})`);
