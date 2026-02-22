@@ -62,7 +62,7 @@ export class ReceivePage {
   readonly qrData = signal<string | undefined>(undefined);
 
   readonly qrPlaceholderMessage = computed(() => {
-    if (this.amount().value === 0) {
+    if (this.selectedNetwork() !== 'starknet' && this.amount().value === 0) {
       return this.i18n.t('receive.enterAmount');
     }
     return this.i18n.t('receive.createInvoiceForQr');
@@ -73,7 +73,7 @@ export class ReceivePage {
 
   readonly showCreateInvoice = computed(() => {
     return this.qrData() === undefined
-      && this.amount().isPositive();
+      && (this.selectedNetwork() === 'starknet' || this.amount().isPositive());
   });
 
   constructor() {

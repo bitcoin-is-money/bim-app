@@ -40,18 +40,18 @@ export class ReceiveService {
    * @throws SwapCreationError if invoice/address generation fails
    */
   async receive(input: ReceivePaymentInput): Promise<ReceiveResult> {
-    if (!input.amount || !input.amount.isPositive()) {
+    if (input.network !== 'starknet' && (!input.amount || !input.amount.isPositive())) {
       throw new InvalidPaymentAmountError(input.network, input.amount?.getSat() ?? 0n);
     }
 
-    this.log.info({network: input.network, amountSats: input.amount.toSatString()}, 'Creating receive request');
+    this.log.info({network: input.network, amountSats: input.amount?.toSatString()}, 'Creating receive request');
     switch (input.network) {
       case 'starknet':
         return {network: 'starknet', ...this.receiveStarknet(input.destinationAddress, input.amount, input.tokenAddress, input.useUriPrefix)};
       case 'lightning':
-        return {network: 'lightning', ...(await this.receiveLightning(input.destinationAddress, input.amount, input.description, input.accountId))};
+        return {network: 'lightning', ...(await this.receiveLightning(input.destinationAddress, input.amount!, input.description, input.accountId))};
       case 'bitcoin':
-        return {network: 'bitcoin', ...(await this.receiveBitcoin(input.destinationAddress, input.amount, input.description, input.accountId, input.useUriPrefix))};
+        return {network: 'bitcoin', ...(await this.receiveBitcoin(input.destinationAddress, input.amount!, input.description, input.accountId, input.useUriPrefix))};
     }
   }
 
@@ -64,7 +64,7 @@ export class ReceiveService {
     const prefix = useUriPrefix !== false ? 'starknet:' : '';
 
     let uri = `${prefix}${address}`;
-    if (amount) {
+    if (amount && amount.isPositive()) {
       uri += `?amount=${amount.toSatString()}&token=${token}`;
     }
 
