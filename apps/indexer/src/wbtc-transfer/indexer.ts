@@ -149,7 +149,8 @@ function extractBlockContext(
 
   let blockTimestamp: Date;
   if (args.block.header?.timestamp) {
-    blockTimestamp = new Date(Number(args.block.header.timestamp) * 1000);
+    // Apibara provides timestamp as a Date object already
+    blockTimestamp = args.block.header.timestamp;
   } else {
     logger.warn({blockNumber}, 'Block missing timestamp, using current time');
     blockTimestamp = new Date();
