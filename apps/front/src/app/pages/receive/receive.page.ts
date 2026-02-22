@@ -4,6 +4,7 @@ import {TranslateModule} from '@ngx-translate/core';
 import {renderSVG} from 'uqr';
 import {AmountFieldComponent} from '../../components/amount-field/amount-field.component';
 import {ButtonComponent} from '../../components/button/button.component';
+import {CheckboxFieldComponent} from '../../components/checkbox-field/checkbox-field.component';
 import {FieldComponent} from '../../components/field/field.component';
 import {GoBackHeaderComponent} from '../../components/go-back-header/go-back-header.component';
 import {NetworkLogoComponent} from '../../components/network-logo/network-logo.component';
@@ -29,6 +30,7 @@ const NETWORKS: PaymentNetwork[] = ['starknet', 'lightning', 'bitcoin'];
     NetworkLogoComponent,
     AmountFieldComponent,
     FieldComponent,
+    CheckboxFieldComponent,
     ButtonComponent,
     FullPageLayoutComponent,
   ],
@@ -49,6 +51,7 @@ export class ReceivePage {
 
   readonly amount = signal<Amount>(Amount.zero());
   readonly description = signal('');
+  readonly useUriPrefix = signal(true);
   readonly activeNetworkIndex = signal(0);
 
   readonly qrSvg = signal<SafeHtml | undefined>(undefined);

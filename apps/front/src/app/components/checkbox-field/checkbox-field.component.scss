@@ -1,0 +1,17 @@
+@reference "tailwindcss";
+
+:host {
+  @apply block w-full;
+}
+
+.checkbox-field {
+  @apply flex items-center gap-3 px-4 py-3 rounded-xl bg-neutral-800 cursor-pointer select-none;
+
+  input[type="checkbox"] {
+    @apply w-4 h-4 accent-amber-500 cursor-pointer shrink-0;
+  }
+
+  span {
+    @apply flex-1 text-sm text-neutral-300 leading-6;
+  }
+}
