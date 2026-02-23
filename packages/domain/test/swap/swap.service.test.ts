@@ -48,6 +48,8 @@ function createMockGateway(): AtomiqGateway {
   return {
     createLightningToStarknetSwap: vi.fn(),
     createBitcoinToStarknetSwap: vi.fn(),
+    prepareBitcoinToStarknetSwap: vi.fn(),
+    completeBitcoinSwapCommit: vi.fn(),
     createStarknetToLightningSwap: vi.fn(),
     createStarknetToBitcoinSwap: vi.fn(),
     getLightningToStarknetLimits: vi.fn(),

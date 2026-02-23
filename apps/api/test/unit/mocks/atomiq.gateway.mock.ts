@@ -4,6 +4,8 @@ import type {
   AtomiqReverseSwapResult,
   AtomiqSwapResult,
   AtomiqSwapStatus,
+  BitcoinSwapCommitResult,
+  BitcoinSwapQuote,
   ClaimResult,
   UnsignedClaimTransactions
 } from '@bim/domain/ports';
@@ -82,6 +84,46 @@ export class AtomiqGatewayMock implements AtomiqGateway {
     this.knownSwapIds.add(swapId);
 
     return {swapId, depositAddress, amountSats: params.amountSats, expiresAt};
+  }
+
+  // ===========================================================================
+  // Bitcoin Two-Phase Flow
+  // ===========================================================================
+
+  async prepareBitcoinToStarknetSwap(params: {
+    amountSats: bigint;
+    destinationAddress: StarknetAddress;
+  }): Promise<BitcoinSwapQuote> {
+    const swapId = crypto.randomUUID();
+    const expiresAt = new Date(Date.now() + 3 * 60 * 60 * 1000);
+
+    this.knownSwapIds.add(swapId);
+
+    return {
+      swapId,
+      commitCalls: [
+        {
+          contractAddress: '0x0123456789abcdef',
+          entrypoint: 'approve',
+          calldata: ['0x1', '0x2'],
+        },
+      ],
+      expiresAt,
+    };
+  }
+
+  async completeBitcoinSwapCommit(swapId: string): Promise<BitcoinSwapCommitResult> {
+    if (!this.knownSwapIds.has(swapId)) {
+      throw new ExternalServiceError('Atomiq', `Swap not found: ${swapId}`);
+    }
+
+    const hex = swapId.replaceAll('-', '');
+    const depositAddress = `tb1q${hex}${hex}`.slice(0, 42);
+
+    return {
+      depositAddress,
+      bip21Uri: `bitcoin:${depositAddress}?amount=0.001`,
+    };
   }
 
   // ===========================================================================

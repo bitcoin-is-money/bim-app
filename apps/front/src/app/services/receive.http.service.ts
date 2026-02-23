@@ -35,10 +35,30 @@ export interface BitcoinReceiveResponse {
   expiresAt: string;
 }
 
+export interface BitcoinReceivePendingCommitResponse {
+  network: 'bitcoin';
+  status: 'pending_commit';
+  buildId: string;
+  messageHash: string;
+  credentialId: string;
+  swapId: string;
+  amount: { value: number; currency: string };
+  expiresAt: string;
+}
+
+export type BitcoinReceiveCommitResponse = BitcoinReceiveResponse;
+
+export interface WebAuthnAssertion {
+  authenticatorData: string;
+  clientDataJSON: string;
+  signature: string;
+}
+
 export type ReceiveResponse =
   | StarknetReceiveResponse
   | LightningReceiveResponse
-  | BitcoinReceiveResponse;
+  | BitcoinReceiveResponse
+  | BitcoinReceivePendingCommitResponse;
 
 @Injectable({
   providedIn: 'root',
@@ -54,6 +74,13 @@ export class ReceiveHttpService {
       tokenAddress: request.tokenAddress,
       ...(request.description ? {description: request.description} : {}),
       ...(request.useUriPrefix !== undefined ? {useUriPrefix: request.useUriPrefix} : {}),
+    });
+  }
+
+  commitBitcoinReceive(buildId: string, assertion: WebAuthnAssertion): Observable<BitcoinReceiveCommitResponse> {
+    return this.http.post<BitcoinReceiveCommitResponse>(`${this.apiUrl}/commit`, {
+      buildId,
+      assertion,
     });
   }
 }

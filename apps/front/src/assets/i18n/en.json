@@ -200,6 +200,8 @@
     "INVALID_PAYMENT_ADDRESS": "Invalid payment address.",
     "USER_SETTINGS_NOT_FOUND": "User settings not found.",
     "UNSUPPORTED_CURRENCY": "Unsupported currency.",
+    "INSUFFICIENT_BALANCE": "Insufficient balance for this operation.",
+    "INSUFFICIENT_BALANCE_WITH_AMOUNT": "Insufficient balance. This operation requires {{amount}} STRK.",
     "EXTERNAL_SERVICE_ERROR": "External service is temporarily unavailable.",
     "TIMEOUT_ERROR": "Request timed out. Please try again."
   }

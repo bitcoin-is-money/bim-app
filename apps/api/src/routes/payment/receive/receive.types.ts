@@ -26,7 +26,34 @@ export interface BitcoinReceiveResponse {
   expiresAt: string;
 }
 
+/**
+ * Bitcoin receive requires a two-phase flow:
+ * Phase 1 (POST /receive): Returns commit data for WebAuthn signing.
+ * Phase 2 (POST /receive/commit): After signing, returns the deposit address.
+ */
+export interface BitcoinReceivePendingCommitResponse {
+  network: 'bitcoin';
+  status: 'pending_commit';
+  buildId: string;
+  messageHash: string;
+  credentialId: string;
+  swapId: string;
+  amount: { value: number; currency: string };
+  expiresAt: string;
+}
+
+// =============================================================================
+// POST /api/receive/commit
+// =============================================================================
+
+export type BitcoinReceiveCommitResponse = BitcoinReceiveResponse;
+
+// =============================================================================
+// Union types
+// =============================================================================
+
 export type ReceiveResponse =
   | StarknetReceiveResponse
   | LightningReceiveResponse
-  | BitcoinReceiveResponse;
+  | BitcoinReceiveResponse
+  | BitcoinReceivePendingCommitResponse;

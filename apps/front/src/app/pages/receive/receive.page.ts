@@ -104,7 +104,12 @@ export class ReceivePage {
           data = invoice.invoice;
           break;
         case 'bitcoin':
-          data = invoice.bip21Uri;
+          // pending_commit is handled by ReceiveService before reaching the invoice signal
+          if ('bip21Uri' in invoice) {
+            data = invoice.bip21Uri;
+          } else {
+            return;
+          }
           break;
       }
 

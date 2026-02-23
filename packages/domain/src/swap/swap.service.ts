@@ -1,7 +1,7 @@
 
 import type {Logger} from 'pino';
 import {AccountId, StarknetAddress} from '../account';
-import type {AtomiqGateway, ClaimResult, SwapRepository, TransactionRepository} from '../ports';
+import type {AtomiqGateway, ClaimResult, StarknetCall, SwapRepository, TransactionRepository} from '../ports';
 import {Amount} from '../shared';
 import {TransactionHash} from '../user/types';
 import {Swap} from './swap';
@@ -58,6 +58,34 @@ export interface CreateBitcoinToStarknetInput {
 }
 
 export interface CreateBitcoinToStarknetOutput {
+  swap: Swap;
+  depositAddress: string;
+  bip21Uri: string;
+}
+
+export interface PrepareBitcoinToStarknetInput {
+  amount: Amount;
+  destinationAddress: string;
+  description?: string;
+  accountId?: string;
+}
+
+export interface PrepareBitcoinToStarknetOutput {
+  swapId: string;
+  commitCalls: readonly StarknetCall[];
+  amount: Amount;
+  expiresAt: Date;
+}
+
+export interface CompleteBitcoinToStarknetInput {
+  swapId: string;
+  destinationAddress: string;
+  amount: Amount;
+  description?: string;
+  accountId: string;
+}
+
+export interface CompleteBitcoinToStarknetOutput {
   swap: Swap;
   depositAddress: string;
   bip21Uri: string;
@@ -245,6 +273,88 @@ export class SwapService {
     };
   }
 
+  /**
+   * Prepares a Bitcoin → Starknet swap (phase 1 of two-phase flow).
+   * Creates the swap quote and returns unsigned Starknet commit transactions.
+   * The caller must sign and submit these before calling completeBitcoinToStarknet.
+   *
+   * @throws SwapAmountError if amount is outside limits
+   * @throws SwapCreationError if swap preparation fails
+   */
+  async prepareBitcoinToStarknet(
+    input: PrepareBitcoinToStarknetInput,
+  ): Promise<PrepareBitcoinToStarknetOutput> {
+    this.log.debug({input}, 'Preparing Bitcoin-to-Starknet swap');
+    const destinationAddress = StarknetAddress.of(input.destinationAddress);
+
+    // Validate amount against limits
+    const limits = await this.deps.atomiqGateway.getBitcoinToStarknetLimits();
+    this.validateAmountAgainstLimits(input.amount, limits);
+
+    // Create swap quote + get unsigned commit transactions
+    const quote = await this.deps.atomiqGateway.prepareBitcoinToStarknetSwap({
+      amountSats: input.amount.getSat(),
+      destinationAddress,
+    });
+
+    this.log.info({
+      swapId: quote.swapId,
+      commitCallsCount: quote.commitCalls.length,
+      amountSats: input.amount.toSatString(),
+    }, 'Bitcoin-to-Starknet swap prepared (pending commit)');
+
+    return {
+      swapId: quote.swapId,
+      commitCalls: quote.commitCalls,
+      amount: input.amount,
+      expiresAt: quote.expiresAt,
+    };
+  }
+
+  /**
+   * Completes a Bitcoin → Starknet swap (phase 2 of two-phase flow).
+   * Called after the commit transactions have been submitted on-chain.
+   * Waits for the SDK to detect the commit, then retrieves the Bitcoin deposit address.
+   *
+   * @throws SwapCreationError if the commit was not detected or address retrieval fails
+   */
+  async completeBitcoinToStarknet(
+    input: CompleteBitcoinToStarknetInput,
+  ): Promise<CompleteBitcoinToStarknetOutput> {
+    this.log.debug({swapId: input.swapId}, 'Completing Bitcoin-to-Starknet swap after commit');
+    const destinationAddress = StarknetAddress.of(input.destinationAddress);
+
+    // Wait for SDK to detect the on-chain commit and get the deposit address
+    const result = await this.deps.atomiqGateway.completeBitcoinSwapCommit(input.swapId);
+
+    if (!result.depositAddress) {
+      throw new SwapCreationError('Failed to retrieve Bitcoin deposit address after commit');
+    }
+
+    const swap = Swap.createBitcoinToStarknet({
+      id: SwapId.of(input.swapId),
+      amount: input.amount,
+      destinationAddress,
+      depositAddress: result.depositAddress,
+      expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1 hour from commit
+      description: input.description,
+      accountId: input.accountId,
+    });
+
+    await this.deps.swapRepository.save(swap);
+
+    this.log.info({
+      swapId: input.swapId,
+      depositAddress: result.depositAddress,
+    }, 'Bitcoin-to-Starknet swap completed (deposit address available)');
+
+    return {
+      swap,
+      depositAddress: result.depositAddress,
+      bip21Uri: result.bip21Uri,
+    };
+  }
+
   // ===========================================================================
   // Reverse Swaps (Send from Starknet)
   // ===========================================================================
@@ -373,8 +483,10 @@ export class SwapService {
       throw new SwapNotFoundError(swapId);
     }
 
-    // Sync with Atomiq if not in the terminal state
-    if (!swap.isTerminal()) {
+    // Sync with Atomiq if not in a terminal or in-flight (confirming) state.
+    // A confirming swap has already had its claim submitted — re-syncing with
+    // Atomiq could incorrectly downgrade it back to "paid".
+    if (!swap.isTerminal() && swap.getStatus() !== 'confirming') {
       await this.syncWithAtomiq(swap);
     }
 

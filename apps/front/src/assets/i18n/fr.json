@@ -200,6 +200,8 @@
     "INVALID_PAYMENT_ADDRESS": "Adresse de paiement invalide.",
     "USER_SETTINGS_NOT_FOUND": "Paramètres utilisateur introuvables.",
     "UNSUPPORTED_CURRENCY": "Devise non supportée.",
+    "INSUFFICIENT_BALANCE": "Solde insuffisant pour cette opération.",
+    "INSUFFICIENT_BALANCE_WITH_AMOUNT": "Solde insuffisant. Cette opération nécessite {{amount}} STRK.",
     "EXTERNAL_SERVICE_ERROR": "Le service externe est temporairement indisponible.",
     "TIMEOUT_ERROR": "La requête a expiré. Veuillez réessayer."
   }

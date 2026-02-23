@@ -7,7 +7,7 @@ import type {
   StarknetTransaction,
   TransactionReceipt,
 } from "@bim/domain/ports";
-import {ExternalServiceError} from "@bim/domain/shared";
+import {DomainError, ExternalServiceError} from "@bim/domain/shared";
 
 import type {Logger} from "pino";
 import {CallData, hash, RpcProvider, typedData as starknetTypedData} from 'starknet';
@@ -266,7 +266,7 @@ export class StarknetRpcGateway implements StarknetGateway {
 
       return {typedData, messageHash};
     } catch (error) {
-      if (error instanceof ExternalServiceError) throw error;
+      if (error instanceof DomainError) throw error;
       throw new ExternalServiceError(
         'Starknet',
         `Failed to build calls: ${error instanceof Error ? error.message : String(error)}`,

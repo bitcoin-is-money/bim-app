@@ -7,7 +7,7 @@ import type {
   StarknetCall,
   StarknetTransaction
 } from "@bim/domain/ports";
-import {ExternalServiceError} from "@bim/domain/shared";
+import {ExternalServiceError, InsufficientBalanceError} from "@bim/domain/shared";
 
 import type {Logger} from "pino";
 import {type ExecutableUserTransaction, type ExecutionParameters, PaymasterRpc, type UserTransaction} from 'starknet';
@@ -137,9 +137,14 @@ export class AvnuPaymasterGateway implements PaymasterGateway {
       return {typedData: response.typed_data};
     } catch (err) {
       if (err instanceof ExternalServiceError) throw err;
+      const message = err instanceof Error ? err.message : String(err);
+      const messageLC = message.toLowerCase();
+      if (messageLC.includes('u256_sub overflow') || messageLC.includes('u256_add overflow')) {
+        throw new InsufficientBalanceError();
+      }
       throw new ExternalServiceError(
         'AVNU Paymaster',
-        `SNIP-29 buildTransaction failed: ${err instanceof Error ? err.message : String(err)}`,
+        `SNIP-29 buildTransaction failed: ${message}`,
       );
     }
   }

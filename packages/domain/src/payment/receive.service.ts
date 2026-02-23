@@ -3,7 +3,12 @@ import type {Logger} from 'pino';
 import type {StarknetAddress} from '../account';
 import {Amount, type StarknetConfig} from '../shared';
 import {BitcoinAddress, LightningInvoice, type SwapService} from '../swap';
-import {InvalidPaymentAmountError, type ReceivePaymentInput, type ReceiveResult,} from './types';
+import {
+  type BitcoinReceiveResult,
+  InvalidPaymentAmountError,
+  type ReceivePaymentInput,
+  type ReceiveResult,
+} from './types';
 
 // =============================================================================
 // Dependencies
@@ -51,7 +56,10 @@ export class ReceiveService {
       case 'lightning':
         return {network: 'lightning', ...(await this.receiveLightning(input.destinationAddress, input.amount!, input.description, input.accountId))};
       case 'bitcoin':
-        return {network: 'bitcoin', ...(await this.receiveBitcoin(input.destinationAddress, input.amount!, input.description, input.accountId, input.useUriPrefix))};
+        return {
+          network: 'bitcoin',
+          status: 'pending_commit' as const,
+          ...(await this.prepareBitcoinReceive(input.destinationAddress, input.amount!, input.description, input.accountId))};
     }
   }
 
@@ -59,9 +67,9 @@ export class ReceiveService {
   // Starknet — generate starknet: URI
   // ===========================================================================
 
-  private receiveStarknet(address: StarknetAddress, amount?: Amount, tokenAddress?: string, useUriPrefix?: boolean) {
+  private receiveStarknet(address: StarknetAddress, amount?: Amount, tokenAddress?: string, useUriPrefix: boolean = true) {
     const token = tokenAddress ?? this.deps.starknetConfig.wbtcTokenAddress;
-    const prefix = useUriPrefix !== false ? 'starknet:' : '';
+    const prefix = useUriPrefix ? 'starknet:' : '';
 
     let uri = `${prefix}${address}`;
     if (amount && amount.isPositive()) {
@@ -92,26 +100,60 @@ export class ReceiveService {
   }
 
   // ===========================================================================
-  // Bitcoin — Bitcoin → Starknet swap (returns deposit address)
+  // Bitcoin — Phase 1: Prepare (returns commit transactions for signing)
   // ===========================================================================
 
-  private async receiveBitcoin(destinationAddress: StarknetAddress, amount: Amount, description?: string, accountId?: string, useUriPrefix?: boolean) {
-    const result = await this.deps.swapService.createBitcoinToStarknet({
+  private async prepareBitcoinReceive(
+    destinationAddress: StarknetAddress,
+    amount: Amount,
+    description?: string,
+    accountId?: string
+  ) {
+    const result = await this.deps.swapService.prepareBitcoinToStarknet({
       amount,
       destinationAddress,
       description,
       accountId,
     });
 
-    const bip21Uri = useUriPrefix !== false
+    return {
+      swapId: result.swapId,
+      commitCalls: result.commitCalls,
+      amount,
+      expiresAt: result.expiresAt,
+    };
+  }
+
+  // ===========================================================================
+  // Bitcoin — Phase 2: Complete (after commit is on-chain, returns deposit address)
+  // ===========================================================================
+
+  async completeBitcoinReceive(params: {
+    swapId: string;
+    destinationAddress: StarknetAddress;
+    amount: Amount;
+    description?: string;
+    accountId: string;
+    useUriPrefix: boolean;
+  }): Promise<{network: 'bitcoin'} & BitcoinReceiveResult> {
+    const result = await this.deps.swapService.completeBitcoinToStarknet({
+      swapId: params.swapId,
+      destinationAddress: params.destinationAddress,
+      amount: params.amount,
+      description: params.description,
+      accountId: params.accountId,
+    });
+
+    const bip21Uri = params.useUriPrefix
       ? result.bip21Uri
       : result.bip21Uri.replace(/^bitcoin:/i, '');
 
     return {
+      network: 'bitcoin',
       swapId: result.swap.id,
       depositAddress: BitcoinAddress.of(result.depositAddress),
       bip21Uri,
-      amount,
+      amount: params.amount,
       expiresAt: result.swap.expiresAt,
     };
   }

@@ -8,7 +8,10 @@ import type {
   AtomiqReverseSwapResult,
   AtomiqSwapResult,
   AtomiqSwapStatus,
+  BitcoinSwapCommitResult,
+  BitcoinSwapQuote,
   ClaimResult,
+  StarknetCall,
   UnsignedClaimTransactions
 } from '@bim/domain/ports';
 import {ExternalServiceError} from "@bim/domain/shared";
@@ -313,6 +316,119 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       throw new ExternalServiceError(
         'Atomiq',
         `Failed to create ${direction} swap: ${error instanceof Error
+          ? error.message
+          : String(error)}`,
+      );
+    }
+  }
+
+  async prepareBitcoinToStarknetSwap(params: {
+    amountSats: bigint;
+    destinationAddress: StarknetAddress;
+  }): Promise<BitcoinSwapQuote> {
+    const direction: SwapDirection = 'bitcoin_to_starknet';
+    this.log.debug({
+      amountSats: params.amountSats.toString(),
+      destination: params.destinationAddress.toString()
+    }, `Preparing ${direction} swap (phase 1: quote + commit txs)`);
+    await this.ensureInitialized();
+
+    try {
+      const swapToken = this.getSwapToken();
+
+      const exactOut = false;
+      const swap: FromBTCSwap<StarknetChainType> = await this.swapper!.createFromBTCSwap(
+        'STARKNET',
+        params.destinationAddress.toString(),
+        swapToken.address,
+        params.amountSats,
+        exactOut,
+      );
+
+      if (!swap) {
+        throw new Error('SDK returned null swap object');
+      }
+
+      const swapId = swap.getId();
+
+      // Get unsigned commit transactions (Starknet escrow creation)
+      const commitTxs = await swap.txsCommit();
+
+      // Extract Call[] from StarknetTx[] and convert to StarknetCall[]
+      const commitCalls: StarknetCall[] = [];
+      for (const tx of commitTxs) {
+        if (tx && typeof tx === 'object' && 'type' in tx && tx.type === 'INVOKE' && 'tx' in tx) {
+          const calls = tx.tx as Array<{contractAddress: string; entrypoint: string; calldata?: string[]}>;
+          for (const call of calls) {
+            commitCalls.push({
+              contractAddress: call.contractAddress,
+              entrypoint: call.entrypoint,
+              calldata: call.calldata ?? [],
+            });
+          }
+        }
+      }
+
+      if (commitCalls.length === 0) {
+        throw new Error('No commit calls extracted from SDK transactions');
+      }
+
+      const quoteExpiry: any = swap.getQuoteExpiry();
+      this.logSwapExpiry(swapId, quoteExpiry, direction);
+
+      this.log.info({
+        swapId,
+        commitCallsCount: commitCalls.length,
+        amountSats: params.amountSats.toString()
+      }, `${direction} swap prepared (pending commit)`);
+
+      return {
+        swapId,
+        commitCalls,
+        expiresAt: new Date(quoteExpiry),
+      };
+    } catch (error) {
+      if (error instanceof ExternalServiceError) throw error;
+      throw new ExternalServiceError(
+        'Atomiq',
+        `Failed to prepare ${direction} swap: ${error instanceof Error
+          ? error.message
+          : String(error)}`,
+      );
+    }
+  }
+
+  async completeBitcoinSwapCommit(swapId: string): Promise<BitcoinSwapCommitResult> {
+    this.log.debug({swapId}, 'Completing Bitcoin swap commit (phase 2: wait + get address)');
+    await this.ensureInitialized();
+
+    try {
+      const swap = await this.getSwapObject(swapId);
+
+      // Wait for the SDK to detect the on-chain commit
+      // This polls the chain state until the swap transitions to CLAIM_COMMITED
+      const abortController = new AbortController();
+      const timeout = setTimeout(() => abortController.abort(), 90_000); // 90s timeout
+
+      try {
+        await swap.waitTillCommited(abortController.signal);
+      } finally {
+        clearTimeout(timeout);
+      }
+
+      // Now the swap is committed — get the Bitcoin deposit address
+      const depositAddress = swap.getAddress();
+      const amount = swap.getInput()?.rawAmount ?? 0n;
+      const bip21Uri = `bitcoin:${depositAddress}?amount=${Number(amount) / 100000000}`;
+
+      this.log.info({swapId, depositAddress}, 'Bitcoin swap commit completed');
+
+      return {depositAddress, bip21Uri};
+    } catch (error) {
+      if (error instanceof ExternalServiceError) throw error;
+      throw new ExternalServiceError(
+        'Atomiq',
+        `Failed to complete Bitcoin swap commit: ${error instanceof Error
           ? error.message
           : String(error)}`,
       );
