@@ -35,6 +35,11 @@ export interface BalanceResponse {
     amount: string;
     decimals: number;
   };
+  strkBalance: {
+    symbol: string;
+    amount: string;
+    decimals: number;
+  };
 }
 
 @Injectable({

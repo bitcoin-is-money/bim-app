@@ -2,7 +2,7 @@
 import type {Logger} from 'pino';
 import type {AccountRepository, PaymasterGateway, StarknetGateway} from '../ports';
 import {Account} from './account';
-import {WBTCToken, WBTCTokenBalance} from './balance';
+import {STRKToken, STRKTokenBalance, WBTCToken, WBTCTokenBalance} from './balance';
 import {
   AccountAlreadyExistsError,
   AccountId,
@@ -52,6 +52,7 @@ export interface GetBalanceInput {
 
 export interface GetBalanceOutput {
   wbtcBalance: WBTCTokenBalance;
+  strkBalance: STRKTokenBalance;
 }
 
 // =============================================================================
@@ -167,26 +168,38 @@ export class AccountService {
     }
 
     if (!account.isDeployed()) {
-      return {wbtcBalance: WBTCTokenBalance.zero()};
+      return {
+        wbtcBalance: WBTCTokenBalance.zero(),
+        strkBalance: STRKTokenBalance.zero()
+      };
     }
 
     const address: StarknetAddress = account.getStarknetAddress()!;
-    let amount: bigint;
-    try {
-      amount = await this.deps.starknetGateway.getBalance({
-        address,
-        token: WBTCToken.symbol,
-      });
-    } catch (err) {
-      this.log.warn({address}, `Failed to fetch balance (${err instanceof Error ? err.message : String(err)})`);
-      amount = BigInt(0);
-    }
+
+    const fetchBalance = async (token: string): Promise<bigint> => {
+      try {
+        return await this.deps.starknetGateway.getBalance({address, token});
+      } catch (err) {
+        this.log.warn({address, token}, `Failed to fetch balance (${err instanceof Error ? err.message : String(err)})`);
+        return 0n;
+      }
+    };
+
+    const [wbtcAmount, strkAmount] = await Promise.all([
+      fetchBalance(WBTCToken.symbol),
+      fetchBalance(STRKToken.symbol),
+    ]);
 
     return {
       wbtcBalance: {
         symbol: WBTCToken.symbol,
-        amount: amount.toString(),
+        amount: wbtcAmount.toString(),
         decimals: WBTCToken.decimals,
+      },
+      strkBalance: {
+        symbol: STRKToken.symbol,
+        amount: strkAmount.toString(),
+        decimals: STRKToken.decimals,
       },
     };
   }

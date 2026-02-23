@@ -72,6 +72,11 @@ export class AccountHandlerMock {
           amount: amount,
           decimals: 8,
         },
+        strkBalance: {
+          symbol: 'STRK',
+          amount: '66000000000000000000',
+          decimals: 18,
+        },
       },
     });
   }

@@ -21,3 +21,25 @@ export namespace WBTCTokenBalance {
   }
 }
 
+export const STRKToken = {
+  symbol: 'STRK',
+  decimals: 18,
+} as const;
+
+export interface STRKTokenBalance {
+  symbol: typeof STRKToken['symbol'];
+  amount: string;
+  decimals: typeof STRKToken['decimals'];
+}
+
+export namespace STRKTokenBalance {
+
+  export function zero(): STRKTokenBalance {
+    return {
+      symbol: STRKToken.symbol,
+      amount: '0',
+      decimals: STRKToken.decimals,
+    };
+  }
+}
+

@@ -45,4 +45,9 @@ export interface GetBalanceResponse {
     amount: string;
     decimals: number;
   };
+  strkBalance: {
+    symbol: string;
+    amount: string;
+    decimals: number;
+  };
 }
