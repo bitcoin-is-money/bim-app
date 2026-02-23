@@ -33,6 +33,7 @@ export namespace AppConfig {
     wbtcTokenAddress: string;
     avnuApiUrl: string;
     avnuApiKey: string;
+    avnuSwapApiUrl: string;
     feeTreasuryAddress: string;
     atomiq: AtomiqConfig;
     webauthn: WebAuthnConfig;
@@ -74,6 +75,10 @@ export namespace AppConfig {
       wbtcTokenAddress: required('WBTC_TOKEN_ADDRESS'),
       avnuApiUrl: optional('AVNU_API_URL', 'https://starknet.paymaster.avnu.fi'),
       avnuApiKey: optional('AVNU_API_KEY', ''),
+      avnuSwapApiUrl: optional('AVNU_SWAP_API_URL',
+        starknetNetwork === 'mainnet'
+          ? 'https://starknet.api.avnu.fi'
+          : 'https://sepolia.api.avnu.fi'),
       atomiq: loadAtomiqConfig(required, optional),
       feeTreasuryAddress: required('FEE_TREASURY_ADDRESS'),
       webauthn: {

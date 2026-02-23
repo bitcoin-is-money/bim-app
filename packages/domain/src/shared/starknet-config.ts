@@ -4,4 +4,5 @@
  */
 export interface StarknetConfig {
   readonly wbtcTokenAddress: string;
+  readonly strkTokenAddress: string;
 }

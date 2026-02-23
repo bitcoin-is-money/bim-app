@@ -59,26 +59,50 @@ export function createReceiveRoutes(appContext: AppContext): AuthenticatedHono {
 
       // Bitcoin two-phase flow: build commit typed data for WebAuthn signing
       if (result.network === 'bitcoin' && 'status' in result && result.status === 'pending_commit') {
-        // Extract approve amount from commitCalls (for error enrichment)
+        // Extract approve amount from commitCalls (for error enrichment + auto-swap)
         const approveInfo = extractApproveAmount(result.commitCalls);
-        log.info({
-          commitCalls: result.commitCalls.map(c => ({
-            contractAddress: c.contractAddress,
-            entrypoint: c.entrypoint,
-            calldataLength: c.calldata.length,
-          })),
-          approveInfo: approveInfo ? {
-            tokenAddress: approveInfo.tokenAddress,
-            amount: approveInfo.amount.toString(),
-          } : null,
-        }, 'Bitcoin receive: commitCalls details');
+
+        // Auto-swap WBTC → STRK if the account lacks sufficient STRK for the commit
+        let finalCalls: StarknetCall[] = [...result.commitCalls];
+        const {strkTokenAddress} = appContext.starknetConfig;
+
+        if (approveInfo && approveInfo.tokenAddress.toLowerCase() === strkTokenAddress.toLowerCase()) {
+          const strkBalance = await appContext.gateways.starknet.getBalance({
+            address: starknetAddress,
+            token: 'STRK',
+          });
+          const deficit = approveInfo.amount - strkBalance;
+
+          if (deficit > 0n) {
+            log.info({
+              requiredStrk: approveInfo.amount.toString(),
+              currentStrk: strkBalance.toString(),
+              deficit: deficit.toString(),
+            }, 'STRK deficit detected, auto-swapping WBTC → STRK');
+
+            const swapResult = await appContext.gateways.dex.getSwapCalls({
+              sellToken: appContext.starknetConfig.wbtcTokenAddress,
+              buyToken: strkTokenAddress,
+              buyAmount: deficit,
+              takerAddress: starknetAddress.toString(),
+            });
+
+            log.info({
+              sellAmount: swapResult.sellAmount.toString(),
+              buyAmount: swapResult.buyAmount.toString(),
+              swapCallCount: swapResult.calls.length,
+            }, 'AVNU swap calls obtained, prepending to commit calls');
+
+            finalCalls = [...swapResult.calls, ...result.commitCalls];
+          }
+        }
 
         // Build typed data via AVNU paymaster
         let buildResult: {typedData: unknown; messageHash: string};
         try {
           buildResult = await appContext.gateways.starknet.buildCalls({
             senderAddress: starknetAddress,
-            calls: [...result.commitCalls],
+            calls: finalCalls,
           });
         } catch (err) {
           if (err instanceof InsufficientBalanceError && approveInfo) {
