@@ -5,6 +5,7 @@ import type {
   AccountRepository,
   AtomiqGateway,
   ChallengeRepository,
+  SwapGateway,
   LightningDecoder,
   PaymasterGateway,
   SessionRepository,
@@ -21,6 +22,7 @@ import type {Logger} from "pino";
 import {
   AtomiqSdkGateway,
   AvnuPaymasterGateway,
+  AvnuSwapGateway,
   Bolt11LightningDecoder,
   DrizzleAccountRepository,
   DrizzleChallengeRepository,
@@ -51,6 +53,7 @@ export interface AppContext {
     starknet: StarknetGateway;
     paymaster: PaymasterGateway;
     atomiq: AtomiqGateway;
+    dex: SwapGateway;
     lightningDecoder: LightningDecoder;
   };
   services: {
@@ -63,6 +66,7 @@ export interface AppContext {
     pay: PayService;
     receive: ReceiveService;
   };
+  starknetConfig: StarknetConfig;
   webauthn: {
     rpId: string;
     rpName: string;
@@ -144,6 +148,10 @@ export namespace AppContext {
         },
         rootLogger,
       ),
+      dex: new AvnuSwapGateway(
+        {baseUrl: config.avnuSwapApiUrl},
+        rootLogger,
+      ),
       lightningDecoder: new Bolt11LightningDecoder(),
       ...overrides?.gateways,
     };
@@ -198,6 +206,7 @@ export namespace AppContext {
 
     const starknetConfig: StarknetConfig = {
       wbtcTokenAddress: config.wbtcTokenAddress,
+      strkTokenAddress: '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d',
     };
 
     const feeConfig = FeeConfig.create({
@@ -243,6 +252,7 @@ export namespace AppContext {
         pay: payService,
         receive: receiveService,
       },
+      starknetConfig,
       webauthn,
       logger: rootLogger,
     };

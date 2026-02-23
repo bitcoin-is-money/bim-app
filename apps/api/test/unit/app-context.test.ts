@@ -19,6 +19,7 @@ vi.mock('../../src/adapters/index.js', () => {
     SimpleWebAuthnGateway: class { name = 'simple-webauthn'; },
     StarknetRpcGateway: class { name = 'starknet-rpc'; },
     AvnuPaymasterGateway: class { name = 'avnu-paymaster'; },
+    AvnuSwapGateway: class { name = 'avnu-swap'; },
     AtomiqSdkGateway: class { name = 'atomiq-sdk'; },
     Bolt11LightningDecoder: class { name = 'bolt11-lightning-decoder'; },
   };
@@ -37,6 +38,7 @@ function createMockConfig(): AppConfig.Config {
     wbtcTokenAddress: '0x456',
     avnuApiUrl: 'http://localhost:9090',
     avnuApiKey: 'test-key',
+    avnuSwapApiUrl: 'https://sepolia.api.avnu.fi',
     feeTreasuryAddress: '0x027367ddd36d7efc4694e1af5742f8d26626369c07abf15d136ff422b9a40fa0',
     atomiq: {storagePath: '/tmp/bim/atomiq', createIfNotExists: true, swapToken: 'WBTC'},
     logLevel: 'silent',
