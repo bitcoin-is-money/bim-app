@@ -79,6 +79,20 @@ export class TimeoutError extends DomainError {
 }
 
 /**
+ * Error thrown when a transaction fails due to insufficient token balance.
+ * Optionally carries the required amount and token address so the frontend
+ * can display a helpful message.
+ */
+export class InsufficientBalanceError extends DomainError {
+  constructor(
+    readonly requiredAmount?: bigint,
+    readonly tokenAddress?: string,
+  ) {
+    super('Insufficient balance for this operation');
+  }
+}
+
+/**
  * Error thrown when an external service fails.
  */
 export class ExternalServiceError extends DomainError {

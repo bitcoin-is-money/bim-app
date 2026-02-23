@@ -133,7 +133,7 @@ export interface ReceiveStarknetInput {
   starknetAddress: StarknetAddress;
   amount?: Amount;
   tokenAddress?: string;
-  useUriPrefix?: boolean;
+  useUriPrefix: boolean;
 }
 
 // =============================================================================
@@ -203,6 +203,18 @@ export interface BitcoinReceiveResult {
 }
 
 /**
+ * Result of preparing a Bitcoin receive request (phase 1 of two-phase flow).
+ * Contains the unsigned commit transactions that must be signed and submitted
+ * before the Bitcoin deposit address becomes available.
+ */
+export interface BitcoinReceivePrepareResult {
+  swapId: string;
+  commitCalls: readonly StarknetCall[];
+  amount: Amount;
+  expiresAt: Date;
+}
+
+/**
  * Result of creating a Starknet receive request.
  * Contains the address and a starknet: URI for QR display.
  */
@@ -222,7 +234,7 @@ export interface ReceivePaymentInput {
   tokenAddress?: string;
   description?: string;
   accountId?: string;
-  useUriPrefix?: boolean;
+  useUriPrefix: boolean;
 }
 
 // =============================================================================
@@ -237,7 +249,8 @@ export type PaymentResult =
 export type ReceiveResult =
   | ({network: 'starknet'} & StarknetReceiveResult)
   | ({network: 'lightning'} & LightningReceiveResult)
-  | ({network: 'bitcoin'} & BitcoinReceiveResult);
+  | ({network: 'bitcoin'} & BitcoinReceiveResult)
+  | ({network: 'bitcoin'; status: 'pending_commit'} & BitcoinReceivePrepareResult);
 
 // =============================================================================
 // Errors

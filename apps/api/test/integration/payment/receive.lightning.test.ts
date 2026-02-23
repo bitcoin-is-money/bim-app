@@ -161,44 +161,38 @@ describe('Lightning Receive Swap Lifecycle', () => {
   // SwapMonitor Auto-Claim
   // ---------------------------------------------------------------------------
 
-  describe('SwapMonitor Auto-Claim', () => {
-    it('auto-claims Lightning swap when payment is detected', async () => {
+  describe('SwapMonitor Status Sync', () => {
+    it('detects payment via monitor polling', async () => {
       const swap = await createLightningSwap();
 
       // Simulate: Atomiq detects Lightning payment
       atomiqMock.setSwapStatus(swap.swapId, {isPaid: true, state: 1});
 
-      // First poll: sync status from Atomiq → marks as paid
-      await getSwapStatus(swap.swapId);
-
-      // Run monitor iteration: detects paid forward swap → auto-claims
+      // Monitor iteration syncs status from Atomiq → marks as paid
       await monitor.runIteration();
 
       const status = await getSwapStatus(swap.swapId);
-
-      // After auto-claim + async confirmation, status should be confirming or completed
-      expect(['confirming', 'completed']).toContain(status.status);
-      expect(status.txHash).toBeDefined();
+      expect(status.status).toBe('paid');
+      expect(status.progress).toBe(33);
     });
 
-    it('transitions to completed after claim confirmation', async () => {
+    it('transitions to completed when LP claims cooperatively', async () => {
       const swap = await createLightningSwap();
+      const claimTxHash = '0xabc123';
 
-      // Simulate paid → poll to sync
+      // Phase 1: Atomiq detects Lightning payment → paid
       atomiqMock.setSwapStatus(swap.swapId, {isPaid: true, state: 1});
-      await getSwapStatus(swap.swapId);
-
-      // Run monitor → auto-claim
       await monitor.runIteration();
 
-      // Give async confirmation handler time to complete
-      await new Promise(resolve => setTimeout(resolve, 200));
+      // Phase 2: LP/watchtower claims on Starknet → completed
+      atomiqMock.setSwapStatus(swap.swapId, {isCompleted: true, state: 3, txHash: claimTxHash});
+      await monitor.runIteration();
 
       const status = await getSwapStatus(swap.swapId);
 
       expect(status.status).toBe('completed');
       expect(status.progress).toBe(100);
-      expect(status.txHash).toBeDefined();
+      expect(status.txHash).toBe(claimTxHash);
     });
   });
 

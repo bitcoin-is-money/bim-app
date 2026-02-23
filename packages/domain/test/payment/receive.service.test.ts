@@ -1,5 +1,6 @@
 import {StarknetAddress} from '@bim/domain/account';
 import {InvalidPaymentAmountError, ReceiveService} from '@bim/domain/payment';
+import type {StarknetCall} from '@bim/domain/ports';
 import {Amount} from '@bim/domain/shared';
 import {
   BitcoinAddress,
@@ -26,6 +27,10 @@ const SENDER_ADDRESS = StarknetAddress.of('0x0123456789abcdef0123456789abcdef012
 const DESTINATION_ADDRESS = StarknetAddress.of('0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef');
 const VALID_INVOICE = 'lntb1000n1pjtest0pp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypq';
 const BTC_DEPOSIT_ADDRESS = 'bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4';
+
+const MOCK_COMMIT_CALLS: StarknetCall[] = [
+  {contractAddress: '0xabc', entrypoint: 'approve', calldata: ['0x1', '0x2']},
+];
 
 // =============================================================================
 // Mock swap factories
@@ -70,6 +75,17 @@ describe('ReceiveService', () => {
         depositAddress: BTC_DEPOSIT_ADDRESS,
         bip21Uri: `bitcoin:${BTC_DEPOSIT_ADDRESS}?amount=0.002`,
       }),
+      prepareBitcoinToStarknet: vi.fn().mockResolvedValue({
+        swapId: 'recv-btc-002',
+        commitCalls: MOCK_COMMIT_CALLS,
+        amount: Amount.ofSatoshi(200_000n),
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+      }),
+      completeBitcoinToStarknet: vi.fn().mockResolvedValue({
+        swap: createMockBitcoinReceiveSwap(),
+        depositAddress: BTC_DEPOSIT_ADDRESS,
+        bip21Uri: `bitcoin:${BTC_DEPOSIT_ADDRESS}?amount=0.002`,
+      }),
       createStarknetToLightning: vi.fn(),
       createStarknetToBitcoin: vi.fn(),
       fetchStatus: vi.fn(),
@@ -95,6 +111,7 @@ describe('ReceiveService', () => {
           network: 'lightning',
           destinationAddress: DESTINATION_ADDRESS,
           amount: Amount.zero(),
+          useUriPrefix: true,
         }),
       ).rejects.toThrow(InvalidPaymentAmountError);
     });
@@ -104,6 +121,7 @@ describe('ReceiveService', () => {
         service.receive({
           network: 'lightning',
           destinationAddress: DESTINATION_ADDRESS,
+          useUriPrefix: true,
         }),
       ).rejects.toThrow(InvalidPaymentAmountError);
     });
@@ -119,6 +137,7 @@ describe('ReceiveService', () => {
         network: 'starknet',
         destinationAddress: SENDER_ADDRESS,
         amount: Amount.ofSatoshi(50_000n),
+        useUriPrefix: true,
       });
 
       expect(result.network).toBe('starknet');
@@ -133,6 +152,7 @@ describe('ReceiveService', () => {
         destinationAddress: SENDER_ADDRESS,
         amount: Amount.ofSatoshi(1_000n),
         tokenAddress: ETH_TOKEN_ADDRESS,
+        useUriPrefix: true,
       });
 
       if (result.network !== 'starknet') throw new Error('Expected starknet result');
@@ -167,6 +187,7 @@ describe('ReceiveService', () => {
       const result = await service.receive({
         network: 'starknet',
         destinationAddress: SENDER_ADDRESS,
+        useUriPrefix: true,
       });
 
       if (result.network !== 'starknet') throw new Error('Expected starknet result');
@@ -179,6 +200,7 @@ describe('ReceiveService', () => {
         network: 'starknet',
         destinationAddress: SENDER_ADDRESS,
         amount: Amount.zero(),
+        useUriPrefix: true,
       });
 
       if (result.network !== 'starknet') throw new Error('Expected starknet result');
@@ -196,6 +218,7 @@ describe('ReceiveService', () => {
         network: 'lightning',
         destinationAddress: DESTINATION_ADDRESS,
         amount: Amount.ofSatoshi(50_000n),
+        useUriPrefix: true,
       });
 
       expect(mockSwapService.createLightningToStarknet).toHaveBeenCalledWith({
@@ -209,6 +232,7 @@ describe('ReceiveService', () => {
         network: 'lightning',
         destinationAddress: DESTINATION_ADDRESS,
         amount: Amount.ofSatoshi(50_000n),
+        useUriPrefix: true,
       });
 
       expect(result.network).toBe('lightning');
@@ -233,6 +257,7 @@ describe('ReceiveService', () => {
           network: 'lightning',
           destinationAddress: DESTINATION_ADDRESS,
           amount: Amount.ofSatoshi(50_000n),
+          useUriPrefix: true,
         }),
       ).rejects.toThrow(SwapAmountError);
     });
@@ -247,72 +272,32 @@ describe('ReceiveService', () => {
           network: 'lightning',
           destinationAddress: DESTINATION_ADDRESS,
           amount: Amount.ofSatoshi(50_000n),
+          useUriPrefix: true,
         }),
       ).rejects.toThrow(SwapCreationError);
     });
   });
 
   // ===========================================================================
-  // Bitcoin receive
+  // Bitcoin receive — Phase 1 (prepare)
   // ===========================================================================
 
-  describe('receive — bitcoin', () => {
-    it('delegates to swapService.createBitcoinToStarknet', async () => {
+  describe('receive — bitcoin (prepare)', () => {
+    it('delegates to swapService.prepareBitcoinToStarknet', async () => {
       await service.receive({
         network: 'bitcoin',
         destinationAddress: DESTINATION_ADDRESS,
         amount: Amount.ofSatoshi(200_000n),
+        useUriPrefix: true,
       });
 
-      expect(mockSwapService.createBitcoinToStarknet).toHaveBeenCalledWith({
+      expect(mockSwapService.prepareBitcoinToStarknet).toHaveBeenCalledWith({
         amount: Amount.ofSatoshi(200_000n),
         destinationAddress: DESTINATION_ADDRESS,
       });
     });
 
-    it('returns swap id, deposit address, bip21 URI and expiry', async () => {
-      const result = await service.receive({
-        network: 'bitcoin',
-        destinationAddress: DESTINATION_ADDRESS,
-        amount: Amount.ofSatoshi(200_000n),
-      });
-
-      expect(result.network).toBe('bitcoin');
-      if (result.network !== 'bitcoin') throw new Error('Expected bitcoin result');
-      expect(result.swapId).toBe(SwapId.of('recv-btc-002'));
-      expect(result.depositAddress).toBe(BitcoinAddress.of(BTC_DEPOSIT_ADDRESS));
-      expect(result.bip21Uri).toBe(`bitcoin:${BTC_DEPOSIT_ADDRESS}?amount=0.002`);
-      expect(result.amount.getSat()).toBe(200_000n);
-      expect(result.expiresAt).toBeInstanceOf(Date);
-    });
-
-    it('propagates SwapCreationError from swap service', async () => {
-      vi.mocked(mockSwapService.createBitcoinToStarknet).mockRejectedValue(
-        new SwapCreationError('Deposit address generation failed'),
-      );
-
-      await expect(
-        service.receive({
-          network: 'bitcoin',
-          destinationAddress: DESTINATION_ADDRESS,
-          amount: Amount.ofSatoshi(200_000n),
-        }),
-      ).rejects.toThrow(SwapCreationError);
-    });
-
-    it('omits the bitcoin: prefix when useUriPrefix is false', async () => {
-      const result = await service.receive({
-        network: 'bitcoin',
-        destinationAddress: DESTINATION_ADDRESS,
-        amount: Amount.ofSatoshi(200_000n),
-        useUriPrefix: false,
-      });
-
-      if (result.network !== 'bitcoin') throw new Error('Expected bitcoin result');
-      expect(result.bip21Uri).toBe(`${BTC_DEPOSIT_ADDRESS}?amount=0.002`);
-    });
-
-    it('includes the bitcoin: prefix when useUriPrefix is true', async () => {
+    it('returns pending_commit status with swap id, commit calls and expiry', async () => {
       const result = await service.receive({
         network: 'bitcoin',
         destinationAddress: DESTINATION_ADDRESS,
@@ -320,8 +305,99 @@ describe('ReceiveService', () => {
         useUriPrefix: true,
       });
 
+      expect(result.network).toBe('bitcoin');
       if (result.network !== 'bitcoin') throw new Error('Expected bitcoin result');
+      expect('status' in result && result.status).toBe('pending_commit');
+      if (!('status' in result) || result.status !== 'pending_commit') throw new Error('Expected pending_commit');
+      expect(result.swapId).toBe('recv-btc-002');
+      expect(result.commitCalls).toEqual(MOCK_COMMIT_CALLS);
+      expect(result.amount.getSat()).toBe(200_000n);
+      expect(result.expiresAt).toBeInstanceOf(Date);
+    });
+
+    it('propagates SwapCreationError from swap service', async () => {
+      vi.mocked(mockSwapService.prepareBitcoinToStarknet).mockRejectedValue(
+        new SwapCreationError('Swap preparation failed'),
+      );
+
+      await expect(
+        service.receive({
+          network: 'bitcoin',
+          destinationAddress: DESTINATION_ADDRESS,
+          amount: Amount.ofSatoshi(200_000n),
+          useUriPrefix: true,
+        }),
+      ).rejects.toThrow(SwapCreationError);
+    });
+  });
+
+  // ===========================================================================
+  // Bitcoin receive — Phase 2 (complete)
+  // ===========================================================================
+
+  describe('completeBitcoinReceive', () => {
+    it('delegates to swapService.completeBitcoinToStarknet and returns deposit address', async () => {
+      const result = await service.completeBitcoinReceive({
+        swapId: 'recv-btc-002',
+        destinationAddress: DESTINATION_ADDRESS,
+        amount: Amount.ofSatoshi(200_000n),
+        accountId: 'account-001',
+        useUriPrefix: true,
+      });
+
+      expect(mockSwapService.completeBitcoinToStarknet).toHaveBeenCalledWith({
+        swapId: 'recv-btc-002',
+        destinationAddress: DESTINATION_ADDRESS,
+        amount: Amount.ofSatoshi(200_000n),
+        accountId: 'account-001',
+      });
+
+      expect(result.network).toBe('bitcoin');
+      expect(result.swapId).toBe(SwapId.of('recv-btc-002'));
+      expect(result.depositAddress).toBe(BitcoinAddress.of(BTC_DEPOSIT_ADDRESS));
       expect(result.bip21Uri).toBe(`bitcoin:${BTC_DEPOSIT_ADDRESS}?amount=0.002`);
+      expect(result.amount.getSat()).toBe(200_000n);
+      expect(result.expiresAt).toBeInstanceOf(Date);
+    });
+
+    it('omits the bitcoin: prefix when useUriPrefix is false', async () => {
+      const result = await service.completeBitcoinReceive({
+        swapId: 'recv-btc-002',
+        destinationAddress: DESTINATION_ADDRESS,
+        amount: Amount.ofSatoshi(200_000n),
+        accountId: 'account-001',
+        useUriPrefix: false,
+      });
+
+      expect(result.bip21Uri).toBe(`${BTC_DEPOSIT_ADDRESS}?amount=0.002`);
+    });
+
+    it('includes the bitcoin: prefix when useUriPrefix is true', async () => {
+      const result = await service.completeBitcoinReceive({
+        swapId: 'recv-btc-002',
+        destinationAddress: DESTINATION_ADDRESS,
+        amount: Amount.ofSatoshi(200_000n),
+        accountId: 'account-001',
+        useUriPrefix: true,
+      });
+
+      expect(result.bip21Uri).toBe(`bitcoin:${BTC_DEPOSIT_ADDRESS}?amount=0.002`);
+    });
+
+    it('propagates errors from swap service', async () => {
+      vi.mocked(mockSwapService.completeBitcoinToStarknet).mockRejectedValue(
+        new SwapCreationError('Failed to retrieve deposit address'),
+      );
+
+      await expect(
+        service.completeBitcoinReceive({
+          swapId: 'recv-btc-002',
+          destinationAddress: DESTINATION_ADDRESS,
+          amount: Amount.ofSatoshi(200_000n),
+          accountId: 'account-001',
+          useUriPrefix: true,
+        }),
+      ).rejects.toThrow(SwapCreationError);
     });
   });
 });

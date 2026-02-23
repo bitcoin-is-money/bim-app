@@ -33,6 +33,7 @@ import {
 // Domain errors - Shared
 import {
   ExternalServiceError,
+  InsufficientBalanceError,
   InvalidStateTransitionError,
   TimeoutError,
   UnauthorizedError,
@@ -212,6 +213,17 @@ export function handleDomainError(ctx: Context, error: unknown, logger: Logger):
     });
   }
 
+  // --- Balance errors ---
+  if (error instanceof InsufficientBalanceError) {
+    if (error.requiredAmount !== undefined) {
+      const formatted = formatTokenAmount(error.requiredAmount, 18);
+      return createErrorResponse(ctx, 400, ErrorCode.INSUFFICIENT_BALANCE_WITH_AMOUNT,
+        `Insufficient balance. This operation requires ~${formatted} STRK.`,
+        {amount: formatted});
+    }
+    return createErrorResponse(ctx, 400, ErrorCode.INSUFFICIENT_BALANCE, 'Insufficient balance for this operation');
+  }
+
   // --- Shared errors ---
   if (error instanceof ValidationError) {
     return createErrorResponse(ctx, 400, ErrorCode.VALIDATION_ERROR, error.message, {
@@ -241,4 +253,17 @@ export function handleDomainError(ctx: Context, error: unknown, logger: Logger):
 
   // --- Fallback ---
   return createErrorResponse(ctx, 500, ErrorCode.INTERNAL_ERROR, 'Internal server error');
+}
+
+/**
+ * Format a raw token amount (in wei) to a human-readable string.
+ * E.g. 4140000000000000000n with 18 decimals → "4.14"
+ */
+function formatTokenAmount(amount: bigint, decimals: number): string {
+  const divisor = 10n ** BigInt(decimals);
+  const whole = amount / divisor;
+  const remainder = amount % divisor;
+  if (remainder === 0n) return whole.toString();
+  const fracStr = remainder.toString().padStart(decimals, '0').replace(/0+$/, '');
+  return `${whole}.${fracStr}`;
 }

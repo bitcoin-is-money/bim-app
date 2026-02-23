@@ -11,3 +11,14 @@ export const ReceiveSchema = z.object({
   description: z.string().max(100).optional(),
   useUriPrefix: z.boolean().default(true),
 });
+
+const WebAuthnAssertionSchema = z.object({
+  authenticatorData: z.string().min(1),
+  clientDataJSON: z.string().min(1),
+  signature: z.string().min(1),
+});
+
+export const ReceiveCommitSchema = z.object({
+  buildId: z.string().uuid(),
+  assertion: WebAuthnAssertionSchema,
+});

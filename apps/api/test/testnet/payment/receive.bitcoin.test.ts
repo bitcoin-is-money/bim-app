@@ -3,7 +3,7 @@ import type {Hono} from 'hono';
 import pg from 'pg';
 import {afterAll, beforeAll, describe, expect, it} from 'vitest';
 import type {ApiErrorResponse} from '../../../src/errors';
-import type {BitcoinReceiveResponse} from '../../../src/routes';
+import type {BitcoinReceivePendingCommitResponse} from '../../../src/routes';
 import {registerAndDeployUser, registerUser} from '../../helpers';
 import {TestDatabase, TestnetApp, TestnetContext} from '../helpers';
 
@@ -11,20 +11,16 @@ import {TestDatabase, TestnetApp, TestnetContext} from '../helpers';
  * Receive Flow — Bitcoin (Testnet)
  *
  * These tests use the REAL Atomiq SDK connected to Starknet Sepolia.
- * They validate that swap creation works end-to-end with the actual SDK,
- * including deposit address generation and BIP-21 URI formatting.
+ * They validate that swap creation (phase 1) works end-to-end:
+ * the SDK creates a swap quote and returns commit transactions.
  *
- * IMPORTANT: Swap lifecycle testing (status transitions: paid, claim, completed)
- * is NOT possible in these testnet tests because:
- * - It would require sending real BTC on Bitcoin testnet, which is slow
- *   (~10 mins block confirmations) and depends on unreliable faucets.
- * - The Atomiq SDK does not support Bitcoin regtest (a fully local Bitcoin
- *   blockchain where you control block mining and can send transactions instantly).
+ * Phase 1 (POST /receive): Returns pending_commit with commit data for WebAuthn signing.
+ * Phase 2 (POST /receive/commit): Not tested here — requires signing the commit
+ * transaction, submitting it on-chain, and waiting for the SDK to detect the commit.
+ * Phase 2 is covered in integration tests with AtomiqGatewayMock.
  *
- * The full swap lifecycle (pending → paid → confirming → completed, plus edge
- * cases like expired+paid and SwapMonitor auto-claim) is covered in the
- * integration tests at: test/integration/payment/receive.bitcoin.test.ts
- * using AtomiqGatewayMock for controllable status transitions.
+ * Full swap lifecycle (status polling, claim, completion) is also covered in:
+ * test/integration/payment/receive.bitcoin.test.ts
  */
 describe('Receive Flow — Bitcoin (Testnet)', () => {
   let app: Hono;
@@ -62,8 +58,8 @@ describe('Receive Flow — Bitcoin (Testnet)', () => {
     await pool.end();
   });
 
-  describe('POST /api/payment/receive (bitcoin)', () => {
-    it('creates a Bitcoin swap with deposit address and BIP-21 URI', async ({skip}) => {
+  describe('POST /api/payment/receive (bitcoin) — Phase 1', () => {
+    it('returns pending_commit response with commit data for signing', async ({skip}) => {
       if (deploymentFailed) skip('Deployment failed — AVNU paymaster likely needs updating');
 
       const response = await TestnetApp
@@ -74,13 +70,14 @@ describe('Receive Flow — Bitcoin (Testnet)', () => {
         }, {headers: {Cookie: deployedSessionCookie}});
 
       expect(response.status).toBe(200);
-      const body = await response.json() as BitcoinReceiveResponse;
+      const body = await response.json() as BitcoinReceivePendingCommitResponse;
 
       expect(body.network).toBe('bitcoin');
+      expect(body.status).toBe('pending_commit');
       expect(body.swapId).toBeDefined();
-      expect(body.depositAddress).toBeDefined();
-      expect(body.bip21Uri).toContain('bitcoin:');
-      expect(body.bip21Uri).toContain(body.depositAddress);
+      expect(body.buildId).toBeDefined();
+      expect(body.messageHash).toBeDefined();
+      expect(body.credentialId).toBeDefined();
       expect(body.amount.value).toBe(100000);
       expect(body.amount.currency).toBe('SAT');
       expect(body.expiresAt).toBeDefined();
@@ -92,7 +89,7 @@ describe('Receive Flow — Bitcoin (Testnet)', () => {
       expect(expiresAt.getTime()).toBeLessThanOrEqual(now.getTime() + 4 * 60 * 60 * 1000);
     });
 
-    it('creates a Bitcoin swap with minimum amount (50k sats)', async ({skip}) => {
+    it('returns pending_commit for minimum amount (50k sats)', async ({skip}) => {
       if (deploymentFailed) skip('Deployment failed — AVNU paymaster likely needs updating');
 
       const response = await TestnetApp
@@ -103,12 +100,13 @@ describe('Receive Flow — Bitcoin (Testnet)', () => {
         }, {headers: {Cookie: deployedSessionCookie}});
 
       expect(response.status).toBe(200);
-      const body = await response.json() as BitcoinReceiveResponse;
+      const body = await response.json() as BitcoinReceivePendingCommitResponse;
 
       expect(body.network).toBe('bitcoin');
+      expect(body.status).toBe('pending_commit');
       expect(body.amount.value).toBe(50000);
-      expect(body.depositAddress).toBeDefined();
-      expect(body.bip21Uri).toContain('bitcoin:');
+      expect(body.buildId).toBeDefined();
+      expect(body.messageHash).toBeDefined();
     });
 
     it('rejects Bitcoin receive without amount', async ({skip}) => {

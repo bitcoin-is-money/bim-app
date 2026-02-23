@@ -3,8 +3,9 @@ import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 import type {AppInstance} from '../../../src/app';
 import type {ApiErrorResponse} from '../../../src/errors';
 import type {SwapMonitor} from '../../../src/monitoring/swap.monitor';
-import type {BitcoinReceiveResponse, SwapStatusResponse} from '../../../src/routes';
+import type {BitcoinReceivePendingCommitResponse, SwapStatusResponse} from '../../../src/routes';
 import {AtomiqGatewayMock} from '../../unit/mocks/atomiq.gateway.mock';
+import {StarknetGatewayMock} from '../../unit/mocks/starknet.gateway.mock';
 import {type DbClient, TestApp, TestDatabase} from '../helpers';
 import {AccountFixture} from '../helpers/account';
 import {AuthFixture} from '../helpers/auth';
@@ -13,11 +14,14 @@ import {AuthFixture} from '../helpers/auth';
  * Bitcoin Receive Swap Lifecycle — Integration Tests
  *
  * Tests the full Bitcoin → Starknet swap lifecycle through the HTTP API:
- * creation, status polling, payment detection, SwapMonitor auto-claim,
- * completion, expiration, and edge cases.
+ * creation (phase 1 — pending_commit), status polling, payment detection,
+ * SwapMonitor auto-claim, completion, expiration, and edge cases.
  *
- * Uses AtomiqGatewayMock to control swap status transitions without
- * requiring a real Bitcoin network or Atomiq SDK.
+ * Phase 2 (commit with WebAuthn) is not tested here because it requires
+ * browser WebAuthn APIs. The commit flow is tested at the unit level.
+ *
+ * Uses AtomiqGatewayMock and StarknetGatewayMock to control swap behavior
+ * without requiring real networks or SDK.
  */
 describe('Bitcoin Receive Swap Lifecycle', () => {
   let appInstance: AppInstance;
@@ -25,6 +29,7 @@ describe('Bitcoin Receive Swap Lifecycle', () => {
   let pool: pg.Pool;
   let db: DbClient;
   let atomiqMock: AtomiqGatewayMock;
+  let starknetMock: StarknetGatewayMock;
   let accountFixture: AccountFixture;
   let authFixture: AuthFixture;
 
@@ -35,6 +40,7 @@ describe('Bitcoin Receive Swap Lifecycle', () => {
 
   beforeAll(async () => {
     atomiqMock = new AtomiqGatewayMock();
+    starknetMock = new StarknetGatewayMock();
     pool = TestDatabase.createPool();
     db = TestDatabase.getClient(pool);
     accountFixture = AccountFixture.create(db);
@@ -42,7 +48,7 @@ describe('Bitcoin Receive Swap Lifecycle', () => {
 
     appInstance = await TestApp.createTestAppWithSwapMonitor({
       context: {
-        gateways: {atomiq: atomiqMock},
+        gateways: {atomiq: atomiqMock, starknet: starknetMock},
       },
     });
     monitor = appInstance.monitor!;
@@ -74,14 +80,38 @@ describe('Bitcoin Receive Swap Lifecycle', () => {
     return TestApp.request(appInstance.app);
   }
 
-  async function createBitcoinSwap(amount = '100000'): Promise<BitcoinReceiveResponse> {
+  /**
+   * Phase 1: POST /receive for bitcoin — returns pending_commit with commit data.
+   */
+  async function createBitcoinPendingCommit(amount = '100000'): Promise<BitcoinReceivePendingCommitResponse> {
     const response = await request().post('/api/payment/receive', {
       network: 'bitcoin',
       amount,
     }, {headers: {Cookie: sessionCookie}});
 
     expect(response.status).toBe(200);
-    return await response.json() as BitcoinReceiveResponse;
+    return await response.json() as BitcoinReceivePendingCommitResponse;
+  }
+
+  /**
+   * Inserts a fully-committed Bitcoin swap directly into the DB.
+   * Used for lifecycle tests (status polling, auto-claim, edge cases)
+   * that don't need to test the two-phase creation flow.
+   */
+  async function insertBitcoinSwap(swapId: string, amount = '100000'): Promise<{swapId: string; depositAddress: string}> {
+    const depositAddress = `tb1q${swapId.replaceAll('-', '')}`.slice(0, 42);
+
+    // Register in atomiq mock for status checks
+    atomiqMock.setSwapStatus(swapId, {state: 0, isPaid: false, isCompleted: false, isFailed: false, isExpired: false});
+
+    // Insert directly into DB
+    await pool.query(
+      `INSERT INTO bim_swaps (id, direction, amount_sats, destination_address, deposit_address, status, expires_at, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
+      [swapId, 'bitcoin_to_starknet', amount, STARKNET_ADDRESS.toLowerCase(), depositAddress, 'pending', new Date(Date.now() + 3 * 60 * 60 * 1000)],
+    );
+
+    return {swapId, depositAddress};
   }
 
   async function getSwapStatus(swapId: string): Promise<SwapStatusResponse> {
@@ -93,18 +123,19 @@ describe('Bitcoin Receive Swap Lifecycle', () => {
   }
 
   // ---------------------------------------------------------------------------
-  // Swap Creation
+  // Swap Creation — Phase 1 (pending_commit)
   // ---------------------------------------------------------------------------
 
-  describe('Swap Creation', () => {
-    it('creates a Bitcoin swap with deposit address and BIP-21 URI', async () => {
-      const body = await createBitcoinSwap('100000');
+  describe('Swap Creation (Phase 1)', () => {
+    it('returns pending_commit response with commit data for WebAuthn signing', async () => {
+      const body = await createBitcoinPendingCommit();
 
       expect(body.network).toBe('bitcoin');
+      expect(body.status).toBe('pending_commit');
       expect(body.swapId).toBeDefined();
-      expect(body.depositAddress).toBeDefined();
-      expect(body.bip21Uri).toContain('bitcoin:');
-      expect(body.bip21Uri).toContain(body.depositAddress);
+      expect(body.buildId).toBeDefined();
+      expect(body.messageHash).toBeDefined();
+      expect(body.credentialId).toBeDefined();
       expect(body.amount.value).toBe(100000);
       expect(body.amount.currency).toBe('SAT');
       expect(body.expiresAt).toBeDefined();
@@ -117,8 +148,8 @@ describe('Bitcoin Receive Swap Lifecycle', () => {
 
   describe('Status Polling', () => {
     it('returns pending status after creation', async () => {
-      const swap = await createBitcoinSwap();
-      const status = await getSwapStatus(swap.swapId);
+      const {swapId} = await insertBitcoinSwap('btc-swap-001');
+      const status = await getSwapStatus(swapId);
 
       expect(status.status).toBe('pending');
       expect(status.progress).toBe(0);
@@ -127,33 +158,33 @@ describe('Bitcoin Receive Swap Lifecycle', () => {
     });
 
     it('returns paid status after payment detected', async () => {
-      const swap = await createBitcoinSwap();
+      const {swapId} = await insertBitcoinSwap('btc-swap-002');
 
       // Simulate: Atomiq detects BTC deposit
-      atomiqMock.setSwapStatus(swap.swapId, {isPaid: true, state: 1});
+      atomiqMock.setSwapStatus(swapId, {isPaid: true, state: 1});
 
-      const status = await getSwapStatus(swap.swapId);
+      const status = await getSwapStatus(swapId);
 
       expect(status.status).toBe('paid');
       expect(status.progress).toBe(33);
     });
 
     it('returns expired status when swap expires', async () => {
-      const swap = await createBitcoinSwap();
+      const {swapId} = await insertBitcoinSwap('btc-swap-003');
 
-      atomiqMock.setSwapStatus(swap.swapId, {isExpired: true, state: -1});
+      atomiqMock.setSwapStatus(swapId, {isExpired: true, state: -1});
 
-      const status = await getSwapStatus(swap.swapId);
+      const status = await getSwapStatus(swapId);
 
       expect(status.status).toBe('expired');
     });
 
     it('returns failed status on error', async () => {
-      const swap = await createBitcoinSwap();
+      const {swapId} = await insertBitcoinSwap('btc-swap-004');
 
-      atomiqMock.setSwapStatus(swap.swapId, {isFailed: true, state: -3, error: 'SDK error'});
+      atomiqMock.setSwapStatus(swapId, {isFailed: true, state: -3, error: 'SDK error'});
 
-      const status = await getSwapStatus(swap.swapId);
+      const status = await getSwapStatus(swapId);
 
       expect(status.status).toBe('failed');
     });
@@ -163,47 +194,38 @@ describe('Bitcoin Receive Swap Lifecycle', () => {
   // SwapMonitor Auto-Claim
   // ---------------------------------------------------------------------------
 
-  describe('SwapMonitor Auto-Claim', () => {
-    it('auto-claims Bitcoin swap when payment is detected', async () => {
-      const swap = await createBitcoinSwap();
+  describe('SwapMonitor Status Sync', () => {
+    it('detects payment via monitor polling', async () => {
+      const {swapId} = await insertBitcoinSwap('btc-swap-010');
 
       // Simulate: Atomiq detects BTC deposit
-      atomiqMock.setSwapStatus(swap.swapId, {isPaid: true, state: 1});
+      atomiqMock.setSwapStatus(swapId, {isPaid: true, state: 1});
 
-      // First poll: sync status from Atomiq → marks as paid
-      await getSwapStatus(swap.swapId);
-
-      // Run monitor iteration: detects paid forward swap → auto-claims
+      // Monitor iteration syncs status from Atomiq → marks as paid
       await monitor.runIteration();
 
-      // After claim, the mock's claimSwap returns a txHash
-      // and waitForClaimConfirmation resolves immediately
-      // So the swap should transition to confirming or completed
-      const status = await getSwapStatus(swap.swapId);
-
-      // After auto-claim + async confirmation, status should be completed
-      expect(['confirming', 'completed']).toContain(status.status);
-      expect(status.txHash).toBeDefined();
+      const status = await getSwapStatus(swapId);
+      expect(status.status).toBe('paid');
+      expect(status.progress).toBe(33);
     });
 
-    it('transitions to completed after claim confirmation', async () => {
-      const swap = await createBitcoinSwap();
+    it('transitions to completed when LP claims cooperatively', async () => {
+      const {swapId} = await insertBitcoinSwap('btc-swap-011');
+      const claimTxHash = '0xabc123';
 
-      // Simulate paid → poll to sync
-      atomiqMock.setSwapStatus(swap.swapId, {isPaid: true, state: 1});
-      await getSwapStatus(swap.swapId);
-
-      // Run monitor → auto-claim
+      // Phase 1: Atomiq detects BTC deposit → paid
+      atomiqMock.setSwapStatus(swapId, {isPaid: true, state: 1});
       await monitor.runIteration();
 
-      // Give async confirmation handler time to complete
-      await new Promise(resolve => setTimeout(resolve, 200));
+      // Phase 2: LP/watchtower claims on Starknet → completed
+      atomiqMock.setSwapStatus(swapId, {isCompleted: true, state: 3, txHash: claimTxHash});
+      await monitor.runIteration();
 
-      const status = await getSwapStatus(swap.swapId);
+      const status = await getSwapStatus(swapId);
 
       expect(status.status).toBe('completed');
       expect(status.progress).toBe(100);
-      expect(status.txHash).toBeDefined();
+      expect(status.txHash).toBe(claimTxHash);
     });
   });
 
@@ -213,21 +235,21 @@ describe('Bitcoin Receive Swap Lifecycle', () => {
 
   describe('Edge Cases', () => {
     it('keeps Bitcoin swap as paid when expired + paid (BTC is irreversible)', async () => {
-      const swap = await createBitcoinSwap();
+      const {swapId} = await insertBitcoinSwap('btc-swap-020');
 
       // Edge case: Atomiq reports expired, but deposit was already confirmed
-      atomiqMock.setSwapStatus(swap.swapId, {isExpired: true, isPaid: true, state: -1});
+      atomiqMock.setSwapStatus(swapId, {isExpired: true, isPaid: true, state: -1});
 
-      const status = await getSwapStatus(swap.swapId);
+      const status = await getSwapStatus(swapId);
 
       // Should be 'paid', NOT 'expired' — Bitcoin transactions are irreversible
       expect(status.status).toBe('paid');
     });
 
     it('rejects claim on non-paid swap', async () => {
-      const swap = await createBitcoinSwap();
+      const {swapId} = await insertBitcoinSwap('btc-swap-021');
 
-      const response = await request().post(`/api/swap/claim/${swap.swapId}`, {}, {
+      const response = await request().post(`/api/swap/claim/${swapId}`, {}, {
         headers: {Cookie: sessionCookie},
       });
 
@@ -247,16 +269,16 @@ describe('Bitcoin Receive Swap Lifecycle', () => {
     });
 
     it('does not change terminal status on subsequent polls', async () => {
-      const swap = await createBitcoinSwap();
+      const {swapId} = await insertBitcoinSwap('btc-swap-022');
 
       // Mark as expired
-      atomiqMock.setSwapStatus(swap.swapId, {isExpired: true, state: -1});
-      const status1 = await getSwapStatus(swap.swapId);
+      atomiqMock.setSwapStatus(swapId, {isExpired: true, state: -1});
+      const status1 = await getSwapStatus(swapId);
       expect(status1.status).toBe('expired');
 
       // Change mock to paid — should NOT change because expired is terminal
-      atomiqMock.setSwapStatus(swap.swapId, {isPaid: true, state: 1});
-      const status2 = await getSwapStatus(swap.swapId);
+      atomiqMock.setSwapStatus(swapId, {isPaid: true, state: 1});
+      const status2 = await getSwapStatus(swapId);
       expect(status2.status).toBe('expired');
     });
   });

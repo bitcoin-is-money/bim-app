@@ -1,5 +1,6 @@
 import {StarknetAddress} from '../account';
 import {BitcoinAddress, LightningInvoice, SwapId, type SwapLimits} from '../swap';
+import type {StarknetCall} from './starknet.gateway';
 
 /**
  * Gateway interface for Atomiq SDK interactions (cross-chain swaps).
@@ -19,11 +20,29 @@ export interface AtomiqGateway {
 
   /**
    * Creates a Bitcoin → Starknet swap.
+   * @deprecated Use prepareBitcoinToStarknetSwap + completeBitcoinSwapCommit for the two-phase flow.
    */
   createBitcoinToStarknetSwap(params: {
     amountSats: bigint;
     destinationAddress: StarknetAddress;
   }): Promise<AtomiqSwapResult>;
+
+  /**
+   * Prepares a Bitcoin → Starknet swap (phase 1).
+   * Creates the swap quote and returns unsigned commit transactions
+   * that must be signed and submitted before the Bitcoin address becomes available.
+   */
+  prepareBitcoinToStarknetSwap(params: {
+    amountSats: bigint;
+    destinationAddress: StarknetAddress;
+  }): Promise<BitcoinSwapQuote>;
+
+  /**
+   * Completes a Bitcoin swap commit (phase 2).
+   * Waits for the commit to be confirmed on-chain, then returns the Bitcoin deposit address.
+   * Must be called after the commit transactions have been signed and submitted.
+   */
+  completeBitcoinSwapCommit(swapId: string): Promise<BitcoinSwapCommitResult>;
 
   /**
    * Creates a Starknet → Lightning swap.
@@ -137,4 +156,15 @@ export interface ClaimResult {
 export interface UnsignedClaimTransactions {
   transactions: unknown[];
   message: string;
+}
+
+export interface BitcoinSwapQuote {
+  swapId: string;
+  commitCalls: StarknetCall[];
+  expiresAt: Date;
+}
+
+export interface BitcoinSwapCommitResult {
+  depositAddress: string;
+  bip21Uri: string;
 }
