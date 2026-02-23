@@ -1,5 +1,0 @@
-{
-	"force_logout_detected": "Force logout detected, clearing session",
-	"user_authenticated_redirecting": "User authenticated, redirecting to /homebis",
-	"periodic_redirect_check": "Periodic redirect check - user found, redirecting to /homebis"
-}
