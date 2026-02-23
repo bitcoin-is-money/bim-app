@@ -1,5 +1,0 @@
-{
-	"force_logout_detected": "Déconnexion forcée détectée, effacement de la session",
-	"user_authenticated_redirecting": "Utilisateur authentifié, redirection vers /homebis",
-	"periodic_redirect_check": "Vérification de redirection périodique - utilisateur trouvé, redirection vers /homebis"
-}
