@@ -63,6 +63,11 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'gas-tank',
+    loadComponent: () => import('./pages/gas-tank/gas-tank.page').then(m => m.GasTankPage),
+    canActivate: [authGuard],
+  },
+  {
     path: 'swaps',
     loadComponent: () => import('./pages/swaps/swaps.page').then(m => m.SwapsPage),
     canActivate: [authGuard],

@@ -11,6 +11,9 @@ export class AccountService {
 
   readonly balance = signal<Amount | undefined>(undefined);
 
+  /** STRK balance formatted as a human-readable string (e.g. "66.04") */
+  readonly strkBalance = signal<string | undefined>(undefined);
+
   constructor(
     private readonly httpService: AccountHttpService,
   ) {
@@ -28,6 +31,7 @@ export class AccountService {
       .getBalance()
       .pipe(
         map((response) => {
+          this.strkBalance.set(formatTokenBalance(response.strkBalance.amount, response.strkBalance.decimals));
           const sats = Number(response.wbtcBalance.amount);
           return Amount.of(sats, 'SAT');
         })
@@ -45,4 +49,16 @@ export class AccountService {
   deploy(): Observable<DeployAccountResponse> {
     return this.httpService.deploy(environment.waitForAccountDeployment);
   }
+}
+
+/**
+ * Formats a raw token balance (wei string) into a human-readable string.
+ * E.g. "66041022140453590000" with 18 decimals → "66.04"
+ */
+function formatTokenBalance(rawAmount: string, decimals: number): string {
+  if (rawAmount === '0') return '0';
+  const padded = rawAmount.padStart(decimals + 1, '0');
+  const whole = padded.slice(0, padded.length - decimals) || '0';
+  const frac = padded.slice(padded.length - decimals, padded.length - decimals + 2);
+  return frac === '00' ? whole : `${whole}.${frac}`;
 }

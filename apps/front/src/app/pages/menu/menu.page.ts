@@ -26,6 +26,10 @@ export class MenuPage {
     this.router.navigate(['/settings']);
   }
 
+  navigateToGasTank(): void {
+    this.router.navigate(['/gas-tank']);
+  }
+
   navigateToSwaps(): void {
     this.router.navigate(['/swaps']);
   }
