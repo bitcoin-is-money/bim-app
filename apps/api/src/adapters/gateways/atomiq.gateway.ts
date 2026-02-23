@@ -564,7 +564,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     this.log.debug({...limits}, `swapper.getSwapLimits`);
     const result: SwapLimits = {
       minSats: limits.input.min.rawAmount ?? 0n,
-      maxSats: limits.input.max?.rawAmount ?? 0n,
+      maxSats: limits.input.max?.rawAmount ?? BigInt(Number.MAX_SAFE_INTEGER),
       feePercent: this.getSwapFeePercent(SwapType.FROM_BTCLN),
     };
     this.log.debug({...result}, `getLightningToStarknetLimits result`);
@@ -580,7 +580,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     );
     const result: SwapLimits = {
       minSats: limits.input.min.rawAmount ?? 0n,
-      maxSats: limits.input.max?.rawAmount ?? 0n,
+      maxSats: limits.input.max?.rawAmount ?? BigInt(Number.MAX_SAFE_INTEGER),
       feePercent: this.getSwapFeePercent(SwapType.FROM_BTC),
     };
     this.log.debug({...result}, `getBitcoinToStarknetLimits result`);
@@ -596,7 +596,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     );
     const result: SwapLimits = {
       minSats: limits.input.min.rawAmount ?? 0n,
-      maxSats: limits.input.max?.rawAmount ?? 0n,
+      maxSats: limits.input.max?.rawAmount ?? BigInt(Number.MAX_SAFE_INTEGER),
       feePercent: this.getSwapFeePercent(SwapType.TO_BTCLN),
     };
     this.log.debug({...result}, `getStarknetToLightningLimits result`);
@@ -612,7 +612,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     );
     const result: SwapLimits = {
       minSats: limits.input.min.rawAmount ?? 0n,
-      maxSats: limits.input.max?.rawAmount ?? 0n,
+      maxSats: limits.input.max?.rawAmount ?? BigInt(Number.MAX_SAFE_INTEGER),
       feePercent: this.getSwapFeePercent(SwapType.TO_BTC),
     };
     this.log.debug({...result}, `getStarknetToBitcoinLimits result`);
