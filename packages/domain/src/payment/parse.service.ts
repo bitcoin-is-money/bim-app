@@ -1,7 +1,7 @@
 import type {Logger} from 'pino';
 import {StarknetAddress} from '../account';
 import type {LightningDecoder} from '../ports';
-import {Amount, type StarknetConfig} from '../shared';
+import {Amount, DomainError, type StarknetConfig} from '../shared';
 import {BitcoinAddress, LightningInvoice} from '../swap';
 import {
   MissingPaymentAmountError,
@@ -183,6 +183,9 @@ export class ParseService {
     try {
       return fn();
     } catch (error: unknown) {
+      if (error instanceof DomainError) {
+        throw error;
+      }
       const cause = error instanceof Error
         ? error
         : new Error(String(error));
