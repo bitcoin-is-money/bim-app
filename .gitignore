@@ -67,6 +67,9 @@ tmp
 .apibara/
 /scripts/utils/localhost*
 
+# Claude Code agent memory
+.claude/agent-memory/
+
 # Terraform
 infra/.terraform/
 infra/*.tfstate
