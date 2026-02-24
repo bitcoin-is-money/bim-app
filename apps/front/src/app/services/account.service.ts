@@ -1,4 +1,4 @@
-import {Injectable, signal} from '@angular/core';
+import {inject, Injectable, signal} from '@angular/core';
 import {map, Observable} from 'rxjs';
 import {environment} from "../../environments/environment";
 import {Amount} from "../model";
@@ -14,10 +14,7 @@ export class AccountService {
   /** STRK balance formatted as a human-readable string (e.g. "66.04") */
   readonly strkBalance = signal<string | undefined>(undefined);
 
-  constructor(
-    private readonly httpService: AccountHttpService,
-  ) {
-  }
+  private readonly httpService = inject(AccountHttpService);
 
   loadBalance(): void {
     this.getBalance().subscribe({

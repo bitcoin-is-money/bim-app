@@ -9,6 +9,7 @@ import {
   AuthenticationFailedError,
   ChallengeId,
   ChallengeNotFoundError,
+  InvalidChallengeError,
   RegistrationFailedError,
   type WebAuthnAuthenticationOptions,
   type WebAuthnRegistrationOptions,
@@ -175,11 +176,16 @@ export class AuthService {
     // Parse the account ID from input
     const accountId = AccountId.of(input.accountId);
 
+    // Validate challenge has required WebAuthn fields
+    if (!challenge.origin || !challenge.rpId) {
+      throw new InvalidChallengeError(challengeId, 'missing origin or rpId');
+    }
+
     // Verify WebAuthn credential
     const verification = await this.deps.webAuthnGateway.verifyRegistration({
       expectedChallenge: challenge.challenge,
-      expectedOrigin: challenge.origin!,
-      expectedRPID: challenge.rpId!,
+      expectedOrigin: challenge.origin,
+      expectedRPID: challenge.rpId,
       credential: input.credential,
     });
 
@@ -268,11 +274,16 @@ export class AuthService {
       throw new AccountNotFoundError('Account not found');
     }
 
+    // Validate challenge has required WebAuthn fields
+    if (!challenge.origin || !challenge.rpId) {
+      throw new InvalidChallengeError(challengeId, 'missing origin or rpId');
+    }
+
     // Verify WebAuthn signature
     const verification = await this.deps.webAuthnGateway.verifyAuthentication({
       expectedChallenge: challenge.challenge,
-      expectedOrigin: challenge.origin!,
-      expectedRPID: challenge.rpId!,
+      expectedOrigin: challenge.origin,
+      expectedRPID: challenge.rpId,
       credential: input.credential,
       storedCredential: {
         credentialId: account.credentialId,

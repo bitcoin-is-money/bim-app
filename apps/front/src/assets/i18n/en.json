@@ -181,6 +181,7 @@
     "CHALLENGE_NOT_FOUND": "Authentication challenge not found.",
     "CHALLENGE_EXPIRED": "Authentication challenge has expired. Please try again.",
     "CHALLENGE_ALREADY_USED": "Authentication challenge has already been used.",
+    "INVALID_CHALLENGE": "Invalid authentication challenge. Please try again.",
     "AUTHENTICATION_FAILED": "Authentication failed. Please try again.",
     "REGISTRATION_FAILED": "Registration failed. Please try again.",
     "SESSION_NOT_FOUND": "Session not found. Please sign in.",

@@ -1,11 +1,12 @@
-import {isValidLevel} from "@bim/lib/logger";
 import type {TypedResponse} from 'hono';
 import {Hono} from 'hono';
 
 import type {Logger} from "pino";
 import type {AppContext} from "../../app-context";
 import type {ApiErrorResponse} from '../../errors';
-import {createErrorResponse, ErrorCode} from '../../errors';
+import {handleDomainError} from '../../errors';
+import {createAuthMiddleware} from '../../middleware/auth.middleware';
+import {UpdateLogLevelSchema} from './admin.schemas';
 import type {GetLogLevelResponse, UpdateLogLevelResponse} from './admin.types';
 
 export function createAdminRoutes(appContext: AppContext): Hono {
@@ -13,26 +14,24 @@ export function createAdminRoutes(appContext: AppContext): Hono {
   const log: Logger = rootLogger.child({name: 'admin.routes.ts'});
   const app = new Hono();
 
+  app.use('*', createAuthMiddleware(appContext));
+
   app.get('/log-level', (honoCtx): TypedResponse<GetLogLevelResponse> => {
     return honoCtx.json<GetLogLevelResponse>({level: rootLogger.level});
   });
 
   app.put('/log-level', async (honoCtx): Promise<TypedResponse<UpdateLogLevelResponse | ApiErrorResponse>> => {
-    const body = await honoCtx.req.json();
-    const {level} = body;
+    try {
+      const body = await honoCtx.req.json();
+      const {level} = UpdateLogLevelSchema.parse(body);
 
-    if (!isValidLevel(level)) {
-      return createErrorResponse(
-        honoCtx,
-        400,
-        ErrorCode.VALIDATION_ERROR,
-        'Invalid level. Valid: debug, info, warn, error, silent');
+      rootLogger.level = level;
+      log.info(`Log level changed to ${level} at runtime`);
+
+      return honoCtx.json<UpdateLogLevelResponse>({level: rootLogger.level});
+    } catch (error) {
+      return handleDomainError(honoCtx, error, log);
     }
-
-    rootLogger.level = level;
-    log.info(`Log level changed to ${level} at runtime`);
-
-    return honoCtx.json<UpdateLogLevelResponse>({level: rootLogger.level});
   });
 
   return app;

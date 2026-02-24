@@ -1,4 +1,4 @@
-import {Component, Input} from '@angular/core';
+import {Component, input} from '@angular/core';
 import {StyleVariant} from "../variant";
 
 @Component({
@@ -7,9 +7,9 @@ import {StyleVariant} from "../variant";
   templateUrl: './spinner.component.html',
   styleUrl: './spinner.component.scss',
   host: {
-    '[class]': 'variant',
+    '[class]': 'variant()',
   },
 })
 export class SpinnerComponent {
-  @Input() variant: StyleVariant = 'secondary';
+  readonly variant = input<StyleVariant>('secondary');
 }

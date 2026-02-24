@@ -2,15 +2,11 @@ import {Account} from '@bim/domain/account';
 import type {TypedResponse} from 'hono';
 import {Hono} from 'hono';
 
-import {z} from 'zod';
 import type {AppContext} from '../../../app-context';
 import {type ApiErrorResponse, handleDomainError} from '../../../errors';
 import type {AuthenticatedHono} from '../../../types.js';
+import {GetTransactionsQuerySchema, SetDescriptionSchema} from './transaction.schemas';
 import type {DeleteDescriptionResponse, GetTransactionsResponse, SetDescriptionResponse} from './transaction.types';
-
-const SetDescriptionSchema = z.object({
-  description: z.string().min(1).max(100),
-});
 
 // =============================================================================
 // Routes
@@ -31,11 +27,10 @@ export function createTransactionRoutes(appContext: AppContext): AuthenticatedHo
     try {
       const account: Account = honoCtx.get('account');
 
-      // Parse pagination parameters
-      const limitParam = honoCtx.req.query('limit');
-      const offsetParam = honoCtx.req.query('offset');
-      const limit = limitParam ? Number.parseInt(limitParam, 10) : 10;
-      const offset = offsetParam ? Number.parseInt(offsetParam, 10) : 0;
+      const {limit, offset} = GetTransactionsQuerySchema.parse({
+        limit: honoCtx.req.query('limit'),
+        offset: honoCtx.req.query('offset'),
+      });
 
       const result = await transactionService.fetchForAccount({
         accountId: account.id,

@@ -6,6 +6,7 @@ import type {AppContext} from '../../app-context';
 import {type ApiErrorResponse, createErrorResponse, ErrorCode, handleDomainError} from '../../errors';
 import {createAuthMiddleware} from '../../middleware/auth.middleware';
 import type {AuthenticatedHono} from '../../types.js';
+import {DeployAccountSchema} from './account.schemas';
 import type {
   DeployAccountRequest,
   DeployAccountResponse,
@@ -51,8 +52,8 @@ export function createAccountRoutes(appCtx: AppContext): AuthenticatedHono {
   app.post('/deploy', async (honoCtx): Promise<TypedResponse<DeployAccountResponse | ApiErrorResponse>> => {
     try {
       const account: Account = honoCtx.get('account');
-      const body: DeployAccountRequest = await honoCtx.req.json().catch(() => ({}));
-      const sync = body.sync === true;
+      const body = DeployAccountSchema.parse(await honoCtx.req.json().catch(() => ({})));
+      const sync = body.sync;
 
       const result = await accountService.deploy({
         accountId: AccountId.of(account.id),

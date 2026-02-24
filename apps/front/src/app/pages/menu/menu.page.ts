@@ -1,4 +1,4 @@
-import {Component} from '@angular/core';
+import {Component, inject} from '@angular/core';
 import {Router} from '@angular/router';
 import {TranslateModule} from '@ngx-translate/core';
 import {GoBackHeaderComponent} from '../../components/go-back-header/go-back-header.component';
@@ -13,10 +13,8 @@ import {AuthService} from '../../services/auth.service';
   styleUrl: './menu.page.scss',
 })
 export class MenuPage {
-  constructor(
-    private readonly router: Router,
-    private readonly authService: AuthService
-  ) {}
+  private readonly router = inject(Router);
+  private readonly authService = inject(AuthService);
 
   navigateToMyAccount(): void {
     this.router.navigate(['/my-account']);

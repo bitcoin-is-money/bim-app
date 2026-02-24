@@ -11,7 +11,8 @@
           <select
             id="language-select"
             class="language-select"
-            [(ngModel)]="currentLanguage"
+            [ngModel]="currentLanguage()"
+            (ngModelChange)="onLanguageChange($event)"
           >
             @for (lang of languages; track lang.code) {
               <option [value]="lang.code">

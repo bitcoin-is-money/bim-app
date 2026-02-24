@@ -1,5 +1,4 @@
 import {computed, inject, Injectable, signal} from '@angular/core';
-import {delay} from 'rxjs';
 import {TransactionHttpService} from './transaction.http.service';
 import type {Transaction} from './transaction.http.service';
 import {CurrencyService} from './currency.service';
@@ -87,7 +86,7 @@ export class TransactionService {
   private loadNext(): void {
     this._isLoadingMore.set(true);
 
-    this.httpService.getTransactions(PAGE_SIZE, this.offset).pipe(delay(2000)).subscribe({
+    this.httpService.getTransactions(PAGE_SIZE, this.offset).subscribe({
       next: (response) => {
         const current = this._transactions() ?? [];
         this._transactions.set([...current, ...response.transactions]);
