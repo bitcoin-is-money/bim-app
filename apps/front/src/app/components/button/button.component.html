@@ -1,20 +1,20 @@
 <button
         type="button"
         class="btn"
-        [class.btn-special]="variant === 'special'"
-        [class.btn-primary]="variant === 'primary'"
-        [class.btn-secondary]="variant === 'secondary'"
-        [class.btn-tertiary]="variant === 'tertiary'"
-        [class.btn-contrast]="variant === 'contrast'"
-        [class.btn-transparent]="variant === 'transparent'"
-        [class.btn-size-lg]="sizeVariant === 'lg'"
-        [class.btn-size-xl]="sizeVariant === 'xl'"
-        [disabled]="disabled"
+        [class.btn-special]="variant() === 'special'"
+        [class.btn-primary]="variant() === 'primary'"
+        [class.btn-secondary]="variant() === 'secondary'"
+        [class.btn-tertiary]="variant() === 'tertiary'"
+        [class.btn-contrast]="variant() === 'contrast'"
+        [class.btn-transparent]="variant() === 'transparent'"
+        [class.btn-size-lg]="sizeVariant() === 'lg'"
+        [class.btn-size-xl]="sizeVariant() === 'xl'"
+        [disabled]="disabled()"
 >
-    @if (loading) {
-        <app-spinner class="btn-spinner" [variant]="variant" aria-hidden="true"/>
-    } @else if (icon) {
-        <fa-icon [icon]="icon" class="btn-icon" aria-hidden="true"/>
+    @if (loading()) {
+        <app-spinner class="btn-spinner" [variant]="variant()" aria-hidden="true"/>
+    } @else if (icon()) {
+        <fa-icon [icon]="icon()!" class="btn-icon" aria-hidden="true"/>
     }
     <span class="btn-label">
     <ng-content></ng-content>

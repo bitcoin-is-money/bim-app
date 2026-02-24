@@ -45,12 +45,7 @@ export class PayConfirmPage {
     if (!balance || !p) {
       return false;
     }
-    const result: boolean = balance.value >= p.amount.value + p.fee.value;
-    if (!result) {
-      console.log('Insufficient balance', balance, p);
-      this.notificationService.error({message: this.i18n.t('payConfirm.insufficientBalance')});
-    }
-    return result;
+    return balance.value >= p.amount.value + p.fee.value;
   });
 
   readonly isProcessing = this.paymentService.isProcessing;
@@ -68,6 +63,10 @@ export class PayConfirmPage {
   }
 
   confirm(): void {
+    if (!this.paymentAvailable()) {
+      this.notificationService.error({message: this.i18n.t('payConfirm.insufficientBalance')});
+      return;
+    }
     this.paymentService.executeAndNavigate();
   }
 }

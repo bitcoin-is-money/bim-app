@@ -553,8 +553,8 @@ export class SwapService {
       swap.markAsConfirming(result.txHash);
       await this.deps.swapRepository.save(swap);
 
-      // Wait for confirmation asynchronously
-      this.waitForClaimConfirmation(swap, result.txHash);
+      // @review-accepted: fire-and-forget intentional — try/catch inside waitForClaimConfirmation
+      void this.waitForClaimConfirmation(swap, result.txHash);
 
       return {swap, txHash: result.txHash};
     } catch (error) {

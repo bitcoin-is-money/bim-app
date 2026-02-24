@@ -40,19 +40,6 @@ function createMockDecoder(overrides?: Partial<ReturnType<LightningDecoder['deco
   };
 }
 
-/**
- * Assert that calling `fn` throws a PaymentParsingError whose cause is an instance of `causeType`.
- */
-function expectParsingErrorWithCause(fn: () => unknown, causeType: new (...args: any[]) => Error): void {
-  try {
-    fn();
-    expect.unreachable('Expected function to throw');
-  } catch (error) {
-    expect(error).toBeInstanceOf(PaymentParsingError);
-    expect((error as PaymentParsingError).cause).toBeInstanceOf(causeType);
-  }
-}
-
 // =============================================================================
 // Tests
 // =============================================================================
@@ -194,35 +181,26 @@ describe('ParseService', () => {
     });
 
     it('throws MissingPaymentAmountError for starknet: URI without amount', () => {
-      expectParsingErrorWithCause(
-        () => service.parse(`starknet:${STARKNET_ADDR}`),
-        MissingPaymentAmountError,
-      );
+      expect(() => service.parse(`starknet:${STARKNET_ADDR}`)).toThrow(MissingPaymentAmountError);
     });
 
     it('throws UnsupportedTokenError when token is absent', () => {
-      expectParsingErrorWithCause(
-        () => service.parse(`starknet:${STARKNET_ADDR}?amount=1000`),
-        UnsupportedTokenError,
-      );
+      expect(() => service.parse(`starknet:${STARKNET_ADDR}?amount=1000`)).toThrow(UnsupportedTokenError);
     });
 
     it('throws UnsupportedTokenError for unsupported token', () => {
       const unknownToken = '0x0000000000000000000000000000000000000000000000000000000000abcdef';
       const uri = `starknet:${STARKNET_ADDR}?amount=1000&token=${unknownToken}`;
-      expectParsingErrorWithCause(() => service.parse(uri), UnsupportedTokenError);
+      expect(() => service.parse(uri)).toThrow(UnsupportedTokenError);
     });
 
     it('throws ValidationError when starknet amount is negative', () => {
       const uri = `starknet:${STARKNET_ADDR}?amount=-100&token=${WBTC_TOKEN_ADDRESS}`;
-      expectParsingErrorWithCause(() => service.parse(uri), ValidationError);
+      expect(() => service.parse(uri)).toThrow(ValidationError);
     });
 
     it('throws InvalidStarknetAddressError for invalid address', () => {
-      expectParsingErrorWithCause(
-        () => service.parse('starknet:not-hex?amount=1000'),
-        InvalidStarknetAddressError,
-      );
+      expect(() => service.parse('starknet:not-hex?amount=1000')).toThrow(InvalidStarknetAddressError);
     });
   });
 
@@ -256,10 +234,7 @@ describe('ParseService', () => {
         logger,
       });
 
-      expectParsingErrorWithCause(
-        () => service.parse(VALID_LIGHTNING_INVOICE),
-        MissingPaymentAmountError,
-      );
+      expect(() => service.parse(VALID_LIGHTNING_INVOICE)).toThrow(MissingPaymentAmountError);
     });
 
     it('throws ValidationError when invoice has negative amount', () => {
@@ -269,10 +244,7 @@ describe('ParseService', () => {
         logger,
       });
 
-      expectParsingErrorWithCause(
-        () => service.parse(VALID_LIGHTNING_INVOICE),
-        ValidationError,
-      );
+      expect(() => service.parse(VALID_LIGHTNING_INVOICE)).toThrow(ValidationError);
     });
   });
 
@@ -323,24 +295,15 @@ describe('ParseService', () => {
     });
 
     it('throws MissingPaymentAmountError for bitcoin: URI without amount', () => {
-      expectParsingErrorWithCause(
-        () => service.parse(`bitcoin:${BTC_BECH32}`),
-        MissingPaymentAmountError,
-      );
+      expect(() => service.parse(`bitcoin:${BTC_BECH32}`)).toThrow(MissingPaymentAmountError);
     });
 
     it('throws ValidationError when bitcoin amount is negative', () => {
-      expectParsingErrorWithCause(
-        () => service.parse(`bitcoin:${BTC_BECH32}?amount=-0.001`),
-        ValidationError,
-      );
+      expect(() => service.parse(`bitcoin:${BTC_BECH32}?amount=-0.001`)).toThrow(ValidationError);
     });
 
     it('throws InvalidBitcoinAddressError for invalid address', () => {
-      expectParsingErrorWithCause(
-        () => service.parse('bitcoin:not-a-valid-address'),
-        InvalidBitcoinAddressError,
-      );
+      expect(() => service.parse('bitcoin:not-a-valid-address')).toThrow(InvalidBitcoinAddressError);
     });
   });
 });

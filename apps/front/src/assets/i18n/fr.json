@@ -181,6 +181,7 @@
     "CHALLENGE_NOT_FOUND": "Défi d'authentification introuvable.",
     "CHALLENGE_EXPIRED": "Le défi d'authentification a expiré. Veuillez réessayer.",
     "CHALLENGE_ALREADY_USED": "Le défi d'authentification a déjà été utilisé.",
+    "INVALID_CHALLENGE": "Défi d'authentification invalide. Veuillez réessayer.",
     "AUTHENTICATION_FAILED": "L'authentification a échoué. Veuillez réessayer.",
     "REGISTRATION_FAILED": "L'inscription a échoué. Veuillez réessayer.",
     "SESSION_NOT_FOUND": "Session introuvable. Veuillez vous connecter.",

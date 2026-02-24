@@ -22,7 +22,7 @@ export class MyAccountPage implements OnInit {
 
   readonly loading = signal(true);
 
-  constructor(private readonly accountService: AccountService) {}
+  private readonly accountService = inject(AccountService);
 
   ngOnInit(): void {
     this.accountService.getAccountInfo().subscribe({

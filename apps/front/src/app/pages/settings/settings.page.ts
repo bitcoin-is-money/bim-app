@@ -29,15 +29,13 @@ export class SettingsPage {
 
   readonly languages = LANGUAGE_OPTIONS;
 
-  get currentLanguage(): Language {
-    return this.i18n.currentLang();
-  }
+  readonly currentLanguage = this.i18n.currentLang;
 
-  set currentLanguage(lang: Language) {
+  onLanguageChange(lang: Language): void {
     this.i18n.setLang(lang);
   }
 
   getSelectedOption(): LanguageOption {
-    return LANGUAGE_OPTIONS.find(l => l.code === this.currentLanguage) ?? LANGUAGE_OPTIONS[0]!;
+    return LANGUAGE_OPTIONS.find(l => l.code === this.currentLanguage()) ?? LANGUAGE_OPTIONS[0]!;
   }
 }

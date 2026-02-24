@@ -57,16 +57,25 @@ export class SwapStorageService {
   }
 
   private loadFromStorage(): void {
+    let swaps: StoredSwap[] = [];
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
-        const parsed = JSON.parse(raw) as StoredSwap[];
-        this.swaps.set(parsed);
+        const parsed: unknown = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          swaps = parsed.filter(
+            (item): item is StoredSwap =>
+              typeof item === 'object' && item !== null
+              && typeof item.id === 'string'
+              && typeof item.lastKnownStatus === 'string'
+              && typeof item.createdAt === 'string',
+          );
+        }
       }
     } catch {
       console.error('Failed to load swaps from localStorage');
-      this.swaps.set([]);
     }
+    this.swaps.set(swaps);
     this.removeOldSwaps();
   }
 

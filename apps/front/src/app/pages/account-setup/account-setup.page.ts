@@ -1,3 +1,4 @@
+import {HttpErrorResponse} from '@angular/common/http';
 import {Component, DestroyRef, inject, OnInit, signal} from '@angular/core';
 import {Router} from '@angular/router';
 import {TranslateModule} from '@ngx-translate/core';
@@ -43,9 +44,9 @@ export class AccountSetupPage implements OnInit {
         // Deployment started, begin polling for status
         this.startPolling();
       },
-      error: (err) => {
+      error: (err: unknown) => {
         // Check if the account is already deploying or deployed (not an error)
-        if (err.status === 400) {
+        if (err instanceof HttpErrorResponse && err.status === 400) {
           // Account may already be deploying, start polling anyway
           this.startPolling();
         } else {

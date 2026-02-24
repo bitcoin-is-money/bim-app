@@ -13,7 +13,6 @@ export class ParsedPayment {
   ) {}
 
   static fromResponse(response: ParsePaymentResponse): ParsedPayment {
-    console.log(response);
     const amount = Amount.of(response.amount.value, response.amount.currency);
     const fee = Amount.of(response.fee.value, response.amount.currency);
 

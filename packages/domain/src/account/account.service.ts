@@ -146,8 +146,8 @@ export class AccountService {
       // Wait for on-chain confirmation before returning
       await this.waitForDeploymentConfirmation(account, txHash);
     } else {
-      // Fire-and-forget: confirm deployment asynchronously
-      this.waitForDeploymentConfirmation(account, txHash);
+      // @review-accepted: fire-and-forget intentional — try/catch inside waitForDeploymentConfirmation
+      void this.waitForDeploymentConfirmation(account, txHash);
     }
 
     return {account, txHash};
@@ -174,7 +174,10 @@ export class AccountService {
       };
     }
 
-    const address: StarknetAddress = account.getStarknetAddress()!;
+    const address = account.getStarknetAddress();
+    if (!address) {
+      throw new InvalidAccountStateError(account.getStatus(), 'get balance', 'deployed account has no starknet address');
+    }
 
     const fetchBalance = async (token: string): Promise<bigint> => {
       try {

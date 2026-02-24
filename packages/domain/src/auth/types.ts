@@ -152,6 +152,12 @@ export class ChallengeAlreadyUsedError extends DomainError {
   }
 }
 
+export class InvalidChallengeError extends DomainError {
+  constructor(readonly challengeId: ChallengeId, readonly reason: string) {
+    super(`Invalid challenge ${challengeId}: ${reason}`);
+  }
+}
+
 export class AuthenticationFailedError extends DomainError {
   constructor(readonly reason: string) {
     super(`Authentication failed: ${reason}`);

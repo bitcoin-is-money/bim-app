@@ -14,6 +14,7 @@ import {
   ChallengeAlreadyUsedError,
   ChallengeExpiredError,
   ChallengeNotFoundError,
+  InvalidChallengeError,
   RegistrationFailedError,
   SessionExpiredError,
   SessionNotFoundError,
@@ -113,6 +114,9 @@ export function handleDomainError(ctx: Context, error: unknown, logger: Logger):
   }
   if (error instanceof ChallengeAlreadyUsedError) {
     return createErrorResponse(ctx, 400, ErrorCode.CHALLENGE_ALREADY_USED, 'Challenge already used');
+  }
+  if (error instanceof InvalidChallengeError) {
+    return createErrorResponse(ctx, 400, ErrorCode.INVALID_CHALLENGE, error.message);
   }
   if (error instanceof AuthenticationFailedError) {
     return createErrorResponse(ctx, 401, ErrorCode.AUTHENTICATION_FAILED, 'Authentication failed');
