@@ -1,0 +1,34 @@
+import {DomainError} from '../shared';
+
+/**
+ * Fiat currency code (ISO 4217).
+ */
+export type FiatCurrency = string & {readonly __brand: 'FiatCurrency'};
+
+export namespace FiatCurrency {
+  const SUPPORTED_CURRENCIES = new Set(['USD', 'EUR', 'GBP', 'CHF', 'JPY', 'CAD', 'AUD']);
+
+  export const DEFAULT: FiatCurrency = 'USD' as FiatCurrency;
+
+  export function of(value: string): FiatCurrency {
+    const normalized = value.trim().toUpperCase();
+    if (!SUPPORTED_CURRENCIES.has(normalized)) {
+      throw new UnsupportedCurrencyError(value);
+    }
+    return normalized as FiatCurrency;
+  }
+
+  export function isSupported(value: string): boolean {
+    return SUPPORTED_CURRENCIES.has(value.trim().toUpperCase());
+  }
+
+  export function getSupportedCurrencies(): readonly string[] {
+    return [...SUPPORTED_CURRENCIES];
+  }
+}
+
+export class UnsupportedCurrencyError extends DomainError {
+  constructor(readonly currency: string) {
+    super(`Unsupported currency: ${currency}. Supported: ${FiatCurrency.getSupportedCurrencies().join(', ')}`);
+  }
+}

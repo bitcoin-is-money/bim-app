@@ -1,11 +1,5 @@
-import {
-  CHALLENGE_DURATION_MS,
-  ChallengeAlreadyUsedError,
-  type ChallengeData,
-  ChallengeExpiredError,
-  ChallengeId,
-  type ChallengePurpose,
-} from './types';
+import {ChallengeAlreadyUsedError, ChallengeExpiredError} from './errors';
+import {CHALLENGE_DURATION_MS, type ChallengeData, ChallengeId, type ChallengePurpose} from './types';
 
 /**
  * Challenge entity representing a WebAuthn challenge for registration or authentication.

@@ -1,4 +1,3 @@
-
 import type {Logger} from 'pino';
 import {AccountId, StarknetAddress} from '../account';
 import type {StarknetGateway, TransactionRepository} from '../ports';
@@ -8,15 +7,9 @@ import {TransactionHash} from '../user/types';
 import type {Erc20CallFactory} from './erc20-call.factory';
 import {FeeCalculator, type FeeConfig} from './fee';
 import type {ParseService} from './parse.service';
-import {
-  type ExecutePaymentInput,
-  InvalidPaymentAmountError,
-  type ParsedPaymentData,
-  type PaymentResult,
-  type PreparedCalls,
-  type PreparedPayment,
-  SameAddressPaymentError,
-} from './types';
+import {InvalidPaymentAmountError, SameAddressPaymentError} from './errors';
+import type {ExecutePaymentInput, PaymentResult, PreparedCalls, PreparedPayment} from './pay.types';
+import type {ParsedPaymentData} from './types';
 
 // =============================================================================
 // Dependencies

@@ -7,13 +7,12 @@ import {Challenge} from './challenge';
 import {Session} from './session';
 import {
   AuthenticationFailedError,
-  ChallengeId,
   ChallengeNotFoundError,
   InvalidChallengeError,
   RegistrationFailedError,
-  type WebAuthnAuthenticationOptions,
-  type WebAuthnRegistrationOptions,
-} from './types';
+} from './errors';
+import {ChallengeId} from './types';
+import type {WebAuthnAuthenticationOptions, WebAuthnRegistrationOptions} from './webauthn.types';
 
 // =============================================================================
 // Dependencies

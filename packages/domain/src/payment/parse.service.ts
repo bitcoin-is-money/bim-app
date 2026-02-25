@@ -5,11 +5,11 @@ import {Amount, DomainError, type StarknetConfig} from '../shared';
 import {BitcoinAddress, LightningInvoice} from '../swap';
 import {
   MissingPaymentAmountError,
-  type ParsedPaymentData,
   PaymentParsingError,
   UnsupportedNetworkError,
   UnsupportedTokenError,
-} from './types';
+} from './errors';
+import type {ParsedPaymentData} from './types';
 
 // =============================================================================
 // Dependencies

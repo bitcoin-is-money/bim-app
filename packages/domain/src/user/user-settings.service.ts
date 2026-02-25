@@ -1,6 +1,8 @@
 import {AccountId} from '../account';
 import type {UserSettingsRepository} from '../ports';
-import {FiatCurrency, Language, UserSettingsId} from './types';
+import {FiatCurrency} from './fiat-currency';
+import {Language} from './language';
+import {UserSettingsId} from './types';
 import {UserSettings} from './user-settings';
 
 // =============================================================================
