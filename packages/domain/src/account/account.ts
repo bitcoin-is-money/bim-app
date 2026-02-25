@@ -1,5 +1,6 @@
 import {InvalidStateTransitionError} from '../shared';
-import {AccountId, type AccountStatus, CredentialId, StarknetAddress,} from './types';
+import {StarknetAddress} from './starknet-address';
+import {AccountId, type AccountStatus, CredentialId} from './types';
 
 /**
  * Account entity representing a user in our application.

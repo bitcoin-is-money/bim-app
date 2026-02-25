@@ -5,40 +5,6 @@ import {DomainError, ValidationError} from '../shared';
 // =============================================================================
 
 /**
- * Username for an Account.
- *
- * Format: 3-20 characters, alphanumeric and underscores only.
- * Example: "john_doe", "alice123"
- */
-export type Username = string & {readonly __brand: 'Username'};
-
-export namespace Username {
-  /** Validation pattern: 3-20 chars, alphanumeric and underscore */
-  export const PATTERN = /^[a-zA-Z0-9_]{3,20}$/;
-
-  /**
-   * Creates a Username from a string.
-   *
-   * @param value - Raw username string
-   * @throws InvalidUsernameError if the format is invalid
-   */
-  export function of(value: string): Username {
-    const trimmed = value.trim();
-    if (!PATTERN.test(trimmed)) {
-      throw new InvalidUsernameError(value);
-    }
-    return trimmed as Username;
-  }
-
-  /**
-   * Checks if a string is a valid username without throwing.
-   */
-  export function isValid(value: string): boolean {
-    return PATTERN.test(value.trim());
-  }
-}
-
-/**
  * Unique identifier for an Account in our database.
  *
  * Format: UUID v4
@@ -72,48 +38,9 @@ export namespace AccountId {
   }
 }
 
-/**
- * Starknet contract address.
- *
- * Format: 0x-prefixed hexadecimal string, normalized to 66 characters (0x + 64 hex).
- * Example: "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7"
- */
-export type StarknetAddress = string & { readonly __brand: 'StarknetAddress' };
-
-export namespace StarknetAddress {
-  const ADDRESS_REGEX = /^0x[a-fA-F0-9]{1,64}$/;
-
-  /** Stark field prime: P = 2^251 + 17 * 2^192 + 1 */
-    const FELT_PRIME = 2n ** 251n + 17n * 2n ** 192n + 1n;
-
-  /**
-   * Creates a StarknetAddress from a hex string.
-   *
-   * @param hexAddress - Hex string with 0x prefix (e.g., "0x049d36...")
-   * @returns Normalized StarknetAddress (lowercase, zero-padded to 66 chars)
-   * @throws InvalidStarknetAddressError if the format is invalid or value >= felt prime
-   */
-  export function of(hexAddress: string): StarknetAddress {
-    const trimmed = hexAddress.trim().toLowerCase();
-    if (!isValid(trimmed)) {
-      throw new InvalidStarknetAddressError(hexAddress);
-    }
-    // Normalize to full 66-character format (0x + 64 hex)
-    const normalized = '0x' + trimmed.slice(2).padStart(64, '0');
-    return normalized as StarknetAddress;
-  }
-
-  /**
-   * Checks if a string is a valid Starknet address.
-   * Must be a 0x-prefixed hex string representing a felt252 (< Stark field prime).
-   */
-  export function isValid(hexAddress: string): boolean {
-    const trimmed = hexAddress.trim();
-    if (!ADDRESS_REGEX.test(trimmed)) {
-      return false;
-    }
-    const value = BigInt(trimmed);
-    return value > 0n && value < FELT_PRIME;
+export class InvalidAccountIdError extends DomainError {
+  constructor(readonly value: string) {
+    super(`Invalid account ID format: ${value}`);
   }
 }
 
@@ -149,59 +76,3 @@ export namespace CredentialId {
 // =============================================================================
 
 export type AccountStatus = 'pending' | 'deploying' | 'deployed' | 'failed';
-
-// =============================================================================
-// Errors
-// =============================================================================
-
-export class InvalidUsernameError extends DomainError {
-  constructor(readonly value: string) {
-    super(
-      `Invalid username: "${value}". Must be 3-20 characters, alphanumeric and underscores only.`,
-    );
-  }
-}
-
-export class InvalidAccountIdError extends DomainError {
-  constructor(readonly value: string) {
-    super(`Invalid account ID format: ${value}`);
-  }
-}
-
-export class InvalidStarknetAddressError extends DomainError {
-  constructor(readonly value: string) {
-    super(`Invalid Starknet address format: ${value}`);
-  }
-}
-
-export class AccountNotFoundError extends DomainError {
-  constructor(readonly accountId: AccountId | string) {
-    super(`Account not found: ${accountId}`);
-  }
-}
-
-export class AccountAlreadyExistsError extends DomainError {
-  constructor(readonly username: string) {
-    super(`Account with username '${username}' already exists`);
-  }
-}
-
-export class AccountDeploymentError extends DomainError {
-  constructor(
-    readonly accountId: AccountId,
-    readonly reason: string,
-  ) {
-    super(`Failed to deploy account ${accountId}: ${reason}`);
-  }
-}
-
-export class InvalidAccountStateError extends DomainError {
-  constructor(
-    readonly currentStatus: AccountStatus,
-    readonly attemptedAction: string,
-    readonly errorDetails?: string
-  ) {
-    const details = errorDetails ? `(${errorDetails})` : '';
-    super(`Cannot ${attemptedAction} with account in '${currentStatus}' status ${details}`);
-  }
-}

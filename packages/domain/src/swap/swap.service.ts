@@ -5,19 +5,10 @@ import type {AtomiqGateway, ClaimResult, StarknetCall, SwapRepository, Transacti
 import {Amount} from '../shared';
 import {TransactionHash} from '../user/types';
 import {Swap} from './swap';
-import {
-  BitcoinAddress,
-  InvalidSwapStateError,
-  LightningInvoice,
-  SwapAmountError,
-  SwapClaimError,
-  SwapCreationError,
-  type SwapDirection,
-  SwapId,
-  type SwapLimits,
-  SwapNotFoundError,
-  type SwapStatus,
-} from './types';
+import {BitcoinAddress} from './bitcoin-address';
+import {InvalidSwapStateError, SwapAmountError, SwapClaimError, SwapCreationError, SwapNotFoundError} from './errors';
+import {LightningInvoice} from './lightning-invoice';
+import {type SwapDirection, SwapId, type SwapLimits, type SwapStatus} from './types';
 
 // =============================================================================
 // Dependencies

@@ -1,4 +1,6 @@
 export * from './types';
+export * from './errors';
+export * from './webauthn.types';
 export * from './challenge';
 export * from './session';
 export {AuthService, type AuthServiceDeps, type WebAuthnConfig} from './auth.service';

@@ -1,16 +1,9 @@
-
 import type {Logger} from 'pino';
 import type {AccountRepository, PaymasterGateway, StarknetGateway} from '../ports';
 import {Account} from './account';
 import {STRKToken, STRKTokenBalance, WBTCToken, WBTCTokenBalance} from './balance';
-import {
-  AccountAlreadyExistsError,
-  AccountId,
-  AccountNotFoundError,
-  CredentialId,
-  InvalidAccountStateError,
-  type StarknetAddress,
-} from './types';
+import {AccountAlreadyExistsError, AccountNotFoundError, InvalidAccountStateError} from './errors';
+import {AccountId, CredentialId} from './types';
 
 // =============================================================================
 // Dependencies

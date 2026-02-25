@@ -1,5 +1,8 @@
-import {StarknetAddress} from '../account';
-import {Amount, DomainError, ValidationError} from '../shared';
+import type {StarknetAddress} from '../account';
+import type {Amount} from '../shared';
+import {ValidationError} from '../shared';
+import type {BitcoinAddress} from './bitcoin-address';
+import type {LightningInvoice} from './lightning-invoice';
 
 // =============================================================================
 // Branded Types
@@ -20,59 +23,6 @@ export namespace SwapId {
 
   export function generate(): SwapId {
     return crypto.randomUUID() as SwapId;
-  }
-}
-
-/**
- * Lightning Network invoice (BOLT11 format).
- * BOLT-11: https://github.com/lightning/bolts/blob/master/11-payment-encoding.md
- */
-export type LightningInvoice = string & { readonly __brand: 'LightningInvoice' };
-
-export namespace LightningInvoice {
-  const INVOICE_REGEX = /^(lnbc|lntb|lnbcrt)[a-z0-9]+$/i;
-
-  export function of(value: string): LightningInvoice {
-    const trimmed = value.trim().toLowerCase();
-    if (!LightningInvoice.isValid(trimmed)) {
-      throw new InvalidLightningInvoiceError(value);
-    }
-    return trimmed as LightningInvoice;
-  }
-
-  export function isValid(value: string): boolean {
-    return INVOICE_REGEX.test(value.trim());
-  }
-}
-
-/**
- * Bitcoin address (supports Bech32 and legacy formats).
- */
-export type BitcoinAddress = string & { readonly __brand: 'BitcoinAddress' };
-
-export namespace BitcoinAddress {
-  // Bech32 mainnet (bc1) and testnet (tb1)
-  const BECH32_REGEX = /^(bc1|tb1)[a-z0-9]{39,87}$/i;
-  // Legacy P2PKH and P2SH
-  const LEGACY_REGEX = /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/;
-  // Testnet legacy
-  const TESTNET_LEGACY_REGEX = /^[mn2][a-km-zA-HJ-NP-Z1-9]{25,34}$/;
-
-  export function of(value: string): BitcoinAddress {
-    const trimmed = value.trim();
-    if (!BitcoinAddress.isValid(trimmed)) {
-      throw new InvalidBitcoinAddressError(value);
-    }
-    return trimmed as BitcoinAddress;
-  }
-
-  export function isValid(value: string): boolean {
-    const trimmed = value.trim();
-    return (
-      BECH32_REGEX.test(trimmed) ||
-      LEGACY_REGEX.test(trimmed) ||
-      TESTNET_LEGACY_REGEX.test(trimmed)
-    );
   }
 }
 
@@ -187,66 +137,4 @@ export interface SwapLimits {
   minSats: bigint;
   maxSats: bigint;
   feePercent: number;
-}
-
-// =============================================================================
-// Errors
-// =============================================================================
-
-export class InvalidLightningInvoiceError extends DomainError {
-  constructor(readonly value: string) {
-    super(`Invalid Lightning invoice format: ${value.substring(0, 20)}...`);
-  }
-}
-
-export class InvalidBitcoinAddressError extends DomainError {
-  constructor(readonly value: string) {
-    super(`Invalid Bitcoin address format: ${value}`);
-  }
-}
-
-export class SwapNotFoundError extends DomainError {
-  constructor(readonly swapId: SwapId | string) {
-    super(`Swap not found: ${swapId}`);
-  }
-}
-
-export class SwapExpiredError extends DomainError {
-  constructor(readonly swapId: SwapId) {
-    super(`Swap expired: ${swapId}`);
-  }
-}
-
-export class InvalidSwapStateError extends DomainError {
-  constructor(
-    readonly currentStatus: SwapStatus,
-    readonly attemptedAction: string,
-  ) {
-    super(`Cannot ${attemptedAction} swap in '${currentStatus}' status`);
-  }
-}
-
-export class SwapAmountError extends DomainError {
-  constructor(
-    readonly amount: Amount,
-    readonly min: Amount,
-    readonly max: Amount,
-  ) {
-    super(`Amount ${amount.getSat()} sats is outside limits [${min.getSat()}, ${max.getSat()}]`);
-  }
-}
-
-export class SwapCreationError extends DomainError {
-  constructor(readonly reason: string) {
-    super(`Failed to create swap: ${reason}`);
-  }
-}
-
-export class SwapClaimError extends DomainError {
-  constructor(
-    readonly swapId: SwapId,
-    readonly reason: string,
-  ) {
-    super(`Failed to claim swap ${swapId}: ${reason}`);
-  }
 }

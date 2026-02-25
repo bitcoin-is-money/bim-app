@@ -1,5 +1,6 @@
 import {AccountId} from '../account';
-import {SESSION_DURATION_MS, type SessionData, SessionExpiredError, SessionId,} from './types';
+import {SessionExpiredError} from './errors';
+import {SESSION_DURATION_MS, type SessionData, SessionId} from './types';
 
 /**
  * Session entity representing an authenticated user session.
