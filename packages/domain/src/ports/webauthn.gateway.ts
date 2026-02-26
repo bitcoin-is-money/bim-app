@@ -54,7 +54,7 @@ export interface VerifyAuthenticationParams {
   storedCredential: {
     credentialId: Base64URLString;
     publicKey: string;
-    credentialPublicKey?: string;
+    credentialPublicKey: string | undefined;
     signCount: number;
   };
 }

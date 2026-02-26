@@ -36,7 +36,8 @@ export function createPayRoutes(appContext: AppContext): AuthenticatedHono {
 
       const prepared = payService.prepare(paymentPayload);
 
-      return honoCtx.json<PreparedPaymentResponse>(serializePreparedPayment(prepared));
+      const response = serializePreparedPayment(prepared);
+      return honoCtx.json(response) as TypedResponse<PreparedPaymentResponse>;
     } catch (error) {
       return handleDomainError(honoCtx, error, log);
     }
@@ -58,7 +59,8 @@ export function createPayRoutes(appContext: AppContext): AuthenticatedHono {
       }
 
       // 1. Prepare calls (parse + create swap if needed)
-      const preparedCalls = await payService.prepareCalls(input.paymentPayload, senderAddress);
+      const description = input.description || 'Sent';
+      const preparedCalls = await payService.prepareCalls(input.paymentPayload, senderAddress, account.id, description);
 
       // 2. Build typed data via AVNU paymaster
       const {typedData, messageHash} = await appContext.gateways.starknet.buildCalls({
@@ -73,19 +75,20 @@ export function createPayRoutes(appContext: AppContext): AuthenticatedHono {
         typedData,
         senderAddress,
         accountId: account.id,
-        description: input.description,
+        description,
         createdAt: Date.now(),
       });
 
       // 4. Return challenge + payment info for display
       const prepared = payService.prepare(input.paymentPayload);
 
-      return honoCtx.json<BuildPaymentResponse>({
+      const response: BuildPaymentResponse = {
         buildId,
         messageHash,
         credentialId: account.credentialId,
         payment: serializePreparedPayment(prepared),
-      });
+      };
+      return honoCtx.json(response) as TypedResponse<BuildPaymentResponse>;
     } catch (error) {
       return handleDomainError(honoCtx, error, log);
     }
@@ -194,13 +197,15 @@ function serializePreparedPayment(prepared: PreparedPayment): PreparedPaymentRes
   };
 
   switch (prepared.network) {
-    case 'lightning':
+    case 'lightning': {
+      const expiresAt = prepared.expiresAt?.toISOString();
       return {
         network: 'lightning',
         ...base,
         invoice: prepared.invoice.toString(),
-        expiresAt: prepared.expiresAt?.toISOString(),
+        ...(expiresAt !== undefined && {expiresAt}),
       };
+    }
     case 'bitcoin':
       return {network: 'bitcoin', ...base, address: prepared.address.toString()};
     case 'starknet':

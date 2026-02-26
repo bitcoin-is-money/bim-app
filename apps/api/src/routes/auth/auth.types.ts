@@ -9,7 +9,7 @@ export interface BeginRegistrationResponse {
     rpName: string;
     userId: string;
     userName: string;
-    timeout?: number;
+    timeoutMs: number;
   };
   challengeId: string;
   accountId: string; // Pre-generated account ID - must be passed to completeRegistration
@@ -38,8 +38,8 @@ export interface BeginAuthenticationResponse {
       id: string;
       type: 'public-key';
     }>;
-    timeout?: number;
-    userVerification?: 'required' | 'preferred' | 'discouraged';
+    timeoutMs: number;
+    userVerification: 'required' | 'preferred' | 'discouraged';
   };
   challengeId: string;
 }

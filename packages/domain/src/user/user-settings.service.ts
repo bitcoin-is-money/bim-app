@@ -25,11 +25,14 @@ export interface FetchUserSettingsOutput {
   settings: UserSettings;
 }
 
-export interface UpdateUserSettingsInput {
-  accountId: string;
-  fiatCurrency?: string;
-  language?: string;
+export interface UserSettingsUpdate {
+  fiatCurrency: string;
+  language: string;
 }
+
+export type UpdateUserSettingsInput = {
+  accountId: string;
+} & Partial<UserSettingsUpdate>;
 
 export interface UpdateUserSettingsOutput {
   settings: UserSettings;
@@ -52,7 +55,8 @@ export class UserSettingsService {
   async fetch(input: FetchUserSettingsInput): Promise<FetchUserSettingsOutput> {
     const accountId = AccountId.of(input.accountId);
 
-    let settings = await this.deps.userSettingsRepository.findByAccountId(accountId);
+    let settings = await this.deps.userSettingsRepository
+      .findByAccountId(accountId);
 
     if (!settings) {
       // Create default settings
@@ -73,7 +77,8 @@ export class UserSettingsService {
   async update(input: UpdateUserSettingsInput): Promise<UpdateUserSettingsOutput> {
     const accountId = AccountId.of(input.accountId);
 
-    let settings = await this.deps.userSettingsRepository.findByAccountId(accountId);
+    let settings = await this.deps.userSettingsRepository
+      .findByAccountId(accountId);
 
     if (!settings) {
       // Create settings if they don't exist

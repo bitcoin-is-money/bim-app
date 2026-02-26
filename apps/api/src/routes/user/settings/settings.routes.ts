@@ -50,10 +50,12 @@ export function createSettingsRoutes(appContext: AppContext): AuthenticatedHono 
       const account: Account = honoCtx.get('account');
       const body = UpdateSettingsSchema.parse(await honoCtx.req.json());
 
+      const language = body.language;
+      const fiatCurrency = body.fiatCurrency;
       const result = await userSettingsService.update({
         accountId: account.id,
-        language: body.language,
-        fiatCurrency: body.fiatCurrency,
+        ...(language !== undefined && {language}),
+        ...(fiatCurrency !== undefined && {fiatCurrency}),
       });
 
       return honoCtx.json<UpdateSettingsResponse>({

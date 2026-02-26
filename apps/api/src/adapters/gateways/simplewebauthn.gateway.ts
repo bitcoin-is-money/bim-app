@@ -9,7 +9,24 @@ import {type Uint8Array_, verifyAuthenticationResponse, verifyRegistrationRespon
 import {cose, decodeCredentialPublicKey,} from '@simplewebauthn/server/helpers';
 
 import type {Logger} from "pino";
-import type {WebAuthnConfig} from '../../app-config';
+
+/**
+ * WebAuthn authenticator attachment modality.
+ * - 'platform': built-in authenticator (Touch ID, Face ID, Windows Hello)
+ * - 'cross-platform': roaming authenticator (YubiKey, phone via QR)
+ */
+export type AuthenticatorAttachment = 'platform' | 'cross-platform';
+
+export interface WebAuthnConfig {
+  /** Relying Party identifier — typically the domain name (e.g. 'localhost', 'bim.app') */
+  rpId: string;
+  /** Human-readable Relying Party name shown during registration prompts */
+  rpName: string;
+  /** Expected origin for credential verification (e.g. 'https://bim.app') */
+  origin: string;
+  /** Restricts which authenticator type is accepted; omit to allow both platform and cross-platform */
+  authenticatorAttachment?: AuthenticatorAttachment;
+}
 
 /**
  * SimpleWebAuthn-based implementation of WebAuthnGateway.
@@ -29,6 +46,7 @@ export class SimpleWebAuthnGateway implements WebAuthnGateway {
   ): Promise<RegistrationVerificationResult> {
     this.log.debug({rpId: params.expectedRPID}, 'Verifying WebAuthn registration');
     try {
+      const authenticatorAttachment: AuthenticatorAttachment | undefined = this.config.authenticatorAttachment;
       const verification = await verifyRegistrationResponse({
         response: {
           id: params.credential.id,
@@ -39,7 +57,7 @@ export class SimpleWebAuthnGateway implements WebAuthnGateway {
           },
           type: params.credential.type,
           clientExtensionResults: {},
-          authenticatorAttachment: this.config.authenticatorAttachment,
+          ...(authenticatorAttachment !== undefined && {authenticatorAttachment}),
         },
         expectedChallenge: params.expectedChallenge,
         expectedOrigin: params.expectedOrigin,
@@ -110,7 +128,8 @@ export class SimpleWebAuthnGateway implements WebAuthnGateway {
           newSignCount: 0,
         };
       }
-
+      const userHandle = params.credential.response.userHandle;
+      const authenticatorAttachment= this.config.authenticatorAttachment;
       const verification = await verifyAuthenticationResponse({
         response: {
           id: params.credential.id,
@@ -119,11 +138,11 @@ export class SimpleWebAuthnGateway implements WebAuthnGateway {
             clientDataJSON: params.credential.response.clientDataJSON,
             authenticatorData: params.credential.response.authenticatorData,
             signature: params.credential.response.signature,
-            userHandle: params.credential.response.userHandle,
+            ...(userHandle !== undefined && {userHandle}),
           },
           type: params.credential.type,
           clientExtensionResults: {},
-          authenticatorAttachment: this.config.authenticatorAttachment,
+          ...(authenticatorAttachment !== undefined && {authenticatorAttachment}),
         },
         expectedChallenge: params.expectedChallenge,
         expectedOrigin: params.expectedOrigin,

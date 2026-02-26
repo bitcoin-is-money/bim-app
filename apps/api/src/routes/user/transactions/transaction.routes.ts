@@ -38,24 +38,24 @@ export function createTransactionRoutes(appContext: AppContext): AuthenticatedHo
         offset,
       });
 
-      return honoCtx.json<GetTransactionsResponse>({
+      return honoCtx.json({
         transactions: result.transactions.map((tx) => ({
-          id: tx.id,
-          transactionHash: tx.transactionHash,
-          blockNumber: tx.blockNumber.toString(),
-          type: tx.transactionType,
-          amount: tx.amount,
-          tokenAddress: tx.tokenAddress,
-          fromAddress: tx.fromAddress,
-          toAddress: tx.toAddress,
-          timestamp: tx.timestamp.toISOString(),
-          indexedAt: tx.indexedAt.toISOString(),
-          description: tx.description ?? undefined,
-        })),
+            id: tx.id,
+            transactionHash: tx.transactionHash,
+            blockNumber: tx.blockNumber.toString(),
+            type: tx.transactionType,
+            amount: tx.amount,
+            tokenAddress: tx.tokenAddress,
+            fromAddress: tx.fromAddress,
+            toAddress: tx.toAddress,
+            timestamp: tx.timestamp.toISOString(),
+            indexedAt: tx.indexedAt.toISOString(),
+            description: tx.description,
+          })),
         total: result.total,
         limit,
         offset,
-      });
+      } satisfies GetTransactionsResponse) as TypedResponse<GetTransactionsResponse>;
     } catch (error) {
       return handleDomainError(honoCtx, error, log);
     }

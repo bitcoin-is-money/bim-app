@@ -15,6 +15,8 @@ function createLightningSwap(id: string): Swap {
     destinationAddress: DESTINATION,
     invoice: INVOICE,
     expiresAt: new Date(Date.now() + 30 * 60 * 1000),
+    description: 'Received',
+    accountId: 'account-001',
   });
 }
 

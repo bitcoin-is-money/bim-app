@@ -22,9 +22,11 @@ const logger = createLogger(LOG_LEVEL);
 // =============================================================================
 
 const WBTC_TOKEN_ADDRESS = '0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac';
+const STRK_TOKEN_ADDRESS = '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d';
 const ETH_TOKEN_ADDRESS = '0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7';
 const SENDER_ADDRESS = StarknetAddress.of('0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef');
 const DESTINATION_ADDRESS = StarknetAddress.of('0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef');
+const ACCOUNT_ID = 'account-001';
 const VALID_INVOICE = 'lntb1000n1pjtest0pp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypq';
 const BTC_DEPOSIT_ADDRESS = 'bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4';
 
@@ -43,6 +45,8 @@ function createMockLightningReceiveSwap(): Swap {
     destinationAddress: DESTINATION_ADDRESS,
     invoice: VALID_INVOICE,
     expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+    description: 'Received',
+    accountId: ACCOUNT_ID,
   });
 }
 
@@ -53,6 +57,8 @@ function createMockBitcoinReceiveSwap(): Swap {
     destinationAddress: DESTINATION_ADDRESS,
     depositAddress: BTC_DEPOSIT_ADDRESS,
     expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+    description: 'Received',
+    accountId: ACCOUNT_ID,
   });
 }
 
@@ -95,7 +101,7 @@ describe('ReceiveService', () => {
 
     service = new ReceiveService({
       swapService: mockSwapService,
-      starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS},
+      starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS, strkTokenAddress: STRK_TOKEN_ADDRESS},
       logger: logger,
     });
   });
@@ -111,6 +117,8 @@ describe('ReceiveService', () => {
           network: 'lightning',
           destinationAddress: DESTINATION_ADDRESS,
           amount: Amount.zero(),
+          accountId: ACCOUNT_ID,
+          description: 'Received',
           useUriPrefix: true,
         }),
       ).rejects.toThrow(InvalidPaymentAmountError);
@@ -121,6 +129,8 @@ describe('ReceiveService', () => {
         service.receive({
           network: 'lightning',
           destinationAddress: DESTINATION_ADDRESS,
+          accountId: ACCOUNT_ID,
+          description: 'Received',
           useUriPrefix: true,
         }),
       ).rejects.toThrow(InvalidPaymentAmountError);
@@ -137,6 +147,8 @@ describe('ReceiveService', () => {
         network: 'starknet',
         destinationAddress: SENDER_ADDRESS,
         amount: Amount.ofSatoshi(50_000n),
+        accountId: ACCOUNT_ID,
+        description: 'Received',
         useUriPrefix: true,
       });
 
@@ -152,6 +164,8 @@ describe('ReceiveService', () => {
         destinationAddress: SENDER_ADDRESS,
         amount: Amount.ofSatoshi(1_000n),
         tokenAddress: ETH_TOKEN_ADDRESS,
+        accountId: ACCOUNT_ID,
+        description: 'Received',
         useUriPrefix: true,
       });
 
@@ -164,6 +178,8 @@ describe('ReceiveService', () => {
         network: 'starknet',
         destinationAddress: SENDER_ADDRESS,
         amount: Amount.ofSatoshi(50_000n),
+        accountId: ACCOUNT_ID,
+        description: 'Received',
         useUriPrefix: false,
       });
 
@@ -176,6 +192,8 @@ describe('ReceiveService', () => {
         network: 'starknet',
         destinationAddress: SENDER_ADDRESS,
         amount: Amount.ofSatoshi(50_000n),
+        accountId: ACCOUNT_ID,
+        description: 'Received',
         useUriPrefix: true,
       });
 
@@ -187,6 +205,8 @@ describe('ReceiveService', () => {
       const result = await service.receive({
         network: 'starknet',
         destinationAddress: SENDER_ADDRESS,
+        accountId: ACCOUNT_ID,
+        description: 'Received',
         useUriPrefix: true,
       });
 
@@ -200,6 +220,8 @@ describe('ReceiveService', () => {
         network: 'starknet',
         destinationAddress: SENDER_ADDRESS,
         amount: Amount.zero(),
+        accountId: ACCOUNT_ID,
+        description: 'Received',
         useUriPrefix: true,
       });
 
@@ -218,12 +240,16 @@ describe('ReceiveService', () => {
         network: 'lightning',
         destinationAddress: DESTINATION_ADDRESS,
         amount: Amount.ofSatoshi(50_000n),
+        accountId: ACCOUNT_ID,
+        description: 'Received',
         useUriPrefix: true,
       });
 
       expect(mockSwapService.createLightningToStarknet).toHaveBeenCalledWith({
         amount: Amount.ofSatoshi(50_000n),
         destinationAddress: DESTINATION_ADDRESS,
+        accountId: ACCOUNT_ID,
+        description: 'Received',
       });
     });
 
@@ -232,6 +258,8 @@ describe('ReceiveService', () => {
         network: 'lightning',
         destinationAddress: DESTINATION_ADDRESS,
         amount: Amount.ofSatoshi(50_000n),
+        accountId: ACCOUNT_ID,
+        description: 'Received',
         useUriPrefix: true,
       });
 
@@ -257,6 +285,8 @@ describe('ReceiveService', () => {
           network: 'lightning',
           destinationAddress: DESTINATION_ADDRESS,
           amount: Amount.ofSatoshi(50_000n),
+          accountId: ACCOUNT_ID,
+          description: 'Received',
           useUriPrefix: true,
         }),
       ).rejects.toThrow(SwapAmountError);
@@ -272,6 +302,8 @@ describe('ReceiveService', () => {
           network: 'lightning',
           destinationAddress: DESTINATION_ADDRESS,
           amount: Amount.ofSatoshi(50_000n),
+          accountId: ACCOUNT_ID,
+          description: 'Received',
           useUriPrefix: true,
         }),
       ).rejects.toThrow(SwapCreationError);
@@ -288,12 +320,16 @@ describe('ReceiveService', () => {
         network: 'bitcoin',
         destinationAddress: DESTINATION_ADDRESS,
         amount: Amount.ofSatoshi(200_000n),
+        accountId: ACCOUNT_ID,
+        description: 'Received',
         useUriPrefix: true,
       });
 
       expect(mockSwapService.prepareBitcoinToStarknet).toHaveBeenCalledWith({
         amount: Amount.ofSatoshi(200_000n),
         destinationAddress: DESTINATION_ADDRESS,
+        accountId: ACCOUNT_ID,
+        description: 'Received',
       });
     });
 
@@ -302,6 +338,8 @@ describe('ReceiveService', () => {
         network: 'bitcoin',
         destinationAddress: DESTINATION_ADDRESS,
         amount: Amount.ofSatoshi(200_000n),
+        accountId: ACCOUNT_ID,
+        description: 'Received',
         useUriPrefix: true,
       });
 
@@ -325,6 +363,8 @@ describe('ReceiveService', () => {
           network: 'bitcoin',
           destinationAddress: DESTINATION_ADDRESS,
           amount: Amount.ofSatoshi(200_000n),
+          accountId: ACCOUNT_ID,
+          description: 'Received',
           useUriPrefix: true,
         }),
       ).rejects.toThrow(SwapCreationError);
@@ -341,6 +381,7 @@ describe('ReceiveService', () => {
         swapId: 'recv-btc-002',
         destinationAddress: DESTINATION_ADDRESS,
         amount: Amount.ofSatoshi(200_000n),
+        description: 'Received',
         accountId: 'account-001',
         useUriPrefix: true,
       });
@@ -349,6 +390,7 @@ describe('ReceiveService', () => {
         swapId: 'recv-btc-002',
         destinationAddress: DESTINATION_ADDRESS,
         amount: Amount.ofSatoshi(200_000n),
+        description: 'Received',
         accountId: 'account-001',
       });
 
@@ -365,6 +407,7 @@ describe('ReceiveService', () => {
         swapId: 'recv-btc-002',
         destinationAddress: DESTINATION_ADDRESS,
         amount: Amount.ofSatoshi(200_000n),
+        description: 'Received',
         accountId: 'account-001',
         useUriPrefix: false,
       });
@@ -377,6 +420,7 @@ describe('ReceiveService', () => {
         swapId: 'recv-btc-002',
         destinationAddress: DESTINATION_ADDRESS,
         amount: Amount.ofSatoshi(200_000n),
+        description: 'Received',
         accountId: 'account-001',
         useUriPrefix: true,
       });
@@ -394,6 +438,7 @@ describe('ReceiveService', () => {
           swapId: 'recv-btc-002',
           destinationAddress: DESTINATION_ADDRESS,
           amount: Amount.ofSatoshi(200_000n),
+          description: 'Received',
           accountId: 'account-001',
           useUriPrefix: true,
         }),

@@ -32,12 +32,8 @@ export function createErrorResponse(
   message: string,
   args?: Record<string, string | number>,
 ): TypedResponse<ApiErrorResponse> {
-  const body: ApiErrorResponse = {
-    error: {
-      code,
-      message,
-      ...(args && {args}),
-    },
-  };
-  return ctx.json(body, status);
+  const error: ApiErrorBody = args
+    ? {code, message, args}
+    : {code, message};
+  return ctx.json({error} satisfies ApiErrorResponse, status) as TypedResponse<ApiErrorResponse>;
 }

@@ -67,10 +67,11 @@ export function toAuthenticationOptions(
   apiResponse: BeginAuthenticationResponse,
   rpId: string,
 ): CredentialRequestOptions {
+  const allowCredentials = apiResponse.options.allowCredentials;
   return {
     challenge: apiResponse.options.challenge,
     rpId,
-    allowCredentials: apiResponse.options.allowCredentials,
+    ...(allowCredentials !== undefined && {allowCredentials}),
     origin: WEBAUTHN_ORIGIN,
   };
 }

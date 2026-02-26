@@ -61,8 +61,8 @@ export interface ChallengeData {
   id: ChallengeId;
   challenge: string;
   purpose: ChallengePurpose;
-  rpId?: string;
-  origin?: string;
+  rpId: string | undefined;
+  origin: string | undefined;
   used: boolean;
   expiresAt: Date;
   createdAt: Date;

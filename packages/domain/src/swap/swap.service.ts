@@ -28,8 +28,8 @@ export interface SwapServiceDeps {
 export interface CreateLightningToStarknetInput {
   amount: Amount;
   destinationAddress: string;
-  description?: string;
-  accountId?: string;
+  description: string;
+  accountId: string;
 }
 
 export interface CreateLightningToStarknetOutput {
@@ -44,8 +44,8 @@ export interface CreateLightningToStarknetOutput {
 export interface CreateBitcoinToStarknetInput {
   amount: Amount;
   destinationAddress: string;
-  description?: string;
-  accountId?: string;
+  description: string;
+  accountId: string;
 }
 
 export interface CreateBitcoinToStarknetOutput {
@@ -57,8 +57,8 @@ export interface CreateBitcoinToStarknetOutput {
 export interface PrepareBitcoinToStarknetInput {
   amount: Amount;
   destinationAddress: string;
-  description?: string;
-  accountId?: string;
+  description: string;
+  accountId: string;
 }
 
 export interface PrepareBitcoinToStarknetOutput {
@@ -72,7 +72,7 @@ export interface CompleteBitcoinToStarknetInput {
   swapId: string;
   destinationAddress: string;
   amount: Amount;
-  description?: string;
+  description: string;
   accountId: string;
 }
 
@@ -89,8 +89,8 @@ export interface CompleteBitcoinToStarknetOutput {
 export interface CreateStarknetToLightningInput {
   invoice: string;
   sourceAddress: string;
-  description?: string;
-  accountId?: string;
+  description: string;
+  accountId: string;
 }
 
 export interface CreateStarknetToLightningOutput {
@@ -107,8 +107,8 @@ export interface CreateStarknetToBitcoinInput {
   amount: Amount;
   destinationAddress: string;
   sourceAddress: string;
-  description?: string;
-  accountId?: string;
+  description: string;
+  accountId: string;
 }
 
 export interface CreateStarknetToBitcoinOutput {
@@ -481,11 +481,12 @@ export class SwapService {
       await this.syncWithAtomiq(swap);
     }
 
+    const txHash = swap.getTxHash();
     return {
       swap,
       status: swap.getStatus(),
       progress: swap.getProgress(),
-      txHash: swap.getTxHash(),
+      ...(txHash !== undefined && {txHash}),
     };
   }
 
@@ -574,12 +575,12 @@ export class SwapService {
   // ===========================================================================
 
   /**
-   * Persists the swap description to the transaction descriptions table if the swap has
-   * a description, an accountId, and a transaction hash.
+   * Persists the swap description to the transaction descriptions table
+   * when the swap has a transaction hash.
    */
-  private async persistDescriptionIfNeeded(swap: Swap): Promise<void> {
+  private async persistDescription(swap: Swap): Promise<void> {
     const txHash = swap.getTxHash();
-    if (swap.description && swap.accountId && txHash) {
+    if (txHash) {
       try {
         await this.deps.transactionRepository.saveDescription(
           TransactionHash.of(txHash),
@@ -618,7 +619,7 @@ export class SwapService {
       if (atomiqStatus.isCompleted) {
         swap.markAsCompleted(atomiqStatus.txHash || 'unknown');
         await this.deps.swapRepository.save(swap);
-        await this.persistDescriptionIfNeeded(swap);
+        await this.persistDescription(swap);
       } else if (atomiqStatus.isPaid) {
         swap.markAsPaid();
         await this.deps.swapRepository.save(swap);
@@ -645,7 +646,7 @@ export class SwapService {
       await this.deps.atomiqGateway.waitForClaimConfirmation(swap.id);
       swap.markAsCompleted(txHash);
       await this.deps.swapRepository.save(swap);
-      await this.persistDescriptionIfNeeded(swap);
+      await this.persistDescription(swap);
     } catch {
       // Don't mark as failed - let the monitor handle the final state
     }

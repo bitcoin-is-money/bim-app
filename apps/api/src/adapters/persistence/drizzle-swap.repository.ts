@@ -30,8 +30,8 @@ export class DrizzleSwapRepository implements SwapRepository {
         sourceAddress: data.sourceAddress ?? null,
         invoice: data.invoice ?? null,
         depositAddress: data.depositAddress ?? null,
-        description: data.description ?? null,
-        accountId: data.accountId ?? null,
+        description: data.description,
+        accountId: data.accountId,
         expiresAt: data.expiresAt,
         createdAt: data.createdAt,
         ...stateColumns,
@@ -166,8 +166,8 @@ export class DrizzleSwapRepository implements SwapRepository {
       depositAddress: record.depositAddress ?? undefined,
       expiresAt: record.expiresAt,
       createdAt: record.createdAt,
-      description: record.description ?? undefined,
-      accountId: record.accountId ?? undefined,
+      description: record.description,
+      accountId: record.accountId,
     });
   }
 }

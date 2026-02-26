@@ -73,7 +73,7 @@ export class PayService {
    *
    * Returns the calls + metadata needed for the execute step.
    */
-  async prepareCalls(paymentPayload: string, senderAddress: StarknetAddress): Promise<PreparedCalls> {
+  async prepareCalls(paymentPayload: string, senderAddress: StarknetAddress, accountId: string, description: string): Promise<PreparedCalls> {
     this.log.info({paymentPayload, senderAddress: senderAddress.toString()}, 'Preparing payment calls');
     const parsed = this.deps.parseService.parse(paymentPayload);
 
@@ -81,9 +81,9 @@ export class PayService {
       case 'starknet':
         return this.prepareStarknetCalls(senderAddress, parsed);
       case 'lightning':
-        return this.prepareLightningCalls(senderAddress, parsed);
+        return this.prepareLightningCalls(senderAddress, parsed, accountId, description);
       case 'bitcoin':
-        return this.prepareBitcoinCalls(senderAddress, parsed);
+        return this.prepareBitcoinCalls(senderAddress, parsed, accountId, description);
     }
   }
 
@@ -118,10 +118,14 @@ export class PayService {
   private async prepareLightningCalls(
     senderAddress: StarknetAddress,
     parsed: Extract<ParsedPaymentData, {network: 'lightning'}>,
+    accountId: string,
+    description: string,
   ): Promise<PreparedCalls> {
     const swapResult = await this.deps.swapService.createStarknetToLightning({
       invoice: parsed.invoice,
       sourceAddress: senderAddress,
+      accountId,
+      description,
     });
 
     const depositAddress = StarknetAddress.of(swapResult.depositAddress);
@@ -145,6 +149,8 @@ export class PayService {
   private async prepareBitcoinCalls(
     senderAddress: StarknetAddress,
     parsed: Extract<ParsedPaymentData, {network: 'bitcoin'}>,
+    accountId: string,
+    description: string,
   ): Promise<PreparedCalls> {
     if (!parsed.amount.isPositive()) {
       throw new InvalidPaymentAmountError('bitcoin', parsed.amount.getSat());
@@ -154,6 +160,8 @@ export class PayService {
       amount: parsed.amount,
       destinationAddress: parsed.address,
       sourceAddress: senderAddress,
+      accountId,
+      description,
     });
 
     const depositAddress = StarknetAddress.of(swapResult.depositAddress);
@@ -181,15 +189,13 @@ export class PayService {
   async savePaymentResult(params: {
     txHash: string;
     accountId: string;
-    description?: string;
+    description: string;
   }): Promise<void> {
-    if (params.description && params.txHash) {
-      await this.deps.transactionRepository.saveDescription(
-        TransactionHash.of(params.txHash),
-        AccountId.of(params.accountId),
-        params.description,
-      );
-    }
+    await this.deps.transactionRepository.saveDescription(
+      TransactionHash.of(params.txHash),
+      AccountId.of(params.accountId),
+      params.description,
+    );
   }
 
   // ===========================================================================
@@ -216,7 +222,7 @@ export class PayService {
         break;
     }
 
-    if (input.description && result.txHash) {
+    if (result.txHash) {
       await this.deps.transactionRepository.saveDescription(
         TransactionHash.of(result.txHash),
         AccountId.of(input.accountId),
@@ -275,6 +281,8 @@ export class PayService {
     const swapResult = await this.deps.swapService.createStarknetToLightning({
       invoice: parsed.invoice,
       sourceAddress: input.senderAddress,
+      accountId: input.accountId,
+      description: input.description,
     });
 
     const depositAddress = StarknetAddress.of(swapResult.depositAddress);
@@ -305,6 +313,8 @@ export class PayService {
       amount: parsed.amount,
       destinationAddress: parsed.address,
       sourceAddress: input.senderAddress,
+      accountId: input.accountId,
+      description: input.description,
     });
 
     const depositAddress = StarknetAddress.of(swapResult.depositAddress);

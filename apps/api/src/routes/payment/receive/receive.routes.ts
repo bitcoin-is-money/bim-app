@@ -45,14 +45,18 @@ export function createReceiveRoutes(appContext: AppContext): AuthenticatedHono {
         return createErrorResponse(honoCtx, 400, ErrorCode.ACCOUNT_NOT_DEPLOYED, 'Account not deployed');
       }
 
-      const amount = input.amount ? Amount.ofSatoshi(BigInt(input.amount)) : undefined;
+      const amount = input.amount
+        ? Amount.ofSatoshi(BigInt(input.amount))
+        : undefined;
+      const tokenAddress = input.tokenAddress;
+      const description = input.description || 'Received';
 
       const result = await receiveService.receive({
         network: input.network,
         destinationAddress: starknetAddress,
-        amount,
-        tokenAddress: input.tokenAddress,
-        description: input.description,
+        ...(amount !== undefined && {amount}),
+        ...(tokenAddress !== undefined && {tokenAddress}),
+        description,
         accountId: account.id,
         useUriPrefix: input.useUriPrefix,
       });
@@ -122,7 +126,7 @@ export function createReceiveRoutes(appContext: AppContext): AuthenticatedHono {
           accountId: account.id,
           amount: result.amount,
           expiresAt: result.expiresAt,
-          description: input.description,
+          description,
           useUriPrefix: input.useUriPrefix,
           createdAt: Date.now(),
         });

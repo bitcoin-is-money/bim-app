@@ -48,14 +48,18 @@ export class ReceiveService {
     this.log.info({network: input.network, amountSats: input.amount?.toSatString()}, 'Creating receive request');
     switch (input.network) {
       case 'starknet':
-        return {network: 'starknet', ...this.receiveStarknet(input.destinationAddress, input.amount, input.tokenAddress, input.useUriPrefix)};
+        return {
+          network: 'starknet',
+          ...this.receiveStarknet(input.destinationAddress, input.amount, input.tokenAddress, input.useUriPrefix)};
       case 'lightning':
-        return {network: 'lightning', ...(await this.receiveLightning(input.destinationAddress, input.amount!, input.description, input.accountId))};
+        return {
+          network: 'lightning',
+          ...(await this.receiveLightning(input.destinationAddress, input.amount!, input.accountId, input.description))};
       case 'bitcoin':
         return {
           network: 'bitcoin',
           status: 'pending_commit' as const,
-          ...(await this.prepareBitcoinReceive(input.destinationAddress, input.amount!, input.description, input.accountId))};
+          ...(await this.prepareBitcoinReceive(input.destinationAddress, input.amount!, input.accountId, input.description))};
     }
   }
 
@@ -79,12 +83,12 @@ export class ReceiveService {
   // Lightning — Lightning → Starknet swap (returns invoice)
   // ===========================================================================
 
-  private async receiveLightning(destinationAddress: StarknetAddress, amount: Amount, description?: string, accountId?: string) {
+  private async receiveLightning(destinationAddress: StarknetAddress, amount: Amount, accountId: string, description: string) {
     const result = await this.deps.swapService.createLightningToStarknet({
       amount,
       destinationAddress,
-      description,
       accountId,
+      description,
     });
 
     return {
@@ -102,14 +106,14 @@ export class ReceiveService {
   private async prepareBitcoinReceive(
     destinationAddress: StarknetAddress,
     amount: Amount,
-    description?: string,
-    accountId?: string
+    accountId: string,
+    description: string,
   ) {
     const result = await this.deps.swapService.prepareBitcoinToStarknet({
       amount,
       destinationAddress,
-      description,
       accountId,
+      description,
     });
 
     return {
@@ -128,7 +132,7 @@ export class ReceiveService {
     swapId: string;
     destinationAddress: StarknetAddress;
     amount: Amount;
-    description?: string;
+    description: string;
     accountId: string;
     useUriPrefix: boolean;
   }): Promise<{network: 'bitcoin'} & BitcoinReceiveResult> {

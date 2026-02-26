@@ -8,7 +8,7 @@ export interface WebAuthnRegistrationOptions {
   rpName: string;
   userId: string;
   userName: string;
-  timeout?: number;
+  timeoutMs: number;
 }
 
 export interface WebAuthnAuthenticationOptions {
@@ -18,8 +18,14 @@ export interface WebAuthnAuthenticationOptions {
     id: string;
     type: 'public-key';
   }>;
-  timeout?: number;
-  userVerification?: 'required' | 'preferred' | 'discouraged';
+  timeoutMs: number;
+  /**
+   * WebAuthn user verification requirement (biometric/PIN prompt).
+   * - 'required': authenticator MUST verify the user (e.g. fingerprint)
+   * - 'preferred': verify if possible, skip if not supported
+   * - 'discouraged': skip verification (faster, less secure)
+   */
+  userVerification: 'required' | 'preferred' | 'discouraged';
 }
 
 export interface WebAuthnRegistrationResponse {

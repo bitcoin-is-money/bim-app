@@ -14,6 +14,7 @@ description: Guide for TypeScript coding conventions. This skill should be used 
 | No direct `as` casts | Branded types via `Type.of()` factory only |
 | Explicit return types | Required on all exported functions |
 | Strict mode | `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes` |
+| Optional field assignment | Extract to a variable, then conditional spread: `const x = getX();` → `...(x !== undefined && {x})` |
 | Collections | Type annotation on left: `const map: Map<K,V> = new Map()` |
 | Runtime validation | Only at external boundaries (API input, DB, env vars) — trust the type system internally |
 | Discriminated unions | Narrow with `if (x.status === 'ok')` before accessing variant fields |
@@ -89,6 +90,13 @@ Route errors via `handleDomainError()` in `apps/api/src/errors/error-handler.ts`
 |---------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Simple one-shot `setTimeout` without `clearTimeout`/cleanup | Short fire-and-forget timers are harmless if the component is destroyed before they fire. Only add cleanup for long-lived or recurring timers (`setInterval`, repeated `setTimeout`). |
 | `console.error` in a silent catch block (frontend only) | When a catch block intentionally swallows an error (no rethrow), `console.error` is acceptable to preserve observability. This applies to frontend code where there is no Pino logger. `console.log` for debugging remains forbidden. |
+
+## Dependencies
+
+| Rule | Detail |
+|------|--------|
+| Prefer libraries over hand-rolled code | Always use a well-maintained library even for small utilities. Do not reinvent the wheel. |
+| Heavy transitive deps | If the library pulls in many transitive dependencies, ask the user before adding it. |
 
 ## Forbidden Patterns
 

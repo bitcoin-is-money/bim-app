@@ -17,7 +17,7 @@ export class Transaction {
     readonly toAddress: StarknetAddress,
     readonly timestamp: Date,
     readonly indexedAt: Date,
-    readonly description: string | undefined,
+    readonly description: string,
   ) {}
 
   /**
@@ -34,7 +34,7 @@ export class Transaction {
     fromAddress: StarknetAddress;
     toAddress: StarknetAddress;
     timestamp: Date;
-    description?: string;
+    description: string;
   }): Transaction {
     return new Transaction(
       params.id,

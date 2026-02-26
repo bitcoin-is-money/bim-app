@@ -14,7 +14,7 @@ export interface TransactionResponse {
   toAddress: string;
   timestamp: string;
   indexedAt: string;
-  description?: string;
+  description: string;
 }
 
 export interface GetTransactionsResponse {

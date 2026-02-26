@@ -35,8 +35,8 @@ export class Swap {
     readonly expiresAt: Date,
     readonly createdAt: Date,
     state: SwapState,
-    readonly description: string | undefined,
-    readonly accountId: string | undefined,
+    readonly description: string,
+    readonly accountId: string,
   ) {
     this.state = state;
   }

@@ -5,6 +5,7 @@
     "moduleResolution": "bundler",
     "esModuleInterop": true,
     "strict": true,
+    "exactOptionalPropertyTypes": true,
     "skipLibCheck": true,
     "declaration": true,
     "declarationMap": true,

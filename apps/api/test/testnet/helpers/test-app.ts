@@ -36,7 +36,7 @@ export namespace TestnetApp {
         app.request(path, {
           method: 'POST',
           headers: {'Content-Type': 'application/json', ...init?.headers},
-          body: body ? JSON.stringify(body) : undefined,
+          body: body ? JSON.stringify(body) : null,
           ...init,
         }),
 
@@ -44,7 +44,7 @@ export namespace TestnetApp {
         app.request(path, {
           method: 'PUT',
           headers: {'Content-Type': 'application/json', ...init?.headers},
-          body: body ? JSON.stringify(body) : undefined,
+          body: body ? JSON.stringify(body) : null,
           ...init,
         }),
 

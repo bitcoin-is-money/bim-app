@@ -3,22 +3,7 @@ import * as schema from '@bim/db';
 import {redactUrl} from '@bim/lib/url';
 import type {DatabaseConfig} from '@bim/db/connection';
 import {getTableName} from 'drizzle-orm';
-
-export type AuthenticatorAttachment = 'platform' | 'cross-platform';
-
-export interface WebAuthnConfig {
-  rpId: string;
-  rpName: string;
-  origin: string;
-  authenticatorAttachment?: AuthenticatorAttachment;
-}
-
-export interface AtomiqConfig {
-  storagePath: string;
-  createIfNotExists: boolean;
-  intermediaryUrl?: string;
-  swapToken: string;
-}
+import type {AtomiqGatewayConfig, AuthenticatorAttachment, WebAuthnConfig} from './adapters';
 
 export namespace AppConfig {
 
@@ -35,7 +20,7 @@ export namespace AppConfig {
     avnuApiKey: string;
     avnuSwapApiUrl: string;
     feeTreasuryAddress: string;
-    atomiq: AtomiqConfig;
+    atomiq: AtomiqGatewayConfig;
     webauthn: WebAuthnConfig;
     logLevel: string;
   }
@@ -61,6 +46,9 @@ export namespace AppConfig {
       throw new Error(`Invalid STARKNET_NETWORK: ${starknetNetwork}. Must be 'mainnet', 'testnet', or 'devnet'.`);
     }
 
+    const starknetRpcUrl = required('STARKNET_RPC_URL');
+    const authenticatorAttachment = parseAuthenticatorAttachment(process.env.WEBAUTHN_AUTHENTICATOR_ATTACHMENT);
+
     return {
       appVersion: optional('APP_VERSION', 'dev'),
       port: Number.parseInt(optional('PORT', '8080'), 10),
@@ -70,7 +58,7 @@ export namespace AppConfig {
         url: required('DATABASE_URL'),
         startupRequiredTable: schema.accounts,
       },
-      starknetRpcUrl: required('STARKNET_RPC_URL'),
+      starknetRpcUrl,
       accountClassHash: required('ACCOUNT_CLASS_HASH'),
       wbtcTokenAddress: required('WBTC_TOKEN_ADDRESS'),
       avnuApiUrl: optional('AVNU_API_URL', 'https://starknet.paymaster.avnu.fi'),
@@ -79,13 +67,13 @@ export namespace AppConfig {
         starknetNetwork === 'mainnet'
           ? 'https://starknet.api.avnu.fi'
           : 'https://sepolia.api.avnu.fi'),
-      atomiq: loadAtomiqConfig(required, optional),
+      atomiq: loadAtomiqConfig(required, optional, starknetNetwork, starknetRpcUrl),
       feeTreasuryAddress: required('FEE_TREASURY_ADDRESS'),
       webauthn: {
         rpId: optional('WEBAUTHN_RP_ID', 'localhost'),
         rpName: optional('WEBAUTHN_RP_NAME', 'BIM'),
         origin: optional('WEBAUTHN_ORIGIN', 'http://localhost:8080'),
-        authenticatorAttachment: parseAuthenticatorAttachment(process.env.WEBAUTHN_AUTHENTICATOR_ATTACHMENT),
+        ...(authenticatorAttachment !== undefined && {authenticatorAttachment}),
       },
       logLevel: optional('LOG_LEVEL', 'debug'),
     };
@@ -94,9 +82,11 @@ export namespace AppConfig {
   function loadAtomiqConfig(
     required: (name: string) => string,
     optional: (name: string, defaultValue: string) => string,
-  ): AtomiqConfig {
+    starknetNetwork: 'mainnet' | 'testnet' | 'devnet',
+    starknetRpcUrl: string,
+  ): AtomiqGatewayConfig {
     const storagePath = required('ATOMIQ_STORAGE_PATH');
-    const createIfNotExists = optional('ATOMIQ_AUTO_CREATE_STORAGE', 'false') === 'true';
+    const autoCreateStorage = optional('ATOMIQ_AUTO_CREATE_STORAGE', 'false') === 'true';
 
     let exists = false;
     try {
@@ -107,7 +97,7 @@ export namespace AppConfig {
     }
 
     if (!exists) {
-      if (!createIfNotExists) {
+      if (!autoCreateStorage) {
         throw new Error(`ATOMIQ_STORAGE_PATH does not exist: ${storagePath}. Set ATOMIQ_AUTO_CREATE_STORAGE=true to create it automatically.`);
       }
       mkdirSync(storagePath, {recursive: true});
@@ -122,7 +112,14 @@ export namespace AppConfig {
     const intermediaryUrl = process.env.ATOMIQ_INTERMEDIARY_URL || undefined;
     const swapToken = required('ATOMIQ_SWAP_TOKEN');
 
-    return {storagePath, createIfNotExists: createIfNotExists, intermediaryUrl, swapToken};
+    return {
+      network: starknetNetwork === 'mainnet' ? 'mainnet' : 'testnet',
+      starknetRpcUrl,
+      storagePath,
+      swapToken,
+      ...(autoCreateStorage !== undefined && {autoCreateStorage}),
+      ...(intermediaryUrl !== undefined && {intermediaryUrl}),
+    };
   }
 
   function parseAuthenticatorAttachment(value: string | undefined): AuthenticatorAttachment | undefined {
@@ -143,7 +140,7 @@ export namespace AppConfig {
       database: {
         ...config.database,
         url: redactUrl(config.database.url!),
-        ...(config.database.startupRequiredTable && {
+        ...(config.database.startupRequiredTable !== undefined && {
           startupRequiredTable: getTableName(config.database.startupRequiredTable)
         })
       },

@@ -5,7 +5,7 @@ import type {StyleConfig} from './style';
 type PrettyOptions = PinoPretty.PrettyOptions;
 type LevelPrettifier = Exclude<PrettyOptions['customPrettifiers'], undefined>['level'] & Function;
 
-export function createMessageFormat(style: StyleConfig): PrettyOptions['messageFormat'] {
+export function createMessageFormat(style: StyleConfig): NonNullable<PrettyOptions['messageFormat']> {
   return (log, messageKey) => {
     const msg = String(log[messageKey]);
     const name: string = log['name']
