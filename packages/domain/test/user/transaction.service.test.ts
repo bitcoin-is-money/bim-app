@@ -39,6 +39,7 @@ describe('TransactionService', () => {
         fromAddress: StarknetAddress.of('0x0222222222222222222222222222222222222222222222222222222222222222'),
         toAddress: StarknetAddress.of('0x0111111111111111111111111111111111111111111111111111111111111111'),
         timestamp: new Date(),
+        description: 'Received',
       });
 
       vi.mocked(mockTransactionRepo.findByAccountId).mockResolvedValue([tx]);

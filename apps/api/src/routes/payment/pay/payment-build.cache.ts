@@ -13,8 +13,8 @@ export interface PaymentBuildData {
   senderAddress: StarknetAddress;
   /** The account ID (for saving transaction description) */
   accountId: string;
-  /** Optional payment description */
-  description?: string;
+  /** Payment description (user-provided or empty) */
+  description: string;
   /** When this build was created */
   createdAt: number;
 }

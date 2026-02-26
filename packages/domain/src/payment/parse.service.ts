@@ -80,12 +80,13 @@ export class ParseService {
     }
 
     const amount = Amount.ofMilliSatoshi(decoded.amountMSat);
+    const expiresAt = decoded.expiresAt;
     return {
       network: 'lightning',
       invoice: lightningInvoice,
       amount,
       description: decoded.description ?? '',
-      expiresAt: decoded.expiresAt,
+      ...(expiresAt !== undefined && {expiresAt}),
     };
   }
 

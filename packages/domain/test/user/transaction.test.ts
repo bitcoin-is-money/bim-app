@@ -23,6 +23,7 @@ describe('Transaction', () => {
         fromAddress,
         toAddress,
         timestamp: new Date('2024-01-15T12:00:00Z'),
+        description: 'Received',
       });
 
       expect(tx.id).toBe(transactionId);
@@ -47,6 +48,7 @@ describe('Transaction', () => {
         fromAddress,
         toAddress,
         timestamp: new Date('2024-01-15T12:00:00Z'),
+        description: 'Sent',
       });
 
       expect(tx.transactionType).toBe('spent');
@@ -67,6 +69,7 @@ describe('Transaction', () => {
         fromAddress,
         toAddress,
         timestamp: new Date('2024-01-15T12:00:00Z'),
+        description: 'Received',
       });
       const after = new Date();
 
@@ -92,7 +95,7 @@ describe('Transaction', () => {
       expect(tx.description).toBe('Coffee payment');
     });
 
-    it('creates transaction without description', () => {
+    it('creates transaction with empty description', () => {
       const tx = Transaction.create({
         id: transactionId,
         accountId,
@@ -104,39 +107,15 @@ describe('Transaction', () => {
         fromAddress,
         toAddress,
         timestamp: new Date('2024-01-15T12:00:00Z'),
+        description: '',
       });
 
-      expect(tx.description).toBeUndefined();
+      expect(tx.description).toBe('');
     });
   });
 
   describe('fromData', () => {
-    it('reconstitutes transaction from persisted data', () => {
-      const data = {
-        id: transactionId,
-        accountId,
-        transactionHash,
-        blockNumber: 99999n,
-        transactionType: 'spent' as const,
-        amount: '123456789',
-        tokenAddress,
-        fromAddress,
-        toAddress,
-        timestamp: new Date('2024-02-01T10:00:00Z'),
-        indexedAt: new Date('2024-02-01T10:05:00Z'),
-      };
-
-      const tx = Transaction.fromData(data);
-
-      expect(tx.id).toBe(transactionId);
-      expect(tx.blockNumber).toBe(99999n);
-      expect(tx.amount).toBe('123456789');
-      expect(tx.timestamp).toEqual(data.timestamp);
-      expect(tx.indexedAt).toEqual(data.indexedAt);
-      expect(tx.description).toBeUndefined();
-    });
-
-    it('reconstitutes transaction with description', () => {
+    it('reconstitutes transaction from persisted data with description', () => {
       const data = {
         id: transactionId,
         accountId,
@@ -154,8 +133,14 @@ describe('Transaction', () => {
 
       const tx = Transaction.fromData(data);
 
+      expect(tx.id).toBe(transactionId);
+      expect(tx.blockNumber).toBe(99999n);
+      expect(tx.amount).toBe('123456789');
+      expect(tx.timestamp).toEqual(data.timestamp);
+      expect(tx.indexedAt).toEqual(data.indexedAt);
       expect(tx.description).toBe('Rent');
     });
+
   });
 
   describe('toData', () => {
@@ -172,6 +157,7 @@ describe('Transaction', () => {
         fromAddress,
         toAddress,
         timestamp,
+        description: 'Received',
       });
 
       const data = tx.toData();
@@ -187,7 +173,7 @@ describe('Transaction', () => {
       expect(data.toAddress).toBe(toAddress);
       expect(data.timestamp).toEqual(timestamp);
       expect(data.indexedAt).toBeDefined();
-      expect(data.description).toBeUndefined();
+      expect(data.description).toBe('Received');
     });
 
     it('exports description when set', () => {

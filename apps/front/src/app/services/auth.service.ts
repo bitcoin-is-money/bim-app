@@ -248,7 +248,7 @@ export class AuthService {
         id: Base64Url.decode(cred.id),
         type: cred.type as PublicKeyCredentialType,
       })),
-      timeout: options.timeout || 60000,
+      timeout: options.timeoutMs,
       userVerification: (options.userVerification as UserVerificationRequirement) || 'required',
     } as PublicKeyCredentialRequestOptions;
   }
@@ -269,7 +269,7 @@ export class AuthService {
         { alg: -7, type: 'public-key' }, // ES256
         { alg: -257, type: 'public-key' }, // RS256
       ],
-      timeout: options.timeout || 60000,
+      timeout: options.timeoutMs,
       attestation: 'none',
       authenticatorSelection: {
         authenticatorAttachment: 'platform',

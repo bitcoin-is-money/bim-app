@@ -112,8 +112,8 @@ export const swaps = pgTable('bim_swaps', {
   sourceAddress: text('source_address'),
   invoice: text('invoice'),
   depositAddress: text('deposit_address'),
-  description: text('description'),
-  accountId: text('account_id'),
+  description: text('description').notNull(),
+  accountId: text('account_id').notNull(),
 
   // Swap state (flat columns)
   status: text('status').notNull().default('pending'),

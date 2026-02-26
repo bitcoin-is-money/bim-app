@@ -112,7 +112,7 @@ export interface CredentialRequestOptions {
  */
 export class WebauthnVirtualAuthenticator {
   private readonly credentials: Map<string, StoredCredential> = new Map();
-  private readonly signer?: P256Signer;
+  private readonly signer: P256Signer | undefined;
 
   // AAGUID for our virtual authenticator (all zeros = no attestation)
   private static readonly AAGUID = new Uint8Array(16);

@@ -49,7 +49,7 @@ export interface ExecutePaymentInput {
   paymentPayload: string;
   senderAddress: StarknetAddress;
   accountId: string;
-  description?: string;
+  description: string;
 }
 
 // =============================================================================

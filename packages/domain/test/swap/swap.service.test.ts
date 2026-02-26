@@ -10,6 +10,7 @@ const logger = createLogger(LOG_LEVEL);
 
 const DESTINATION_ADDRESS = StarknetAddress.of('0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef');
 const VALID_INVOICE = 'lntb1000n1pjtest0pp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypq';
+const ACCOUNT_ID = 'account-001';
 
 function createPendingLightningSwap(id = 'swap-001'): Swap {
   return Swap.createLightningToStarknet({
@@ -18,6 +19,8 @@ function createPendingLightningSwap(id = 'swap-001'): Swap {
     destinationAddress: DESTINATION_ADDRESS,
     invoice: VALID_INVOICE,
     expiresAt: new Date(Date.now() + 30 * 60 * 1000),
+    description: 'Received',
+    accountId: ACCOUNT_ID,
   });
 }
 
@@ -28,6 +31,8 @@ function createPendingBitcoinSwap(id = 'swap-btc-001'): Swap {
     destinationAddress: DESTINATION_ADDRESS,
     depositAddress: 'bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4',
     expiresAt: new Date(Date.now() + 3 * 60 * 60 * 1000),
+    description: 'Received',
+    accountId: ACCOUNT_ID,
   });
 }
 

@@ -57,8 +57,14 @@ export interface PaymasterResult {
   success: boolean;
 }
 
+/**
+ * A transaction enriched with paymaster sponsorship data.
+ */
 export interface PaymasterTransaction {
+  /** The original transaction with paymaster-modified fields (resource bounds, etc.) */
   transaction: StarknetTransaction;
+  /** Paymaster's signature authorizing gas sponsorship */
   sponsorSignature: string;
+  /** Token address used for gas payment; omit to use the paymaster's default */
   gasToken?: string;
 }

@@ -40,7 +40,7 @@ function createMockConfig(): AppConfig.Config {
     avnuApiKey: 'test-key',
     avnuSwapApiUrl: 'https://sepolia.api.avnu.fi',
     feeTreasuryAddress: '0x027367ddd36d7efc4694e1af5742f8d26626369c07abf15d136ff422b9a40fa0',
-    atomiq: {storagePath: '/tmp/bim/atomiq', createIfNotExists: true, swapToken: 'WBTC'},
+    atomiq: {network: 'testnet', starknetRpcUrl: 'http://localhost:5050', storagePath: '/tmp/bim/atomiq', autoCreateStorage: true, swapToken: 'WBTC'},
     logLevel: 'silent',
   };
 }

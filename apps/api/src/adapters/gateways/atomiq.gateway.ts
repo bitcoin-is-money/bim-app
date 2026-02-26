@@ -25,11 +25,17 @@ import type {Logger} from "pino";
  * Configuration for Atomiq gateway.
  */
 export interface AtomiqGatewayConfig {
+  /** Starknet network to connect to */
   network: 'mainnet' | 'testnet';
+  /** Starknet JSON-RPC endpoint URL */
   starknetRpcUrl: string;
+  /** Custom Atomiq intermediary URL; uses the default public intermediary if omitted */
   intermediaryUrl?: string;
+  /** Local filesystem path for SQLite swap storage */
   storagePath: string;
+  /** Create the storage directory automatically if it doesn't exist */
   autoCreateStorage?: boolean;
+  /** Token symbol used for swaps (e.g. 'WBTC') */
   swapToken: string;
 }
 

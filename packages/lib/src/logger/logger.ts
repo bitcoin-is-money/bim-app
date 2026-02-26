@@ -44,7 +44,9 @@ export function createLogger(
       time: createTimestampPrettifier(style),
       err: createErrorPrettifier(style),
       // Suppress requestId from extra key-value output (it's already displayed by the level prettifier)
-      ...(style.requestId && {requestId: () => undefined as unknown as string}),
+      ...(style.requestId !== undefined && {
+        requestId: () => undefined as unknown as string
+      }),
     },
     sync: true,
   };

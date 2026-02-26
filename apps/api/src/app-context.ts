@@ -137,17 +137,7 @@ export namespace AppContext {
         rootLogger,
       ),
       paymaster: paymasterGateway,
-      atomiq: new AtomiqSdkGateway(
-        {
-          network: config.starknetNetwork === 'mainnet' ? 'mainnet' : 'testnet',
-          starknetRpcUrl: config.starknetRpcUrl,
-          storagePath: config.atomiq.storagePath,
-          autoCreateStorage: config.atomiq.createIfNotExists,
-          intermediaryUrl: config.atomiq.intermediaryUrl,
-          swapToken: config.atomiq.swapToken,
-        },
-        rootLogger,
-      ),
+      atomiq: new AtomiqSdkGateway(config.atomiq, rootLogger),
       dex: new AvnuSwapGateway(
         {baseUrl: config.avnuSwapApiUrl},
         rootLogger,

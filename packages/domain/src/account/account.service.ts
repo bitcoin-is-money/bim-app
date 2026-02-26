@@ -76,12 +76,13 @@ export class AccountService {
       throw new AccountAlreadyExistsError(input.username);
     }
 
+    const credentialPublicKey = input.credentialPublicKey;
     const account = Account.create({
       id: input.accountId,
       username: input.username,
       credentialId: CredentialId.of(input.credentialId),
       publicKey: input.publicKey,
-      credentialPublicKey: input.credentialPublicKey,
+      ...(credentialPublicKey !== undefined && {credentialPublicKey}),
     });
 
     this.log.debug("Saving account");

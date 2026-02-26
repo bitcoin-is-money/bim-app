@@ -57,7 +57,7 @@ describe('ParseService', () => {
       mockDecoder = createMockDecoder();
       service = new ParseService({
         lightningDecoder: mockDecoder,
-        starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS},
+        starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS, strkTokenAddress: STARKNET_ADDR},
         logger,
       });
     });
@@ -102,7 +102,7 @@ describe('ParseService', () => {
 
       const failingService = new ParseService({
         lightningDecoder: failingDecoder,
-        starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS},
+        starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS, strkTokenAddress: STARKNET_ADDR},
         logger,
       });
 
@@ -120,7 +120,7 @@ describe('ParseService', () => {
     beforeEach(() => {
       service = new ParseService({
         lightningDecoder: createMockDecoder(),
-        starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS},
+        starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS, strkTokenAddress: STARKNET_ADDR},
         logger,
       });
     });
@@ -212,7 +212,7 @@ describe('ParseService', () => {
     it('detects a Lightning invoice and returns decoded data', () => {
       const service = new ParseService({
         lightningDecoder: createMockDecoder(),
-        starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS},
+        starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS, strkTokenAddress: STARKNET_ADDR},
         logger,
       });
 
@@ -229,8 +229,8 @@ describe('ParseService', () => {
 
     it('throws MissingPaymentAmountError when invoice has no amount', () => {
       const service = new ParseService({
-        lightningDecoder: createMockDecoder({amountMSat: undefined}),
-        starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS},
+        lightningDecoder: {decode: vi.fn().mockReturnValue({description: 'test'})},
+        starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS, strkTokenAddress: STARKNET_ADDR},
         logger,
       });
 
@@ -240,7 +240,7 @@ describe('ParseService', () => {
     it('throws ValidationError when invoice has negative amount', () => {
       const service = new ParseService({
         lightningDecoder: createMockDecoder({amountMSat: BigInt(-1)}),
-        starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS},
+        starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS, strkTokenAddress: STARKNET_ADDR},
         logger,
       });
 
@@ -258,7 +258,7 @@ describe('ParseService', () => {
     beforeEach(() => {
       service = new ParseService({
         lightningDecoder: createMockDecoder(),
-        starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS},
+        starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS, strkTokenAddress: STARKNET_ADDR},
         logger,
       });
     });

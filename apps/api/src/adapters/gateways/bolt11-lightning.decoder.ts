@@ -13,26 +13,20 @@ export class Bolt11LightningDecoder implements LightningDecoder {
     const amountSection = decoded.sections.find(
       (section) => section.name === 'amount',
     );
-
     const descriptionSection = decoded.sections.find(
       (section) => section.name === 'description',
     );
 
-    let amountMSat: bigint | undefined;
+    const result: DecodedLightningInvoice = {};
     if (amountSection && 'value' in amountSection && amountSection.value) {
-      amountMSat = BigInt(amountSection.value);
+      result.amountMSat = BigInt(amountSection.value);
     }
-
-    const description =
-      descriptionSection && 'value' in descriptionSection
-        ? String(descriptionSection.value)
-        : undefined;
-
-    const expiresAt =
-      decoded.expiry === undefined
-        ? undefined
-        : new Date(decoded.expiry * 1000);
-
-    return {amountMSat, description, expiresAt};
+    if (descriptionSection && 'value' in descriptionSection) {
+      result.description = String(descriptionSection.value);
+    }
+    if (decoded.expiry !== undefined) {
+      result.expiresAt = new Date(decoded.expiry * 1000);
+    }
+    return result;
   }
 }

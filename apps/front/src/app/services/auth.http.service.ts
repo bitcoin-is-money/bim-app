@@ -12,7 +12,7 @@ export interface BeginAuthResponse {
     challenge: string;
     rpId: string;
     allowCredentials?: Array<{ id: string; type: string }>;
-    timeout?: number;
+    timeoutMs: number;
     userVerification?: string;
   };
   challengeId: string;
@@ -25,7 +25,7 @@ export interface BeginRegisterResponse {
     rpName: string;
     userId: string;
     userName: string;
-    timeout?: number;
+    timeoutMs: number;
   };
   challengeId: string;
   accountId: string; // Pre-generated account ID - must be passed to completeRegister

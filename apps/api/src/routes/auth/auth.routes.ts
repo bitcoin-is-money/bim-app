@@ -84,10 +84,11 @@ export function createAuthRoutes(appContext: AppContext): Hono {
     try {
       const result = await authService.beginAuthentication();
 
-      return honoCtx.json<BeginAuthenticationResponse>({
+      const response: BeginAuthenticationResponse = {
         options: result.options,
         challengeId: result.challengeId,
-      });
+      };
+      return honoCtx.json(response) as TypedResponse<BeginAuthenticationResponse>;
     } catch (error) {
       return handleDomainError(honoCtx, error, log);
     }
@@ -98,9 +99,16 @@ export function createAuthRoutes(appContext: AppContext): Hono {
       const body = await honoCtx.req.json();
       const input = CompleteAuthenticationSchema.parse(body);
 
+      const {userHandle, ...response} = input.credential.response;
       const result = await authService.completeAuthentication({
         challengeId: input.challengeId,
-        credential: input.credential,
+        credential: {
+          ...input.credential,
+          response: {
+            ...response,
+            ...(userHandle !== undefined && {userHandle}),
+          },
+        },
       });
 
       // Set session cookie

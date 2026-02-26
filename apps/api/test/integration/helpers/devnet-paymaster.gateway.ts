@@ -163,8 +163,8 @@ export class DevnetPaymasterGateway implements PaymasterGateway {
   private readonly provider: RpcProvider;
   private readonly devnetUrl: string;
   private fundingAccount: Account | null = null;
-  private readonly starkSigner?: StarkSigner;
-  private lastDeployedAddress?: string;
+  private readonly starkSigner?: StarkSigner | undefined;
+  private lastDeployedAddress?: string | undefined;
 
   constructor(devnetUrl: string, starkSigner?: StarkSigner) {
     this.devnetUrl = devnetUrl;
@@ -418,7 +418,6 @@ export class DevnetPaymasterGateway implements PaymasterGateway {
     return {
       transaction: params.transaction,
       sponsorSignature: '0x0', // Dummy signature for devnet
-      gasToken: undefined,
     };
   }
 

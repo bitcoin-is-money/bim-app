@@ -87,7 +87,7 @@ export class AuthHandlerMock {
           rpName: this.RP_NAME,
           userId: accountId, // Use accountId as userId for WebAuthn
           userName: username,
-          timeout: 60000,
+          timeoutMs: 60000,
         },
       },
     });
@@ -169,7 +169,7 @@ export class AuthHandlerMock {
           challenge,
           rpId: this.RP_ID,
           allowCredentials: [],
-          timeout: 60000,
+          timeoutMs: 60000,
           userVerification: 'required',
         },
       },

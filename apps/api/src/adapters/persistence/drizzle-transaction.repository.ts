@@ -193,7 +193,7 @@ export class DrizzleTransactionRepository implements TransactionRepository {
       toAddress: StarknetAddress.of(record.toAddress),
       timestamp: record.timestamp,
       indexedAt: record.indexedAt,
-      description: description ?? undefined,
+      description: description ?? (record.transactionType === 'receipt' ? 'Received' : 'Sent'),
     });
   }
 }

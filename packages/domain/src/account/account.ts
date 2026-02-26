@@ -21,8 +21,8 @@ import {AccountId, type AccountStatus, CredentialId} from './types';
  */
 export class Account {
   private status: AccountStatus;
-  private starknetAddress?: StarknetAddress;
-  private deploymentTxHash?: string;
+  private starknetAddress: StarknetAddress | undefined;
+  private deploymentTxHash: string | undefined;
   private signCount: number;
   private updatedAt: Date;
 
@@ -216,10 +216,10 @@ export interface AccountData {
   username: string;
   credentialId: CredentialId;
   publicKey: string;
-  credentialPublicKey?: string;
-  starknetAddress?: StarknetAddress;
+  credentialPublicKey: string | undefined;
+  starknetAddress: StarknetAddress | undefined;
   status: AccountStatus;
-  deploymentTxHash?: string;
+  deploymentTxHash: string | undefined;
   signCount: number;
   createdAt: Date;
   updatedAt: Date;
