@@ -143,14 +143,15 @@ export class AvnuSwapGateway implements SwapGateway {
 
     const quotes = (await response.json()) as AvnuQuote[];
 
-    if (!quotes.length) {
+    const quote = quotes.at(0);
+    if (!quote) {
       throw new ExternalServiceError(
         'AVNU Swap',
         'No swap quotes available for the requested pair/amount',
       );
     }
 
-    return quotes[0];
+    return quote;
   }
 
   private async buildSwap(quoteId: string, takerAddress: string): Promise<AvnuBuildResponse> {

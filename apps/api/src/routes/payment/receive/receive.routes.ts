@@ -226,8 +226,8 @@ function extractApproveAmount(calls: readonly StarknetCall[]): {amount: bigint; 
   const approveCall = calls.find(c => c.entrypoint === 'approve');
   if (!approveCall || approveCall.calldata.length < 3) return undefined;
   try {
-    const low = BigInt(approveCall.calldata[1]);
-    const high = BigInt(approveCall.calldata[2]);
+    const low = BigInt(approveCall.calldata[1]!);
+    const high = BigInt(approveCall.calldata[2]!);
     return {
       amount: low + (high << 128n),
       tokenAddress: approveCall.contractAddress,

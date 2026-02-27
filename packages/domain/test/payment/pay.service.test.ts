@@ -142,7 +142,7 @@ describe('PayService', () => {
 
       expect(result.network).toBe('starknet');
 
-      const callArgs = vi.mocked(mockStarknetGateway.executeCalls).mock.calls[0][0];
+      const callArgs = vi.mocked(mockStarknetGateway.executeCalls).mock.calls[0]![0];
       expect(callArgs.senderAddress).toBe(SENDER_ADDRESS);
       expect(callArgs.calls).toHaveLength(2); // transfer + fee
       expect(callArgs.calls[0]).toEqual({
@@ -150,7 +150,7 @@ describe('PayService', () => {
         entrypoint: 'transfer',
         calldata: [RECIPIENT_ADDRESS, '100000000', '0'],
       });
-      expect(callArgs.calls[1].calldata[0]).toBe(TREASURY_ADDRESS.toString());
+      expect(callArgs.calls[1]!.calldata[0]).toBe(TREASURY_ADDRESS.toString());
     });
 
     it('returns txHash, amount, feeAmount, recipientAddress, tokenAddress', async () => {
@@ -190,7 +190,7 @@ describe('PayService', () => {
       if (result.network !== 'starknet') return;
       expect(result.feeAmount.isZero()).toBe(true);
 
-      const callArgs = vi.mocked(mockStarknetGateway.executeCalls).mock.calls[0][0];
+      const callArgs = vi.mocked(mockStarknetGateway.executeCalls).mock.calls[0]![0];
       expect(callArgs.calls).toHaveLength(1);
     });
 

@@ -11,7 +11,7 @@ export class AccountFixture extends DbFixture {
       .insert(schema.accounts)
       .values(accountData)
       .returning();
-    return inserted;
+    return inserted!;
   }
 
   static create(dbClient: DbClient): AccountFixture {

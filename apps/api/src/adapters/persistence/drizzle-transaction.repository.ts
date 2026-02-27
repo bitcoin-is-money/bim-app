@@ -79,12 +79,11 @@ export class DrizzleTransactionRepository implements TransactionRepository {
       )
       .where(eq(schema.transactions.id, id))
       .limit(1);
-
-    if (rows.length === 0) {
+    const row = rows.at(0);
+    if (!row) {
       return undefined;
     }
-
-    return this.toTransaction(rows[0].transaction, rows[0].description);
+    return this.toTransaction(row.transaction, row.description);
   }
 
   async findByHash(hash: TransactionHash): Promise<Transaction | undefined> {
@@ -104,11 +103,11 @@ export class DrizzleTransactionRepository implements TransactionRepository {
       .where(eq(schema.transactions.transactionHash, hash))
       .limit(1);
 
-    if (rows.length === 0) {
+    const row = rows.at(0);
+    if (!row) {
       return undefined;
     }
-
-    return this.toTransaction(rows[0].transaction, rows[0].description);
+    return this.toTransaction(row.transaction, row.description);
   }
 
   async findByAccountId(
