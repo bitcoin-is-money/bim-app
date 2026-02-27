@@ -136,7 +136,7 @@ export async function fetchDevnetAccountClassHash(devnetUrl: string): Promise<st
   }
 
   const provider = new RpcProvider({nodeUrl: devnetUrl});
-  cachedAccountClassHash = await provider.getClassHashAt(accounts[0].address);
+  cachedAccountClassHash = await provider.getClassHashAt(accounts[0]!.address);
 
   return cachedAccountClassHash;
 }

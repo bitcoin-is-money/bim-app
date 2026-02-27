@@ -18,7 +18,7 @@ export class UserFixture extends DbFixture {
       .insert(schema.userSettings)
       .values(settingsData)
       .returning();
-    return inserted;
+    return inserted!;
   }
 
   async insertTransaction(
@@ -30,7 +30,7 @@ export class UserFixture extends DbFixture {
       .insert(schema.transactions)
       .values(txData)
       .returning();
-    return inserted;
+    return inserted!;
   }
 
 }

@@ -21,7 +21,7 @@ export class AuthFixture extends DbFixture {
       .insert(schema.sessions)
       .values(sessionData)
       .returning();
-    return inserted;
+    return inserted!;
   }
 
   async insertChallenge(data?: Partial<schema.NewChallengeRecord>): Promise<schema.ChallengeRecord> {
@@ -30,7 +30,7 @@ export class AuthFixture extends DbFixture {
       .insert(schema.challenges)
       .values(challengeData)
       .returning();
-    return inserted;
+    return inserted!;
   }
 
 }

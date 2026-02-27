@@ -26,9 +26,9 @@ describe('Erc20CallFactory', () => {
       });
 
       expect(calls).toHaveLength(1);
-      expect(calls[0].contractAddress).toBe(ETH_TOKEN_ADDRESS);
-      expect(calls[0].entrypoint).toBe('transfer');
-      expect(calls[0].calldata).toHaveLength(3);
+      expect(calls[0]!.contractAddress).toBe(ETH_TOKEN_ADDRESS);
+      expect(calls[0]!.entrypoint).toBe('transfer');
+      expect(calls[0]!.calldata).toHaveLength(3);
     });
 
     it('encodes recipient address correctly', () => {
@@ -39,7 +39,7 @@ describe('Erc20CallFactory', () => {
         applyFee: false,
       });
 
-      expect(calls[0].calldata[0]).toBe(RECIPIENT_ADDRESS);
+      expect(calls[0]!.calldata[0]).toBe(RECIPIENT_ADDRESS);
     });
 
     it('encodes amount as u256 (low, high)', () => {
@@ -50,8 +50,8 @@ describe('Erc20CallFactory', () => {
         applyFee: false,
       });
 
-      expect(calls[0].calldata[1]).toBe('123456789'); // low part as decimal string (sats)
-      expect(calls[0].calldata[2]).toBe('0'); // high part always 0 for normal amounts
+      expect(calls[0]!.calldata[1]).toBe('123456789'); // low part as decimal string (sats)
+      expect(calls[0]!.calldata[2]).toBe('0'); // high part always 0 for normal amounts
     });
 
     it('handles zero amount', () => {
@@ -62,8 +62,8 @@ describe('Erc20CallFactory', () => {
         applyFee: false,
       });
 
-      expect(calls[0].calldata[1]).toBe('0');
-      expect(calls[0].calldata[2]).toBe('0');
+      expect(calls[0]!.calldata[1]).toBe('0');
+      expect(calls[0]!.calldata[2]).toBe('0');
     });
 
     it('returns zero feeAmount', () => {
@@ -101,8 +101,8 @@ describe('Erc20CallFactory', () => {
         applyFee: true,
       });
 
-      expect(calls[0].calldata[0]).toBe(RECIPIENT_ADDRESS);
-      expect(calls[0].calldata[1]).toBe('100000000');
+      expect(calls[0]!.calldata[0]).toBe(RECIPIENT_ADDRESS);
+      expect(calls[0]!.calldata[1]).toBe('100000000');
     });
 
     it('fee call sends to treasury', () => {
@@ -113,8 +113,8 @@ describe('Erc20CallFactory', () => {
         applyFee: true,
       });
 
-      expect(calls[1].calldata[0]).toBe(TREASURY_ADDRESS.toString());
-      expect(calls[1].calldata[1]).toBe('100000'); // 0.1% of 100,000,000 sats
+      expect(calls[1]!.calldata[0]).toBe(TREASURY_ADDRESS.toString());
+      expect(calls[1]!.calldata[1]).toBe('100000'); // 0.1% of 100,000,000 sats
     });
 
     it('returns only transfer call when amount too small for fee', () => {
@@ -140,8 +140,8 @@ describe('Erc20CallFactory', () => {
         applyFee: true,
       });
 
-      expect(calls[0].contractAddress).toBe(customToken);
-      expect(calls[1].contractAddress).toBe(customToken);
+      expect(calls[0]!.contractAddress).toBe(customToken);
+      expect(calls[1]!.contractAddress).toBe(customToken);
     });
 
     it('calculates fee correctly for various amounts', () => {

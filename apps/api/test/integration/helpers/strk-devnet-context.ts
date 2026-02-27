@@ -173,7 +173,7 @@ export class StrkDevnetContext {
    */
   async getFundingAccount() {
     const accounts = await fetchDevnetAccounts(StrkDevnet.getDevnetUrl());
-    return accounts[0];
+    return accounts[0]!;
   }
 
   /**
@@ -303,7 +303,7 @@ export class StrkDevnetContext {
     if (accountIndex >= accounts.length) {
       throw new Error(`Account index ${accountIndex} out of range (max: ${accounts.length - 1})`);
     }
-    const account = accounts[accountIndex];
+    const account = accounts[accountIndex]!;
     return new Account({
       provider: this.devnetProvider,
       address: account.address,
