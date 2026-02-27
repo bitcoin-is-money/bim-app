@@ -1,5 +1,6 @@
 import type {AccountId} from "../account";
-import {DomainError, ValidationError} from '../shared';
+import {ValidationError} from '../shared';
+import {InvalidSessionIdError} from './errors';
 
 // =============================================================================
 // Branded Types
@@ -22,12 +23,6 @@ export namespace SessionId {
 
   export function generate(): SessionId {
     return crypto.randomUUID() as SessionId;
-  }
-}
-
-export class InvalidSessionIdError extends DomainError {
-  constructor(readonly value: string) {
-    super(`Invalid session ID format: ${value}`);
   }
 }
 

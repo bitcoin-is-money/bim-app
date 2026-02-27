@@ -1,4 +1,4 @@
-import {DomainError} from '../shared';
+import {InvalidStarknetAddressError} from './errors';
 
 /**
  * Starknet contract address.
@@ -45,8 +45,3 @@ export namespace StarknetAddress {
   }
 }
 
-export class InvalidStarknetAddressError extends DomainError {
-  constructor(readonly value: string) {
-    super(`Invalid Starknet address format: ${value}`);
-  }
-}

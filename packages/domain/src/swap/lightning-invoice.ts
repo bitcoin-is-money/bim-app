@@ -1,4 +1,4 @@
-import {DomainError} from '../shared';
+import {InvalidLightningInvoiceError} from './errors';
 
 /**
  * Lightning Network invoice (BOLT11 format).
@@ -22,8 +22,3 @@ export namespace LightningInvoice {
   }
 }
 
-export class InvalidLightningInvoiceError extends DomainError {
-  constructor(readonly value: string) {
-    super(`Invalid Lightning invoice format: ${value.substring(0, 20)}...`);
-  }
-}

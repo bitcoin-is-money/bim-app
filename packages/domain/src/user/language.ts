@@ -1,4 +1,4 @@
-import {DomainError} from '../shared';
+import {UnsupportedLanguageError} from './errors';
 
 /**
  * Language code (ISO 639-1).
@@ -13,7 +13,7 @@ export namespace Language {
   export function of(value: string): Language {
     const normalized = value.trim().toLowerCase();
     if (!SUPPORTED_LANGUAGES.has(normalized)) {
-      throw new UnsupportedLanguageError(value);
+      throw new UnsupportedLanguageError(value, [...SUPPORTED_LANGUAGES]);
     }
     return normalized as Language;
   }
@@ -27,8 +27,3 @@ export namespace Language {
   }
 }
 
-export class UnsupportedLanguageError extends DomainError {
-  constructor(readonly language: string) {
-    super(`Unsupported language: ${language}. Supported: ${Language.getSupportedLanguages().join(', ')}`);
-  }
-}

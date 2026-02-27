@@ -1,7 +1,7 @@
 import type {AccountId, StarknetAddress} from '../account';
-import {DomainError} from '../shared';
 import type {FiatCurrency} from './fiat-currency';
 import type {Language} from './language';
+import {InvalidUserSettingsIdError, InvalidTransactionIdError, InvalidTransactionHashError} from './errors';
 
 // =============================================================================
 // Branded Types
@@ -67,28 +67,6 @@ export namespace TransactionHash {
 
   export function isValid(value: string): boolean {
     return HASH_REGEX.test(value.trim());
-  }
-}
-
-// =============================================================================
-// Validation Errors (co-located with branded types to avoid circular deps)
-// =============================================================================
-
-export class InvalidUserSettingsIdError extends DomainError {
-  constructor(readonly value: string) {
-    super(`Invalid user settings ID format: ${value}`);
-  }
-}
-
-export class InvalidTransactionIdError extends DomainError {
-  constructor(readonly value: string) {
-    super(`Invalid transaction ID format: ${value}`);
-  }
-}
-
-export class InvalidTransactionHashError extends DomainError {
-  constructor(readonly value: string) {
-    super(`Invalid transaction hash format: ${value}`);
   }
 }
 

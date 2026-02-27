@@ -1,6 +1,26 @@
 import {DomainError} from '../shared';
 import type {AccountId, AccountStatus} from './types';
 
+export class InvalidAccountIdError extends DomainError {
+  constructor(readonly value: string) {
+    super(`Invalid account ID format: ${value}`);
+  }
+}
+
+export class InvalidUsernameError extends DomainError {
+  constructor(readonly value: string) {
+    super(
+      `Invalid username: "${value}". Must be 3-20 characters, alphanumeric and underscores only.`,
+    );
+  }
+}
+
+export class InvalidStarknetAddressError extends DomainError {
+  constructor(readonly value: string) {
+    super(`Invalid Starknet address format: ${value}`);
+  }
+}
+
 export class AccountNotFoundError extends DomainError {
   constructor(readonly accountId: AccountId | string) {
     super(`Account not found: ${accountId}`);
