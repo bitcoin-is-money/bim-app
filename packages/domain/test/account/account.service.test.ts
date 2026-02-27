@@ -82,7 +82,7 @@ describe('AccountService', () => {
       // Make waitForTransaction never resolve during test to keep status as 'deploying'
       vi.mocked(mockStarknetGateway.waitForTransaction).mockReturnValue(new Promise(() => {}));
 
-      const result = await service.deploy({accountId, sync: false});
+      const result = await service.deploy({accountId});
 
       expect(result.txHash).toBe('0xtxhash');
       expect(result.account.getStatus()).toBe('deploying');

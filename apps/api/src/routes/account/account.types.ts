@@ -11,14 +11,6 @@ export interface GetAccountResponse {
 }
 
 /**
- * API request body for POST /api/account/deploy
- */
-export interface DeployAccountRequest {
-  /** If true, wait for on-chain confirmation before returning. Default: false */
-  sync?: boolean;
-}
-
-/**
  * API response type from POST /api/account/deploy
  */
 export interface DeployAccountResponse {

@@ -30,8 +30,6 @@ export interface CreateAccountInput {
 
 export interface DeployAccountInput {
   accountId: AccountId;
-  /** If true, wait for on-chain confirmation before returning. Default: false */
-  sync?: boolean;
 }
 
 export interface DeployAccountOutput {
@@ -136,13 +134,8 @@ export class AccountService {
     await this.deps.accountRepository.save(account);
     this.log.info({accountId: input.accountId, starknetAddress, txHash}, 'Account deployment submitted');
 
-    if (input.sync) {
-      // Wait for on-chain confirmation before returning
-      await this.waitForDeploymentConfirmation(account, txHash);
-    } else {
-      // @review-accepted: fire-and-forget intentional — try/catch inside waitForDeploymentConfirmation
-      void this.waitForDeploymentConfirmation(account, txHash);
-    }
+    // @review-accepted: fire-and-forget intentional — try/catch inside waitForDeploymentConfirmation
+    void this.waitForDeploymentConfirmation(account, txHash);
 
     return {account, txHash};
   }

@@ -60,7 +60,7 @@ export class AccountHttpService {
     return this.http.get<DeploymentStatusResponse>('/api/account/deployment-status');
   }
 
-  deploy(sync: boolean = false): Observable<DeployAccountResponse> {
-    return this.http.post<DeployAccountResponse>('/api/account/deploy', { sync });
+  deploy(): Observable<DeployAccountResponse> {
+    return this.http.post<DeployAccountResponse>('/api/account/deploy', null);
   }
 }
