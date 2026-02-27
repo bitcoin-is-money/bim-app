@@ -1,6 +1,18 @@
 import {type Amount, DomainError} from '../shared';
 import type {SwapId, SwapStatus} from './types';
 
+export class InvalidBitcoinAddressError extends DomainError {
+  constructor(readonly value: string) {
+    super(`Invalid Bitcoin address format: ${value}`);
+  }
+}
+
+export class InvalidLightningInvoiceError extends DomainError {
+  constructor(readonly value: string) {
+    super(`Invalid Lightning invoice format: ${value.substring(0, 20)}...`);
+  }
+}
+
 export class SwapNotFoundError extends DomainError {
   constructor(readonly swapId: SwapId | string) {
     super(`Swap not found: ${swapId}`);

@@ -1,6 +1,12 @@
 import {DomainError} from '../shared';
 import type {ChallengeId, SessionId} from './types';
 
+export class InvalidSessionIdError extends DomainError {
+  constructor(readonly value: string) {
+    super(`Invalid session ID format: ${value}`);
+  }
+}
+
 export class SessionNotFoundError extends DomainError {
   constructor(readonly sessionId: SessionId | string) {
     super(`Session not found: ${sessionId}`);

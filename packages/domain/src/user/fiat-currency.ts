@@ -1,4 +1,4 @@
-import {DomainError} from '../shared';
+import {UnsupportedCurrencyError} from './errors';
 
 /**
  * Fiat currency code (ISO 4217).
@@ -13,7 +13,7 @@ export namespace FiatCurrency {
   export function of(value: string): FiatCurrency {
     const normalized = value.trim().toUpperCase();
     if (!SUPPORTED_CURRENCIES.has(normalized)) {
-      throw new UnsupportedCurrencyError(value);
+      throw new UnsupportedCurrencyError(value, [...SUPPORTED_CURRENCIES]);
     }
     return normalized as FiatCurrency;
   }
@@ -27,8 +27,3 @@ export namespace FiatCurrency {
   }
 }
 
-export class UnsupportedCurrencyError extends DomainError {
-  constructor(readonly currency: string) {
-    super(`Unsupported currency: ${currency}. Supported: ${FiatCurrency.getSupportedCurrencies().join(', ')}`);
-  }
-}

@@ -1,4 +1,4 @@
-import {DomainError} from '../shared';
+import {InvalidBitcoinAddressError} from './errors';
 
 /**
  * Bitcoin address (supports Bech32 and legacy formats).
@@ -31,8 +31,3 @@ export namespace BitcoinAddress {
   }
 }
 
-export class InvalidBitcoinAddressError extends DomainError {
-  constructor(readonly value: string) {
-    super(`Invalid Bitcoin address format: ${value}`);
-  }
-}

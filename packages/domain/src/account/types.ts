@@ -1,4 +1,5 @@
-import {DomainError, ValidationError} from '../shared';
+import {ValidationError} from '../shared';
+import {InvalidAccountIdError} from './errors';
 
 // =============================================================================
 // Branded Types
@@ -35,12 +36,6 @@ export namespace AccountId {
    */
   export function generate(): AccountId {
     return crypto.randomUUID() as AccountId;
-  }
-}
-
-export class InvalidAccountIdError extends DomainError {
-  constructor(readonly value: string) {
-    super(`Invalid account ID format: ${value}`);
   }
 }
 

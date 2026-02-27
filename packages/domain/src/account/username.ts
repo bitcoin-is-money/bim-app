@@ -1,4 +1,4 @@
-import {DomainError} from '../shared';
+import {InvalidUsernameError} from './errors';
 
 /**
  * Username for an Account.
@@ -34,10 +34,3 @@ export namespace Username {
   }
 }
 
-export class InvalidUsernameError extends DomainError {
-  constructor(readonly value: string) {
-    super(
-      `Invalid username: "${value}". Must be 3-20 characters, alphanumeric and underscores only.`,
-    );
-  }
-}
