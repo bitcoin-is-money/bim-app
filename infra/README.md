@@ -2,66 +2,14 @@
 
 Terraform configuration to deploy BIM on Scaleway Serverless.
 
-## Terraform Refresher
-
-### Core Concepts
-
-```hcl
-# PROVIDER — Plugin that talks to a cloud API (Scaleway, AWS, GCP...).
-# Installed by `terraform init`. Configured once per project.
-provider "scaleway" {
-  region = "fr-par"
-}
-
-# RESOURCE — An infrastructure object to create/manage.
-#   resource "<type>" "<local_name>" { ... }
-#
-#   - type:       Determined by the provider (e.g. scaleway_container)
-#   - local_name: YOUR label, used only inside Terraform to reference this resource.
-#                 Not sent to the cloud. You pick whatever name makes sense.
-
-# VARIABLE — Input parameter (set via terraform.tfvars or -var flag).
-variable "network" {
-  type    = string
-  default = "testnet"
-}
-
-# OUTPUT — Value displayed after `terraform apply` and queryable with `terraform output`.
-output "api_url" {
-  value = "https://${scaleway_container.api.domain_name}"
-}
-```
-
-### Key Files
-
-| File | Role | Commit? |
-|------|------|---------|
-| `*.tf` | Infrastructure definition | Yes |
-| `terraform.tfvars` | Your variable values (secrets!) | **No** (gitignored) |
-| `.terraform.lock.hcl` | Provider version lock (like `package-lock.json`) | **Yes** |
-| `terraform.tfstate` | Current state of deployed resources (contains secrets!) | **No** (gitignored) |
-| `.terraform/` | Downloaded provider plugins (like `node_modules/`) | **No** (gitignored) |
-
-### About `terraform.tfstate`
-
-Terraform tracks what it has created in a **state file** (`terraform.tfstate`).
-This file maps your `.tf` config to real cloud resource IDs. It is essential for
-Terraform to know what exists and what needs to change on `apply`.
-
-**It contains sensitive values** (database URLs, API keys) in plain text.
-It is gitignored and stays local. For team use, consider a
-[remote backend](https://developer.hashicorp.com/terraform/language/backend)
-(S3, Scaleway Object Storage...) with encryption.
-
-If the state file is lost, Terraform loses track of existing resources.
-You can recover with `terraform import` (see below).
+> New to Terraform? See [TERRAFORM.md](TERRAFORM.md) for core concepts, key files, and state management.
 
 ## Resources Created
 
 | Resource | Type | Description |
 |----------|------|-------------|
 | Container Registry | `scaleway_registry_namespace` | Private Docker registry for API + Indexer images |
-| Serverless SQL Database | `scaleway_sdb_sql_database` | Managed PostgreSQL (auto-scales to zero) |
+| Managed PostgreSQL | `scaleway_rdb_instance` + `scaleway_rdb_database` | PostgreSQL 16 (DB-DEV-S, 20 GB LSSD) |
 | bim-api | `scaleway_container` | **Public** — frontend + API (HTTPS via Scaleway reverse proxy) |
 | bim-indexer | `scaleway_container` | **Private** — Apibara blockchain indexer |
 
@@ -144,9 +92,11 @@ Terraform manages infrastructure but does **not** build or push Docker images.
 Scaleway requires images to exist in the registry before creating containers,
 so the first deployment is a 3-step process:
 
-1. **`terraform apply -target=scaleway_registry_namespace.bim`** — creates only the Docker registry (minimum to push images)
-2. **`docker build` + `docker push`** — you build images locally and push them to the registry
-3. **`terraform apply`** — creates everything else (database, containers) and deploys
+1. **`npm run infra:apply -- -target=scaleway_registry_namespace.bim`** — creates only the Docker registry (minimum to push images)
+2. **`npm run docker:build` + `npm run docker:push`** — build and push images to the registry
+3. **`npm run infra:apply`** — creates everything else (database, containers) and deploys
+
+For subsequent deploys, use `npm run docker:ship` (build + push + redeploy in one command).
 
 Once CI/CD is set up (`.github/workflows/deploy.yml`), steps 2 and 3 happen
 automatically on every push to `main`.
@@ -156,8 +106,7 @@ automatically on every push to `main`.
 ### 1. Initialize Terraform
 
 ```bash
-cd infra
-terraform init
+npm run infra:init
 ```
 
 Downloads the Scaleway provider plugin into `.terraform/` and creates
@@ -170,12 +119,12 @@ cp terraform.tfvars.example terraform.tfvars
 ```
 
 Edit `terraform.tfvars` — fill in your secrets (`avnu_api_key`, `dna_token`).
-Leave `deploy = false` and `api_domain` commented out for now.
+Leave `api_domain` commented out for now (set it after the first deploy, step 6).
 
 ### 3. Create the registry (first apply — minimal)
 
 ```bash
-terraform apply -target=scaleway_registry_namespace.bim
+npm run infra:apply -- -target=scaleway_registry_namespace.bim
 ```
 
 Only creates the Docker registry. This is the minimum needed before pushing images.
@@ -184,24 +133,18 @@ Only creates the Docker registry. This is the minimum needed before pushing imag
 
 ```bash
 # Login to the Scaleway registry (username is always "nologin", password is your SCW secret key)
-REGISTRY=$(terraform output -raw registry_endpoint)
+REGISTRY=$(cd infra && terraform output -raw registry_endpoint)
 docker login $REGISTRY -u nologin
 
-# Build from project root
-cd ..
-docker build -f apps/api/Dockerfile -t $REGISTRY/bim-api:latest .
-docker build -f apps/indexer/Dockerfile -t $REGISTRY/bim-indexer:latest .
-
-# Push images to the registry
-docker push $REGISTRY/bim-api:latest
-docker push $REGISTRY/bim-indexer:latest
+# Build and push images (tagged with git hash + latest)
+npm run docker:build
+npm run docker:push
 ```
 
 ### 5. Create remaining infrastructure and deploy
 
 ```bash
-cd infra
-terraform apply
+npm run infra:apply
 ```
 
 Creates the database, container namespace, and both containers in one pass.
@@ -218,7 +161,7 @@ api_domain = "bimxxxxxxxx-bim-api.functions.fnc.fr-par.scw.cloud"
 Then apply again to inject the correct WebAuthn config:
 
 ```bash
-terraform apply
+npm run infra:apply
 ```
 
 Your app is now live at the `api_url` output.
@@ -226,17 +169,18 @@ Your app is now live at the `api_url` output.
 ### 7. Run database migrations
 
 ```bash
-DB_URL=$(terraform output -raw database_endpoint)
-cd ..
-DATABASE_URL="$DB_URL" npm run db:push -w @bim/db
+DATABASE_URL=$(cd infra && terraform output -raw database_url) npm run db:push
 ```
 
 ## Common Commands
 
+All Terraform commands can be run via `npm run infra:*` from the project root,
+or directly with `terraform` from the `infra/` directory.
+
 ### Preview changes (dry run)
 
 ```bash
-terraform plan
+npm run infra:plan
 ```
 
 Compares your `.tf` files against the state file and shows what would be
@@ -245,24 +189,25 @@ created/modified/destroyed. Nothing is actually changed. Safe to run anytime.
 ### Apply changes
 
 ```bash
-terraform apply
+npm run infra:apply
 ```
 
 Runs a `plan`, shows the diff, asks for confirmation, then executes.
 Idempotent: running it twice with no changes does nothing.
 
-### Auto-approve (skip confirmation)
+### Docker image workflow
 
 ```bash
-terraform apply -auto-approve
+npm run docker:build      # Build images tagged with git hash + latest
+npm run docker:push       # Push to Scaleway registry
+npm run docker:redeploy   # Update Scaleway containers to new version
+npm run docker:ship       # All three in one command
 ```
-
-Skips the interactive "yes/no" prompt. Useful in CI, risky in manual use.
 
 ### Override a variable on the fly
 
 ```bash
-terraform apply -var="network=testnet"
+npm run infra:apply -- -var="network=testnet"
 ```
 
 Overrides the value from `terraform.tfvars` for this run only.
@@ -270,40 +215,17 @@ Overrides the value from `terraform.tfvars` for this run only.
 ### View outputs
 
 ```bash
+cd infra
 terraform output                  # All outputs (secrets are hidden)
 terraform output api_url          # Single output
 terraform output -raw api_domain  # Raw value (no quotes — useful in scripts)
 ```
 
-### View full current state
-
-```bash
-terraform show
-```
-
-Displays every resource and its attributes as Terraform knows them.
-Includes sensitive values.
-
-### Force redeploy containers
-
-Terraform only acts when the config changes. If containers are in error (e.g. after a
-schema push or a config fix) and `terraform apply` says "0 changes", use `-replace`
-to force recreation:
-
-```bash
-# Redeploy both containers
-terraform apply -replace=scaleway_container.api -replace=scaleway_container.indexer
-
-# Or just one
-terraform apply -replace=scaleway_container.api
-```
-
-Also useful after pushing a new Docker image with the same `:latest` tag.
-
 ### View container logs
 
 ```bash
 # Snapshot (last logs via Scaleway CLI — not real-time)
+cd infra
 API_ID=$(terraform output -raw api_container_id)
 scw container container logs $API_ID region=fr-par
 
@@ -334,7 +256,7 @@ To create a Cockpit token: Console > Cockpit > Tokens > Generate token (with Log
 ### Refresh state from cloud
 
 ```bash
-terraform refresh
+cd infra && terraform refresh
 ```
 
 Re-reads the actual state of all resources from Scaleway and updates the local
@@ -343,7 +265,7 @@ state file. Useful if someone changed something via the console.
 ### Destroy everything
 
 ```bash
-terraform destroy
+cd infra && terraform destroy
 ```
 
 Shows what will be deleted, asks for confirmation, then deletes all managed resources.
@@ -356,8 +278,10 @@ If you already created resources via the console or `scaleway-setup.sh`,
 you can bring them under Terraform management without recreating them:
 
 ```bash
+cd infra
 terraform import scaleway_registry_namespace.bim fr-par/<registry-id>
-terraform import scaleway_sdb_sql_database.bim fr-par/<database-id>
+terraform import scaleway_rdb_instance.bim fr-par/<instance-id>
+terraform import scaleway_rdb_database.bim fr-par/<instance-id>/<database-name>
 terraform import scaleway_container_namespace.bim fr-par/<namespace-id>
 terraform import scaleway_container.api fr-par/<api-container-id>
 terraform import scaleway_container.indexer fr-par/<indexer-container-id>
@@ -369,17 +293,21 @@ After import, run `terraform plan` to check if the config matches the real state
 
 ```
 infra/
-├── main.tf                  # Provider config + all 5 resources
-├── variables.tf             # Variable declarations with defaults and validation
+├── .terraform/              # Downloaded plugins (gitignored, like node_modules/)
+├── .terraform.lock.hcl      # Provider version lock (committed, like package-lock.json)
+├── main.tf                  # Provider config + all resources
 ├── outputs.tf               # Values displayed after apply (URLs, IDs)
+├── variables.tf             # Variable declarations with defaults and validation
+├── terraform.tfstate        # State file with resource IDs + secrets (gitignored, local only)
 ├── terraform.tfvars.example # Template (committed — copy to terraform.tfvars)
 ├── terraform.tfvars         # Your actual values and secrets (gitignored)
-├── .terraform.lock.hcl      # Provider version lock (committed, like package-lock.json)
-├── .terraform/              # Downloaded plugins (gitignored, like node_modules/)
-├── terraform.tfstate        # State file with resource IDs + secrets (gitignored, local only)
-├── .gitignore
 └── README.md
+
+scripts/
+└── docker.sh                # Docker build/push/deploy + Terraform pass-through
 ```
+
+All operations are accessible via `npm run docker:*` and `npm run infra:*` from the project root.
 
 ## CI/CD Integration
 

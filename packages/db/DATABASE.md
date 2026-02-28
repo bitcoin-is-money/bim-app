@@ -36,7 +36,7 @@ translation to PostgreSQL DDL.
 packages/db/
 ├── src/
 │   ├── schema.ts             # All table definitions (single source of truth)
-│   ├── connection.ts         # DatabaseConnection class (pool, SSL, retry, startup validation)
+│   ├── connection.ts         # DatabaseConnection class (pool, retry, startup validation)
 │   └── index.ts              # Re-exports schema
 ├── drizzle.config.ts         # Drizzle Kit config
 ├── drizzle/                  # Generated migration files (if using generate + migrate)
@@ -46,7 +46,7 @@ packages/db/
 
 Sub-path exports:
 - `@bim/db` — schema only (tables, types)
-- `@bim/db/connection` — `DatabaseConnection` class (pool, SSL, retry, startup validation)
+- `@bim/db/connection` — `DatabaseConnection` class (pool, retry, startup validation)
 
 ## Tables
 
@@ -82,17 +82,22 @@ DATABASE_URL=$(terraform output -raw database_url) ...
 
 ## SSL Configuration
 
-The `DATABASE_SSL` env var controls SSL for `node-postgres` (`pg`). The `pg` driver
-does **not** parse `?sslmode=` from connection strings — it requires explicit config.
+SSL is configured via the `?sslmode=` query parameter in the `DATABASE_URL` connection
+string. Since `pg-connection-string@2.7+` (bundled with `pg@8.x`), the `pg` driver
+parses `sslmode` directly from the URL — no separate env var is needed.
 
-| `DATABASE_SSL` | `pg` option | PostgreSQL standard |
-|----------------|-------------|---------------------|
-| `disable` | no `ssl` | `sslmode=disable` |
-| `require` | `ssl: { rejectUnauthorized: false }` | `sslmode=require` |
-| `verify-full` | `ssl: { rejectUnauthorized: true }` | `sslmode=verify-full` |
+| URL parameter | Behavior |
+|---------------|----------|
+| *(none)* | No SSL (local dev default) |
+| `?sslmode=require` | SSL enabled, **but** `pg` treats this as `verify-full` (rejects untrusted certs) |
+| `?sslmode=require&uselibpqcompat=true` | SSL enabled with true PostgreSQL `require` semantics (encrypt, don't verify cert) |
+| `?sslmode=verify-full` | SSL enabled, certificate verified against system CA |
 
-Scaleway Serverless SQL endpoints include `?sslmode=require` in the URL, but this is
-silently ignored by `pg`. You must set `DATABASE_SSL=verify-full` explicitly.
+**Production (Scaleway):** The Terraform `database_url` output includes
+`?sslmode=require&uselibpqcompat=true`, which enables SSL without requiring a trusted CA.
+
+**Local dev:** No `sslmode` parameter is needed — the Docker Compose PostgreSQL
+container runs without SSL.
 
 ## Push vs Generate + Migrate
 
