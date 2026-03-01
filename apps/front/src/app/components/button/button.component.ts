@@ -1,9 +1,9 @@
 import {CommonModule} from "@angular/common";
 import {Component, input} from '@angular/core';
 import {FaIconComponent} from "@fortawesome/angular-fontawesome";
-import {IconProp} from "@fortawesome/fontawesome-svg-core";
+import type {IconProp} from "@fortawesome/fontawesome-svg-core";
 import {SpinnerComponent} from '../spinner/spinner.component';
-import {SizeVariant, StyleVariant} from "../variant";
+import type {SizeVariant, StyleVariant} from "../variant";
 
 @Component({
   selector: 'app-button',

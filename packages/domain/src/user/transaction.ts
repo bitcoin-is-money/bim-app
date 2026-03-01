@@ -1,5 +1,6 @@
-import {AccountId, StarknetAddress} from '../account';
-import {TransactionHash, TransactionId, type TransactionType} from './types';
+import type {AccountId, StarknetAddress} from '../account';
+import type {TransactionHash, TransactionId} from './types';
+import type { TransactionType} from './types';
 
 /**
  * Transaction entity representing a recorded blockchain transaction.

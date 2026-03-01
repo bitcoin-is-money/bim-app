@@ -1,7 +1,7 @@
 import {HttpClient} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
-import {Observable} from 'rxjs';
-import {Account} from '../model';
+import type {Observable} from 'rxjs';
+import type {Account} from '../model';
 
 export interface AuthResponse {
   account: Account;
@@ -11,7 +11,7 @@ export interface BeginAuthResponse {
   options: {
     challenge: string;
     rpId: string;
-    allowCredentials?: Array<{ id: string; type: string }>;
+    allowCredentials?: { id: string; type: string }[];
     timeoutMs: number;
     userVerification?: string;
   };

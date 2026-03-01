@@ -50,7 +50,7 @@ export class DataStoreMock {
   getCredentials(): Map<string, StoredCredential> {
     const data = localStorage.getItem(STORAGE_KEYS.CREDENTIALS);
     if (!data) return new Map();
-    const entries: Array<[string, StoredCredential]> = JSON.parse(data);
+    const entries: [string, StoredCredential][] = JSON.parse(data);
     return new Map(entries);
   }
 
@@ -91,7 +91,7 @@ export class DataStoreMock {
   getPendingChallenges(): Map<string, PendingChallenge> {
     const data = localStorage.getItem(STORAGE_KEYS.PENDING_CHALLENGES);
     if (!data) return new Map();
-    const entries: Array<[string, PendingChallenge]> = JSON.parse(data);
+    const entries: [string, PendingChallenge][] = JSON.parse(data);
     return new Map(entries);
   }
 
@@ -155,7 +155,7 @@ export class DataStoreMock {
   getSwaps(): Map<string, MockSwapData> {
     const data = localStorage.getItem(STORAGE_KEYS.MOCK_SWAPS);
     if (!data) return new Map();
-    const entries: Array<[string, MockSwapData]> = JSON.parse(data);
+    const entries: [string, MockSwapData][] = JSON.parse(data);
     return new Map(entries);
   }
 
@@ -173,7 +173,7 @@ export class DataStoreMock {
   getPollCounts(): Map<string, number> {
     const data = localStorage.getItem(STORAGE_KEYS.MOCK_SWAP_POLL_COUNTS);
     if (!data) return new Map();
-    const entries: Array<[string, number]> = JSON.parse(data);
+    const entries: [string, number][] = JSON.parse(data);
     return new Map(entries);
   }
 

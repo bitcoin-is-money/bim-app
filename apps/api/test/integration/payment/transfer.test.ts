@@ -3,13 +3,14 @@ import {Erc20CallFactory, FeeConfig} from '@bim/domain/payment';
 import {Amount} from '@bim/domain/shared';
 import {WebauthnVirtualAuthenticator} from "@bim/test-toolkit/auth";
 import type {Hono} from 'hono';
-import pg from 'pg';
+import type pg from 'pg';
 import {Account, Signer} from 'starknet';
 import {afterAll, beforeAll, describe, expect, it} from 'vitest';
 import type {DeployAccountResponse} from '../../../src/routes';
 import {registerUser} from '../../helpers';
+import type {
+  DevnetPaymasterGateway} from '../helpers';
 import {
-  DevnetPaymasterGateway,
   ETH_TOKEN_ADDRESS,
   STRK_TOKEN_ADDRESS,
   StrkDevnetContext,

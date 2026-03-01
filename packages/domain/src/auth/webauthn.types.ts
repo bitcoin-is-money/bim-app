@@ -14,10 +14,10 @@ export interface WebAuthnRegistrationOptions {
 export interface WebAuthnAuthenticationOptions {
   challenge: string;
   rpId: string;
-  allowCredentials?: Array<{
+  allowCredentials?: {
     id: string;
     type: 'public-key';
-  }>;
+  }[];
   timeoutMs: number;
   /**
    * WebAuthn user verification requirement (biometric/PIN prompt).

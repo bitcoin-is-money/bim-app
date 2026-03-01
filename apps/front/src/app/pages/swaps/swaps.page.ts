@@ -1,4 +1,5 @@
-import {Component, computed, inject, OnInit, signal} from '@angular/core';
+import type { OnInit} from '@angular/core';
+import {Component, computed, inject, signal} from '@angular/core';
 import {TranslateModule} from '@ngx-translate/core';
 import {ButtonComponent} from "../../components/button/button.component";
 import {GoBackHeaderComponent} from '../../components/go-back-header/go-back-header.component';
@@ -37,6 +38,6 @@ export class SwapsPage implements OnInit {
     }
 
     // Reset refreshing state after a short delay (mocks are async)
-    setTimeout(() => this.isRefreshing.set(false), 1000);
+    setTimeout(() => { this.isRefreshing.set(false); }, 1000);
   }
 }

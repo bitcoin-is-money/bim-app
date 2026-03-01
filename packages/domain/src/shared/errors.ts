@@ -49,7 +49,7 @@ export class ValidationError extends DomainError {
  * Error thrown when an operation is not authorized.
  */
 export class UnauthorizedError extends DomainError {
-  constructor(message: string = 'Unauthorized') {
+  constructor(message = 'Unauthorized') {
     super(message);
   }
 }

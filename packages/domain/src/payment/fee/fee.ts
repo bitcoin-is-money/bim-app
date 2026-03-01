@@ -1,4 +1,4 @@
-import {StarknetAddress} from '../../account';
+import type {StarknetAddress} from '../../account';
 
 /**
  * Fee configuration for BIM developer tax.

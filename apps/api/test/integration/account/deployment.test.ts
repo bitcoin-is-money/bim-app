@@ -3,12 +3,13 @@ import {StarknetAddress} from '@bim/domain/account';
 import {WebauthnVirtualAuthenticator} from "@bim/test-toolkit/auth";
 import {eq} from 'drizzle-orm';
 import type {Hono} from 'hono';
-import pg from 'pg';
+import type pg from 'pg';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 import type {ApiErrorResponse} from '../../../src/errors';
 import type {DeployAccountResponse, GetAccountResponse, GetDeploymentStatusResponse} from '../../../src/routes';
 import {registerUser} from '../../helpers';
-import {type DbClient, DevnetPaymasterGateway, StrkDevnetContext, TestApp, TestDatabase,} from '../helpers';
+import type { DevnetPaymasterGateway} from '../helpers';
+import {type DbClient, StrkDevnetContext, TestApp, TestDatabase,} from '../helpers';
 import {AccountFixture} from '../helpers/account';
 import {AuthFixture} from '../helpers/auth';
 

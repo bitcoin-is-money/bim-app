@@ -1,4 +1,4 @@
-import {StarknetAddress} from "@bim/domain/account";
+import type {StarknetAddress} from "@bim/domain/account";
 import type {
   AtomiqGateway,
   AtomiqReverseSwapResult,
@@ -10,7 +10,8 @@ import type {
   UnsignedClaimTransactions
 } from '@bim/domain/ports';
 import {ExternalServiceError} from "@bim/domain/shared";
-import {BitcoinAddress, LightningInvoice, SwapId, type SwapLimits} from '@bim/domain/swap';
+import type {BitcoinAddress, LightningInvoice, SwapId} from '@bim/domain/swap';
+import type { SwapLimits} from '@bim/domain/swap';
 
 /**
  * Mock implementation of AtomiqGateway for testing purposes.

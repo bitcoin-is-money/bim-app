@@ -1,7 +1,7 @@
 import {HttpResponse} from '@angular/common/http';
 import {type ApiErrorResponse, ErrorCode, type SwapDirection} from '../../model';
-import {ExecutePaymentResponse, ParsePaymentResponse} from '../../services/pay.http.service';
-import {DataStoreMock} from '../data-store.mock';
+import type {ExecutePaymentResponse, ParsePaymentResponse} from '../../services/pay.http.service';
+import type {DataStoreMock} from '../data-store.mock';
 import {createErrorResponse} from '../mock-error';
 
 export class PaymentHandlerMock {

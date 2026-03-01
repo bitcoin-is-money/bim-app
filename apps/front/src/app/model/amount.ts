@@ -1,4 +1,5 @@
-import {ConversionRates, Currency} from './currency';
+import type {ConversionRates} from './currency';
+import { Currency} from './currency';
 
 const SATS_PER_BTC = 100_000_000;
 
@@ -25,7 +26,7 @@ export class Amount {
   }
 
   /** Returns the formatted value as a string with appropriate decimal places */
-  format(locale: string = 'en-US'): string {
+  format(locale = 'en-US'): string {
     const decimals = Currency.decimals(this.currency);
     return new Intl.NumberFormat(locale, {
       minimumFractionDigits: decimals,

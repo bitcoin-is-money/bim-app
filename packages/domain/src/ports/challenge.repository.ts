@@ -1,4 +1,4 @@
-import {Challenge, ChallengeId} from '../auth';
+import type {Challenge, ChallengeId} from '../auth';
 
 /**
  * Repository interface for WebAuthn Challenge persistence.

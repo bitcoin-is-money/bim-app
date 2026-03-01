@@ -1,7 +1,7 @@
 import {WebauthnVirtualAuthenticator} from "@bim/test-toolkit/auth";
 import {sql} from 'drizzle-orm';
 import type {Hono} from 'hono';
-import pg from 'pg';
+import type pg from 'pg';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 import type {ApiErrorResponse} from '../../../src/errors';
 import type {

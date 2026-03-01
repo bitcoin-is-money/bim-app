@@ -1,7 +1,9 @@
 import {inject, Injectable, signal} from '@angular/core';
-import {map, Observable} from 'rxjs';
+import type { Observable} from 'rxjs';
+import {map} from 'rxjs';
 import {Amount} from "../model";
-import {AccountHttpService, AccountInfoResponse, DeployAccountResponse, DeploymentStatusResponse} from './account.http.service';
+import type { AccountInfoResponse, DeployAccountResponse, DeploymentStatusResponse} from './account.http.service';
+import {AccountHttpService} from './account.http.service';
 
 @Injectable({
   providedIn: 'root',
@@ -17,8 +19,8 @@ export class AccountService {
 
   loadBalance(): void {
     this.getBalance().subscribe({
-      next: (balance) => this.balance.set(balance),
-      error: (err) => console.error('Error loading balance:', err),
+      next: (balance) => { this.balance.set(balance); },
+      error: (err) => { console.error('Error loading balance:', err); },
     });
   }
 

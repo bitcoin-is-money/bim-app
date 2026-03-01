@@ -1,6 +1,6 @@
 import {AccountId} from '../account';
 import type {TransactionRepository} from '../ports';
-import {Transaction} from './transaction';
+import type {Transaction} from './transaction';
 import {TransactionHash} from './types';
 
 // =============================================================================

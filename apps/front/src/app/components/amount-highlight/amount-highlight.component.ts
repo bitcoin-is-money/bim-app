@@ -1,7 +1,7 @@
 import {Component, computed, inject, input} from '@angular/core';
 import {CurrencyDisplayComponent} from '../currency-display/currency-display.component';
 import {FormatAmountPipe} from '../../pipes/format-amount.pipe';
-import {Amount} from '../../model';
+import type {Amount} from '../../model';
 import {CurrencyService} from '../../services/currency.service';
 
 @Component({

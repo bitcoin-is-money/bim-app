@@ -34,10 +34,10 @@ export interface BeginAuthenticationResponse {
   options: {
     challenge: string;
     rpId: string;
-    allowCredentials?: Array<{
+    allowCredentials?: {
       id: string;
       type: 'public-key';
-    }>;
+    }[];
     timeoutMs: number;
     userVerification: 'required' | 'preferred' | 'discouraged';
   };

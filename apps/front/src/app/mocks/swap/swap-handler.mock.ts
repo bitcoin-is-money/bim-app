@@ -1,6 +1,6 @@
 import {HttpResponse} from '@angular/common/http';
 import {type ApiErrorResponse, ErrorCode, type SwapStatus, type SwapStatusResponse} from '../../model';
-import {DataStoreMock} from '../data-store.mock';
+import type {DataStoreMock} from '../data-store.mock';
 import {createErrorResponse} from '../mock-error';
 
 /** Predefined statuses for Bob's existing swaps */

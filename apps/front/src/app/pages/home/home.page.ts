@@ -1,5 +1,6 @@
 import {CommonModule} from '@angular/common';
-import {Component, inject, OnInit} from '@angular/core';
+import type { OnInit} from '@angular/core';
+import {Component, inject} from '@angular/core';
 import {Router} from '@angular/router';
 import {TranslateModule} from '@ngx-translate/core';
 import {AmountHighlightComponent} from '../../components/amount-highlight/amount-highlight.component';

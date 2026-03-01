@@ -3,7 +3,7 @@ import {describe, it} from 'vitest';
 
 // Visual smoke tests — verify rendering in vitest console output
 // Change this log level to trace to see output when launching tests
-const LOG_LEVEL: string = 'silent';
+const LOG_LEVEL = 'silent';
 
 describe('createLogger rendering', () => {
   const log = createLogger(LOG_LEVEL);
@@ -16,11 +16,11 @@ describe('createLogger rendering', () => {
     named.error(new Error('Connection failed'), 'Gateway error');
   });
 
-  it('trace', () => log.trace('This is a trace message'));
-  it('debug', () => log.debug('This is a debug message'));
-  it('info', () => log.info('This is an info message'));
-  it('warn', () => log.warn('This is a warn message'));
-  it('error', () => log.error('This is an error message'));
-  it('fatal', () => log.fatal('This is a fatal message'));
-  it('info with key', () => log.info({key: 'value'}, 'This is an info message'));
+  it('trace', () => { log.trace('This is a trace message'); });
+  it('debug', () => { log.debug('This is a debug message'); });
+  it('info', () => { log.info('This is an info message'); });
+  it('warn', () => { log.warn('This is a warn message'); });
+  it('error', () => { log.error('This is an error message'); });
+  it('fatal', () => { log.fatal('This is a fatal message'); });
+  it('info with key', () => { log.info({key: 'value'}, 'This is an info message'); });
 });

@@ -59,7 +59,7 @@ describe('UserSettings', () => {
     it('throws on empty list', () => {
       const settings = UserSettings.create({id: settingsId, accountId});
 
-      expect(() => settings.setPreferredCurrencies([])).toThrow('At least one preferred currency is required');
+      expect(() => { settings.setPreferredCurrencies([]); }).toThrow('At least one preferred currency is required');
     });
 
     it('updates updatedAt timestamp', () => {
@@ -85,7 +85,7 @@ describe('UserSettings', () => {
     it('throws if currency not in preferred list', () => {
       const settings = UserSettings.create({id: settingsId, accountId});
 
-      expect(() => settings.setDefaultCurrency(FiatCurrency.of('EUR')))
+      expect(() => { settings.setDefaultCurrency(FiatCurrency.of('EUR')); })
         .toThrow('Default currency EUR must be in preferred currencies');
     });
   });

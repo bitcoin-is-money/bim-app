@@ -1,5 +1,5 @@
 import {Component, input} from '@angular/core';
-import {StyleVariant} from "../variant";
+import type {StyleVariant} from "../variant";
 
 @Component({
   selector: 'app-spinner',

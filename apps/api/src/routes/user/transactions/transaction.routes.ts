@@ -1,4 +1,4 @@
-import {Account} from '@bim/domain/account';
+import type {Account} from '@bim/domain/account';
 import type {TypedResponse} from 'hono';
 import {Hono} from 'hono';
 

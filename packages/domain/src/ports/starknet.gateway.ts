@@ -1,4 +1,4 @@
-import {StarknetAddress} from '../account';
+import type {StarknetAddress} from '../account';
 
 /**
  * Gateway interface for Starknet blockchain interactions.

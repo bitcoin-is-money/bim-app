@@ -1,7 +1,7 @@
 import {HttpResponse} from '@angular/common/http';
 import {type ApiErrorResponse, ErrorCode} from '../../model';
-import {AccountInfoResponse, BalanceResponse, DeployAccountResponse, DeploymentStatusResponse,} from '../../services/account.http.service';
-import {DataStoreMock} from '../data-store.mock';
+import type {AccountInfoResponse, BalanceResponse, DeployAccountResponse, DeploymentStatusResponse,} from '../../services/account.http.service';
+import type {DataStoreMock} from '../data-store.mock';
 import {createErrorResponse} from '../mock-error';
 
 const MOCK_DEPLOYMENT_DELAY_MS = 2000;

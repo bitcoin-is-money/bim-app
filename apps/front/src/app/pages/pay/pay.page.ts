@@ -1,5 +1,6 @@
 import {CommonModule} from '@angular/common';
-import {Component, inject, OnDestroy, signal} from '@angular/core';
+import type { OnDestroy} from '@angular/core';
+import {Component, inject, signal} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {TranslateModule} from '@ngx-translate/core';
 import {Html5Qrcode, Html5QrcodeSupportedFormats} from 'html5-qrcode';

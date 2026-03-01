@@ -1,5 +1,5 @@
-import {AccountId} from '../account';
-import {UserSettings} from '../user';
+import type {AccountId} from '../account';
+import type {UserSettings} from '../user';
 
 /**
  * Repository interface for UserSettings persistence.

@@ -90,7 +90,7 @@ import {createWbtcTransferIndexer, type WbtcRuntimeConfig} from '../../src/wbtc-
 // Helpers
 // ---------------------------------------------------------------------------
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 function getLogger(): Record<string, ReturnType<typeof vi.fn>> {
   return (createLogger as any)();
 }
@@ -217,7 +217,7 @@ describe('createWbtcTransferIndexer', () => {
 // ---------------------------------------------------------------------------
 
 describe('transform error handling', () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   function mockBlockArgs(blockNumber = 42n): any {
     return {
       block: {header: {timestamp: '1700000000'}, events: [{keys: ['a', 'b', 'c'], data: ['d', 'e']}]},
@@ -231,7 +231,7 @@ describe('transform error handling', () => {
     });
 
     const indexer = await createWbtcTransferIndexer(makeConfig());
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     await (indexer as any).transform(mockBlockArgs());
 
     expect(getLogger().error).toHaveBeenCalledWith(
@@ -246,13 +246,13 @@ describe('transform error handling', () => {
     });
 
     const indexer = await createWbtcTransferIndexer(makeConfig());
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     await expect((indexer as any).transform(mockBlockArgs())).resolves.toBeUndefined();
   });
 
   it('does not log error when processing succeeds', async () => {
     const indexer = await createWbtcTransferIndexer(makeConfig());
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     await (indexer as any).transform(mockBlockArgs());
 
     expect(getLogger().error).not.toHaveBeenCalled();

@@ -1,4 +1,5 @@
-import {Component, inject, OnInit, signal} from '@angular/core';
+import type { OnInit} from '@angular/core';
+import {Component, inject, signal} from '@angular/core';
 import {DatePipe} from '@angular/common';
 import {TranslateModule} from '@ngx-translate/core';
 import {GoBackHeaderComponent} from '../../components/go-back-header/go-back-header.component';
@@ -6,7 +7,7 @@ import {InfoFieldComponent} from '../../components/info-field/info-field.compone
 import {FullPageLayoutComponent} from '../../layout';
 import {AccountService} from '../../services/account.service';
 import {I18nService} from '../../services/i18n.service';
-import {AccountInfoResponse} from '../../services/account.http.service';
+import type {AccountInfoResponse} from '../../services/account.http.service';
 
 @Component({
   selector: 'app-my-account',

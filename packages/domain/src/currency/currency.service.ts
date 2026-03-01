@@ -21,7 +21,7 @@ export class CurrencyService {
 
   private readonly log: Logger;
   private readonly allCurrencies: FiatCurrency[];
-  private cachedPrices: Map<FiatCurrency, number> = new Map();
+  private cachedPrices = new Map<FiatCurrency, number>();
   private cachedAt = 0;
 
   constructor(private readonly deps: CurrencyServiceDeps) {

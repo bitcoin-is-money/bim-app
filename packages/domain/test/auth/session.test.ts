@@ -69,7 +69,7 @@ describe('Session', () => {
     it('does not throw for valid session', () => {
       const session = Session.create(accountId);
 
-      expect(() => session.validate()).not.toThrow();
+      expect(() => { session.validate(); }).not.toThrow();
     });
 
     it('throws SessionExpiredError if expired', () => {
@@ -77,7 +77,7 @@ describe('Session', () => {
 
       vi.advanceTimersByTime(SESSION_DURATION_MS + 1000);
 
-      expect(() => session.validate()).toThrow(SessionExpiredError);
+      expect(() => { session.validate(); }).toThrow(SessionExpiredError);
     });
   });
 

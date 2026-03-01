@@ -1,4 +1,4 @@
-import {AccountId} from '../account';
+import type {AccountId} from '../account';
 import {SessionExpiredError} from './errors';
 import {SESSION_DURATION_MS, SessionId} from './types';
 

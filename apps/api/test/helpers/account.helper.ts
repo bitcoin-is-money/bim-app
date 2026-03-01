@@ -1,4 +1,4 @@
-import {WebauthnVirtualAuthenticator} from '@bim/test-toolkit/auth';
+import type {WebauthnVirtualAuthenticator} from '@bim/test-toolkit/auth';
 import type {DeployAccountResponse} from '../../src/routes';
 import {registerUser, type TestRequester} from './auth.helper';
 

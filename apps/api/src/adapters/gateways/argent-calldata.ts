@@ -1,4 +1,4 @@
-import {sha256} from '@noble/hashes/sha256';
+import {sha256} from '@noble/hashes/sha2';
 
 /**
  * Splits a 256-bit hex value into two 128-bit felt strings (low, high).

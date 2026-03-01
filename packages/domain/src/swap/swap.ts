@@ -1,4 +1,6 @@
-import {Amount} from '../shared';
+import type {Amount} from '../shared';
+import type {
+  SwapId} from './types';
 import {
   type CreateBitcoinToStarknetParams,
   type CreateLightningToStarknetParams,
@@ -6,7 +8,6 @@ import {
   type CreateStarknetToLightningParams,
   isForwardSwap,
   type SwapDirection,
-  SwapId,
   type SwapState,
   type SwapStatus,
 } from './types';

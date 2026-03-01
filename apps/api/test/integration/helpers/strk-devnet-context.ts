@@ -75,7 +75,7 @@ export class StrkDevnetContext {
    * Call this in beforeAll() for tests that need STARK signing (deployment tests).
    * @param accountIndex - Index of the devnet account to use (default: 1, since 0 is for funding)
    */
-  async ensureStarkSignerInitialized(accountIndex: number = 1): Promise<void> {
+  async ensureStarkSignerInitialized(accountIndex = 1): Promise<void> {
     if (this.starkSignerInitialized) return;
 
     // Fetch a devnet account's private key for the StarkSigner
@@ -207,7 +207,7 @@ export class StrkDevnetContext {
    */
   async fundAddress(
     address: string | StarknetAddress,
-    amountWei: string = '1000000000000000000'
+    amountWei = '1000000000000000000'
   ): Promise<string> {
     const normalizedAddress = typeof address === 'string'
       ? StarknetAddress.of(address)
@@ -410,11 +410,11 @@ export class StrkDevnetContext {
    */
   async executeMulticall(
     from: Account,
-    calls: ReadonlyArray<{
+    calls: readonly {
       readonly contractAddress: string;
       readonly entrypoint: string;
       readonly calldata: readonly string[];
-    }>,
+    }[],
     skipFeeEstimation = true,
   ): Promise<string> {
     const options = skipFeeEstimation

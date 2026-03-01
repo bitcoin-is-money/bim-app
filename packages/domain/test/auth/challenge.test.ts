@@ -95,7 +95,7 @@ describe('Challenge', () => {
 
       vi.advanceTimersByTime(CHALLENGE_DURATION_MS + 1000);
 
-      expect(() => challenge.consume()).toThrow(ChallengeExpiredError);
+      expect(() => { challenge.consume(); }).toThrow(ChallengeExpiredError);
     });
 
     it('throws ChallengeAlreadyUsedError if already used', () => {
@@ -106,7 +106,7 @@ describe('Challenge', () => {
 
       challenge.consume();
 
-      expect(() => challenge.consume()).toThrow(ChallengeAlreadyUsedError);
+      expect(() => { challenge.consume(); }).toThrow(ChallengeAlreadyUsedError);
     });
   });
 
@@ -117,7 +117,7 @@ describe('Challenge', () => {
         origin: 'http://localhost:3000',
       });
 
-      expect(() => challenge.validate()).not.toThrow();
+      expect(() => { challenge.validate(); }).not.toThrow();
     });
 
     it('throws ChallengeExpiredError if expired on validate', () => {
@@ -128,7 +128,7 @@ describe('Challenge', () => {
 
       vi.advanceTimersByTime(CHALLENGE_DURATION_MS + 1000);
 
-      expect(() => challenge.validate()).toThrow(ChallengeExpiredError);
+      expect(() => { challenge.validate(); }).toThrow(ChallengeExpiredError);
     });
 
     it('throws ChallengeAlreadyUsedError if used', () => {
@@ -139,7 +139,7 @@ describe('Challenge', () => {
 
       challenge.consume();
 
-      expect(() => challenge.validate()).toThrow(ChallengeAlreadyUsedError);
+      expect(() => { challenge.validate(); }).toThrow(ChallengeAlreadyUsedError);
     });
 
     it('does not consume the challenge', () => {

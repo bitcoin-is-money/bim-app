@@ -1,13 +1,15 @@
 import {HttpResponse} from '@angular/common/http';
 import {WebauthnUserHandleDecoder} from '@bim/lib/auth';
-import {Account, type ApiErrorResponse, ErrorCode} from '../../model';
+import type {Account} from '../../model';
+import { type ApiErrorResponse, ErrorCode} from '../../model';
 import type {
   AuthResponse,
   BeginAuthResponse,
   BeginRegisterResponse,
   UserSessionResponse,
 } from '../../services/auth.service';
-import {DataStoreMock, type StoredCredential} from '../data-store.mock';
+import type {DataStoreMock} from '../data-store.mock';
+import type { StoredCredential} from '../data-store.mock';
 import {createErrorResponse} from '../mock-error';
 import {getMockUser, type MockUserProfile} from '../mock-users';
 

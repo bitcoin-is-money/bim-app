@@ -1,4 +1,5 @@
-import {Swap, type SwapDirection, SwapId, type SwapStatus} from '../swap';
+import type {Swap, SwapId} from '../swap';
+import type { SwapDirection, SwapStatus} from '../swap';
 
 /**
  * Repository interface for Swap persistence.

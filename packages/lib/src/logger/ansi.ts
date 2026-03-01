@@ -1,7 +1,7 @@
-export type TextColorConfig = {
+export interface TextColorConfig {
   fg: number;
   bg?: number;
-};
+}
 
 // ANSI 256-color: \x1b[48;5;Nm = background, \x1b[38;5;Nm = foreground
 const ansiBg = (n: number, text: string) =>

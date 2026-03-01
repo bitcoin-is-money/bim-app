@@ -23,11 +23,11 @@ interface AvnuQuote {
  */
 interface AvnuBuildResponse {
   chainId: string;
-  calls: Array<{
+  calls: {
     contractAddress: string;
     entrypoint: string;
     calldata: string[];
-  }>;
+  }[];
 }
 
 const SWAP_API_VERSION = 'v3';

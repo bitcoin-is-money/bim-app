@@ -1,5 +1,5 @@
-import {AccountId} from '../account';
-import {Transaction, TransactionHash, TransactionId} from '../user';
+import type {AccountId} from '../account';
+import type {Transaction, TransactionHash, TransactionId} from '../user';
 
 /**
  * Pagination options for transaction queries.

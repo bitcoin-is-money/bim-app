@@ -1,8 +1,9 @@
 import {computed, inject, Injectable, signal} from '@angular/core';
 import {TranslateService} from '@ngx-translate/core';
 import {firstValueFrom} from 'rxjs';
-import {ApiErrorBody} from '../model';
-import {UserSettingsHttpService, Language} from './user-settings-http.service';
+import type {ApiErrorBody} from '../model';
+import type { Language} from './user-settings-http.service';
+import {UserSettingsHttpService} from './user-settings-http.service';
 
 const SUPPORTED_LANGS: readonly Language[] = ['en', 'fr'] as const;
 const DEFAULT_LANG: Language = 'en';

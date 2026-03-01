@@ -1,8 +1,8 @@
 
 import type {Logger} from 'pino';
-import {Account} from '../account';
+import type {Account} from '../account';
 import type {AccountRepository, SessionRepository} from '../ports';
-import {Session} from './session';
+import type {Session} from './session';
 import {SessionNotFoundError} from './errors';
 import {SessionId} from './types';
 
