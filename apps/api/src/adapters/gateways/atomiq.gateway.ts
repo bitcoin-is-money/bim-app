@@ -187,7 +187,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         params.destinationAddress.toString(),
         swapToken.address,
         params.amountSats,
-        false, // exactOut = false (i.e. exactIn)
+        true, // exactOut = true: user receives exactly the requested amount, payer covers fees
       );
 
       if (!swap) {
@@ -342,7 +342,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     try {
       const swapToken = this.getSwapToken();
 
-      const exactOut = false;
+      const exactOut = true; // User receives exactly the requested amount, payer covers fees
       const swap: FromBTCSwap<StarknetChainType> = await this.swapper!.createFromBTCSwap(
         'STARKNET',
         params.destinationAddress.toString(),
