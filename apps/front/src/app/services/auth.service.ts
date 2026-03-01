@@ -11,6 +11,7 @@ import {
   BeginRegisterResponse,
   UserSessionResponse,
 } from './auth.http.service';
+import {CurrencyService} from './currency.service';
 import {I18nService} from './i18n.service';
 import {NotificationService} from './notification.service';
 
@@ -24,6 +25,7 @@ export class AuthService {
   private readonly httpService = inject(AuthHttpService);
   private readonly router = inject(Router);
   private readonly i18n = inject(I18nService);
+  private readonly currency = inject(CurrencyService);
   private readonly notifications = inject(NotificationService);
 
   currentUser = signal<Account | null>(null);
@@ -117,8 +119,9 @@ export class AuthService {
 
       await firstValueFrom(this.completeLogin(beginResponse.challengeId, credential));
 
-      // Load user's language preference after login
+      // Load user preferences after login
       await this.i18n.init();
+      await this.currency.init();
 
       await this.router.navigate(['/home']);
     } catch (error) {
@@ -167,8 +170,9 @@ export class AuthService {
       .subscribe((response: UserSessionResponse) => {
         if (response.authenticated && response.account) {
           this.currentUser.set(response.account);
-          // Load user's language preference
+          // Load user preferences
           this.i18n.init();
+          this.currency.init();
         } else {
           this.currentUser.set(null);
           // Use browser language for unauthenticated users

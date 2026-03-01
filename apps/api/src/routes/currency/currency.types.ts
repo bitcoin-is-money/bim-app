@@ -4,5 +4,6 @@
 // =============================================================================
 
 export interface GetPricesResponse {
-  BTC_USD: number;
+  prices: Record<string, number>;
+  supportedCurrencies: readonly string[];
 }

@@ -5,9 +5,8 @@
 
 export interface GetSettingsResponse {
   language: string;
-  supportedLanguages: readonly string[];
-  fiatCurrency: string;
-  supportedCurrencies: readonly string[];
+  preferredCurrencies: string[];
+  defaultCurrency: string;
 }
 
 // =============================================================================
@@ -16,7 +15,6 @@ export interface GetSettingsResponse {
 
 export interface UpdateSettingsResponse {
   language: string;
-  supportedLanguages: readonly string[];
-  fiatCurrency: string;
-  supportedCurrencies: readonly string[];
+  preferredCurrencies: string[];
+  defaultCurrency: string;
 }

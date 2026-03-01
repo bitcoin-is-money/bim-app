@@ -10,4 +10,5 @@ export * from './webauthn.gateway';
 export * from './atomiq.gateway';
 export * from './swap.gateway';
 export * from './lightning.decoder';
+export * from './price.gateway';
 

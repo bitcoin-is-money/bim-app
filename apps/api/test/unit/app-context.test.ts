@@ -22,6 +22,7 @@ vi.mock('../../src/adapters/index.js', () => {
     AvnuSwapGateway: class { name = 'avnu-swap'; },
     AtomiqSdkGateway: class { name = 'atomiq-sdk'; },
     Bolt11LightningDecoder: class { name = 'bolt11-lightning-decoder'; },
+    CoinGeckoPriceGateway: class { name = 'coingecko-price'; },
   };
 });
 

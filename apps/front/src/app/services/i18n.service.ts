@@ -2,7 +2,7 @@ import {computed, inject, Injectable, signal} from '@angular/core';
 import {TranslateService} from '@ngx-translate/core';
 import {firstValueFrom} from 'rxjs';
 import {ApiErrorBody} from '../model';
-import {I18nHttpService, Language} from './i18n.http.service';
+import {UserSettingsHttpService, Language} from './user-settings-http.service';
 
 const SUPPORTED_LANGS: readonly Language[] = ['en', 'fr'] as const;
 const DEFAULT_LANG: Language = 'en';
@@ -15,7 +15,7 @@ const LANG_TO_LOCALE: Record<Language, string> = {
 @Injectable({providedIn: 'root'})
 export class I18nService {
   private readonly translate = inject(TranslateService);
-  private readonly httpService = inject(I18nHttpService);
+  private readonly httpService = inject(UserSettingsHttpService);
 
   private readonly _currentLang = signal<Language>(DEFAULT_LANG);
   readonly currentLang = this._currentLang.asReadonly();

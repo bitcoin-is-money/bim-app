@@ -1,7 +1,7 @@
 import {AccountId} from '../account';
 import type {UserSettingsRepository} from '../ports';
-import {FiatCurrency} from './fiat-currency';
-import {Language} from './language';
+import type {FiatCurrency} from '../currency';
+import type {Language} from './language';
 import {UserSettingsId} from './types';
 import {UserSettings} from './user-settings';
 
@@ -26,8 +26,9 @@ export interface FetchUserSettingsOutput {
 }
 
 export interface UserSettingsUpdate {
-  fiatCurrency: string;
-  language: string;
+  preferredCurrencies: FiatCurrency[];
+  defaultCurrency: FiatCurrency;
+  language: Language;
 }
 
 export type UpdateUserSettingsInput = {
@@ -88,14 +89,16 @@ export class UserSettingsService {
       });
     }
 
-    if (input.fiatCurrency !== undefined) {
-      const currency = FiatCurrency.of(input.fiatCurrency);
-      settings.setFiatCurrency(currency);
+    if (input.preferredCurrencies !== undefined) {
+      settings.setPreferredCurrencies(input.preferredCurrencies);
+    }
+
+    if (input.defaultCurrency !== undefined) {
+      settings.setDefaultCurrency(input.defaultCurrency);
     }
 
     if (input.language !== undefined) {
-      const language = Language.of(input.language);
-      settings.setLanguage(language);
+      settings.setLanguage(input.language);
     }
 
     await this.deps.userSettingsRepository.save(settings);

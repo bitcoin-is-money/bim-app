@@ -5,13 +5,8 @@ import {UserSettings} from "../model/user-settings";
 
 export type Language = 'en' | 'fr';
 
-export interface UpdateSettingsRequest {
-  language?: Language;
-  fiatCurrency?: string;
-}
-
 @Injectable({providedIn: 'root'})
-export class I18nHttpService {
+export class UserSettingsHttpService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = '/api/user/settings';
 
@@ -19,7 +14,7 @@ export class I18nHttpService {
     return this.http.get<UserSettings>(this.apiUrl);
   }
 
-  updateSettings(settings: UpdateSettingsRequest): Observable<UserSettings> {
+  updateSettings(settings: Partial<UserSettings>): Observable<UserSettings> {
     return this.http.put<UserSettings>(this.apiUrl, settings);
   }
 }

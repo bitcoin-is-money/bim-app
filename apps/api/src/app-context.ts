@@ -1,6 +1,7 @@
 import {AccountService, StarknetAddress} from "@bim/domain/account";
 import {AuthService, SessionService} from "@bim/domain/auth";
 import {Erc20CallFactory, FeeConfig, ParseService, PayService, ReceiveService,} from "@bim/domain/payment";
+import {CurrencyService} from "@bim/domain/currency";
 import type {
   AccountRepository,
   AtomiqGateway,
@@ -8,6 +9,7 @@ import type {
   SwapGateway,
   LightningDecoder,
   PaymasterGateway,
+  PriceGateway,
   SessionRepository,
   StarknetGateway,
   SwapRepository,
@@ -24,6 +26,7 @@ import {
   AvnuPaymasterGateway,
   AvnuSwapGateway,
   Bolt11LightningDecoder,
+  CoinGeckoPriceGateway,
   DrizzleAccountRepository,
   DrizzleChallengeRepository,
   DrizzleSessionRepository,
@@ -55,6 +58,7 @@ export interface AppContext {
     atomiq: AtomiqGateway;
     dex: SwapGateway;
     lightningDecoder: LightningDecoder;
+    price: PriceGateway;
   };
   services: {
     account: AccountService;
@@ -65,6 +69,7 @@ export interface AppContext {
     transaction: TransactionService;
     pay: PayService;
     receive: ReceiveService;
+    currency: CurrencyService;
   };
   starknetConfig: StarknetConfig;
   webauthn: {
@@ -143,6 +148,7 @@ export namespace AppContext {
         rootLogger,
       ),
       lightningDecoder: new Bolt11LightningDecoder(),
+      price: new CoinGeckoPriceGateway(rootLogger),
       ...overrides?.gateways,
     };
 
@@ -229,6 +235,11 @@ export namespace AppContext {
       logger: rootLogger,
     });
 
+    const currencyService = new CurrencyService({
+      priceGateway: gateways.price,
+      logger: rootLogger,
+    });
+
     return {
       repositories,
       gateways,
@@ -241,6 +252,7 @@ export namespace AppContext {
         transaction: transactionService,
         pay: payService,
         receive: receiveService,
+        currency: currencyService,
       },
       starknetConfig,
       webauthn,

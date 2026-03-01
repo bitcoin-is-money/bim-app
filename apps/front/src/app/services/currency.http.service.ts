@@ -1,16 +1,24 @@
 import {HttpClient} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
 import {Observable} from 'rxjs';
-import {ConversionRates} from '../model';
+import {UserSettings} from '../model/user-settings';
+
+export interface PricesResponse {
+  prices: Record<string, number>;
+  supportedCurrencies: string[];
+}
 
 @Injectable({
   providedIn: 'root',
 })
 export class CurrencyHttpService {
-  private readonly apiUrl = '/api/currency/prices';
   private readonly http = inject(HttpClient);
 
-  fetchRates(): Observable<ConversionRates> {
-    return this.http.get<ConversionRates>(this.apiUrl);
+  getSettings(): Observable<UserSettings> {
+    return this.http.get<UserSettings>('/api/user/settings');
+  }
+
+  fetchRates(): Observable<PricesResponse> {
+    return this.http.get<PricesResponse>('/api/currency/prices');
   }
 }

@@ -53,8 +53,11 @@ import {
   SwapNotFoundError,
 } from '@bim/domain/swap';
 
+// Domain errors - Currency
+import {UnsupportedCurrencyError} from '@bim/domain/currency';
+
 // Domain errors - User
-import {UnsupportedCurrencyError, UserSettingsNotFoundError} from '@bim/domain/user';
+import {UserSettingsNotFoundError} from '@bim/domain/user';
 import type {Context, TypedResponse} from 'hono';
 import type {Logger} from 'pino';
 import {ZodError} from 'zod';

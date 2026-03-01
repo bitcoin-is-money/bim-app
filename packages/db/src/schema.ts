@@ -56,7 +56,8 @@ export const userSettings = pgTable('bim_user_settings', {
     .references(() => accounts.id, {onDelete: 'cascade'})
     .notNull()
     .unique(),
-  fiatCurrency: text('fiat_currency').notNull().default('USD'),
+  preferredCurrencies: text('preferred_currencies').notNull().default('USD'),
+  defaultCurrency: text('default_currency').notNull().default('USD'),
   language: text('language').notNull().default('en'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),

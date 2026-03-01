@@ -1,12 +1,11 @@
+import {FiatCurrency, UnsupportedCurrencyError} from '@bim/domain/currency';
 import {
-  FiatCurrency,
   InvalidTransactionHashError,
   InvalidTransactionIdError,
   InvalidUserSettingsIdError,
   Language,
   TransactionHash,
   TransactionId,
-  UnsupportedCurrencyError,
   UnsupportedLanguageError,
   UserSettingsId,
 } from '@bim/domain/user';

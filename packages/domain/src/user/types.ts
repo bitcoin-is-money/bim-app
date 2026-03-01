@@ -1,5 +1,5 @@
 import type {AccountId, StarknetAddress} from '../account';
-import type {FiatCurrency} from './fiat-currency';
+import type {FiatCurrency} from '../currency';
 import type {Language} from './language';
 import {InvalidUserSettingsIdError, InvalidTransactionIdError, InvalidTransactionHashError} from './errors';
 
@@ -83,7 +83,8 @@ export type TransactionType = 'receipt' | 'spent';
 export interface UserSettingsData {
   id: UserSettingsId;
   accountId: AccountId;
-  fiatCurrency: FiatCurrency;
+  preferredCurrencies: FiatCurrency[];
+  defaultCurrency: FiatCurrency;
   language: Language;
   createdAt: Date;
   updatedAt: Date;
