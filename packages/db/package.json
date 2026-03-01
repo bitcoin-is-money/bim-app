@@ -26,11 +26,11 @@
   },
   "dependencies": {
     "drizzle-orm": "^0.45.1",
-    "pg": "^8.18.0",
+    "pg": "^8.19.0",
     "pino": "^10.3.1"
   },
   "devDependencies": {
-    "@types/pg": "^8.16.0",
-    "drizzle-kit": "^0.31.8"
+    "@types/pg": "^8.18.0",
+    "drizzle-kit": "^0.31.9"
   }
 }

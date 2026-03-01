@@ -19,17 +19,18 @@
     "copy:front": "rm -rf public/app && cp -r ../front/dist/frontend/browser/browser public/app"
   },
   "dependencies": {
-    "@atomiqlabs/chain-starknet": "^8.0.13",
-    "@atomiqlabs/sdk": "^8.1.8",
+    "@atomiqlabs/chain-starknet": "^8.1.10",
+    "@atomiqlabs/sdk": "^8.3.5",
     "@atomiqlabs/storage-sqlite": "^5.0.0",
     "@bim/db": "*",
     "@bim/domain": "*",
     "@bim/lib": "*",
     "@hono/node-server": "^1.19.9",
+    "@noble/curves": "^1.9.7",
     "@stablelib/base64": "^2.0.1",
-    "dotenv": "^17.2.4",
+    "dotenv": "^17.3.1",
     "dotenv-expand": "^12.0.3",
-    "hono": "^4.11.9",
+    "hono": "^4.12.3",
     "hono-rate-limiter": "^0.5.3",
     "light-bolt11-decoder": "^3.2.0",
     "pino": "^10.3.1",
@@ -39,8 +40,8 @@
   },
   "devDependencies": {
     "@bim/test-toolkit": "*",
-    "@testcontainers/postgresql": "^11.11.0",
-    "@types/node": "^25.2.2",
-    "testcontainers": "^11.11.0"
+    "@testcontainers/postgresql": "^11.12.0",
+    "@types/node": "^25.3.3",
+    "testcontainers": "^11.12.0"
   }
 }

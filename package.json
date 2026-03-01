@@ -35,21 +35,28 @@
     "docker:redeploy": "./scripts/docker.sh redeploy",
     "infra:plan": "./scripts/docker.sh plan",
     "infra:apply": "./scripts/docker.sh apply",
-    "infra:init": "./scripts/docker.sh init"
+    "infra:init": "./scripts/docker.sh init",
+    "security": "npm run security:audit; npm run security:lockfile",
+    "security:audit": "better-npm-audit audit --level moderate",
+    "security:lockfile": "lockfile-lint --path package-lock.json --type npm --allowed-hosts npm --validate-https",
+    "deps:check": "npx npm-check-updates --workspaces --root",
+    "deps:update": "npx npm-check-updates --workspaces --root -u && npm install"
   },
-  "packageManager": "npm@11.10.0",
+  "packageManager": "npm@11.11.0",
   "engines": {
     "node": ">=22.0.0"
   },
   "devDependencies": {
+    "better-npm-audit": "^3.11.0",
+    "dotenv-cli": "^11.0.0",
     "esbuild": "^0.27.3",
+    "lockfile-lint": "^5.0.0",
     "patch-package": "^8.0.1",
     "postinstall-postinstall": "^2.1.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "vite-tsconfig-paths": "^6.1.0",
-    "vitest": "^4.0.18",
-    "dotenv-cli": "^11.0.0"
+    "vite-tsconfig-paths": "^6.1.1",
+    "vitest": "^4.0.18"
   },
   "overrides": {
     "@noble/hashes": "1.8.0"
