@@ -20,7 +20,7 @@ export interface ApiErrorResponse {
   error: ApiErrorBody;
 }
 
-export type ErrorStatus = 400 | 401 | 403 | 404 | 409 | 500 | 502 | 503 | 504;
+export type ErrorStatus = 400 | 401 | 403 | 404 | 409 | 429 | 500 | 502 | 503 | 504;
 
 /**
  * Create a typed error response.

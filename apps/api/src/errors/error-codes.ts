@@ -57,6 +57,9 @@ export const ErrorCode = {
   // External services
   EXTERNAL_SERVICE_ERROR: 'EXTERNAL_SERVICE_ERROR',
   TIMEOUT_ERROR: 'TIMEOUT_ERROR',
+
+  // Rate limiting
+  RATE_LIMITED: 'RATE_LIMITED',
 } as const;
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
