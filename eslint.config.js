@@ -40,6 +40,7 @@ export default tseslint.config(
       // Keep strict but allow these common patterns
       '@typescript-eslint/consistent-type-imports': 'error',
       '@typescript-eslint/no-import-type-side-effects': 'error',
+      '@typescript-eslint/restrict-template-expressions': ['error', {allowNumber: true, allowBoolean: true}],
     },
   },
 
