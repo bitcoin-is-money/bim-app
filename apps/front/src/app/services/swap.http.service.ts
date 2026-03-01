@@ -1,6 +1,6 @@
 import {HttpClient, HttpContext} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
-import {Observable} from 'rxjs';
+import type {Observable} from 'rxjs';
 import {SUPPRESS_ERROR_NOTIFICATION} from '../interceptor/http-notification.interceptor';
 import type {SwapStatusResponse} from '../model';
 

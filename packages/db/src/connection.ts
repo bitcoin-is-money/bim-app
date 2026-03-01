@@ -7,7 +7,7 @@ import type {Logger} from 'pino';
 
 export type Database = ReturnType<typeof drizzle<typeof schema>>;
 
-export type DatabaseConfig = {
+export interface DatabaseConfig {
   url: string;
   poolMax: number;
   poolIdleTimeoutMillis: number;

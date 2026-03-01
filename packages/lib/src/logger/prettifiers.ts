@@ -8,8 +8,8 @@ type LevelPrettifier = Exclude<PrettyOptions['customPrettifiers'], undefined>['l
 export function createMessageFormat(style: StyleConfig): NonNullable<PrettyOptions['messageFormat']> {
   return (log, messageKey) => {
     const msg = String(log[messageKey]);
-    const name: string = log['name']
-      ? String(log['name']) + ' \u25b8 '
+    const name: string = log.name
+      ? String(log.name) + ' \u25b8 '
       : '';
     const coloredName: string = colorize(style.name, name);
     const coloredMsg: string = colorize(style.msg, msg);
@@ -42,9 +42,9 @@ export function createLevelPrettifier(style: StyleConfig): LevelPrettifier {
     // Request ID prefix (padStart for right-alignment)
     let ridPrefix = '';
     if (style.requestId) {
-      const rid = log['requestId'] == null
+      const rid = log.requestId == null
         ? ' '.repeat(padding)
-        : String(log['requestId']).padStart(padding);
+        : String(log.requestId).padStart(padding);
       ridPrefix = "[" + colorize(style.requestId, rid) + '] ';
     }
 

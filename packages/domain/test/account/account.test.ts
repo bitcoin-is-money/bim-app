@@ -51,7 +51,7 @@ describe('Account', () => {
       const account = createTestAccount();
       account.markAsDeploying(TEST_STARKNET_ADDRESS, '0xtx1');
 
-      expect(() => account.markAsDeploying(TEST_STARKNET_ADDRESS, '0xtx2'))
+      expect(() => { account.markAsDeploying(TEST_STARKNET_ADDRESS, '0xtx2'); })
         .toThrow(InvalidStateTransitionError);
     });
   });
@@ -70,7 +70,7 @@ describe('Account', () => {
     it('throws when not in deploying status', () => {
       const account = createTestAccount();
 
-      expect(() => account.markAsDeployed())
+      expect(() => { account.markAsDeployed(); })
         .toThrow(InvalidStateTransitionError);
     });
   });
@@ -88,7 +88,7 @@ describe('Account', () => {
     it('throws when not in deploying status', () => {
       const account = createTestAccount();
 
-      expect(() => account.markAsFailed())
+      expect(() => { account.markAsFailed(); })
         .toThrow(InvalidStateTransitionError);
     });
   });
@@ -106,9 +106,9 @@ describe('Account', () => {
       const account = createTestAccount();
       account.updateSignCount(5);
 
-      expect(() => account.updateSignCount(5))
+      expect(() => { account.updateSignCount(5); })
         .toThrow(InvalidStateTransitionError);
-      expect(() => account.updateSignCount(3))
+      expect(() => { account.updateSignCount(3); })
         .toThrow(InvalidStateTransitionError);
     });
   });

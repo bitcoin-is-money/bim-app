@@ -1,6 +1,6 @@
 import {Component, input, model} from '@angular/core';
 import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {IconProp} from '@fortawesome/fontawesome-svg-core';
+import type {IconProp} from '@fortawesome/fontawesome-svg-core';
 
 @Component({
   selector: 'app-field',

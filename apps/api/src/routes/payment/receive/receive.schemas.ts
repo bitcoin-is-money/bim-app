@@ -19,6 +19,6 @@ const WebAuthnAssertionSchema = z.object({
 });
 
 export const ReceiveCommitSchema = z.object({
-  buildId: z.string().uuid(),
+  buildId: z.uuid(),
   assertion: WebAuthnAssertionSchema,
 });

@@ -19,7 +19,7 @@ describe('FormatAmountPipe', () => {
 
     return {
       pipe: TestBed.inject(FormatAmountPipe),
-      setLocale: (l: string) => localeSignal.set(l),
+      setLocale: (l: string) => { localeSignal.set(l); },
     };
   }
 

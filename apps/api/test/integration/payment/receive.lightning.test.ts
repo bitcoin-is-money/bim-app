@@ -1,4 +1,4 @@
-import pg from 'pg';
+import type pg from 'pg';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 import type {AppInstance} from '../../../src/app';
 import type {ApiErrorResponse} from '../../../src/errors';

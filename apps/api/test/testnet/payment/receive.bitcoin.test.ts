@@ -1,6 +1,6 @@
 import {WebauthnVirtualAuthenticator} from '@bim/test-toolkit/auth';
 import type {Hono} from 'hono';
-import pg from 'pg';
+import type pg from 'pg';
 import {afterAll, beforeAll, describe, expect, it} from 'vitest';
 import type {ApiErrorResponse} from '../../../src/errors';
 import type {BitcoinReceivePendingCommitResponse} from '../../../src/routes';

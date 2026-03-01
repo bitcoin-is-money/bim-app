@@ -1,5 +1,5 @@
 import {p256} from '@noble/curves/p256';
-import {sha256} from '@noble/hashes/sha256';
+import {sha256} from '@noble/hashes/sha2';
 import {cose, isoBase64URL, isoCBOR} from '@simplewebauthn/server/helpers';
 import {randomBytes} from 'node:crypto';
 import {P256Signer} from '../crypto/p256-signer.js';
@@ -88,10 +88,10 @@ export interface CredentialCreationOptions {
 export interface CredentialRequestOptions {
   challenge: string; // base64url
   rpId: string;
-  allowCredentials?: Array<{
+  allowCredentials?: {
     id: string; // base64url
     type: 'public-key';
-  }>;
+  }[];
   origin?: string; // Optional origin override (default: https://{rpId})
 }
 
@@ -111,7 +111,7 @@ export interface CredentialRequestOptions {
  * key pair, enabling DevnetPaymasterGateway to sign deployment transactions.
  */
 export class WebauthnVirtualAuthenticator {
-  private readonly credentials: Map<string, StoredCredential> = new Map();
+  private readonly credentials = new Map<string, StoredCredential>();
   private readonly signer: P256Signer | undefined;
 
   // AAGUID for our virtual authenticator (all zeros = no attestation)
@@ -165,7 +165,7 @@ export class WebauthnVirtualAuthenticator {
 
     // Build attestation object (using "none" attestation for simplicity)
     // Must use Map because isoCBOR.encode requires Maps, not plain objects
-    const attestationObjectMap = new Map<string, string | Map<string, string> | Uint8Array<ArrayBufferLike>>();
+    const attestationObjectMap = new Map<string, string | Map<string, string> | Uint8Array>();
     attestationObjectMap.set('fmt', 'none');
     attestationObjectMap.set('attStmt', new Map());
     attestationObjectMap.set('authData', authenticatorData);
@@ -208,7 +208,7 @@ export class WebauthnVirtualAuthenticator {
       // Use specified credential
       for (const allowed of options.allowCredentials) {
         const found = this.credentials.get(allowed.id);
-        if (found && found.rpId === options.rpId) {
+        if (found?.rpId === options.rpId) {
           credential = found;
           credentialIdBase64 = allowed.id;
           break;

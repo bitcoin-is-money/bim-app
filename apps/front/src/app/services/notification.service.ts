@@ -1,7 +1,9 @@
-import {inject, Injectable, TemplateRef} from '@angular/core';
-import {IconProp} from "@fortawesome/fontawesome-svg-core";
-import {HotToastService, ToastOptions} from '@ngxpert/hot-toast';
-import {Observable} from "rxjs";
+import type { TemplateRef} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
+import type {IconProp} from "@fortawesome/fontawesome-svg-core";
+import type { ToastOptions} from '@ngxpert/hot-toast';
+import {HotToastService} from '@ngxpert/hot-toast';
+import type {Observable} from "rxjs";
 import confetti from 'canvas-confetti';
 
 const DEFAULT_OPTIONS: ToastOptions<unknown> = {

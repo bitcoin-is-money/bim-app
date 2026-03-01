@@ -1,6 +1,8 @@
 import {HttpErrorResponse} from '@angular/common/http';
-import {inject, Injectable, OnDestroy} from '@angular/core';
-import {catchError, filter, interval, of, Subscription, switchMap, takeWhile, tap} from 'rxjs';
+import type { OnDestroy} from '@angular/core';
+import {inject, Injectable} from '@angular/core';
+import type { Subscription} from 'rxjs';
+import {catchError, filter, interval, of, switchMap, takeWhile, tap} from 'rxjs';
 import {isTerminalStatus, type StoredSwap, type SwapStatus} from '../model';
 import {I18nService} from './i18n.service';
 import {NotificationService} from './notification.service';

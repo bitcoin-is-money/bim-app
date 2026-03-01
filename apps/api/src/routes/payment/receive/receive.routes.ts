@@ -1,4 +1,4 @@
-import {type ReceiveResult} from '@bim/domain/payment';
+import type {ReceiveResult} from '@bim/domain/payment';
 import type {StarknetCall} from '@bim/domain/ports';
 import {Amount, InsufficientBalanceError} from '@bim/domain/shared';
 import type {TypedResponse} from 'hono';
@@ -70,7 +70,7 @@ export function createReceiveRoutes(appContext: AppContext): AuthenticatedHono {
         let finalCalls: StarknetCall[] = [...result.commitCalls];
         const {strkTokenAddress} = appContext.starknetConfig;
 
-        if (approveInfo && approveInfo.tokenAddress.toLowerCase() === strkTokenAddress.toLowerCase()) {
+        if (approveInfo?.tokenAddress.toLowerCase() === strkTokenAddress.toLowerCase()) {
           const strkBalance = await appContext.gateways.starknet.getBalance({
             address: starknetAddress,
             token: 'STRK',

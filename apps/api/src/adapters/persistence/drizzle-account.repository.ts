@@ -1,6 +1,6 @@
 import * as schema from '@bim/db';
 import {Account, AccountId, type AccountStatus, CredentialId, StarknetAddress,} from '@bim/domain/account';
-import {type AccountRepository} from '@bim/domain/ports';
+import type {AccountRepository} from '@bim/domain/ports';
 import {eq} from 'drizzle-orm';
 import type {NodePgDatabase} from 'drizzle-orm/node-postgres';
 

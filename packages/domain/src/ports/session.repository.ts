@@ -1,5 +1,5 @@
-import {AccountId} from '../account';
-import {Session, SessionId} from '../auth';
+import type {AccountId} from '../account';
+import type {Session, SessionId} from '../auth';
 
 /**
  * Repository interface for Session persistence.

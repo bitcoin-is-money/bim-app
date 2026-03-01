@@ -1,8 +1,8 @@
 import {type StarknetChainType, StarknetInitializer, type StarknetInitializerType} from '@atomiqlabs/chain-starknet';
-import {type FromBTCSwap, type TypedSwapper, type TypedSwapperOptions} from '@atomiqlabs/sdk';
+import type {FromBTCSwap, TypedSwapper, TypedSwapperOptions} from '@atomiqlabs/sdk';
 import {BitcoinNetwork, SwapperFactory, SwapType} from '@atomiqlabs/sdk';
 import {SqliteStorageManager, SqliteUnifiedStorage} from '@atomiqlabs/storage-sqlite';
-import {StarknetAddress} from "@bim/domain/account";
+import type {StarknetAddress} from "@bim/domain/account";
 import type {
   AtomiqGateway,
   AtomiqReverseSwapResult,
@@ -16,7 +16,7 @@ import type {
 } from '@bim/domain/ports';
 import {ExternalServiceError} from "@bim/domain/shared";
 import type {SwapDirection, SwapLimits} from "@bim/domain/swap";
-import {BitcoinAddress, LightningInvoice, SwapId} from '@bim/domain/swap';
+import type {BitcoinAddress, LightningInvoice, SwapId} from '@bim/domain/swap';
 import {existsSync, mkdirSync} from 'node:fs';
 
 import type {Logger} from "pino";
@@ -50,7 +50,7 @@ type StarknetChainInitializers = readonly [StarknetInitializerType];
 export class AtomiqSdkGateway implements AtomiqGateway {
   private swapperFactory: SwapperFactory<StarknetChainInitializers> | null = null;
   private swapper: TypedSwapper<StarknetChainInitializers> | null = null;
-  private isInitialized: boolean = false;
+  private isInitialized = false;
   private readonly log: Logger;
 
   constructor(
@@ -364,7 +364,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       const commitCalls: StarknetCall[] = [];
       for (const tx of commitTxs) {
         if (tx && typeof tx === 'object' && 'type' in tx && tx.type === 'INVOKE' && 'tx' in tx) {
-          const calls = tx.tx as Array<{contractAddress: string; entrypoint: string; calldata?: string[]}>;
+          const calls = tx.tx as {contractAddress: string; entrypoint: string; calldata?: string[]}[];
           for (const call of calls) {
             commitCalls.push({
               contractAddress: call.contractAddress,
@@ -414,7 +414,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       // Wait for the SDK to detect the on-chain commit
       // This polls the chain state until the swap transitions to CLAIM_COMMITED
       const abortController = new AbortController();
-      const timeout = setTimeout(() => abortController.abort(), 90_000); // 90s timeout
+      const timeout = setTimeout(() => { abortController.abort(); }, 90_000); // 90s timeout
 
       try {
         await swap.waitTillCommited(abortController.signal);

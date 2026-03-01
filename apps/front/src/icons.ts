@@ -1,4 +1,4 @@
-import {FaIconLibrary} from '@fortawesome/angular-fontawesome';
+import type {FaIconLibrary} from '@fortawesome/angular-fontawesome';
 import {faGithub} from '@fortawesome/free-brands-svg-icons';
 import {
   faArrowLeft,

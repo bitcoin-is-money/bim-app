@@ -1,6 +1,6 @@
 import {WebauthnVirtualAuthenticator} from '@bim/test-toolkit/auth';
 import type {Hono} from 'hono';
-import pg from 'pg';
+import type pg from 'pg';
 import {afterAll, beforeAll, describe, expect, it} from 'vitest';
 import type {StarknetReceiveResponse} from '../../../src/routes';
 import {registerAndDeployUser} from '../../helpers';

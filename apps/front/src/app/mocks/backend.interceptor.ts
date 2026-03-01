@@ -1,12 +1,14 @@
-import {
-  HttpErrorResponse,
+import type {
   HttpEvent,
   HttpHandlerFn,
   HttpInterceptorFn,
   HttpRequest,
-  HttpResponse,
+  HttpResponse} from '@angular/common/http';
+import {
+  HttpErrorResponse
 } from '@angular/common/http';
-import {Observable, of, throwError} from 'rxjs';
+import type {Observable} from 'rxjs';
+import { of, throwError} from 'rxjs';
 import {delay, mergeMap} from 'rxjs/operators';
 import {AccountHandlerMock} from './account/account-handler.mock';
 import {AuthHandlerMock} from './auth/auth-handler.mock';

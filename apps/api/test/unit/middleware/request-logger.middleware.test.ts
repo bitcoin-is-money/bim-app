@@ -58,21 +58,21 @@ describe('request-logger middleware', () => {
     expect(entries.length).toBeGreaterThanOrEqual(2);
 
     // All entries must carry the same requestId
-    const requestIds = entries.map(e => e['requestId']);
+    const requestIds = entries.map(e => e.requestId);
     expect(requestIds.every(id => id != null)).toBe(true);
     expect(new Set(requestIds).size).toBe(1);
   });
 
   it('increments requestId across requests', async () => {
     await app.request('/ok');
-    const firstId = entries[0]!['requestId'];
+    const firstId = entries[0]!.requestId;
 
     await app.request('/ok');
     // Entries from the second request
-    const secondRequestEntries = entries.filter(e => e['requestId'] !== firstId);
+    const secondRequestEntries = entries.filter(e => e.requestId !== firstId);
     expect(secondRequestEntries.length).toBeGreaterThan(0);
 
-    const secondId = secondRequestEntries[0]!['requestId'];
+    const secondId = secondRequestEntries[0]!.requestId;
     expect(Number(secondId)).toBe(Number(firstId) + 1);
   });
 
@@ -85,44 +85,44 @@ describe('request-logger middleware', () => {
   it('logs method and path on incoming request', async () => {
     await app.request('/ok');
 
-    const incoming = entries.find(e => (e['msg'] as string).startsWith('Incoming request'));
+    const incoming = entries.find(e => (e.msg as string).startsWith('Incoming request'));
     expect(incoming).toBeDefined();
-    expect(incoming!['msg']).toBe('Incoming request - GET /ok');
+    expect(incoming!.msg).toBe('Incoming request - GET /ok');
   });
 
   it('logs status and duration on completed request', async () => {
     await app.request('/ok');
 
-    const completed = entries.find(e => e['msg'] === 'Request completed');
+    const completed = entries.find(e => e.msg === 'Request completed');
     expect(completed).toBeDefined();
-    expect(completed!['status']).toBe(200);
-    expect(completed!['durationMs']).toEqual(expect.any(Number));
+    expect(completed!.status).toBe(200);
+    expect(completed!.durationMs).toEqual(expect.any(Number));
   });
 
   it('uses debug level for 2xx responses', async () => {
     await app.request('/ok');
 
-    const completed = entries.find(e => e['msg'] === 'Request completed');
+    const completed = entries.find(e => e.msg === 'Request completed');
     // pino debug level = 20
-    expect(completed!['level']).toBe(20);
+    expect(completed!.level).toBe(20);
   });
 
   it('uses warn level for 4xx responses', async () => {
     await app.request('/not-found');
 
-    const completed = entries.find(e => e['msg'] === 'Request completed');
+    const completed = entries.find(e => e.msg === 'Request completed');
     // pino warn level = 40
-    expect(completed!['level']).toBe(40);
+    expect(completed!.level).toBe(40);
   });
 
   it('wraps requestId back to 1 after 999', async () => {
     setRequestCounter(998);
 
     await app.request('/ok');
-    expect(entries[0]!['requestId']).toBe('999');
+    expect(entries[0]!.requestId).toBe('999');
 
     await app.request('/ok');
-    const wrappedEntries = entries.filter(e => e['requestId'] === '1');
+    const wrappedEntries = entries.filter(e => e.requestId === '1');
     expect(wrappedEntries.length).toBeGreaterThan(0);
   });
 
@@ -171,9 +171,9 @@ describe('request-logger middleware', () => {
     it('still logs silenced paths on error (4xx+)', async () => {
       await silencedApp.request('/api/auth/fail');
 
-      const completed = entries.find(e => e['msg'] === 'Request completed');
+      const completed = entries.find(e => e.msg === 'Request completed');
       expect(completed).toBeDefined();
-      expect(completed!['status']).toBe(401);
+      expect(completed!.status).toBe(401);
     });
   });
 });

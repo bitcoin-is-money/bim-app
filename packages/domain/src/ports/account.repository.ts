@@ -1,4 +1,4 @@
-import {Account, AccountId, CredentialId} from '../account';
+import type {Account, AccountId, CredentialId} from '../account';
 
 /**
  * Repository interface for Account persistence.

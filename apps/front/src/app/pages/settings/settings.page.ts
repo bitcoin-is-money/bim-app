@@ -3,7 +3,7 @@ import {FormsModule} from '@angular/forms';
 import {TranslateModule} from '@ngx-translate/core';
 import {GoBackHeaderComponent} from '../../components/go-back-header/go-back-header.component';
 import {FullPageLayoutComponent} from '../../layout';
-import {Language} from '../../services/user-settings-http.service';
+import type {Language} from '../../services/user-settings-http.service';
 import {CurrencyService} from '../../services/currency.service';
 import {I18nService} from '../../services/i18n.service';
 

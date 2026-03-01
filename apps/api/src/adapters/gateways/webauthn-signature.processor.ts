@@ -1,7 +1,7 @@
 import type {WebAuthnAssertion} from '@bim/domain/payment';
 import {Base64Url} from '@bim/lib/encoding';
 import {p256} from '@noble/curves/p256';
-import {sha256} from '@noble/hashes/sha256';
+import {sha256} from '@noble/hashes/sha2';
 import {bytesToHex, concatBytes} from '@noble/hashes/utils';
 import {uint256} from 'starknet';
 

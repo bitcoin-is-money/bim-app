@@ -1,7 +1,7 @@
-import {AccountId} from '../account';
+import type {AccountId} from '../account';
 import {FiatCurrency} from '../currency';
 import {Language} from './language';
-import {UserSettingsId} from './types';
+import type {UserSettingsId} from './types';
 
 /**
  * UserSettings entity representing user preferences.

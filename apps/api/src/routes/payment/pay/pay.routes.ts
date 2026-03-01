@@ -1,4 +1,4 @@
-import {type PaymentResult, type PreparedCalls, type PreparedPayment} from '@bim/domain/payment';
+import type {PaymentResult, PreparedCalls, PreparedPayment} from '@bim/domain/payment';
 import type {TypedResponse} from 'hono';
 import {Hono} from 'hono';
 import {randomUUID} from 'node:crypto';

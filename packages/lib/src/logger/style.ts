@@ -1,6 +1,6 @@
 import type {TextColorConfig} from './ansi';
 
-export type StyleConfig = {
+export interface StyleConfig {
   levelPadding: boolean;
   timestamp: TextColorConfig;
   name: TextColorConfig;
@@ -15,7 +15,7 @@ export type StyleConfig = {
   info: TextColorConfig;
   debug: TextColorConfig;
   trace: TextColorConfig;
-};
+}
 
 // extra key/value only support colorette colors:
 //   white(7), red(1), green(2), yellow(3), blue(4), magenta(5), cyan(6), gray(8),

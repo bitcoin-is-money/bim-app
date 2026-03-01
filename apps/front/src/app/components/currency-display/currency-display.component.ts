@@ -1,5 +1,5 @@
 import {Component, inject, input} from '@angular/core';
-import {Currency} from '../../model';
+import type {Currency} from '../../model';
 import {CurrencyService} from '../../services/currency.service';
 
 @Component({

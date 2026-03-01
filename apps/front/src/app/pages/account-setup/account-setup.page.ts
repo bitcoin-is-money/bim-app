@@ -1,5 +1,6 @@
 import {HttpErrorResponse} from '@angular/common/http';
-import {Component, DestroyRef, inject, OnInit, signal} from '@angular/core';
+import type { OnInit} from '@angular/core';
+import {Component, DestroyRef, inject, signal} from '@angular/core';
 import {Router} from '@angular/router';
 import {TranslateModule} from '@ngx-translate/core';
 import {ButtonComponent} from '../../components/button/button.component';
@@ -33,7 +34,7 @@ export class AccountSetupPage implements OnInit {
 
   ngOnInit(): void {
     this.triggerDeployment();
-    this.destroyRef.onDestroy(() => this.stopPolling());
+    this.destroyRef.onDestroy(() => { this.stopPolling(); });
   }
 
   private triggerDeployment(): void {
@@ -62,7 +63,7 @@ export class AccountSetupPage implements OnInit {
   }
 
   private startPolling(): void {
-    this.pollTimer = setInterval(() => this.checkDeploymentStatus(), POLL_INTERVAL_MS);
+    this.pollTimer = setInterval(() => { this.checkDeploymentStatus(); }, POLL_INTERVAL_MS);
   }
 
   private stopPolling(): void {

@@ -1,4 +1,4 @@
-import {StarknetAddress} from '@bim/domain/account';
+import type {StarknetAddress} from '@bim/domain/account';
 import type {
   DeployTransaction,
   PaymasterGateway,
@@ -36,7 +36,7 @@ export async function fetchDevnetAccounts(devnetUrl: string): Promise<DevnetAcco
 
   try {
     // Try the new RPC method first (devnet 0.7.x+)
-    let rawAccounts: Array<Record<string, unknown>> | null = null;
+    let rawAccounts: Record<string, unknown>[] | null = null;
 
     const rpcResponse = await fetch(`${devnetUrl}/rpc`, {
       method: 'POST',
@@ -50,7 +50,7 @@ export async function fetchDevnetAccounts(devnetUrl: string): Promise<DevnetAcco
     });
 
     if (rpcResponse.ok) {
-      const rpcResult = await rpcResponse.json() as {result?: Array<Record<string, unknown>>};
+      const rpcResult = await rpcResponse.json() as {result?: Record<string, unknown>[]};
       if (rpcResult.result && Array.isArray(rpcResult.result) && rpcResult.result.length > 0) {
         rawAccounts = rpcResult.result;
       }
@@ -60,7 +60,7 @@ export async function fetchDevnetAccounts(devnetUrl: string): Promise<DevnetAcco
     if (!rawAccounts) {
       const response = await fetch(`${devnetUrl}/predeployed_accounts`);
       if (response.ok) {
-        const data = await response.json() as Array<Record<string, unknown>>;
+        const data = await response.json() as Record<string, unknown>[];
         if (Array.isArray(data) && data.length > 0) {
           rawAccounts = data;
         }
@@ -441,7 +441,7 @@ export class DevnetPaymasterGateway implements PaymasterGateway {
    * Helper: Fund an address with ETH using devnet's mint endpoint.
    * Supports both old HTTP endpoint and new RPC method.
    */
-  async fundAddress(address: StarknetAddress, amount: string = '1000000000000000000'): Promise<string> {
+  async fundAddress(address: StarknetAddress, amount = '1000000000000000000'): Promise<string> {
     const addressStr = address.toString();
 
     // Try new RPC method first (devnet 0.7.x+)

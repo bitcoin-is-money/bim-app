@@ -1,4 +1,5 @@
-import {Component, inject, OnInit} from '@angular/core';
+import type { OnInit} from '@angular/core';
+import {Component, inject} from '@angular/core';
 import {TranslateModule} from '@ngx-translate/core';
 import {FieldComponent} from '../../components/field/field.component';
 import {GoBackHeaderComponent} from '../../components/go-back-header/go-back-header.component';

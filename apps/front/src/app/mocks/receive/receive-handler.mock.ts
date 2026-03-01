@@ -1,7 +1,7 @@
 import {HttpResponse} from '@angular/common/http';
 import {type ApiErrorResponse, ErrorCode, type SwapDirection} from '../../model';
 import type {ReceiveResponse} from '../../services/receive.http.service';
-import {DataStoreMock} from '../data-store.mock';
+import type {DataStoreMock} from '../data-store.mock';
 import {createErrorResponse} from '../mock-error';
 
 interface ReceiveRequestBody {

@@ -1,5 +1,6 @@
 import {Component, computed, effect, inject, signal} from '@angular/core';
-import {DomSanitizer, SafeHtml} from '@angular/platform-browser';
+import type { SafeHtml} from '@angular/platform-browser';
+import {DomSanitizer} from '@angular/platform-browser';
 import {TranslateModule} from '@ngx-translate/core';
 import {renderSVG} from 'uqr';
 import {AmountFieldComponent} from '../../components/amount-field/amount-field.component';

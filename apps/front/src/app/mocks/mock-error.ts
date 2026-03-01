@@ -1,5 +1,5 @@
 import {HttpResponse} from '@angular/common/http';
-import {type ApiErrorResponse, type ErrorCode} from '../model';
+import type {ApiErrorResponse, ErrorCode} from '../model';
 
 /**
  * Create a mock HTTP error response with the standard API error format.

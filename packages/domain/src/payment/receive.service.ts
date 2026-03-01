@@ -1,7 +1,8 @@
 
 import type {Logger} from 'pino';
 import type {StarknetAddress} from '../account';
-import {Amount, type StarknetConfig} from '../shared';
+import type {Amount} from '../shared';
+import type { StarknetConfig} from '../shared';
 import {BitcoinAddress, LightningInvoice, type SwapService} from '../swap';
 import {InvalidPaymentAmountError} from './errors';
 import type {BitcoinReceiveResult, ReceivePaymentInput, ReceiveResult} from './receive.types';
@@ -41,7 +42,7 @@ export class ReceiveService {
    * @throws SwapCreationError if invoice/address generation fails
    */
   async receive(input: ReceivePaymentInput): Promise<ReceiveResult> {
-    if (input.network !== 'starknet' && (!input.amount || !input.amount.isPositive())) {
+    if (input.network !== 'starknet' && (!input.amount?.isPositive())) {
       throw new InvalidPaymentAmountError(input.network, input.amount?.getSat() ?? 0n);
     }
 
@@ -67,12 +68,12 @@ export class ReceiveService {
   // Starknet — generate starknet: URI
   // ===========================================================================
 
-  private receiveStarknet(address: StarknetAddress, amount?: Amount, tokenAddress?: string, useUriPrefix: boolean = true) {
+  private receiveStarknet(address: StarknetAddress, amount?: Amount, tokenAddress?: string, useUriPrefix = true) {
     const token = tokenAddress ?? this.deps.starknetConfig.wbtcTokenAddress;
     const prefix = useUriPrefix ? 'starknet:' : '';
 
     let uri = `${prefix}${address}`;
-    if (amount && amount.isPositive()) {
+    if (amount?.isPositive()) {
       uri += `?amount=${amount.toSatString()}&token=${token}`;
     }
 

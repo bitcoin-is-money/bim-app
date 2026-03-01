@@ -159,8 +159,8 @@ export class StarknetRpcGateway implements StarknetGateway {
       });
 
       // Balance is returned as two felts (low, high) for u256
-      const low: bigint = BigInt(result[0] || '0');
-      const high: bigint = BigInt(result[1] || '0');
+      const low = BigInt(result[0] || '0');
+      const high = BigInt(result[1] || '0');
 
       return low + (high << 128n);
     } catch (error) {

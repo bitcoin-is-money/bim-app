@@ -3,7 +3,8 @@ import {TransactionHttpService} from './transaction.http.service';
 import type {Transaction} from './transaction.http.service';
 import {CurrencyService} from './currency.service';
 import {I18nService} from './i18n.service';
-import {Amount, ConversionRates, Currency} from '../model';
+import type { ConversionRates} from '../model';
+import {Amount, Currency} from '../model';
 
 export type {Transaction} from './transaction.http.service';
 

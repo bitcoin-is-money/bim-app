@@ -8,7 +8,7 @@ import {FieldComponent} from '../../components/field/field.component';
 import {GoBackHeaderComponent} from '../../components/go-back-header/go-back-header.component';
 import {NetworkLogoComponent} from '../../components/network-logo/network-logo.component';
 import {FullPageLayoutComponent} from '../../layout';
-import {Amount} from "../../model";
+import type {Amount} from "../../model";
 import {AccountService} from '../../services/account.service';
 import {CurrencyService} from '../../services/currency.service';
 import {I18nService} from '../../services/i18n.service';
