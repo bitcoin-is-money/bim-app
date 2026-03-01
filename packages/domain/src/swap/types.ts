@@ -69,23 +69,8 @@ export type SwapState =
   | { status: 'failed'; error: string; failedAt: Date };
 
 // =============================================================================
-// Swap Data DTOs
+// Swap Creation Params
 // =============================================================================
-
-export interface SwapData {
-  id: SwapId;
-  direction: SwapDirection;
-  amountSats: bigint;
-  destinationAddress: string;
-  sourceAddress: string | undefined;
-  state: SwapState;
-  invoice: string | undefined;
-  depositAddress: string | undefined;
-  expiresAt: Date;
-  createdAt: Date;
-  description: string;
-  accountId: string;
-}
 
 export interface CreateLightningToStarknetParams {
   id: SwapId;

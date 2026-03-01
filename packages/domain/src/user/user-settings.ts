@@ -1,7 +1,7 @@
 import {AccountId} from '../account';
 import {FiatCurrency} from '../currency';
 import {Language} from './language';
-import {type UserSettingsData, UserSettingsId} from './types';
+import {UserSettingsId} from './types';
 
 /**
  * UserSettings entity representing user preferences.
@@ -12,7 +12,7 @@ export class UserSettings {
   private language: Language;
   private updatedAt: Date;
 
-  private constructor(
+  constructor(
     readonly id: UserSettingsId,
     readonly accountId: AccountId,
     readonly createdAt: Date,
@@ -43,21 +43,6 @@ export class UserSettings {
       FiatCurrency.DEFAULT,
       Language.DEFAULT,
       now,
-    );
-  }
-
-  /**
-   * Reconstitutes user settings from persisted data.
-   */
-  static fromData(data: UserSettingsData): UserSettings {
-    return new UserSettings(
-      data.id,
-      data.accountId,
-      data.createdAt,
-      data.preferredCurrencies,
-      data.defaultCurrency,
-      data.language,
-      data.updatedAt,
     );
   }
 
@@ -124,18 +109,4 @@ export class UserSettings {
     this.updatedAt = new Date();
   }
 
-  /**
-   * Exports the settings data for persistence.
-   */
-  toData(): UserSettingsData {
-    return {
-      id: this.id,
-      accountId: this.accountId,
-      preferredCurrencies: [...this.preferredCurrencies],
-      defaultCurrency: this.defaultCurrency,
-      language: this.language,
-      createdAt: this.createdAt,
-      updatedAt: this.updatedAt,
-    };
-  }
 }

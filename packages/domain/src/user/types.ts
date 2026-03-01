@@ -1,6 +1,3 @@
-import type {AccountId, StarknetAddress} from '../account';
-import type {FiatCurrency} from '../currency';
-import type {Language} from './language';
 import {InvalidUserSettingsIdError, InvalidTransactionIdError, InvalidTransactionHashError} from './errors';
 
 // =============================================================================
@@ -76,31 +73,3 @@ export namespace TransactionHash {
 
 export type TransactionType = 'receipt' | 'spent';
 
-// =============================================================================
-// Data Interfaces
-// =============================================================================
-
-export interface UserSettingsData {
-  id: UserSettingsId;
-  accountId: AccountId;
-  preferredCurrencies: FiatCurrency[];
-  defaultCurrency: FiatCurrency;
-  language: Language;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface TransactionData {
-  id: TransactionId;
-  accountId: AccountId;
-  transactionHash: TransactionHash;
-  blockNumber: bigint;
-  transactionType: TransactionType;
-  amount: string; // String to preserve precision
-  tokenAddress: StarknetAddress;
-  fromAddress: StarknetAddress;
-  toAddress: StarknetAddress;
-  timestamp: Date;
-  indexedAt: Date;
-  description: string;
-}

@@ -36,32 +36,6 @@ describe('Account', () => {
     });
   });
 
-  describe('fromData', () => {
-    it('reconstitutes account from persisted data', () => {
-      const data = {
-        id: AccountId.of('550e8400-e29b-41d4-a716-446655440000'),
-        username: 'bob',
-        credentialId: CredentialId.of('cred-id'),
-        publicKey: '0xpubkey',
-        credentialPublicKey: 'cose-key',
-        starknetAddress: StarknetAddress.of('0x123'),
-        status: 'deployed' as const,
-        deploymentTxHash: '0xtxhash',
-        signCount: 5,
-        createdAt: new Date('2024-01-01'),
-        updatedAt: new Date('2024-01-02'),
-      };
-
-      const account = Account.fromData(data);
-
-      expect(account.id).toBe(data.id);
-      expect(account.username).toBe('bob');
-      expect(account.getStatus()).toBe('deployed');
-      expect(account.getSignCount()).toBe(5);
-      expect(account.getStarknetAddress()).toBe(data.starknetAddress);
-    });
-  });
-
   describe('markAsDeploying', () => {
     it('transitions from pending to deploying with starknet address', () => {
       const account = createTestAccount();
@@ -154,17 +128,4 @@ describe('Account', () => {
     });
   });
 
-  describe('toData', () => {
-    it('exports account data for persistence', () => {
-      const account = createTestAccount();
-
-      const data = account.toData();
-
-      expect(data.id).toBe(account.id);
-      expect(data.username).toBe('alice');
-      expect(data.status).toBe('pending');
-      expect(data.signCount).toBe(0);
-      expect(data.starknetAddress).toBeUndefined();
-    });
-  });
 });

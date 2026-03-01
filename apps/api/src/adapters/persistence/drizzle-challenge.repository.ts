@@ -11,24 +11,22 @@ export class DrizzleChallengeRepository implements ChallengeRepository {
   constructor(private readonly db: NodePgDatabase<typeof schema>) {}
 
   async save(challenge: Challenge): Promise<void> {
-    const data = challenge.toData();
-
     await this.db
       .insert(schema.challenges)
       .values({
-        id: data.id,
-        challenge: data.challenge,
-        purpose: data.purpose,
-        rpId: data.rpId,
-        origin: data.origin,
-        used: data.used,
-        expiresAt: data.expiresAt,
-        createdAt: data.createdAt,
+        id: challenge.id,
+        challenge: challenge.challenge,
+        purpose: challenge.purpose,
+        rpId: challenge.rpId,
+        origin: challenge.origin,
+        used: challenge.isUsed(),
+        expiresAt: challenge.expiresAt,
+        createdAt: challenge.createdAt,
       })
       .onConflictDoUpdate({
         target: schema.challenges.id,
         set: {
-          used: data.used,
+          used: challenge.isUsed(),
         },
       });
   }
@@ -72,15 +70,15 @@ export class DrizzleChallengeRepository implements ChallengeRepository {
   }
 
   private toChallenge(record: schema.ChallengeRecord): Challenge {
-    return Challenge.fromData({
-      id: ChallengeId.of(record.id),
-      challenge: record.challenge,
-      purpose: record.purpose as ChallengePurpose,
-      rpId: record.rpId ?? undefined,
-      origin: record.origin ?? undefined,
-      used: record.used,
-      expiresAt: record.expiresAt,
-      createdAt: record.createdAt,
-    });
+    return new Challenge(
+      ChallengeId.of(record.id),
+      record.challenge,
+      record.purpose as ChallengePurpose,
+      record.rpId ?? undefined,
+      record.origin ?? undefined,
+      record.expiresAt,
+      record.createdAt,
+      record.used,
+    );
   }
 }

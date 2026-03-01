@@ -36,7 +36,7 @@ All under `packages/domain/src/<context>/`. Each has: entity class(es), service(
 
 ```typescript
 export class Account {
-  private constructor(
+  constructor(
     readonly id: AccountId,            // Immutable: readonly
     readonly username: string,
     private status: AccountStatus,     // Mutable: private + getXxx()
@@ -46,9 +46,8 @@ export class Account {
     return new Account(params.id, params.username, 'pending');
   }
 
-  static fromData(data: AccountData): Account {
-    return new Account(data.id, data.username, data.status);
-  }
+  // No fromData/toData — persistence mapping lives in repository adapters.
+  // Constructor is public to allow reconstitution from persistence layer.
 
   getStatus(): AccountStatus { return this.status; }
 
@@ -56,8 +55,6 @@ export class Account {
     if (this.status !== 'pending') throw new InvalidStateTransitionError(this.status, 'deploying');
     this.status = 'deploying';
   }
-
-  toData(): AccountData { ... }
 }
 ```
 

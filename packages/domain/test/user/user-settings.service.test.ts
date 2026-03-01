@@ -28,15 +28,15 @@ describe('UserSettingsService', () => {
 
   describe('fetch', () => {
     it('returns existing settings', async () => {
-      const settings = UserSettings.fromData({
-        id: settingsId,
+      const settings = new UserSettings(
+        settingsId,
         accountId,
-        preferredCurrencies: [FiatCurrency.of('EUR')],
-        defaultCurrency: FiatCurrency.of('EUR'),
-        language: Language.of('fr'),
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+        new Date(),
+        [FiatCurrency.of('EUR')],
+        FiatCurrency.of('EUR'),
+        Language.of('fr'),
+        new Date(),
+      );
       vi.mocked(mockRepository.findByAccountId).mockResolvedValue(settings);
 
       const result = await service.fetch({accountId: accountId});

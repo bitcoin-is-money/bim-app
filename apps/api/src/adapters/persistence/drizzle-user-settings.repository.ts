@@ -17,25 +17,25 @@ export class DrizzleUserSettingsRepository implements UserSettingsRepository {
   ) {}
 
   async save(settings: UserSettings): Promise<void> {
-    const data = settings.toData();
+    const preferredCurrencies = settings.getPreferredCurrencies().join(',');
 
     await this.db
       .insert(schema.userSettings)
       .values({
-        id: data.id,
-        accountId: data.accountId,
-        preferredCurrencies: data.preferredCurrencies.join(','),
-        defaultCurrency: data.defaultCurrency,
-        language: data.language,
-        createdAt: data.createdAt,
-        updatedAt: data.updatedAt,
+        id: settings.id,
+        accountId: settings.accountId,
+        preferredCurrencies,
+        defaultCurrency: settings.getDefaultCurrency(),
+        language: settings.getLanguage(),
+        createdAt: settings.createdAt,
+        updatedAt: settings.getUpdatedAt(),
       })
       .onConflictDoUpdate({
         target: schema.userSettings.id,
         set: {
-          preferredCurrencies: data.preferredCurrencies.join(','),
-          defaultCurrency: data.defaultCurrency,
-          language: data.language,
+          preferredCurrencies,
+          defaultCurrency: settings.getDefaultCurrency(),
+          language: settings.getLanguage(),
           updatedAt: new Date(),
         },
       });
@@ -59,14 +59,14 @@ export class DrizzleUserSettingsRepository implements UserSettingsRepository {
       .filter(c => c.length > 0)
       .map(c => FiatCurrency.of(c));
 
-    return UserSettings.fromData({
-      id: UserSettingsId.of(record.id),
-      accountId: AccountId.of(record.accountId),
+    return new UserSettings(
+      UserSettingsId.of(record.id),
+      AccountId.of(record.accountId),
+      record.createdAt,
       preferredCurrencies,
-      defaultCurrency: FiatCurrency.of(record.defaultCurrency),
-      language: Language.of(record.language),
-      createdAt: record.createdAt,
-      updatedAt: record.updatedAt,
-    });
+      FiatCurrency.of(record.defaultCurrency),
+      Language.of(record.language),
+      record.updatedAt,
+    );
   }
 }

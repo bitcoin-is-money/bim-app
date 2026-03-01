@@ -1,5 +1,5 @@
 import {ChallengeAlreadyUsedError, ChallengeExpiredError} from './errors';
-import {CHALLENGE_DURATION_MS, type ChallengeData, ChallengeId, type ChallengePurpose} from './types';
+import {CHALLENGE_DURATION_MS, ChallengeId, type ChallengePurpose} from './types';
 
 /**
  * Challenge entity representing a WebAuthn challenge for registration or authentication.
@@ -8,7 +8,7 @@ import {CHALLENGE_DURATION_MS, type ChallengeData, ChallengeId, type ChallengePu
 export class Challenge {
   private used: boolean;
 
-  private constructor(
+  constructor(
     readonly id: ChallengeId,
     readonly challenge: string,
     readonly purpose: ChallengePurpose,
@@ -66,22 +66,6 @@ export class Challenge {
   }
 
   /**
-   * Reconstitutes a challenge from persisted data.
-   */
-  static fromData(data: ChallengeData): Challenge {
-    return new Challenge(
-      data.id,
-      data.challenge,
-      data.purpose,
-      data.rpId,
-      data.origin,
-      data.expiresAt,
-      data.createdAt,
-      data.used,
-    );
-  }
-
-  /**
    * Checks if the challenge has expired.
    */
   isExpired(): boolean {
@@ -121,21 +105,6 @@ export class Challenge {
     }
   }
 
-  /**
-   * Exports the challenge data for persistence.
-   */
-  toData(): ChallengeData {
-    return {
-      id: this.id,
-      challenge: this.challenge,
-      purpose: this.purpose,
-      rpId: this.rpId,
-      origin: this.origin,
-      used: this.used,
-      expiresAt: this.expiresAt,
-      createdAt: this.createdAt,
-    };
-  }
 }
 
 /**

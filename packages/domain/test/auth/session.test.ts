@@ -41,20 +41,6 @@ describe('Session', () => {
     });
   });
 
-  describe('fromData', () => {
-    it('reconstitutes session from persisted data', () => {
-      const original = Session.create(accountId);
-      const data = original.toData();
-
-      const reconstituted = Session.fromData(data);
-
-      expect(reconstituted.id).toBe(original.id);
-      expect(reconstituted.accountId).toBe(original.accountId);
-      expect(reconstituted.expiresAt.getTime()).toBe(original.expiresAt.getTime());
-      expect(reconstituted.createdAt.getTime()).toBe(original.createdAt.getTime());
-    });
-  });
-
   describe('isExpired', () => {
     it('returns false before expiration', () => {
       const session = Session.create(accountId);
@@ -120,15 +106,4 @@ describe('Session', () => {
     });
   });
 
-  describe('toData', () => {
-    it('exports all session data', () => {
-      const session = Session.create(accountId);
-      const data = session.toData();
-
-      expect(data.id).toBe(session.id);
-      expect(data.accountId).toBe(accountId);
-      expect(data.expiresAt).toEqual(session.expiresAt);
-      expect(data.createdAt).toEqual(session.createdAt);
-    });
-  });
 });

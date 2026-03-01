@@ -1,5 +1,6 @@
 import * as schema from '@bim/db';
 import type {SwapRepository} from '@bim/domain/ports';
+import {Amount} from '@bim/domain/shared';
 import {Swap, type SwapDirection, SwapId, type SwapState, type SwapStatus} from '@bim/domain/swap';
 import {and, eq, lt, notInArray} from 'drizzle-orm';
 import type {NodePgDatabase} from 'drizzle-orm/node-postgres';
@@ -17,23 +18,22 @@ export class DrizzleSwapRepository implements SwapRepository {
   ) {}
 
   async save(swap: Swap): Promise<void> {
-    const data = swap.toData();
-    const stateColumns = this.stateToColumns(data.state);
+    const stateColumns = this.stateToColumns(swap.getState());
 
     await this.db
       .insert(schema.swaps)
       .values({
-        id: data.id,
-        direction: data.direction,
-        amountSats: data.amountSats.toString(),
-        destinationAddress: data.destinationAddress,
-        sourceAddress: data.sourceAddress ?? null,
-        invoice: data.invoice ?? null,
-        depositAddress: data.depositAddress ?? null,
-        description: data.description,
-        accountId: data.accountId,
-        expiresAt: data.expiresAt,
-        createdAt: data.createdAt,
+        id: swap.id,
+        direction: swap.direction,
+        amountSats: swap.amount.getSat().toString(),
+        destinationAddress: swap.destinationAddress,
+        sourceAddress: swap.sourceAddress ?? null,
+        invoice: swap.invoice ?? null,
+        depositAddress: swap.depositAddress ?? null,
+        description: swap.description,
+        accountId: swap.accountId,
+        expiresAt: swap.expiresAt,
+        createdAt: swap.createdAt,
         ...stateColumns,
       })
       .onConflictDoUpdate({
@@ -155,19 +155,19 @@ export class DrizzleSwapRepository implements SwapRepository {
   }
 
   private toSwap(record: schema.SwapRecord): Swap {
-    return Swap.fromData({
-      id: SwapId.of(record.id),
-      direction: record.direction as SwapDirection,
-      amountSats: BigInt(record.amountSats),
-      destinationAddress: record.destinationAddress,
-      sourceAddress: record.sourceAddress ?? undefined,
-      state: this.columnsToState(record),
-      invoice: record.invoice ?? undefined,
-      depositAddress: record.depositAddress ?? undefined,
-      expiresAt: record.expiresAt,
-      createdAt: record.createdAt,
-      description: record.description,
-      accountId: record.accountId,
-    });
+    return new Swap(
+      SwapId.of(record.id),
+      record.direction as SwapDirection,
+      Amount.ofSatoshi(BigInt(record.amountSats)),
+      record.destinationAddress,
+      record.sourceAddress ?? undefined,
+      record.invoice ?? undefined,
+      record.depositAddress ?? undefined,
+      record.expiresAt,
+      record.createdAt,
+      this.columnsToState(record),
+      record.description,
+      record.accountId,
+    );
   }
 }

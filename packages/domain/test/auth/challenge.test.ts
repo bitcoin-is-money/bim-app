@@ -53,22 +53,6 @@ describe('Challenge', () => {
     });
   });
 
-  describe('fromData', () => {
-    it('reconstitutes challenge from persisted data', () => {
-      const original = Challenge.createForRegistration({
-        rpId: 'localhost',
-        origin: 'http://localhost:3000',
-      });
-
-      const reconstituted = Challenge.fromData(original.toData());
-
-      expect(reconstituted.id).toBe(original.id);
-      expect(reconstituted.challenge).toBe(original.challenge);
-      expect(reconstituted.purpose).toBe(original.purpose);
-      expect(reconstituted.isUsed()).toBe(original.isUsed());
-    });
-  });
-
   describe('isExpired', () => {
     it('returns false before expiration', () => {
       const challenge = Challenge.createForRegistration({
@@ -170,23 +154,4 @@ describe('Challenge', () => {
     });
   });
 
-  describe('toData', () => {
-    it('exports all challenge data', () => {
-      const challenge = Challenge.createForRegistration({
-        rpId: 'localhost',
-        origin: 'http://localhost:3000',
-      });
-
-      const data = challenge.toData();
-
-      expect(data.id).toBe(challenge.id);
-      expect(data.challenge).toBe(challenge.challenge);
-      expect(data.purpose).toBe('registration');
-      expect(data.rpId).toBe('localhost');
-      expect(data.origin).toBe('http://localhost:3000');
-      expect(data.used).toBe(false);
-      expect(data.expiresAt).toEqual(challenge.expiresAt);
-      expect(data.createdAt).toEqual(challenge.createdAt);
-    });
-  });
 });

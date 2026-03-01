@@ -52,28 +52,6 @@ export namespace ChallengeId {
 
 export type ChallengePurpose = 'registration' | 'authentication';
 
-export interface ChallengeData {
-  id: ChallengeId;
-  challenge: string;
-  purpose: ChallengePurpose;
-  rpId: string | undefined;
-  origin: string | undefined;
-  used: boolean;
-  expiresAt: Date;
-  createdAt: Date;
-}
-
-// =============================================================================
-// Session Types
-// =============================================================================
-
-export interface SessionData {
-  id: SessionId;
-  accountId: AccountId;
-  expiresAt: Date;
-  createdAt: Date;
-}
-
 // =============================================================================
 // Constants
 // =============================================================================
