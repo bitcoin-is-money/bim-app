@@ -39,6 +39,8 @@
     "security": "npm run security:audit; npm run security:lockfile",
     "security:audit": "better-npm-audit audit --level moderate",
     "security:lockfile": "lockfile-lint --path package-lock.json --type npm --allowed-hosts npm --validate-https",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "deps:check": "npx npm-check-updates --workspaces --root",
     "deps:update": "npx npm-check-updates --workspaces --root -u && npm install"
   },
@@ -47,14 +49,19 @@
     "node": ">=22.0.0"
   },
   "devDependencies": {
+    "angular-eslint": "^21.2.0",
     "better-npm-audit": "^3.11.0",
     "dotenv-cli": "^11.0.0",
     "esbuild": "^0.27.3",
+    "eslint": "^9.39.3",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-security": "^4.0.0",
     "lockfile-lint": "^5.0.0",
     "patch-package": "^8.0.1",
     "postinstall-postinstall": "^2.1.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
+    "typescript-eslint": "^8.56.1",
     "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^4.0.18"
   },
