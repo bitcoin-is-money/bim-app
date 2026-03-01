@@ -72,7 +72,7 @@ export async function createApp(options: CreateAppOptions = {}): Promise<AppInst
   app.route('/api/account', createAccountRoutes(context));
   app.route('/api/admin', createAdminRoutes(context));
   app.route('/api/auth', createAuthRoutes(context));
-  app.route('/api/currency', createCurrencyRoutes());
+  app.route('/api/currency', createCurrencyRoutes(context));
   app.route('/api/health', createHealthRoutes());
   app.route('/api/payment', createPaymentRoutes(context));
   app.route('/api/swap', createSwapRoutes(context));

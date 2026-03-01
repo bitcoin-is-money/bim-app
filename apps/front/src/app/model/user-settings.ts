@@ -1,8 +1,7 @@
-import {Language} from "../services/i18n.http.service";
+import {Language} from "../services/user-settings-http.service";
 
 export interface UserSettings {
   language: Language;
-  supportedLanguages: readonly string[];
-  fiatCurrency: string;
-  supportedCurrencies: readonly string[];
+  preferredCurrencies: string[];
+  defaultCurrency: string;
 }

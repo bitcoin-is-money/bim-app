@@ -1,5 +1,5 @@
 import {AccountId} from '../account';
-import {FiatCurrency} from './fiat-currency';
+import {FiatCurrency} from '../currency';
 import {Language} from './language';
 import {type UserSettingsData, UserSettingsId} from './types';
 
@@ -7,7 +7,8 @@ import {type UserSettingsData, UserSettingsId} from './types';
  * UserSettings entity representing user preferences.
  */
 export class UserSettings {
-  private fiatCurrency: FiatCurrency;
+  private preferredCurrencies: FiatCurrency[];
+  private defaultCurrency: FiatCurrency;
   private language: Language;
   private updatedAt: Date;
 
@@ -15,11 +16,13 @@ export class UserSettings {
     readonly id: UserSettingsId,
     readonly accountId: AccountId,
     readonly createdAt: Date,
-    fiatCurrency: FiatCurrency,
+    preferredCurrencies: FiatCurrency[],
+    defaultCurrency: FiatCurrency,
     language: Language,
     updatedAt: Date,
   ) {
-    this.fiatCurrency = fiatCurrency;
+    this.preferredCurrencies = preferredCurrencies;
+    this.defaultCurrency = defaultCurrency;
     this.language = language;
     this.updatedAt = updatedAt;
   }
@@ -36,6 +39,7 @@ export class UserSettings {
       params.id,
       params.accountId,
       now,
+      [FiatCurrency.DEFAULT],
       FiatCurrency.DEFAULT,
       Language.DEFAULT,
       now,
@@ -50,17 +54,25 @@ export class UserSettings {
       data.id,
       data.accountId,
       data.createdAt,
-      data.fiatCurrency,
+      data.preferredCurrencies,
+      data.defaultCurrency,
       data.language,
       data.updatedAt,
     );
   }
 
   /**
-   * Returns the preferred fiat currency.
+   * Returns the preferred fiat currencies.
    */
-  getFiatCurrency(): FiatCurrency {
-    return this.fiatCurrency;
+  getPreferredCurrencies(): FiatCurrency[] {
+    return [...this.preferredCurrencies];
+  }
+
+  /**
+   * Returns the default fiat currency for display.
+   */
+  getDefaultCurrency(): FiatCurrency {
+    return this.defaultCurrency;
   }
 
   /**
@@ -78,10 +90,29 @@ export class UserSettings {
   }
 
   /**
-   * Updates the preferred fiat currency.
+   * Updates the preferred fiat currencies.
+   * All currencies must be supported, and at least one is required.
+   * If the current defaultCurrency is not in the new list, it is set to the first element.
    */
-  setFiatCurrency(currency: FiatCurrency): void {
-    this.fiatCurrency = currency;
+  setPreferredCurrencies(currencies: FiatCurrency[]): void {
+    if (currencies.length === 0) {
+      throw new Error('At least one preferred currency is required');
+    }
+    this.preferredCurrencies = [...currencies];
+    if (!this.preferredCurrencies.includes(this.defaultCurrency)) {
+      this.defaultCurrency = this.preferredCurrencies[0]!;
+    }
+    this.updatedAt = new Date();
+  }
+
+  /**
+   * Updates the default fiat currency. Must be one of the preferred currencies.
+   */
+  setDefaultCurrency(currency: FiatCurrency): void {
+    if (!this.preferredCurrencies.includes(currency)) {
+      throw new Error(`Default currency ${currency} must be in preferred currencies`);
+    }
+    this.defaultCurrency = currency;
     this.updatedAt = new Date();
   }
 
@@ -100,7 +131,8 @@ export class UserSettings {
     return {
       id: this.id,
       accountId: this.accountId,
-      fiatCurrency: this.fiatCurrency,
+      preferredCurrencies: [...this.preferredCurrencies],
+      defaultCurrency: this.defaultCurrency,
       language: this.language,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,

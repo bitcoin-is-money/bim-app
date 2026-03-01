@@ -5,3 +5,4 @@ export * from './avnu-swap.gateway';
 export * from './atomiq.gateway';
 export * from './bolt11-lightning.decoder';
 export * from './webauthn-signature.processor';
+export * from './coingecko-price.gateway';

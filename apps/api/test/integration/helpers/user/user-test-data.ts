@@ -10,7 +10,8 @@ export function createUserSettingsData(
   return {
     id: crypto.randomUUID(),
     accountId,
-    fiatCurrency: 'USD',
+    preferredCurrencies: 'USD',
+    defaultCurrency: 'USD',
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,

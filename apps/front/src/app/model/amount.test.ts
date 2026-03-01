@@ -2,7 +2,26 @@ import {describe, expect, it} from 'vitest';
 import {Amount} from './amount';
 import {ConversionRates, Currency} from './currency';
 
-const RATES: ConversionRates = {BTC_USD: 100_000};
+const RATES: ConversionRates = {prices: {USD: 100_000}};
+
+describe('Currency', () => {
+  describe('decimals', () => {
+    it('should return 8 for BTC', () => expect(Currency.decimals('BTC')).toBe(8));
+    it('should return 0 for SAT', () => expect(Currency.decimals('SAT')).toBe(0));
+    it('should return 2 for USD via Intl', () => expect(Currency.decimals('USD')).toBe(2));
+    it('should return 2 for EUR via Intl', () => expect(Currency.decimals('EUR')).toBe(2));
+    it('should return 0 for JPY via Intl', () => expect(Currency.decimals('JPY')).toBe(0));
+  });
+
+  describe('symbol', () => {
+    it('should return ₿ for BTC', () => expect(Currency.symbol('BTC')).toBe('₿'));
+    it('should return sat for SAT', () => expect(Currency.symbol('SAT')).toBe('sat'));
+    it('should return $ for USD via Intl', () => expect(Currency.symbol('USD')).toBe('$'));
+    it('should return € for EUR via Intl', () => expect(Currency.symbol('EUR')).toBe('€'));
+    it('should return ¥ for JPY via Intl', () => expect(Currency.symbol('JPY')).toBe('¥'));
+    it('should return CHF for CHF via Intl', () => expect(Currency.symbol('CHF')).toBe('CHF'));
+  });
+});
 
 describe('Amount', () => {
   describe('zero', () => {
@@ -77,16 +96,16 @@ describe('Amount', () => {
       expect(result).not.toBe(amount);
     });
 
-    it('should keep value unchanged when BTC_USD rate is 0', () => {
+    it('should keep value unchanged when rate is missing', () => {
       const amount = Amount.of(500, 'USD');
-      const result = amount.convert('SAT', {BTC_USD: 0});
+      const result = amount.convert('SAT', {prices: {}});
       expect(result.value).toBe(500);
       expect(result.currency).toBe('SAT');
     });
 
     // SAT → USD
     it('should convert SAT to USD', () => {
-      const amount = Amount.of(Currency.SATS_PER_BTC, 'SAT'); // 1 BTC in sats
+      const amount = Amount.of(100_000_000, 'SAT'); // 1 BTC in sats
       const result = amount.convert('USD', RATES);
       expect(result.value).toBe(100_000);
       expect(result.currency).toBe('USD');
@@ -96,7 +115,7 @@ describe('Amount', () => {
     it('should convert USD to SAT', () => {
       const amount = Amount.of(100_000, 'USD'); // 1 BTC worth
       const result = amount.convert('SAT', RATES);
-      expect(result.value).toBe(Currency.SATS_PER_BTC);
+      expect(result.value).toBe(100_000_000);
       expect(result.currency).toBe('SAT');
     });
 
@@ -120,16 +139,25 @@ describe('Amount', () => {
     it('should convert BTC to SAT', () => {
       const amount = Amount.of(1, 'BTC');
       const result = amount.convert('SAT', RATES);
-      expect(result.value).toBe(Currency.SATS_PER_BTC);
+      expect(result.value).toBe(100_000_000);
       expect(result.currency).toBe('SAT');
     });
 
     // SAT → BTC
     it('should convert SAT to BTC', () => {
-      const amount = Amount.of(Currency.SATS_PER_BTC, 'SAT');
+      const amount = Amount.of(100_000_000, 'SAT');
       const result = amount.convert('BTC', RATES);
       expect(result.value).toBe(1);
       expect(result.currency).toBe('BTC');
+    });
+
+    // Multi-currency: EUR conversion
+    it('should convert BTC to EUR', () => {
+      const ratesWithEur: ConversionRates = {prices: {USD: 100_000, EUR: 90_000}};
+      const amount = Amount.of(1, 'BTC');
+      const result = amount.convert('EUR', ratesWithEur);
+      expect(result.value).toBe(90_000);
+      expect(result.currency).toBe('EUR');
     });
 
     // Round-trip conversions

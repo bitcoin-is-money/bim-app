@@ -1,10 +1,11 @@
 import type {Account, SwapDirection} from '../model';
-import type {Language} from '../services/i18n.http.service';
+import type {Language} from '../services/user-settings-http.service';
 import {DEFAULT_MOCK_USER, type MockUserProfile} from './mock-users';
 
 export interface StoredUserSettings {
   language: Language;
-  fiatCurrency: string;
+  preferredCurrencies: string[];
+  defaultCurrency: string;
 }
 
 const STORAGE_KEYS = {
@@ -199,7 +200,8 @@ export class DataStoreMock {
     const profile = this.getMockUserProfile();
     return {
       language: profile.language,
-      fiatCurrency: 'USD',
+      preferredCurrencies: ['USD'],
+      defaultCurrency: 'USD',
     };
   }
 

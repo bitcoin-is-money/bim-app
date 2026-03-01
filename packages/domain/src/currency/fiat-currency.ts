@@ -18,6 +18,10 @@ export namespace FiatCurrency {
     return normalized as FiatCurrency;
   }
 
+  export function ofAll(values: string[]): FiatCurrency[] {
+    return values.map(of);
+  }
+
   export function isSupported(value: string): boolean {
     return SUPPORTED_CURRENCIES.has(value.trim().toUpperCase());
   }
@@ -26,4 +30,3 @@ export namespace FiatCurrency {
     return [...SUPPORTED_CURRENCIES];
   }
 }
-

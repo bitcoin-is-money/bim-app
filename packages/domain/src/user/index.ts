@@ -1,6 +1,5 @@
 export * from './types';
 export * from './errors';
-export * from './fiat-currency';
 export * from './language';
 export * from './user-settings';
 export * from './transaction';

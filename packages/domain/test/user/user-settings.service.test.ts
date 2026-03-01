@@ -1,10 +1,8 @@
 import {AccountId} from '@bim/domain/account';
+import {FiatCurrency} from '@bim/domain/currency';
 import type {UserSettingsRepository} from '@bim/domain/ports';
 import {
-  FiatCurrency,
   Language,
-  UnsupportedCurrencyError,
-  UnsupportedLanguageError,
   UserSettings,
   UserSettingsId,
   UserSettingsService,
@@ -33,7 +31,8 @@ describe('UserSettingsService', () => {
       const settings = UserSettings.fromData({
         id: settingsId,
         accountId,
-        fiatCurrency: FiatCurrency.of('EUR'),
+        preferredCurrencies: [FiatCurrency.of('EUR')],
+        defaultCurrency: FiatCurrency.of('EUR'),
         language: Language.of('fr'),
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -42,7 +41,8 @@ describe('UserSettingsService', () => {
 
       const result = await service.fetch({accountId: accountId});
 
-      expect(result.settings.getFiatCurrency()).toBe('EUR');
+      expect(result.settings.getPreferredCurrencies()).toEqual(['EUR']);
+      expect(result.settings.getDefaultCurrency()).toBe('EUR');
       expect(result.settings.getLanguage()).toBe('fr');
       expect(mockRepository.save).not.toHaveBeenCalled();
     });
@@ -52,27 +52,50 @@ describe('UserSettingsService', () => {
 
       const result = await service.fetch({accountId: accountId});
 
-      expect(result.settings.getFiatCurrency()).toBe('USD'); // Default
-      expect(result.settings.getLanguage()).toBe('en'); // Default
+      expect(result.settings.getPreferredCurrencies()).toEqual(['USD']);
+      expect(result.settings.getDefaultCurrency()).toBe('USD');
+      expect(result.settings.getLanguage()).toBe('en');
       expect(mockRepository.save).toHaveBeenCalled();
     });
   });
 
   describe('update', () => {
-    it('updates existing settings', async () => {
-      const settings = UserSettings.create({
-        id: settingsId,
-        accountId,
-      });
+    it('updates preferred currencies', async () => {
+      const settings = UserSettings.create({id: settingsId, accountId});
       vi.mocked(mockRepository.findByAccountId).mockResolvedValue(settings);
 
       const result = await service.update({
         accountId: accountId,
-        fiatCurrency: 'EUR',
-        language: 'fr',
+        preferredCurrencies: [FiatCurrency.of('EUR'), FiatCurrency.of('GBP')],
       });
 
-      expect(result.settings.getFiatCurrency()).toBe('EUR');
+      expect(result.settings.getPreferredCurrencies()).toEqual(['EUR', 'GBP']);
+      expect(mockRepository.save).toHaveBeenCalled();
+    });
+
+    it('updates default currency', async () => {
+      const settings = UserSettings.create({id: settingsId, accountId});
+      settings.setPreferredCurrencies([FiatCurrency.of('USD'), FiatCurrency.of('EUR')]);
+      vi.mocked(mockRepository.findByAccountId).mockResolvedValue(settings);
+
+      const result = await service.update({
+        accountId: accountId,
+        defaultCurrency: FiatCurrency.of('EUR'),
+      });
+
+      expect(result.settings.getDefaultCurrency()).toBe('EUR');
+      expect(mockRepository.save).toHaveBeenCalled();
+    });
+
+    it('updates language', async () => {
+      const settings = UserSettings.create({id: settingsId, accountId});
+      vi.mocked(mockRepository.findByAccountId).mockResolvedValue(settings);
+
+      const result = await service.update({
+        accountId: accountId,
+        language: Language.of('fr'),
+      });
+
       expect(result.settings.getLanguage()).toBe('fr');
       expect(mockRepository.save).toHaveBeenCalled();
     });
@@ -82,43 +105,13 @@ describe('UserSettingsService', () => {
 
       const result = await service.update({
         accountId: accountId,
-        fiatCurrency: 'EUR',
-        language: 'fr',
+        preferredCurrencies: [FiatCurrency.of('EUR')],
+        language: Language.of('fr'),
       });
 
-      expect(result.settings.getFiatCurrency()).toBe('EUR');
+      expect(result.settings.getPreferredCurrencies()).toEqual(['EUR']);
       expect(result.settings.getLanguage()).toBe('fr');
       expect(mockRepository.save).toHaveBeenCalled();
-    });
-
-    it('throws for unsupported currency', async () => {
-      const settings = UserSettings.create({
-        id: settingsId,
-        accountId,
-      });
-      vi.mocked(mockRepository.findByAccountId).mockResolvedValue(settings);
-
-      await expect(
-        service.update({
-          accountId: accountId,
-          fiatCurrency: 'INVALID',
-        }),
-      ).rejects.toThrow(UnsupportedCurrencyError);
-    });
-
-    it('throws for unsupported language', async () => {
-      const settings = UserSettings.create({
-        id: settingsId,
-        accountId,
-      });
-      vi.mocked(mockRepository.findByAccountId).mockResolvedValue(settings);
-
-      await expect(
-        service.update({
-          accountId: accountId,
-          language: 'de',
-        }),
-      ).rejects.toThrow(UnsupportedLanguageError);
     });
   });
 });

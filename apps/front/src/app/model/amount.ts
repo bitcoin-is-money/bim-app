@@ -1,6 +1,9 @@
 import {ConversionRates, Currency} from './currency';
 
+const SATS_PER_BTC = 100_000_000;
+
 export class Amount {
+
   private constructor(
     public readonly value: number,
     public readonly currency: Currency
@@ -34,7 +37,6 @@ export class Amount {
     return this.value > 0;
   }
 
-
   convert(
     targetCurrency: Currency,
     rates: ConversionRates
@@ -43,41 +45,57 @@ export class Amount {
       return this.clone();
     }
 
-    const btcUsd = rates.BTC_USD;
+    // Convert source to BTC first (base unit)
+    const amountInBtc = this.toBtc(rates);
 
-    if (btcUsd === 0) {
+    // If conversion failed (no rate), keep original value
+    if (amountInBtc === undefined) {
       return new Amount(this.value, targetCurrency);
     }
 
-    // Convert to BTC first (base unit)
-    let amountInBtc: number;
-    switch (this.currency) {
-      case 'BTC':
-        amountInBtc = this.value;
-        break;
-      case 'SAT':
-        amountInBtc = this.value / Currency.SATS_PER_BTC;
-        break;
-      case 'USD':
-        amountInBtc = this.value / btcUsd;
-        break;
-    }
-
     // Convert from BTC to target currency
-    let convertedValue: number;
-    switch (targetCurrency) {
-      case 'BTC':
-        convertedValue = amountInBtc;
-        break;
-      case 'SAT':
-        convertedValue = amountInBtc * Currency.SATS_PER_BTC;
-        break;
-      case 'USD':
-        convertedValue = amountInBtc * btcUsd;
-        break;
+    const convertedValue = Amount.fromBtc(amountInBtc, targetCurrency, rates);
+    if (convertedValue === undefined) {
+      return new Amount(this.value, targetCurrency);
     }
 
     return new Amount(convertedValue, targetCurrency);
+  }
+
+  private toBtc(rates: ConversionRates): number | undefined {
+    switch (this.currency) {
+      case 'BTC':
+        return this.value;
+      case 'SAT':
+        return this.value / SATS_PER_BTC;
+      default: {
+        const rate = rates.prices[this.currency];
+        if (!rate || rate === 0) {
+          return undefined;
+        }
+        return this.value / rate;
+      }
+    }
+  }
+
+  private static fromBtc(
+    btcAmount: number,
+    target: Currency,
+    rates: ConversionRates
+  ): number | undefined {
+    switch (target) {
+      case 'BTC':
+        return btcAmount;
+      case 'SAT':
+        return btcAmount * SATS_PER_BTC;
+      default: {
+        const rate = rates.prices[target];
+        if (!rate || rate === 0) {
+          return undefined;
+        }
+        return btcAmount * rate;
+      }
+    }
   }
 
 }

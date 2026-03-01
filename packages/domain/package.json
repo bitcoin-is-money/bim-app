@@ -20,6 +20,10 @@
       "types": "./dist/payment/index.d.ts",
       "import": "./dist/payment/index.js"
     },
+    "./currency": {
+      "types": "./dist/currency/index.d.ts",
+      "import": "./dist/currency/index.js"
+    },
     "./ports": {
       "types": "./dist/ports/index.d.ts",
       "import": "./dist/ports/index.js"

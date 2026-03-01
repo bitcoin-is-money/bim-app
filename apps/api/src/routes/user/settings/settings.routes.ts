@@ -1,5 +1,6 @@
 import {Account} from '@bim/domain/account';
-import {FiatCurrency, Language} from '@bim/domain/user';
+import {FiatCurrency} from '@bim/domain/currency';
+import {Language} from '@bim/domain/user';
 import type {TypedResponse} from 'hono';
 import {Hono} from 'hono';
 
@@ -32,9 +33,8 @@ export function createSettingsRoutes(appContext: AppContext): AuthenticatedHono 
 
       return honoCtx.json<GetSettingsResponse>({
         language: result.settings.getLanguage(),
-        supportedLanguages: Language.getSupportedLanguages(),
-        fiatCurrency: result.settings.getFiatCurrency(),
-        supportedCurrencies: FiatCurrency.getSupportedCurrencies(),
+        preferredCurrencies: result.settings.getPreferredCurrencies(),
+        defaultCurrency: result.settings.getDefaultCurrency(),
       });
     } catch (error) {
       return handleDomainError(honoCtx, error, log);
@@ -50,19 +50,23 @@ export function createSettingsRoutes(appContext: AppContext): AuthenticatedHono 
       const account: Account = honoCtx.get('account');
       const body = UpdateSettingsSchema.parse(await honoCtx.req.json());
 
-      const language = body.language;
-      const fiatCurrency = body.fiatCurrency;
       const result = await userSettingsService.update({
         accountId: account.id,
-        ...(language !== undefined && {language}),
-        ...(fiatCurrency !== undefined && {fiatCurrency}),
+        ...(body.language !== undefined && {
+          language: Language.of(body.language)
+        }),
+        ...(body.preferredCurrencies !== undefined && {
+          preferredCurrencies: FiatCurrency.ofAll(body.preferredCurrencies)
+        }),
+        ...(body.defaultCurrency !== undefined && {
+          defaultCurrency: FiatCurrency.of(body.defaultCurrency)
+        }),
       });
 
       return honoCtx.json<UpdateSettingsResponse>({
         language: result.settings.getLanguage(),
-        supportedLanguages: Language.getSupportedLanguages(),
-        fiatCurrency: result.settings.getFiatCurrency(),
-        supportedCurrencies: FiatCurrency.getSupportedCurrencies(),
+        preferredCurrencies: result.settings.getPreferredCurrencies(),
+        defaultCurrency: result.settings.getDefaultCurrency(),
       });
     } catch (error) {
       return handleDomainError(honoCtx, error, log);

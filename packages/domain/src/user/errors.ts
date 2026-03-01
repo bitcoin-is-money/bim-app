@@ -20,12 +20,6 @@ export class InvalidTransactionHashError extends DomainError {
   }
 }
 
-export class UnsupportedCurrencyError extends DomainError {
-  constructor(readonly currency: string, supportedCurrencies: readonly string[]) {
-    super(`Unsupported currency: ${currency}. Supported: ${supportedCurrencies.join(', ')}`);
-  }
-}
-
 export class UnsupportedLanguageError extends DomainError {
   constructor(readonly language: string, supportedLanguages: readonly string[]) {
     super(`Unsupported language: ${language}. Supported: ${supportedLanguages.join(', ')}`);

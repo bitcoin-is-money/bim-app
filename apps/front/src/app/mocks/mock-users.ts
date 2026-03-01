@@ -1,5 +1,5 @@
 import type {StoredSwap, SwapStatus} from '../model';
-import type {Language} from '../services/i18n.http.service';
+import type {Language} from '../services/user-settings-http.service';
 import {ParsePaymentResponse} from '../services/pay.http.service';
 
 export interface MockSwapConfig {
