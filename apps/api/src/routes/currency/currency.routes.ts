@@ -1,4 +1,3 @@
-import {Account} from '@bim/domain/account';
 import {FiatCurrency} from '@bim/domain/currency';
 import type {TypedResponse} from 'hono';
 import {Hono} from 'hono';
@@ -14,29 +13,29 @@ export function createCurrencyRoutes(appCtx: AppContext): AuthenticatedHono {
 
   app.use('*', createAuthMiddleware(appCtx));
 
+  /**
+   * GET /api/currency/prices
+   *
+   * Returns BTC prices for all supported fiat currencies.
+   * The response is a flat object: keys = currency codes, values = BTC price.
+   * The set of keys also serves as the list of supported currencies.
+   *
+   * Example: { "AUD": 148000, "CAD": 132000, "EUR": 89000, "USD": 97000, ... }
+   */
   app.get('/prices', async (honoCtx): Promise<TypedResponse<GetPricesResponse | ApiErrorResponse>> => {
     try {
-      const account: Account = honoCtx.get('account');
+      const allCurrencies = FiatCurrency.getSupportedCurrencies()
+        .map(c => FiatCurrency.of(c));
 
-      // Fetch user's preferred currencies
-      const {settings} = await appCtx.services.userSettings
-        .fetch({accountId: account.id});
-      const preferredCurrencies = settings.getPreferredCurrencies();
-
-      // Fetch BTC prices for preferred currencies
       const priceMap = await appCtx.services.currency
-        .getBtcPrices(preferredCurrencies);
+        .getBtcPrices(allCurrencies);
 
-      // Convert Map to a plain object
-      const prices: Record<string, number> = {};
+      const prices: GetPricesResponse = {};
       for (const [currency, price] of priceMap) {
         prices[currency] = price;
       }
 
-      return honoCtx.json<GetPricesResponse>({
-        prices,
-        supportedCurrencies: FiatCurrency.getSupportedCurrencies(),
-      });
+      return honoCtx.json(prices);
     } catch (error) {
       return handleDomainError(honoCtx, error, log);
     }

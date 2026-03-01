@@ -1,16 +1,18 @@
 import {HttpResponse} from '@angular/common/http';
 import type {PricesResponse} from '../../services/currency.http.service';
 
-const SUPPORTED_CURRENCIES = ['USD', 'EUR', 'GBP', 'CHF', 'JPY', 'CAD', 'AUD'];
-
 export class PricesHandlerMock {
-  // GET /api/currency/prices
   getPrices(): HttpResponse<PricesResponse> {
     return new HttpResponse({
       status: 200,
       body: {
-        prices: {USD: 100000},
-        supportedCurrencies: SUPPORTED_CURRENCIES,
+        AUD: 148000,
+        CAD: 132000,
+        CHF: 84000,
+        EUR: 89000,
+        GBP: 76000,
+        JPY: 14500000,
+        USD: 97000,
       },
     });
   }

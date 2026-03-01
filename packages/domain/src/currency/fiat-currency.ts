@@ -27,6 +27,6 @@ export namespace FiatCurrency {
   }
 
   export function getSupportedCurrencies(): readonly string[] {
-    return [...SUPPORTED_CURRENCIES];
+    return [...SUPPORTED_CURRENCIES].sort();
   }
 }
