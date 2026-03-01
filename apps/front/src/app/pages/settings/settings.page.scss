@@ -7,7 +7,7 @@
     @apply flex-1 p-4;
 
     .settings-section {
-      @apply max-w-md mx-auto;
+      @apply max-w-md mx-auto mb-6;
 
       .settings-label {
         @apply block text-neutral-300 text-sm font-medium mb-2;
@@ -16,7 +16,7 @@
       .select-wrapper {
         @apply relative;
 
-        .language-select {
+        .settings-select {
           @apply w-full appearance-none bg-neutral-800 text-white
                  border border-neutral-700 rounded-lg px-4 py-3 pr-10
                  text-base cursor-pointer

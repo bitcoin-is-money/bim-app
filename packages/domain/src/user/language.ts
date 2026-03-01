@@ -23,7 +23,7 @@ export namespace Language {
   }
 
   export function getSupportedLanguages(): readonly string[] {
-    return [...SUPPORTED_LANGUAGES];
+    return [...SUPPORTED_LANGUAGES].sort();
   }
 }
 

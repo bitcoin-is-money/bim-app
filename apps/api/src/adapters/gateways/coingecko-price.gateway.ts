@@ -38,8 +38,6 @@ export class CoinGeckoPriceGateway implements PriceGateway {
         }
         result.set(currency, price);
       }
-
-      this.log.info({currencies: [...result.keys()]}, 'Fetched BTC prices');
       return result;
     } catch (error) {
       throw new ExternalServiceError(

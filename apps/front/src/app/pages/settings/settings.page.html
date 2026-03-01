@@ -10,13 +10,34 @@
         <div class="select-wrapper">
           <select
             id="language-select"
-            class="language-select"
+            class="settings-select"
             [ngModel]="currentLanguage()"
             (ngModelChange)="onLanguageChange($event)"
           >
             @for (lang of languages; track lang.code) {
               <option [value]="lang.code">
                 {{ lang.flag }} {{ lang.name }}
+              </option>
+            }
+          </select>
+          <span class="select-arrow">▼</span>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <label class="settings-label" for="currency-select">
+          {{ 'settings.currency' | translate }}
+        </label>
+        <div class="select-wrapper">
+          <select
+            id="currency-select"
+            class="settings-select"
+            [ngModel]="currentFiat()"
+            (ngModelChange)="onFiatChange($event)"
+          >
+            @for (option of currencyOptions(); track option.code) {
+              <option [value]="option.code">
+                {{ option.label }}
               </option>
             }
           </select>

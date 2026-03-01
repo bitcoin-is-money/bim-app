@@ -95,7 +95,8 @@
   },
   "settings": {
     "title": "Settings",
-    "language": "Language"
+    "language": "Language",
+    "currency": "Currency"
   },
   "about": {
     "title": "About",
