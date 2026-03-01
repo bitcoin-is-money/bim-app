@@ -1,11 +1,11 @@
 import {AccountId, StarknetAddress} from '../account';
-import {type TransactionData, TransactionHash, TransactionId, type TransactionType} from './types';
+import {TransactionHash, TransactionId, type TransactionType} from './types';
 
 /**
  * Transaction entity representing a recorded blockchain transaction.
  */
 export class Transaction {
-  private constructor(
+  constructor(
     readonly id: TransactionId,
     readonly accountId: AccountId,
     readonly transactionHash: TransactionHash,
@@ -53,26 +53,6 @@ export class Transaction {
   }
 
   /**
-   * Reconstitutes transaction from persisted data.
-   */
-  static fromData(data: TransactionData): Transaction {
-    return new Transaction(
-      data.id,
-      data.accountId,
-      data.transactionHash,
-      data.blockNumber,
-      data.transactionType,
-      data.amount,
-      data.tokenAddress,
-      data.fromAddress,
-      data.toAddress,
-      data.timestamp,
-      data.indexedAt,
-      data.description,
-    );
-  }
-
-  /**
    * Returns whether this is a receipt (incoming) transaction.
    */
   isReceipt(): boolean {
@@ -86,23 +66,4 @@ export class Transaction {
     return this.transactionType === 'spent';
   }
 
-  /**
-   * Exports the transaction data for persistence.
-   */
-  toData(): TransactionData {
-    return {
-      id: this.id,
-      accountId: this.accountId,
-      transactionHash: this.transactionHash,
-      blockNumber: this.blockNumber,
-      transactionType: this.transactionType,
-      amount: this.amount,
-      tokenAddress: this.tokenAddress,
-      fromAddress: this.fromAddress,
-      toAddress: this.toAddress,
-      timestamp: this.timestamp,
-      indexedAt: this.indexedAt,
-      description: this.description,
-    };
-  }
 }

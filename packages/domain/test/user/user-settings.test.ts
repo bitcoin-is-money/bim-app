@@ -32,30 +32,6 @@ describe('UserSettings', () => {
     });
   });
 
-  describe('fromData', () => {
-    it('reconstitutes settings from persisted data', () => {
-      const data = {
-        id: settingsId,
-        accountId,
-        preferredCurrencies: [FiatCurrency.of('EUR'), FiatCurrency.of('GBP')],
-        defaultCurrency: FiatCurrency.of('EUR'),
-        language: Language.of('fr'),
-        createdAt: new Date('2024-01-01'),
-        updatedAt: new Date('2024-01-02'),
-      };
-
-      const settings = UserSettings.fromData(data);
-
-      expect(settings.id).toBe(settingsId);
-      expect(settings.accountId).toBe(accountId);
-      expect(settings.getPreferredCurrencies()).toEqual(['EUR', 'GBP']);
-      expect(settings.getDefaultCurrency()).toBe('EUR');
-      expect(settings.getLanguage()).toBe('fr');
-      expect(settings.createdAt).toEqual(data.createdAt);
-      expect(settings.getUpdatedAt()).toEqual(data.updatedAt);
-    });
-  });
-
   describe('setPreferredCurrencies', () => {
     it('updates preferred currencies', () => {
       const settings = UserSettings.create({id: settingsId, accountId});
@@ -135,22 +111,4 @@ describe('UserSettings', () => {
     });
   });
 
-  describe('toData', () => {
-    it('exports all settings data', () => {
-      const settings = UserSettings.create({id: settingsId, accountId});
-      settings.setPreferredCurrencies([FiatCurrency.of('GBP'), FiatCurrency.of('EUR')]);
-      settings.setDefaultCurrency(FiatCurrency.of('EUR'));
-      settings.setLanguage(Language.of('fr'));
-
-      const data = settings.toData();
-
-      expect(data.id).toBe(settingsId);
-      expect(data.accountId).toBe(accountId);
-      expect(data.preferredCurrencies).toEqual(['GBP', 'EUR']);
-      expect(data.defaultCurrency).toBe('EUR');
-      expect(data.language).toBe('fr');
-      expect(data.createdAt).toEqual(settings.createdAt);
-      expect(data.updatedAt).toEqual(settings.getUpdatedAt());
-    });
-  });
 });

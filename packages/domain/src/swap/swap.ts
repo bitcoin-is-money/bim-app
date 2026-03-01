@@ -5,7 +5,6 @@ import {
   type CreateStarknetToBitcoinParams,
   type CreateStarknetToLightningParams,
   isForwardSwap,
-  type SwapData,
   type SwapDirection,
   SwapId,
   type SwapState,
@@ -24,7 +23,7 @@ import {
 export class Swap {
   private state: SwapState;
 
-  private constructor(
+  constructor(
     readonly id: SwapId,
     readonly direction: SwapDirection,
     readonly amount: Amount,
@@ -130,26 +129,6 @@ export class Swap {
       { status: 'pending' },
       params.description,
       params.accountId,
-    );
-  }
-
-  /**
-   * Reconstitutes a Swap from persisted data.
-   */
-  static fromData(data: SwapData): Swap {
-    return new Swap(
-      data.id,
-      data.direction,
-      Amount.ofSatoshi(data.amountSats),
-      data.destinationAddress,
-      data.sourceAddress,
-      data.invoice,
-      data.depositAddress,
-      data.expiresAt,
-      data.createdAt,
-      data.state,
-      data.description,
-      data.accountId,
     );
   }
 
@@ -282,27 +261,4 @@ export class Swap {
     }
   }
 
-  // ===========================================================================
-  // Data Export
-  // ===========================================================================
-
-  /**
-   * Exports the swap data for persistence.
-   */
-  toData(): SwapData {
-    return {
-      id: this.id,
-      direction: this.direction,
-      amountSats: this.amount.getSat(),
-      destinationAddress: this.destinationAddress,
-      sourceAddress: this.sourceAddress,
-      state: this.state,
-      invoice: this.invoice,
-      depositAddress: this.depositAddress,
-      expiresAt: this.expiresAt,
-      createdAt: this.createdAt,
-      description: this.description,
-      accountId: this.accountId,
-    };
-  }
 }

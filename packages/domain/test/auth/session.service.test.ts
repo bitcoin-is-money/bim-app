@@ -33,12 +33,12 @@ describe('SessionService', () => {
   }
 
   function createSession(expiresAt?: Date): Session {
-    return Session.fromData({
-      id: sessionId,
+    return new Session(
+      sessionId,
       accountId,
-      expiresAt: expiresAt ?? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      createdAt: new Date(),
-    });
+      expiresAt ?? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      new Date(),
+    );
   }
 
   beforeEach(() => {

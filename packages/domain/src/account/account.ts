@@ -26,7 +26,7 @@ export class Account {
   private signCount: number;
   private updatedAt: Date;
 
-  private constructor(
+  constructor(
     readonly id: AccountId,
     readonly username: string,
     readonly credentialId: CredentialId,
@@ -60,25 +60,6 @@ export class Account {
       now,
       'pending',
       0,
-    );
-  }
-
-  /**
-   * Reconstitutes an Account from persisted data.
-   */
-  static fromData(data: AccountData): Account {
-    return new Account(
-      data.id,
-      data.username,
-      data.credentialId,
-      data.publicKey,
-      data.credentialPublicKey,
-      data.createdAt,
-      data.status,
-      data.signCount,
-      data.starknetAddress,
-      data.deploymentTxHash,
-      data.updatedAt,
     );
   }
 
@@ -183,24 +164,6 @@ export class Account {
     return this.status === 'pending';
   }
 
-  /**
-   * Exports the account data for persistence.
-   */
-  toData(): AccountData {
-    return {
-      id: this.id,
-      username: this.username,
-      credentialId: this.credentialId,
-      publicKey: this.publicKey,
-      credentialPublicKey: this.credentialPublicKey,
-      starknetAddress: this.starknetAddress,
-      status: this.status,
-      deploymentTxHash: this.deploymentTxHash,
-      signCount: this.signCount,
-      createdAt: this.createdAt,
-      updatedAt: this.updatedAt,
-    };
-  }
 }
 
 interface CreateAccountParams {
@@ -209,18 +172,4 @@ interface CreateAccountParams {
   credentialId: CredentialId;
   publicKey: string;
   credentialPublicKey?: string;
-}
-
-export interface AccountData {
-  id: AccountId;
-  username: string;
-  credentialId: CredentialId;
-  publicKey: string;
-  credentialPublicKey: string | undefined;
-  starknetAddress: StarknetAddress | undefined;
-  status: AccountStatus;
-  deploymentTxHash: string | undefined;
-  signCount: number;
-  createdAt: Date;
-  updatedAt: Date;
 }

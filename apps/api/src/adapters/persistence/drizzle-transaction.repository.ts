@@ -15,22 +15,20 @@ export class DrizzleTransactionRepository implements TransactionRepository {
   ) {}
 
   async save(transaction: Transaction): Promise<void> {
-    const data = transaction.toData();
-
     await this.db
       .insert(schema.transactions)
       .values({
-        id: data.id,
-        accountId: data.accountId,
-        transactionHash: data.transactionHash,
-        blockNumber: data.blockNumber.toString(),
-        transactionType: data.transactionType,
-        amount: data.amount,
-        tokenAddress: data.tokenAddress,
-        fromAddress: data.fromAddress,
-        toAddress: data.toAddress,
-        timestamp: data.timestamp,
-        indexedAt: data.indexedAt,
+        id: transaction.id,
+        accountId: transaction.accountId,
+        transactionHash: transaction.transactionHash,
+        blockNumber: transaction.blockNumber.toString(),
+        transactionType: transaction.transactionType,
+        amount: transaction.amount,
+        tokenAddress: transaction.tokenAddress,
+        fromAddress: transaction.fromAddress,
+        toAddress: transaction.toAddress,
+        timestamp: transaction.timestamp,
+        indexedAt: transaction.indexedAt,
       })
       .onConflictDoNothing();
   }
@@ -40,22 +38,19 @@ export class DrizzleTransactionRepository implements TransactionRepository {
       return;
     }
 
-    const values = transactions.map((tx) => {
-      const data = tx.toData();
-      return {
-        id: data.id,
-        accountId: data.accountId,
-        transactionHash: data.transactionHash,
-        blockNumber: data.blockNumber.toString(),
-        transactionType: data.transactionType,
-        amount: data.amount,
-        tokenAddress: data.tokenAddress,
-        fromAddress: data.fromAddress,
-        toAddress: data.toAddress,
-        timestamp: data.timestamp,
-        indexedAt: data.indexedAt,
-      };
-    });
+    const values = transactions.map((tx) => ({
+      id: tx.id,
+      accountId: tx.accountId,
+      transactionHash: tx.transactionHash,
+      blockNumber: tx.blockNumber.toString(),
+      transactionType: tx.transactionType,
+      amount: tx.amount,
+      tokenAddress: tx.tokenAddress,
+      fromAddress: tx.fromAddress,
+      toAddress: tx.toAddress,
+      timestamp: tx.timestamp,
+      indexedAt: tx.indexedAt,
+    }));
 
     await this.db
       .insert(schema.transactions)
@@ -180,19 +175,19 @@ export class DrizzleTransactionRepository implements TransactionRepository {
   }
 
   private toTransaction(record: schema.TransactionRecord, description: string | null): Transaction {
-    return Transaction.fromData({
-      id: TransactionId.of(record.id),
-      accountId: AccountId.of(record.accountId),
-      transactionHash: TransactionHash.of(record.transactionHash),
-      blockNumber: BigInt(record.blockNumber),
-      transactionType: record.transactionType as TransactionType,
-      amount: record.amount,
-      tokenAddress: StarknetAddress.of(record.tokenAddress),
-      fromAddress: StarknetAddress.of(record.fromAddress),
-      toAddress: StarknetAddress.of(record.toAddress),
-      timestamp: record.timestamp,
-      indexedAt: record.indexedAt,
-      description: description ?? (record.transactionType === 'receipt' ? 'Received' : 'Sent'),
-    });
+    return new Transaction(
+      TransactionId.of(record.id),
+      AccountId.of(record.accountId),
+      TransactionHash.of(record.transactionHash),
+      BigInt(record.blockNumber),
+      record.transactionType as TransactionType,
+      record.amount,
+      StarknetAddress.of(record.tokenAddress),
+      StarknetAddress.of(record.fromAddress),
+      StarknetAddress.of(record.toAddress),
+      record.timestamp,
+      record.indexedAt,
+      description ?? (record.transactionType === 'receipt' ? 'Received' : 'Sent'),
+    );
   }
 }

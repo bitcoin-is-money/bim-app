@@ -1,12 +1,12 @@
 import {AccountId} from '../account';
 import {SessionExpiredError} from './errors';
-import {SESSION_DURATION_MS, type SessionData, SessionId} from './types';
+import {SESSION_DURATION_MS, SessionId} from './types';
 
 /**
  * Session entity representing an authenticated user session.
  */
 export class Session {
-  private constructor(
+  constructor(
     readonly id: SessionId,
     readonly accountId: AccountId,
     readonly expiresAt: Date,
@@ -23,18 +23,6 @@ export class Session {
       accountId,
       new Date(now.getTime() + SESSION_DURATION_MS),
       now,
-    );
-  }
-
-  /**
-   * Reconstitutes a session from persisted data.
-   */
-  static fromData(data: SessionData): Session {
-    return new Session(
-      data.id,
-      data.accountId,
-      data.expiresAt,
-      data.createdAt,
     );
   }
 
@@ -63,15 +51,4 @@ export class Session {
     return Math.max(0, remaining);
   }
 
-  /**
-   * Exports the session data for persistence.
-   */
-  toData(): SessionData {
-    return {
-      id: this.id,
-      accountId: this.accountId,
-      expiresAt: this.expiresAt,
-      createdAt: this.createdAt,
-    };
-  }
 }

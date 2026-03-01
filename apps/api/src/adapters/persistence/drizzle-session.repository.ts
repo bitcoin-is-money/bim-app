@@ -12,20 +12,18 @@ export class DrizzleSessionRepository implements SessionRepository {
   constructor(private readonly db: NodePgDatabase<typeof schema>) {}
 
   async save(session: Session): Promise<void> {
-    const data = session.toData();
-
     await this.db
       .insert(schema.sessions)
       .values({
-        id: data.id,
-        accountId: data.accountId,
-        expiresAt: data.expiresAt,
-        createdAt: data.createdAt,
+        id: session.id,
+        accountId: session.accountId,
+        expiresAt: session.expiresAt,
+        createdAt: session.createdAt,
       })
       .onConflictDoUpdate({
         target: schema.sessions.id,
         set: {
-          expiresAt: data.expiresAt,
+          expiresAt: session.expiresAt,
         },
       });
   }
@@ -69,11 +67,11 @@ export class DrizzleSessionRepository implements SessionRepository {
   }
 
   private toSession(record: schema.SessionRecord): Session {
-    return Session.fromData({
-      id: SessionId.of(record.id),
-      accountId: AccountId.of(record.accountId),
-      expiresAt: record.expiresAt,
-      createdAt: record.createdAt,
-    });
+    return new Session(
+      SessionId.of(record.id),
+      AccountId.of(record.accountId),
+      record.expiresAt,
+      record.createdAt,
+    );
   }
 }

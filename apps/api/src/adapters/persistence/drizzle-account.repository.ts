@@ -14,34 +14,32 @@ export class DrizzleAccountRepository implements AccountRepository {
   ) {}
 
   async save(account: Account): Promise<void> {
-    const data = account.toData();
-
     await this.db
       .insert(schema.accounts)
       .values({
-        id: data.id,
-        username: data.username,
-        credentialId: data.credentialId,
-        publicKey: data.publicKey,
-        credentialPublicKey: data.credentialPublicKey,
-        starknetAddress: data.starknetAddress,
-        status: data.status,
-        deploymentTxHash: data.deploymentTxHash,
-        signCount: data.signCount,
-        createdAt: data.createdAt,
-        updatedAt: data.updatedAt,
+        id: account.id,
+        username: account.username,
+        credentialId: account.credentialId,
+        publicKey: account.publicKey,
+        credentialPublicKey: account.credentialPublicKey,
+        starknetAddress: account.getStarknetAddress(),
+        status: account.getStatus(),
+        deploymentTxHash: account.getDeploymentTxHash(),
+        signCount: account.getSignCount(),
+        createdAt: account.createdAt,
+        updatedAt: account.getUpdatedAt(),
       })
       .onConflictDoUpdate({
         target: schema.accounts.id,
         set: {
-          username: data.username,
-          credentialId: data.credentialId,
-          publicKey: data.publicKey,
-          credentialPublicKey: data.credentialPublicKey,
-          starknetAddress: data.starknetAddress,
-          status: data.status,
-          deploymentTxHash: data.deploymentTxHash,
-          signCount: data.signCount,
+          username: account.username,
+          credentialId: account.credentialId,
+          publicKey: account.publicKey,
+          credentialPublicKey: account.credentialPublicKey,
+          starknetAddress: account.getStarknetAddress(),
+          status: account.getStatus(),
+          deploymentTxHash: account.getDeploymentTxHash(),
+          signCount: account.getSignCount(),
           updatedAt: new Date(),
         },
       });
@@ -99,20 +97,20 @@ export class DrizzleAccountRepository implements AccountRepository {
   }
 
   private toAccount(record: schema.AccountRecord): Account {
-    return Account.fromData({
-      id: AccountId.of(record.id),
-      username: record.username,
-      credentialId: CredentialId.of(record.credentialId),
-      publicKey: record.publicKey,
-      credentialPublicKey: record.credentialPublicKey ?? undefined,
-      starknetAddress: record.starknetAddress
+    return new Account(
+      AccountId.of(record.id),
+      record.username,
+      CredentialId.of(record.credentialId),
+      record.publicKey,
+      record.credentialPublicKey ?? undefined,
+      record.createdAt,
+      record.status as AccountStatus,
+      record.signCount,
+      record.starknetAddress
         ? StarknetAddress.of(record.starknetAddress)
         : undefined,
-      status: record.status as AccountStatus,
-      deploymentTxHash: record.deploymentTxHash ?? undefined,
-      signCount: record.signCount,
-      createdAt: record.createdAt,
-      updatedAt: record.updatedAt,
-    });
+      record.deploymentTxHash ?? undefined,
+      record.updatedAt,
+    );
   }
 }
