@@ -24,7 +24,7 @@ export class I18nService {
   readonly supportedLangs = SUPPORTED_LANGS;
 
   constructor() {
-    this.translate.setDefaultLang(DEFAULT_LANG);
+    this.translate.setFallbackLang(DEFAULT_LANG);
     this.translate.addLangs([...SUPPORTED_LANGS]);
   }
 
@@ -79,7 +79,7 @@ export class I18nService {
    * Translate a key with optional parameters.
    */
   t(key: string, params?: Record<string, unknown>): string {
-    return this.translate.instant(key, params);
+    return String(this.translate.instant(key, params));
   }
 
   /**
@@ -87,7 +87,7 @@ export class I18nService {
    */
   translateError(error: ApiErrorBody): string {
     const key = `errors.${error.code}`;
-    const translated = this.translate.instant(key, error.args ?? {});
+    const translated = String(this.translate.instant(key, error.args ?? {}));
     // Fallback to backend message if key not found
     return translated === key ? error.message : translated;
   }

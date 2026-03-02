@@ -32,8 +32,9 @@ export class CoinGeckoPriceGateway implements PriceGateway {
       const result = new Map<FiatCurrency, number>();
       for (const currency of currencies) {
         const key = (currency as string).toLowerCase();
+        // eslint-disable-next-line security/detect-object-injection -- key derived from FiatCurrency enum, not user input
         const price = bitcoin[key];
-        if (typeof price !== 'number' || price <= 0) {
+        if (price === undefined || price <= 0) {
           throw new Error(`Invalid price for ${currency}: ${price}`);
         }
         result.set(currency, price);

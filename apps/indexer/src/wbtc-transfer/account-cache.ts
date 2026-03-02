@@ -2,7 +2,7 @@
 import * as schema from '@bim/db';
 import {isNotNull} from 'drizzle-orm';
 import type {Logger} from 'pino';
-import type {AccountMatch} from './types.js';
+import type {AccountMatch, ApibaraDb} from './types.js';
 
 export class AccountCache {
   private accounts: AccountMatch[] = [];
@@ -16,8 +16,7 @@ export class AccountCache {
   }
 
   // Returns cached accounts, refreshing from DB when TTL has expired.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Apibara's drizzle plugin db type is internal
-  async get(db: any): Promise<AccountMatch[]> {
+  async get(db: ApibaraDb): Promise<AccountMatch[]> {
     if (Date.now() - this.lastFetchedAt < this.ttlMs) {
       return this.accounts;
     }

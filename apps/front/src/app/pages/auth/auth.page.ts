@@ -19,11 +19,11 @@ export class AuthPage {
   username = signal('');
 
   onSignIn(): void {
-    this.authService.signIn();
+    void this.authService.signIn();
   }
 
   onSignUp(): void {
-    this.authService.signUp(this.username());
+    void this.authService.signUp(this.username());
   }
 
   updateUsername(event: Event): void {

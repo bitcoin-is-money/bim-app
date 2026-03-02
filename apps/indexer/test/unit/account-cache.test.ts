@@ -2,6 +2,7 @@ import {createLogger} from '@bim/lib/logger';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import {AccountCache} from '../../src/wbtc-transfer/account-cache.js';
 import {INDEXER_LOGGER_CONFIG} from "../../src/wbtc-transfer/logger-config";
+import type {ApibaraDb} from '../../src/wbtc-transfer/types.js';
 
 const LOG_LEVEL = 'silent';
 
@@ -17,7 +18,7 @@ function makeMockDb(rows: {id: string; starknetAddress: string}[]) {
         where: vi.fn().mockResolvedValue(rows),
       }),
     }),
-  };
+  } as unknown as ApibaraDb;
 }
 
 describe('AccountCache', () => {
@@ -57,11 +58,11 @@ describe('AccountCache', () => {
 
     await cache.get(db);
 
-    db.select.mockReturnValue({
+    vi.mocked(db.select).mockReturnValue({
       from: vi.fn().mockReturnValue({
         where: vi.fn().mockResolvedValue([ALICE, BOB]),
       }),
-    });
+    } as any);
 
     vi.advanceTimersByTime(60_001);
     const result = await cache.get(db);

@@ -260,7 +260,7 @@ export class SwapService {
     return {
       swap,
       depositAddress: atomiqSwap.depositAddress,
-      bip21Uri: atomiqSwap.bip21Uri || `bitcoin:${atomiqSwap.depositAddress}`,
+      bip21Uri: atomiqSwap.bip21Uri ?? `bitcoin:${atomiqSwap.depositAddress}`,
     };
   }
 
@@ -617,6 +617,7 @@ export class SwapService {
       this.log.debug({atomiqStatus}, 'Sync swap with Atomiq');
 
       if (atomiqStatus.isCompleted) {
+        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- empty txHash should fallback
         swap.markAsCompleted(atomiqStatus.txHash || 'unknown');
         await this.deps.swapRepository.save(swap);
         await this.persistDescription(swap);
@@ -624,6 +625,7 @@ export class SwapService {
         swap.markAsPaid();
         await this.deps.swapRepository.save(swap);
       } else if (atomiqStatus.isFailed) {
+        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- empty error should fallback
         swap.markAsFailed(atomiqStatus.error || 'Unknown error');
         await this.deps.swapRepository.save(swap);
       } else if (atomiqStatus.isExpired) {

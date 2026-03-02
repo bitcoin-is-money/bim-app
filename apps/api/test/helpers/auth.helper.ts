@@ -86,7 +86,7 @@ export function toAuthenticationOptions(
  * Extracts the session cookie value from a Set-Cookie response header.
  */
 export function extractSessionCookie(response: Response): string {
-  const setCookie = response.headers.get('Set-Cookie') || '';
+  const setCookie = response.headers.get('Set-Cookie') ?? '';
   const match = /session=([^;]+)/.exec(setCookie);
   return match ? `session=${match[1]}` : '';
 }

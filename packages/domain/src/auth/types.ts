@@ -1,4 +1,3 @@
-import type {AccountId} from "../account";
 import {ValidationError} from '../shared';
 import {InvalidSessionIdError} from './errors';
 

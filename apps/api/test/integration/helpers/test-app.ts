@@ -83,7 +83,7 @@ export namespace TestApp {
       post: (path: string, body?: unknown, init?: RequestInit) =>
         app.request(path, {
           method: 'POST',
-          headers: {'Content-Type': 'application/json', ...init?.headers},
+          headers: {'Content-Type': 'application/json', ...Object.fromEntries(new Headers(init?.headers))},
           body: body ? JSON.stringify(body) : null,
           ...init,
         }),
@@ -91,7 +91,7 @@ export namespace TestApp {
       put: (path: string, body?: unknown, init?: RequestInit) =>
         app.request(path, {
           method: 'PUT',
-          headers: {'Content-Type': 'application/json', ...init?.headers},
+          headers: {'Content-Type': 'application/json', ...Object.fromEntries(new Headers(init?.headers))},
           body: body ? JSON.stringify(body) : null,
           ...init,
         }),

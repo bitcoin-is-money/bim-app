@@ -16,7 +16,7 @@ describe('StarknetRpcGateway', () => {
     const publicKey = strkContext.generateTestPublicKey();
     const gateway = strkContext.getStarknetGateway();
 
-    const address = await gateway.calculateAccountAddress({publicKey});
+    const address = gateway.calculateAccountAddress({publicKey});
 
     expect(address).toBeDefined();
     expect(address.toString()).toMatch(/^0x[0-9a-fA-F]{64}$/);
@@ -26,8 +26,8 @@ describe('StarknetRpcGateway', () => {
     const publicKey = strkContext.generateTestPublicKey();
     const gateway = strkContext.getStarknetGateway();
 
-    const address = await gateway.calculateAccountAddress({publicKey});
-    const deployTx = await gateway.buildDeployTransaction({
+    const address = gateway.calculateAccountAddress({publicKey});
+    const deployTx = gateway.buildDeployTransaction({
       starknetAddress: address,
       publicKey,
     });

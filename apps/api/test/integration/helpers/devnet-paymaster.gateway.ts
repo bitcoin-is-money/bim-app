@@ -73,9 +73,9 @@ export async function fetchDevnetAccounts(devnetUrl: string): Promise<DevnetAcco
 
     // Handle various possible field names from different devnet versions
     cachedAccounts = rawAccounts.map(acc => {
-      const address = (acc.address || acc.account_address) as string | undefined;
-      const privateKey = (acc.private_key || acc.privateKey) as string | undefined;
-      const publicKey = (acc.public_key || acc.publicKey) as string | undefined;
+      const address = (acc.address ?? acc.account_address) as string | undefined;
+      const privateKey = (acc.private_key ?? acc.privateKey) as string | undefined;
+      const publicKey = (acc.public_key ?? acc.publicKey) as string | undefined;
 
       if (!address || !privateKey) {
         console.error('Account object keys:', Object.keys(acc));
@@ -86,13 +86,14 @@ export async function fetchDevnetAccounts(devnetUrl: string): Promise<DevnetAcco
       return {
         address,
         privateKey,
-        publicKey: publicKey || '',
+        publicKey: publicKey ?? '',
       };
     });
 
     return cachedAccounts;
-  } catch (error) {
-    throw new Error(`Failed to fetch devnet accounts: ${error}`);
+  } catch (err: unknown) {
+    const cause = err instanceof Error ? err.message : String(err)
+    throw new Error(`Failed to fetch devnet accounts: ${cause}`);
   }
 }
 
@@ -459,7 +460,7 @@ export class DevnetPaymasterGateway implements PaymasterGateway {
     if (rpcResponse.ok) {
       const rpcResult = await rpcResponse.json() as {result?: {tx_hash?: string}; error?: {message: string}};
       if (rpcResult.result) {
-        return rpcResult.result.tx_hash || '0x0';
+        return rpcResult.result.tx_hash ?? '0x0';
       }
     }
 
@@ -480,7 +481,7 @@ export class DevnetPaymasterGateway implements PaymasterGateway {
     }
 
     const result = await response.json() as {tx_hash?: string; new_balance?: string};
-    return result.tx_hash || '0x0';
+    return result.tx_hash ?? '0x0';
   }
 
   /**
@@ -546,8 +547,8 @@ export class DevnetPaymasterGateway implements PaymasterGateway {
       calldata: [address.toString()],
     });
 
-    const low = BigInt(result[0] || '0');
-    const high = BigInt(result[1] || '0');
+    const low = BigInt(result[0] ?? '0');
+    const high = BigInt(result[1] ?? '0');
 
     return low + (high << 128n);
   }

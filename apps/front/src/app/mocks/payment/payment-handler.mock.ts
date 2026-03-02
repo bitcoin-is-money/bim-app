@@ -49,7 +49,7 @@ export class PaymentHandlerMock {
         };
         break;
       case 'lightning': {
-        const swapId = 'mock-swap-ln-pay-' + Date.now();
+        const swapId = 'mock-swap-ln-pay-' + String(Date.now());
         const expiresAt = parseResult.expiresAt ?? new Date(Date.now() + 3_600_000).toISOString();
         response = {
           network: 'lightning',
@@ -71,7 +71,7 @@ export class PaymentHandlerMock {
         break;
       }
       case 'bitcoin': {
-        const swapId = 'mock-swap-btc-pay-' + Date.now();
+        const swapId = 'mock-swap-btc-pay-' + String(Date.now());
         const expiresAt = new Date(Date.now() + 3_600_000).toISOString();
         response = {
           network: 'bitcoin',

@@ -37,7 +37,15 @@ async function shutdown(signal: string): Promise<void> {
   process.exit(0);
 }
 
-process.on('SIGTERM', () => shutdown('SIGTERM'));
-process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => void shutdown('SIGTERM')
+  .catch((err : unknown) => {
+    logger.error(err, 'Shutdown failed');
+    process.exit(1);
+  }));
+process.on('SIGINT', () => void shutdown('SIGINT')
+  .catch((err : unknown) => {
+    logger.error(err, 'Shutdown failed');
+    process.exit(1);
+  }));
 
 logger.info('Server ready');

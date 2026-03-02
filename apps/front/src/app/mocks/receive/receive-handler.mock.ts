@@ -33,12 +33,12 @@ export class ReceiveHandlerMock {
     let response: ReceiveResponse;
     switch (body.network) {
       case 'lightning': {
-        const swapId = 'mock-swap-ln-' + Date.now();
+        const swapId = 'mock-swap-ln-' + String(Date.now());
         const expiresAt = new Date(Date.now() + 3_600_000).toISOString();
         response = {
           network: 'lightning',
           swapId,
-          invoice: 'lnbc' + amount + 'n1pnxk7aasp5mock0invoice0for0testing0' + Date.now(),
+          invoice: 'lnbc' + String(amount) + 'n1pnxk7aasp5mock0invoice0for0testing0' + String(Date.now()),
           amount: {value: amount, currency: 'SAT'},
           expiresAt,
         };
@@ -54,7 +54,7 @@ export class ReceiveHandlerMock {
         break;
       }
       case 'bitcoin': {
-        const swapId = 'mock-swap-btc-' + Date.now();
+        const swapId = 'mock-swap-btc-' + String(Date.now());
         const expiresAt = new Date(Date.now() + 3_600_000).toISOString();
         response = {
           network: 'bitcoin',

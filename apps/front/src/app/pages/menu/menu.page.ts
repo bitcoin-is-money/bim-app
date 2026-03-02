@@ -17,26 +17,26 @@ export class MenuPage {
   private readonly authService = inject(AuthService);
 
   navigateToMyAccount(): void {
-    this.router.navigate(['/my-account']);
+    void this.router.navigate(['/my-account']);
   }
 
   navigateToSettings(): void {
-    this.router.navigate(['/settings']);
+    void this.router.navigate(['/settings']);
   }
 
   navigateToGasTank(): void {
-    this.router.navigate(['/gas-tank']);
+    void this.router.navigate(['/gas-tank']);
   }
 
   navigateToSwaps(): void {
-    this.router.navigate(['/swaps']);
+    void this.router.navigate(['/swaps']);
   }
 
   navigateToAbout(): void {
-    this.router.navigate(['/about']);
+    void this.router.navigate(['/about']);
   }
 
   logout(): void {
-    this.authService.signOut();
+    void this.authService.signOut();
   }
 }

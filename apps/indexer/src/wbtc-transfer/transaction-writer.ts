@@ -2,6 +2,7 @@
 import type {NewTransactionRecord} from '@bim/db';
 import * as schema from '@bim/db';
 import type {Logger} from 'pino';
+import type {ApibaraDb} from './types.js';
 
 export class TransactionWriter {
   private readonly logger: Logger;
@@ -13,8 +14,7 @@ export class TransactionWriter {
   /**
    * Insert transaction rows into the database, ignoring duplicates.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Apibara's drizzle plugin db type is internal
-  async write(db: any, rows: NewTransactionRecord[], blockNumber: string): Promise<void> {
+  async write(db: ApibaraDb, rows: NewTransactionRecord[], blockNumber: string): Promise<void> {
     if (rows.length === 0) {
       this.logger.debug(`[Block ${blockNumber}] No rows to write in DB`);
       return;

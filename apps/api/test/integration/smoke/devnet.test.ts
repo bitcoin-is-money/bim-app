@@ -27,7 +27,7 @@ describe('Devnet Smoke', () => {
   it('checks that a new address is not deployed', async () => {
     const publicKey = strkContext.generateTestPublicKey();
     const gateway = strkContext.getStarknetGateway();
-    const address = await gateway.calculateAccountAddress({publicKey});
+    const address = gateway.calculateAccountAddress({publicKey});
 
     const isDeployed = await strkContext.isAccountDeployed(address);
 
@@ -37,7 +37,7 @@ describe('Devnet Smoke', () => {
   it('funds an address with ETH', async () => {
     const publicKey = strkContext.generateTestPublicKey();
     const gateway = strkContext.getStarknetGateway();
-    const address = await gateway.calculateAccountAddress({publicKey});
+    const address = gateway.calculateAccountAddress({publicKey});
 
     const fundAmount = '1000000000000000000'; // 1 ETH
     await strkContext.fundAddress(address, fundAmount);
@@ -49,7 +49,7 @@ describe('Devnet Smoke', () => {
   it('devnet paymaster is available', async () => {
     const publicKey = strkContext.generateTestPublicKey();
     const gateway = strkContext.getStarknetGateway();
-    const address = await gateway.calculateAccountAddress({publicKey});
+    const address = gateway.calculateAccountAddress({publicKey});
     const paymaster = strkContext.getDevnetPaymasterGateway();
 
     const available = await paymaster.isAvailable(address);

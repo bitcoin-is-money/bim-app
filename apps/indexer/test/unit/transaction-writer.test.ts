@@ -4,6 +4,7 @@ import type {Logger} from "pino";
 import {describe, expect, it, vi} from 'vitest';
 import {INDEXER_LOGGER_CONFIG} from "../../src/wbtc-transfer/logger-config";
 import {TransactionWriter} from '../../src/wbtc-transfer/transaction-writer.js';
+import type {ApibaraDb} from '../../src/wbtc-transfer/types.js';
 
 const LOG_LEVEL = 'silent';
 
@@ -19,7 +20,7 @@ function mockDb(insertThrows = false) {
     insert: vi.fn().mockReturnValue({
       values: vi.fn().mockReturnValue({onConflictDoNothing}),
     }),
-  };
+  } as unknown as ApibaraDb;
 }
 
 function makeRow(overrides: Partial<NewTransactionRecord> = {}): NewTransactionRecord {

@@ -164,7 +164,7 @@ describe('Account Deployment Flow', () => {
     it('rejects deployment for already deployed account', async () => {
       const publicKey = strkContext.generateTestPublicKey();
       const starknetGateway = strkContext.getStarknetGateway();
-      const starknetAddress = await starknetGateway.calculateAccountAddress({publicKey});
+      const starknetAddress = starknetGateway.calculateAccountAddress({publicKey});
 
       const account = await accountFixture.insertAccount({
         username: 'already_deployed_user',

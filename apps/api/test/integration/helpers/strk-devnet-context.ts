@@ -391,8 +391,8 @@ export class StrkDevnetContext {
       entrypoint: 'balanceOf',
       calldata: [address],
     });
-    const low = BigInt(result[0] || '0');
-    const high = BigInt(result[1] || '0');
+    const low = BigInt(result[0] ?? '0');
+    const high = BigInt(result[1] ?? '0');
     return low + (high << 128n);
   }
 

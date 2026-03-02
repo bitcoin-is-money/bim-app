@@ -63,6 +63,7 @@ export class SwapStorageService {
       if (raw) {
         const parsed: unknown = JSON.parse(raw);
         if (Array.isArray(parsed)) {
+          /* eslint-disable @typescript-eslint/no-unsafe-member-access -- type guard narrowing from unknown */
           swaps = parsed.filter(
             (item): item is StoredSwap =>
               typeof item === 'object' && item !== null
@@ -70,6 +71,7 @@ export class SwapStorageService {
               && typeof item.lastKnownStatus === 'string'
               && typeof item.createdAt === 'string',
           );
+          /* eslint-enable @typescript-eslint/no-unsafe-member-access */
         }
       }
     } catch {

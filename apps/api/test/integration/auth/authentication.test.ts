@@ -215,7 +215,7 @@ describe('Authentication Flow', () => {
       await register(username);
       const {completeResponse} = await loginUser();
 
-      const setCookie = completeResponse.headers.get('Set-Cookie') || '';
+      const setCookie = completeResponse.headers.get('Set-Cookie') ?? '';
       const sessionMatch = /session=([^;]+)/.exec(setCookie);
       const sessionCookie = sessionMatch ? `session=${sessionMatch[1]}` : '';
 

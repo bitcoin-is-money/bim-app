@@ -33,7 +33,7 @@ export class PayService {
         this.parsedPayment.set(payment);
         this.description = payment.description || null;
         this.isLoading.set(false);
-        this.router.navigate(['/pay/confirm']);
+        void this.router.navigate(['/pay/confirm']);
       },
       error: () => {
         this.isLoading.set(false);
@@ -123,7 +123,7 @@ export class PayService {
       this.swapPollingService.startPolling(swap.id);
     }
 
-    this.router.navigate(['/pay/success']);
+    void this.router.navigate(['/pay/success']);
   }
 }
 
@@ -135,6 +135,7 @@ function hexToBytes(hex: string): Uint8Array {
   const padded = clean.length % 2 === 0 ? clean : '0' + clean;
   const bytes = new Uint8Array(padded.length / 2);
   for (let i = 0; i < bytes.length; i++) {
+    // eslint-disable-next-line security/detect-object-injection -- numeric index on Uint8Array
     bytes[i] = parseInt(padded.substring(i * 2, i * 2 + 2), 16);
   }
   return bytes;

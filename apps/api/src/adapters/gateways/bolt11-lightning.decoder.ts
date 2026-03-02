@@ -22,11 +22,9 @@ export class Bolt11LightningDecoder implements LightningDecoder {
       result.amountMSat = BigInt(amountSection.value);
     }
     if (descriptionSection && 'value' in descriptionSection) {
-      result.description = String(descriptionSection.value);
+      result.description = descriptionSection.value;
     }
-    if (decoded.expiry !== undefined) {
-      result.expiresAt = new Date(decoded.expiry * 1000);
-    }
+    result.expiresAt = new Date(decoded.expiry * 1000);
     return result;
   }
 }

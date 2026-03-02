@@ -31,8 +31,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
 
   app.post('/register/begin', async (honoCtx): Promise<TypedResponse<BeginRegistrationResponse | ApiErrorResponse>> => {
     try {
-      const body = await honoCtx.req.json();
-      const input = BeginRegistrationSchema.parse(body);
+      const input = BeginRegistrationSchema.parse(await honoCtx.req.json());
 
       const result = await authService.beginRegistration({
         username: input.username,
@@ -50,8 +49,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
 
   app.post('/register/complete', async (honoCtx): Promise<TypedResponse<CompleteRegistrationResponse | ApiErrorResponse>> => {
     try {
-      const body = await honoCtx.req.json();
-      const input = CompleteRegistrationSchema.parse(body);
+      const input = CompleteRegistrationSchema.parse(await honoCtx.req.json());
 
       const result = await authService.completeRegistration({
         challengeId: input.challengeId,
@@ -96,8 +94,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
 
   app.post('/login/complete', async (honoCtx): Promise<TypedResponse<CompleteAuthenticationResponse | ApiErrorResponse>> => {
     try {
-      const body = await honoCtx.req.json();
-      const input = CompleteAuthenticationSchema.parse(body);
+      const input = CompleteAuthenticationSchema.parse(await honoCtx.req.json());
 
       const {userHandle, ...response} = input.credential.response;
       const result = await authService.completeAuthentication({

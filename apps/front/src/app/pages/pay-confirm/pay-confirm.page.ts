@@ -67,6 +67,6 @@ export class PayConfirmPage {
       this.notificationService.error({message: this.i18n.t('payConfirm.insufficientBalance')});
       return;
     }
-    this.paymentService.executeAndNavigate();
+    void this.paymentService.executeAndNavigate();
   }
 }

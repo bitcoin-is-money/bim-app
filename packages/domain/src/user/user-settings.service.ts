@@ -81,13 +81,11 @@ export class UserSettingsService {
     let settings = await this.deps.userSettingsRepository
       .findByAccountId(accountId);
 
-    if (!settings) {
-      // Create settings if they don't exist
-      settings = UserSettings.create({
-        id: UserSettingsId.generate(),
-        accountId,
-      });
-    }
+    // Create settings if they don't exist
+    settings ??= UserSettings.create({
+      id: UserSettingsId.generate(),
+      accountId,
+    });
 
     if (input.preferredCurrencies !== undefined) {
       settings.setPreferredCurrencies(input.preferredCurrencies);
