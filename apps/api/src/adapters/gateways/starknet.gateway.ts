@@ -40,9 +40,9 @@ export class StarknetRpcGateway implements StarknetGateway {
     this.log = rootLogger.child({name: 'starknet.gateway.ts'});
   }
 
-  async calculateAccountAddress(params: {
+  calculateAccountAddress(params: {
     publicKey: string;
-  }): Promise<StarknetAddress> {
+  }): StarknetAddress {
     this.log.debug({publicKey: params.publicKey.slice(0, 10) + '...'}, 'Calculating account address');
     try {
       const calldata = buildArgentWebauthnCalldata({
@@ -66,10 +66,10 @@ export class StarknetRpcGateway implements StarknetGateway {
     }
   }
 
-  async buildDeployTransaction(params: {
+  buildDeployTransaction(params: {
     starknetAddress: StarknetAddress;
     publicKey: string;
-  }): Promise<DeployTransaction> {
+  }): DeployTransaction {
     this.log.debug({address: params.starknetAddress.toString()}, 'Building deploy transaction');
     const calldata = buildArgentWebauthnCalldata({
       origin: this.config.webauthnOrigin,

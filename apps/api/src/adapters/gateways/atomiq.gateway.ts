@@ -799,7 +799,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
   /**
    * Cleans up resources. Call when shutting down.
    */
-  async cleanup(): Promise<void> {
+  cleanup(): void {
     this.swapper = null;
     this.swapperFactory = null;
     this.isInitialized = false;

@@ -113,11 +113,11 @@ export class AccountService {
     }
 
     // Compute the deterministic Starknet address from the public key
-    const starknetAddress = await this.deps.starknetGateway.calculateAccountAddress({
+    const starknetAddress = this.deps.starknetGateway.calculateAccountAddress({
       publicKey: account.publicKey,
     });
 
-    const deployTx = await this.deps.starknetGateway.buildDeployTransaction({
+    const deployTx = this.deps.starknetGateway.buildDeployTransaction({
       starknetAddress,
       publicKey: account.publicKey,
     });
