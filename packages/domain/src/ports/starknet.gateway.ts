@@ -9,7 +9,7 @@ export interface StarknetGateway {
    */
   calculateAccountAddress(params: {
     publicKey: string;
-  }): Promise<StarknetAddress>;
+  }): StarknetAddress;
 
   /**
    * Builds a deployment transaction for a new account.
@@ -17,7 +17,7 @@ export interface StarknetGateway {
   buildDeployTransaction(params: {
     starknetAddress: StarknetAddress;
     publicKey: string;
-  }): Promise<DeployTransaction>;
+  }): DeployTransaction;
 
   /**
    * Waits for a transaction to be confirmed.

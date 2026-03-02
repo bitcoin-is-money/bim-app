@@ -14,14 +14,14 @@ import type {
  * need the Starknet gateway without a real devnet or paymaster.
  */
 export class StarknetGatewayMock implements StarknetGateway {
-  async calculateAccountAddress(_params: {publicKey: string}): Promise<StarknetAddress> {
+  calculateAccountAddress(_params: {publicKey: string}): StarknetAddress {
     return StarknetAddress.of('0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef');
   }
 
-  async buildDeployTransaction(_params: {
+  buildDeployTransaction(_params: {
     starknetAddress: StarknetAddress;
     publicKey: string;
-  }): Promise<DeployTransaction> {
+  }): DeployTransaction {
     return {
       type: 'DEPLOY_ACCOUNT',
       contractAddress: '0x0123',
