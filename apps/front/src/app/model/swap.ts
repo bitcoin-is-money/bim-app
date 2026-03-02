@@ -45,6 +45,7 @@ export function formatSwapDirection(direction: SwapDirection): string {
     starknet_to_lightning: 'Lightning Send',
     starknet_to_bitcoin: 'Bitcoin Send',
   };
+  // eslint-disable-next-line security/detect-object-injection -- key is SwapDirection union type
   return map[direction];
 }
 

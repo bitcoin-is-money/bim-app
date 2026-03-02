@@ -14,6 +14,7 @@ export default tseslint.config(
       'tmp/',
       'data/',
       '.angular/',
+      '.apibara/',
       'patches/',
       '**/public/',
       'scripts/',
@@ -41,6 +42,8 @@ export default tseslint.config(
       // Keep strict but allow these common patterns
       '@typescript-eslint/consistent-type-imports': 'error',
       '@typescript-eslint/no-import-type-side-effects': 'error',
+      '@typescript-eslint/no-namespace': 'off',
+      '@typescript-eslint/no-unused-vars': ['error', {argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_'}],
       '@typescript-eslint/restrict-template-expressions': ['error', {allowNumber: true, allowBoolean: true}],
     },
   },
@@ -73,6 +76,7 @@ export default tseslint.config(
       '**/*.test.ts',
       '**/*.spec.ts',
       '**/test/**/*.ts',
+      '**/mocks/**/*.ts',
       'packages/test-toolkit/**/*.ts',
     ],
     rules: {
@@ -85,6 +89,7 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-argument': 'off',
       '@typescript-eslint/no-floating-promises': 'off',
       '@typescript-eslint/unbound-method': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
       'security/detect-object-injection': 'off',
       '@typescript-eslint/no-unnecessary-condition': 'off',
       '@typescript-eslint/require-await': 'off',

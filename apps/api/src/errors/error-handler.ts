@@ -75,6 +75,7 @@ export function handleDomainError(ctx: Context, error: unknown, logger: Logger):
   // Zod validation errors
   if (error instanceof ZodError) {
     const firstError = error.issues[0];
+    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- empty path should show 'unknown'
     const field = firstError?.path.join('.') || 'unknown';
     return createErrorResponse(ctx, 400, ErrorCode.VALIDATION_ERROR, `Invalid ${field}: ${firstError?.message}`, {
       field,

@@ -8,5 +8,6 @@ import {NotificationHostComponent} from "./components/notification/notification-
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class App {
 }

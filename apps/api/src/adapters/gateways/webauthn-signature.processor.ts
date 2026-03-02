@@ -2,7 +2,7 @@ import type {WebAuthnAssertion} from '@bim/domain/payment';
 import {Base64Url} from '@bim/lib/encoding';
 // @noble/curves v1 import — pinned due to @noble/hashes 1.8.0 override (starknet compat)
 // TODO: when upgrading to v2, change to: '@noble/curves/nist.js'
-// eslint-disable-next-line @typescript-eslint/no-deprecated
+/* eslint-disable @typescript-eslint/no-deprecated */
 import {p256} from '@noble/curves/p256';
 import {sha256} from '@noble/hashes/sha2';
 import {bytesToHex, concatBytes} from '@noble/hashes/utils';
@@ -143,6 +143,7 @@ function extractClientDataJsonOutro(clientDataJSON: Uint8Array): Uint8Array {
 
   // Scan past origin key to find the closing quote of the origin value
   let i = keyIndex + originKey.length;
+  // eslint-disable-next-line security/detect-object-injection -- numeric index on Uint8Array
   while (i < clientDataJSON.length && clientDataJSON[i] !== 0x22 /* '"' */) i++;
   if (i >= clientDataJSON.length) return new Uint8Array();
 
@@ -154,6 +155,7 @@ function extractClientDataJsonOutro(clientDataJSON: Uint8Array): Uint8Array {
 function indexOfSubarray(haystack: Uint8Array, needle: Uint8Array): number {
   outer: for (let i = 0; i <= haystack.length - needle.length; i++) {
     for (let j = 0; j < needle.length; j++) {
+      // eslint-disable-next-line security/detect-object-injection -- numeric index on Uint8Array
       if (haystack[i + j] !== needle[j]) continue outer;
     }
     return i;

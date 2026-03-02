@@ -7,5 +7,6 @@ import {Component} from '@angular/core';
   templateUrl: './logo-footer.component.html',
   styleUrls: ['./logo-footer.component.scss'],
 })
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class LogoFooterComponent  {
 }

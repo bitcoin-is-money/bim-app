@@ -59,7 +59,7 @@ export class AccountSetupPage implements OnInit {
   }
 
   goBack(): void {
-    this.authService.signOut();
+    void this.authService.signOut();
   }
 
   private startPolling(): void {
@@ -82,7 +82,7 @@ export class AccountSetupPage implements OnInit {
             message: this.i18n.t('accountSetup.success'),
             useConfetti: true
           });
-          this.router.navigate(['/home']);
+          void this.router.navigate(['/home']);
         } else if (response.status === 'failed') {
           this.stopPolling();
           this.failed.set(true);

@@ -27,7 +27,7 @@ export function createAuthMiddleware(appContext: AppContext) {
   return async (
     ctx: Context<{Variables: AuthenticatedContext}>,
     next: Next,
-  ): Promise<Response | void> => {
+  ): Promise<Response | undefined> => {
     const sessionId = getSessionId(ctx);
     if (!sessionId) {
       return ctx.json<ApiErrorResponse>({error: {code: ErrorCode.UNAUTHORIZED, message: 'Missing session cookie'}}, 401);

@@ -173,12 +173,12 @@ export class AuthService {
         if (response.authenticated && response.account) {
           this.currentUser.set(response.account);
           // Load user preferences
-          this.i18n.init();
-          this.currency.init();
+          void this.i18n.init();
+          void this.currency.init();
         } else {
           this.currentUser.set(null);
           // Use browser language for unauthenticated users
-          this.i18n.initFromBrowser();
+          void this.i18n.initFromBrowser();
         }
       });
   }

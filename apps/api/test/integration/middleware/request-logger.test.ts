@@ -9,9 +9,6 @@ describe('Request logger middleware (integration)', () => {
     instance = await TestApp.createTestAppWithLogger();
   });
 
-  afterAll(async () => {
-  });
-
   it('logs requests with requestId visible in output', async () => {
     // logLevel is 'info' → pino-pretty output will appear in the vitest console
     const res = await TestApp

@@ -30,6 +30,7 @@ export namespace AppConfig {
    */
   export function load(): Config {
     const required = (name: string): string => {
+      // eslint-disable-next-line security/detect-object-injection -- env var lookup by name
       const value = process.env[name];
       if (!value) {
         throw new Error(`Missing required environment variable: ${name}`);
@@ -38,6 +39,7 @@ export namespace AppConfig {
     };
 
     const optional = (name: string, defaultValue: string): string => {
+      // eslint-disable-next-line security/detect-object-injection, @typescript-eslint/prefer-nullish-coalescing -- env var lookup; empty env var should use default
       return process.env[name] || defaultValue;
     };
 
@@ -109,6 +111,7 @@ export namespace AppConfig {
       throw new Error(`ATOMIQ_STORAGE_PATH is not writable: ${storagePath}`);
     }
 
+    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- empty env var should be treated as absent
     const intermediaryUrl = process.env.ATOMIQ_INTERMEDIARY_URL || undefined;
     const swapToken = required('ATOMIQ_SWAP_TOKEN');
 

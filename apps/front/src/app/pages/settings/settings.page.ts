@@ -45,11 +45,11 @@ export class SettingsPage {
   });
 
   onLanguageChange(lang: Language): void {
-    this.i18n.setLang(lang);
+    void this.i18n.setLang(lang);
   }
 
   onFiatChange(fiat: string): void {
-    this.currency.setPreferredFiat(fiat);
+    void this.currency.setPreferredFiat(fiat);
   }
 
   getSelectedOption(): LanguageOption {

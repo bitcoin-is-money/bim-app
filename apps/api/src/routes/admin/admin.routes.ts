@@ -22,8 +22,7 @@ export function createAdminRoutes(appContext: AppContext): Hono {
 
   app.put('/log-level', async (honoCtx): Promise<TypedResponse<UpdateLogLevelResponse | ApiErrorResponse>> => {
     try {
-      const body = await honoCtx.req.json();
-      const {level} = UpdateLogLevelSchema.parse(body);
+      const {level} = UpdateLogLevelSchema.parse(await honoCtx.req.json());
 
       rootLogger.level = level;
       log.info(`Log level changed to ${level} at runtime`);

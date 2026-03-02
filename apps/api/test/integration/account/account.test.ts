@@ -7,14 +7,13 @@ import {AccountFixture} from "../helpers/account";
 import {AuthFixture} from "../helpers/auth";
 
 describe('Account API', () => {
-  let app: Hono;
   let pool: pg.Pool;
   let db: DbClient;
   let accountFixture: AccountFixture;
   let authFixture: AuthFixture;
 
   beforeAll(async () => {
-    app = await TestApp.createTestApp();
+    await TestApp.createTestApp();
     pool = TestDatabase.createPool();
     db = TestDatabase.getClient(pool);
     accountFixture = AccountFixture.create(db);

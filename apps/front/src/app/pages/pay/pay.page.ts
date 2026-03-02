@@ -60,11 +60,11 @@ export class PayPage implements OnDestroy {
   }
 
   closeScanner(): void {
-    this.stopScanner();
+    void this.stopScanner();
   }
 
   ngOnDestroy(): void {
-    this.stopScanner();
+    void this.stopScanner();
   }
 
   private startScanner(): void {

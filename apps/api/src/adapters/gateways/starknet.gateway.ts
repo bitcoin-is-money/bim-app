@@ -10,6 +10,7 @@ import type {
 import {DomainError, ExternalServiceError} from "@bim/domain/shared";
 
 import type {Logger} from "pino";
+import {ETransactionType} from '@starknet-io/starknet-types-010';
 import {CallData, hash, RpcProvider, typedData as starknetTypedData} from 'starknet';
 import {ARGENT_WEBAUTHN_SALT, buildArgentWebauthnCalldata} from './argent-calldata.js';
 
@@ -61,7 +62,7 @@ export class StarknetRpcGateway implements StarknetGateway {
     } catch (error) {
       throw new ExternalServiceError(
         'Starknet',
-        `Failed to calculate address: ${error}`,
+        `Failed to calculate address: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -120,7 +121,7 @@ export class StarknetRpcGateway implements StarknetGateway {
     } catch (error) {
       throw new ExternalServiceError(
         'Starknet',
-        `Transaction ${txHash} failed: ${error}`,
+        `Transaction ${txHash} failed: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -133,7 +134,7 @@ export class StarknetRpcGateway implements StarknetGateway {
     } catch (error) {
       throw new ExternalServiceError(
         'Starknet',
-        `Failed to get nonce: ${error}`,
+        `Failed to get nonce: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -159,14 +160,14 @@ export class StarknetRpcGateway implements StarknetGateway {
       });
 
       // Balance is returned as two felts (low, high) for u256
-      const low = BigInt(result[0] || '0');
-      const high = BigInt(result[1] || '0');
+      const low = BigInt(result[0] ?? '0');
+      const high = BigInt(result[1] ?? '0');
 
       return low + (high << 128n);
     } catch (error) {
       throw new ExternalServiceError(
         'Starknet',
-        `Failed to get balance: ${error}`,
+        `Failed to get balance: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -183,16 +184,18 @@ export class StarknetRpcGateway implements StarknetGateway {
         version: '0x1' as const,
       };
 
-      const result = await this.provider.getInvokeEstimateFee(
-        invocation,
-        details,
-      );
+      const [result] = await this.provider.getEstimateFeeBulk([
+        {type: ETransactionType.INVOKE, ...invocation, ...details},
+      ]);
+      if (!result) {
+        throw new ExternalServiceError('Starknet', 'No fee estimate returned. This should never happen, it is a bug in starknet provider.');
+      }
 
       return result.overall_fee;
     } catch (error) {
       throw new ExternalServiceError(
         'Starknet',
-        `Failed to estimate fee: ${error}`,
+        `Failed to estimate fee: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }

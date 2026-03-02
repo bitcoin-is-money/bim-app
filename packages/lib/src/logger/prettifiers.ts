@@ -7,6 +7,7 @@ type LevelPrettifier = Exclude<PrettyOptions['customPrettifiers'], undefined>['l
 
 export function createMessageFormat(style: StyleConfig): NonNullable<PrettyOptions['messageFormat']> {
   return (log, messageKey) => {
+    // eslint-disable-next-line security/detect-object-injection -- pino standard API
     const msg = String(log[messageKey]);
     const name: string = log.name
       ? String(log.name) + ' \u25b8 '

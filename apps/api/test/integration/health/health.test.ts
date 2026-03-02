@@ -9,9 +9,6 @@ describe('Health API', () => {
     app = await TestApp.createTestApp();
   });
 
-  afterAll(async () => {
-  });
-
   describe('GET /api/health', () => {
     it('should return healthy status when database is connected', async () => {
       const res = await TestApp

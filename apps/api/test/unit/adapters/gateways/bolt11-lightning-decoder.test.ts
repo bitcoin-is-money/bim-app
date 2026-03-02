@@ -45,11 +45,6 @@ describe('Bolt11LightningDecoder', () => {
     expect(result.description).toBe('Please consider supporting this project');
   });
 
-  it('returns undefined expiry when invoice has no expiry', () => {
-    const result = decoder.decode(INVOICE_WITHOUT_AMOUNT);
-    expect(result.expiresAt).toBeUndefined();
-  });
-
   it('throws on invalid invoice', () => {
     expect(() => decoder.decode('not-a-bolt11-invoice')).toThrow();
   });

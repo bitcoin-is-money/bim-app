@@ -69,9 +69,7 @@ export function createTransactionRoutes(appContext: AppContext): AuthenticatedHo
     try {
       const account: Account = honoCtx.get('account');
       const transactionHash = honoCtx.req.param('transactionHash');
-
-      const body = await honoCtx.req.json();
-      const {description} = SetDescriptionSchema.parse(body);
+      const {description} = SetDescriptionSchema.parse(await honoCtx.req.json());
 
       await transactionService.setDescription({
         accountId: account.id,

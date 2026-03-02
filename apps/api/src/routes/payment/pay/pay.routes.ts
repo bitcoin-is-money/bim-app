@@ -32,8 +32,7 @@ export function createPayRoutes(appContext: AppContext): AuthenticatedHono {
 
   app.post('/parse', async (honoCtx): Promise<TypedResponse<PreparedPaymentResponse | ApiErrorResponse>> => {
     try {
-      const body = await honoCtx.req.json();
-      const {paymentPayload} = ParsePaymentSchema.parse(body);
+      const {paymentPayload} = ParsePaymentSchema.parse(await honoCtx.req.json());
 
       const prepared = payService.prepare(paymentPayload);
 
@@ -50,8 +49,7 @@ export function createPayRoutes(appContext: AppContext): AuthenticatedHono {
 
   app.post('/build', async (honoCtx): Promise<TypedResponse<BuildPaymentResponse | ApiErrorResponse>> => {
     try {
-      const body = await honoCtx.req.json();
-      const input = BuildPaymentSchema.parse(body);
+      const input = BuildPaymentSchema.parse(await honoCtx.req.json());
 
       const account = honoCtx.get('account');
       const senderAddress = account.getStarknetAddress();
@@ -60,6 +58,7 @@ export function createPayRoutes(appContext: AppContext): AuthenticatedHono {
       }
 
       // 1. Prepare calls (parse + create swap if needed)
+      // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- empty description should fallback
       const description = input.description || 'Sent';
       const preparedCalls = await payService.prepareCalls(input.paymentPayload, senderAddress, account.id, description);
 
@@ -101,8 +100,7 @@ export function createPayRoutes(appContext: AppContext): AuthenticatedHono {
 
   app.post('/execute', async (honoCtx): Promise<TypedResponse<PaymentResultResponse | ApiErrorResponse>> => {
     try {
-      const body = await honoCtx.req.json();
-      const input = ExecuteSignedPaymentSchema.parse(body);
+      const input = ExecuteSignedPaymentSchema.parse(await honoCtx.req.json());
 
       const account = honoCtx.get('account');
 

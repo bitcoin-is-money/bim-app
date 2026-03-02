@@ -37,6 +37,7 @@ export class CurrencyService implements OnDestroy {
     const currencies = this._preferredCurrencies();
     const currentIndex = currencies.indexOf(this._currentCurrency());
     const nextIndex = (currentIndex + 1) % currencies.length;
+    // eslint-disable-next-line security/detect-object-injection -- numeric index
     this._currentCurrency.set(currencies[nextIndex] ?? this._currentCurrency());
   }
 

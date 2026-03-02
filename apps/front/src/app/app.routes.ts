@@ -9,7 +9,7 @@ const authGuard = () => {
   const user = authService.currentUser();
 
   if (!user) {
-    router.navigate(['/auth']);
+    void router.navigate(['/auth']);
     return false;
   }
   return true;
@@ -21,7 +21,7 @@ const guestGuard = () => {
   const user = authService.currentUser();
 
   if (user) {
-    router.navigate(['/home']);
+    void router.navigate(['/home']);
     return false;
   }
   return true;

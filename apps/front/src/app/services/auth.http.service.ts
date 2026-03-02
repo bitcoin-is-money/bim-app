@@ -68,7 +68,7 @@ export class AuthHttpService {
     return this.http.get<UserSessionResponse>(`${this.apiUrl}/session`);
   }
 
-  logout(): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/logout`, {});
+  logout(): Observable<undefined> {
+    return this.http.post<undefined>(`${this.apiUrl}/logout`, {});
   }
 }

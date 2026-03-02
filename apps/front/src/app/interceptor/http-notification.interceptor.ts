@@ -26,6 +26,7 @@ export const httpNotificationInterceptor: HttpInterceptorFn = (
       const i18n = injector.get(I18nService);
       let message: string;
 
+      /* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment -- response.error is `any` (HttpErrorResponse) */
       if (isApiErrorResponse(response.error)) {
         // Structured format: { error: { code, message, args? } } — translate via i18n
         message = i18n.translateError(response.error.error);
@@ -38,6 +39,7 @@ export const httpNotificationInterceptor: HttpInterceptorFn = (
       } else {
         message = response.message || i18n.t('errors.INTERNAL_ERROR');
       }
+      /* eslint-enable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
 
       if (response.status >= 400 && response.status < 500) {
         notifications.error({message});

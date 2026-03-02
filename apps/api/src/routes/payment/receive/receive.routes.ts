@@ -36,8 +36,7 @@ export function createReceiveRoutes(appContext: AppContext): AuthenticatedHono {
 
   app.post('/', async (honoCtx): Promise<TypedResponse<ReceiveResponse | ApiErrorResponse>> => {
     try {
-      const body = await honoCtx.req.json();
-      const input = ReceiveSchema.parse(body);
+      const input = ReceiveSchema.parse(await honoCtx.req.json());
 
       const account = honoCtx.get('account');
       const starknetAddress = account.getStarknetAddress();
@@ -49,6 +48,7 @@ export function createReceiveRoutes(appContext: AppContext): AuthenticatedHono {
         ? Amount.ofSatoshi(BigInt(input.amount))
         : undefined;
       const tokenAddress = input.tokenAddress;
+      // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- empty description should fallback
       const description = input.description || 'Received';
 
       const result = await receiveService.receive({
@@ -156,8 +156,7 @@ export function createReceiveRoutes(appContext: AppContext): AuthenticatedHono {
 
   app.post('/commit', async (honoCtx): Promise<TypedResponse<BitcoinReceiveCommitResponse | ApiErrorResponse>> => {
     try {
-      const body = await honoCtx.req.json();
-      const input = ReceiveCommitSchema.parse(body);
+      const input = ReceiveCommitSchema.parse(await honoCtx.req.json());
 
       const account = honoCtx.get('account');
 

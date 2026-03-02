@@ -47,7 +47,7 @@ export class SwapMonitor {
     if (this.running) return;
     this.log.info('Starting SwapMonitor');
     this.running = true;
-    this.timer = setInterval(() => this.runIteration(), this.config.pollInterval);
+    this.timer = setInterval(() => void this.runIteration(), this.config.pollInterval);
     this.log.debug('SwapMonitor started');
   }
 

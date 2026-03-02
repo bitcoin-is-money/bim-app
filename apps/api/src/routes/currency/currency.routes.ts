@@ -32,6 +32,7 @@ export function createCurrencyRoutes(appCtx: AppContext): AuthenticatedHono {
 
       const prices: GetPricesResponse = {};
       for (const [currency, price] of priceMap) {
+        // eslint-disable-next-line security/detect-object-injection -- key from Map iteration
         prices[currency] = price;
       }
 

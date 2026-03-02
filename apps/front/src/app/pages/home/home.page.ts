@@ -56,18 +56,18 @@ export class HomePage implements OnInit {
   }
 
   get username(): string {
-    return this.currentUser?.username || '';
+    return this.currentUser?.username ?? '';
   }
 
   openMenu(): void {
-    this.router.navigate(['/menu']);
+    void this.router.navigate(['/menu']);
   }
 
   onReceive(): void {
-    this.router.navigate(['/receive']);
+    void this.router.navigate(['/receive']);
   }
 
   onPay(): void {
-    this.router.navigate(['/pay']);
+    void this.router.navigate(['/pay']);
   }
 }

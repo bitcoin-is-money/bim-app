@@ -41,7 +41,7 @@ export class ReceiveService {
         // Bitcoin two-phase flow: need WebAuthn signing before deposit address is available
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive: guard against future ReceiveResult variants
         if (response.network === 'bitcoin' && 'status' in response && response.status === 'pending_commit') {
-          this.handleBitcoinCommitFlow(response);
+          void this.handleBitcoinCommitFlow(response);
           return;
         }
 
@@ -138,6 +138,7 @@ function hexToBytes(hex: string): Uint8Array {
   const padded = clean.length % 2 === 0 ? clean : '0' + clean;
   const bytes = new Uint8Array(padded.length / 2);
   for (let i = 0; i < bytes.length; i++) {
+    // eslint-disable-next-line security/detect-object-injection -- numeric index on Uint8Array
     bytes[i] = parseInt(padded.substring(i * 2, i * 2 + 2), 16);
   }
   return bytes;
