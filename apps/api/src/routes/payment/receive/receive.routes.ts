@@ -62,6 +62,7 @@ export function createReceiveRoutes(appContext: AppContext): AuthenticatedHono {
       });
 
       // Bitcoin two-phase flow: build commit typed data for WebAuthn signing
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive: guard against future ReceiveResult variants
       if (result.network === 'bitcoin' && 'status' in result && result.status === 'pending_commit') {
         // Extract approve amount from commitCalls (for error enrichment + auto-swap)
         const approveInfo = extractApproveAmount(result.commitCalls);
@@ -254,6 +255,7 @@ function serializeReceiveResult(result: ReceiveResult): ReceiveResponse {
         expiresAt: result.expiresAt.toISOString(),
       };
     case 'bitcoin': {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive: guard against future ReceiveResult variants
       if ('status' in result && result.status === 'pending_commit') {
         // Should not reach here — handled above in the route
         throw new Error('Unexpected pending_commit result in serializeReceiveResult');

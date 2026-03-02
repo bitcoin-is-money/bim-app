@@ -45,7 +45,7 @@ export function formatSwapDirection(direction: SwapDirection): string {
     starknet_to_lightning: 'Lightning Send',
     starknet_to_bitcoin: 'Bitcoin Send',
   };
-  return map[direction] ?? direction;
+  return map[direction];
 }
 
 export function getSwapTypeFromDirection(direction: SwapDirection): SwapType {

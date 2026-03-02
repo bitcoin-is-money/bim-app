@@ -39,6 +39,7 @@ export class ReceiveService {
     this.httpService.createInvoice(request).subscribe({
       next: (response) => {
         // Bitcoin two-phase flow: need WebAuthn signing before deposit address is available
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive: guard against future ReceiveResult variants
         if (response.network === 'bitcoin' && 'status' in response && response.status === 'pending_commit') {
           this.handleBitcoinCommitFlow(response);
           return;

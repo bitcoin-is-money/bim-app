@@ -85,6 +85,7 @@ export default tseslint.config(
       '@typescript-eslint/no-floating-promises': 'off',
       '@typescript-eslint/unbound-method': 'off',
       'security/detect-object-injection': 'off',
+      '@typescript-eslint/no-unnecessary-condition': 'off',
       'security/detect-non-literal-fs-filename': 'off',
     },
   },

@@ -49,7 +49,7 @@ export class PayPage implements OnDestroy {
 
     try {
       const text = await navigator.clipboard.readText();
-      if (!text?.trim()) {
+      if (!text.trim()) {
         this.notifications.error({message: this.i18n.t('pay.clipboardEmpty')});
         return;
       }
@@ -68,6 +68,7 @@ export class PayPage implements OnDestroy {
   }
 
   private startScanner(): void {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- runtime check: not all browsers support mediaDevices/getUserMedia
     if (!navigator.mediaDevices?.getUserMedia) {
       this.notifications.error({
         message: this.i18n.t('pay.cameraNotSupported')

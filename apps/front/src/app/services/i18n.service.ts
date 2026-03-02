@@ -35,7 +35,7 @@ export class I18nService {
   async init(): Promise<void> {
     try {
       const settings = await firstValueFrom(this.httpService.getSettings());
-      await this.applyLang(settings.language ?? DEFAULT_LANG);
+      await this.applyLang(settings.language);
     } catch {
       // Use browser language as fallback
       const browserLang = this.translate.getBrowserLang() as Language | undefined;

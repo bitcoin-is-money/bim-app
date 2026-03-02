@@ -110,7 +110,7 @@ async function createWbtcTransferIndexerInternal(
         blocksProcessed = 0;
       }
       try {
-        const {blockNumber, blockTimestamp, events} = extractBlockContext(args, logger);
+        const {blockNumber, blockTimestamp, events} = extractBlockContext(args);
         if (events.length === 0) return;
 
         const transfers: TransferEvent[] = decoder.decode(events);
@@ -123,7 +123,7 @@ async function createWbtcTransferIndexerInternal(
       } catch (error) {
         logger.error({
           err: error,
-          blockNumber: args.endCursor?.orderKey?.toString(),
+          blockNumber: args.endCursor?.orderKey.toString(),
         }, 'Failed to process transfer block');
       }
     },
@@ -142,19 +142,10 @@ interface BlockContext {
 
 function extractBlockContext(
   args: HandlerArgs<Block>,
-  logger: Logger
 ): BlockContext {
-  const blockNumber = args.endCursor?.orderKey?.toString() ?? '0';
-  const events = args.block.events ?? [];
-
-  let blockTimestamp: Date;
-  if (args.block.header?.timestamp) {
-    // Apibara provides timestamp as a Date object already
-    blockTimestamp = args.block.header.timestamp;
-  } else {
-    logger.warn({blockNumber}, 'Block missing timestamp, using current time');
-    blockTimestamp = new Date();
-  }
+  const blockNumber = args.endCursor?.orderKey.toString() ?? '0';
+  const events = args.block.events;
+  const blockTimestamp = args.block.header.timestamp;
 
   return {blockNumber, blockTimestamp, events};
 }
