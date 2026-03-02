@@ -1,3 +1,6 @@
+// @noble/curves v1 import — pinned due to @noble/hashes 1.8.0 override (starknet compat)
+// TODO: when upgrading to v2, change to: '@noble/curves/nist.js'
+// eslint-disable-next-line @typescript-eslint/no-deprecated
 import {p256} from '@noble/curves/p256';
 import {sha256} from '@noble/hashes/sha2';
 import {cose, isoBase64URL, isoCBOR} from '@simplewebauthn/server/helpers';
