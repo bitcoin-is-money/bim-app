@@ -86,7 +86,6 @@ export function isApiErrorResponse(obj: unknown): obj is ApiErrorResponse {
     obj !== null &&
     'error' in obj &&
     typeof (obj as ApiErrorResponse).error === 'object' &&
-    (obj as ApiErrorResponse).error !== null &&
     'code' in (obj as ApiErrorResponse).error &&
     'message' in (obj as ApiErrorResponse).error
   );

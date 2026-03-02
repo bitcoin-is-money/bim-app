@@ -186,6 +186,7 @@ export class ReceivePage {
     const data = this.qrData();
     if (!data) return;
 
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- runtime check: navigator.share is not available in all browsers
     if (navigator.share) {
       try {
         await navigator.share({title: 'BIM Receive', text: data});

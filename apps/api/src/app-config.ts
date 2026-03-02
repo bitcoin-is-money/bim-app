@@ -117,7 +117,7 @@ export namespace AppConfig {
       starknetRpcUrl,
       storagePath,
       swapToken,
-      ...(autoCreateStorage !== undefined && {autoCreateStorage}),
+      autoCreateStorage,
       ...(intermediaryUrl !== undefined && {intermediaryUrl}),
     };
   }

@@ -255,7 +255,7 @@ export class AuthService {
         type: cred.type as PublicKeyCredentialType,
       })),
       timeout: options.timeoutMs,
-      userVerification: (options.userVerification as UserVerificationRequirement) || 'required',
+      userVerification: (options.userVerification ?? 'required') as UserVerificationRequirement,
     } as PublicKeyCredentialRequestOptions;
   }
 

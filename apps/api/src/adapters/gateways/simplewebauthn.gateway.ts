@@ -65,7 +65,7 @@ export class SimpleWebAuthnGateway implements WebAuthnGateway {
         requireUserVerification: true,
       });
 
-      if (!verification.verified || !verification.registrationInfo) {
+      if (!verification.verified) {
         return {
           verified: false,
           encodedCredentialId: '',
@@ -157,7 +157,7 @@ export class SimpleWebAuthnGateway implements WebAuthnGateway {
 
       return {
         verified: verification.verified,
-        newSignCount: verification.authenticationInfo?.newCounter ?? 0,
+        newSignCount: verification.authenticationInfo.newCounter,
       };
     } catch (err) {
       this.log.error({err}, 'WebAuthn authentication verification failed');

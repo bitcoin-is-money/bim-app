@@ -39,7 +39,7 @@ export class AccountHandlerMock {
 
     const registrationDate: Date = this.store.getRegistrationDate() ?? new Date();
     const timeToWait = Date.now() - registrationDate.getTime();
-    if (!registrationDate || timeToWait < MOCK_DEPLOYMENT_DELAY_MS) {
+    if (timeToWait < MOCK_DEPLOYMENT_DELAY_MS) {
       return new HttpResponse({status: 200, body: {status: 'deploying', txHash: null, isDeployed: false}});
     }
 

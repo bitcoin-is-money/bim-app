@@ -1,6 +1,5 @@
 import {DEFAULT_LOGGER_CONFIG} from "@bim/lib/logger";
+import type {StyleConfig} from "@bim/lib/logger";
 
-export const INDEXER_LOGGER_CONFIG = {
-  ...DEFAULT_LOGGER_CONFIG,
-  requestId: undefined
-}
+const {requestId: _, ...baseConfig} = DEFAULT_LOGGER_CONFIG;
+export const INDEXER_LOGGER_CONFIG: StyleConfig = baseConfig;
