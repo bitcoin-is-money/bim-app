@@ -34,4 +34,8 @@ describe('redactUrl', () => {
   it('returns *** for empty string', () => {
     expect(redactUrl('')).toBe('***');
   });
+
+  it('returns "undefined" for undefined input', () => {
+    expect(redactUrl(undefined)).toBe('undefined');
+  });
 });
