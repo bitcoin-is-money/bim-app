@@ -1,8 +1,8 @@
 import {verifyAuthenticationResponse, verifyRegistrationResponse,} from '@simplewebauthn/server';
 import {isoBase64URL} from '@simplewebauthn/server/helpers';
 import {beforeEach, describe, expect, it} from 'vitest';
-import {WebauthnVirtualAuthenticator} from '../../src/auth/webauthn-virtual-authenticator';
-import {P256Signer} from '../../src/crypto/p256-signer';
+import {WebauthnVirtualAuthenticator} from '@bim/test-toolkit/auth';
+import {P256Signer} from '@bim/test-toolkit/crypto';
 
 /**
  * Unit tests for WebauthnVirtualAuthenticator.

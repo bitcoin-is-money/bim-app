@@ -1,4 +1,8 @@
+// @noble/curves v1 imports — pinned due to @noble/hashes 1.8.0 override (starknet compat)
+// TODO: when upgrading to v2, change to: '@noble/curves/utils.js' and '@noble/curves/nist.js'
+// eslint-disable-next-line @typescript-eslint/no-deprecated
 import {bytesToHex, hexToBytes} from '@noble/curves/abstract/utils';
+// eslint-disable-next-line @typescript-eslint/no-deprecated
 import {p256} from '@noble/curves/p256';
 
 /**
