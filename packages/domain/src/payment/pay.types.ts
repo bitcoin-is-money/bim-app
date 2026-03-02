@@ -41,40 +41,6 @@ export type PreparedCalls =
 export type PreparedPayment = ParsedPaymentData & { fee: Amount };
 
 // =============================================================================
-// EXECUTE Input (facade-level)
-// =============================================================================
-
-export interface ExecutePaymentInput {
-  /** Raw payment string to parse: Lightning invoice, BIP21 URI, Bitcoin address, or Starknet address. */
-  paymentPayload: string;
-  senderAddress: StarknetAddress;
-  accountId: string;
-  description: string;
-}
-
-// =============================================================================
-// PAY Inputs (network-specific)
-// =============================================================================
-
-export interface PayStarknetInput {
-  senderAddress: StarknetAddress;
-  recipientAddress: StarknetAddress;
-  tokenAddress: string;
-  amount: Amount;
-}
-
-export interface PayLightningInput {
-  invoice: LightningInvoice;
-  senderAddress: StarknetAddress;
-}
-
-export interface PayBitcoinInput {
-  address: BitcoinAddress;
-  amount: Amount;
-  senderAddress: StarknetAddress;
-}
-
-// =============================================================================
 // PAY Results
 // =============================================================================
 
