@@ -52,13 +52,6 @@ export class StarknetGatewayMock implements StarknetGateway {
     return 100000n;
   }
 
-  async executeCalls(_params: {
-    senderAddress: StarknetAddress;
-    calls: readonly StarknetCall[];
-  }): Promise<{txHash: string}> {
-    return {txHash: `0x${crypto.randomUUID().replaceAll('-', '')}`};
-  }
-
   async buildCalls(_params: {
     senderAddress: StarknetAddress;
     calls: readonly StarknetCall[];

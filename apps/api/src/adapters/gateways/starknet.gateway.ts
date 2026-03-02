@@ -200,46 +200,6 @@ export class StarknetRpcGateway implements StarknetGateway {
     }
   }
 
-  async executeCalls(params: {
-    senderAddress: StarknetAddress;
-    calls: readonly StarknetCall[];
-  }): Promise<{ txHash: string }> {
-    try {
-      this.log.info(
-        {senderAddress: params.senderAddress.toString(), callCount: params.calls.length},
-        'Executing multicall');
-      const calldata = this.encodeMulticall(params.calls);
-
-      const transaction: StarknetTransaction = {
-        type: 'INVOKE',
-        contractAddress: params.senderAddress.toString(),
-        callData: calldata,
-      };
-
-      const result = await this.paymasterGateway.executeTransaction({
-        transaction,
-        accountAddress: params.senderAddress,
-      });
-
-      if (!result.success) {
-        throw new Error('Transaction execution failed');
-      }
-
-      this.log.info({txHash: result.txHash}, 'Multicall transaction submitted');
-      return {txHash: result.txHash};
-    } catch (error) {
-      if (error instanceof ExternalServiceError) throw error;
-      throw new ExternalServiceError(
-        'Starknet',
-        `Failed to execute calls: ${error instanceof Error ? error.message : String(error)}`,
-      );
-    }
-  }
-
-  // ===========================================================================
-  // SNIP-29 Build / Execute (with WebAuthn signing)
-  // ===========================================================================
-
   async buildCalls(params: {
     senderAddress: StarknetAddress;
     calls: readonly StarknetCall[];
@@ -309,26 +269,4 @@ export class StarknetRpcGateway implements StarknetGateway {
     }
   }
 
-  // ===========================================================================
-  // Private helpers
-  // ===========================================================================
-
-  /**
-   * Encodes an array of calls into Cairo 1 __execute__ calldata format:
-   * [num_calls, to_0, selector_0, data_0_len, ...data_0, to_1, selector_1, ...]
-   */
-  private encodeMulticall(calls: readonly StarknetCall[]): string[] {
-    const encoded: string[] = [String(calls.length)];
-
-    for (const call of calls) {
-      encoded.push(call.contractAddress);
-      encoded.push(hash.getSelectorFromName(call.entrypoint));
-      encoded.push(String(call.calldata.length));
-      for (const datum of call.calldata) {
-        encoded.push(datum);
-      }
-    }
-
-    return encoded;
-  }
 }

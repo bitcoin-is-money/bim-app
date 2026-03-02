@@ -34,7 +34,6 @@ const WBTC_TOKEN_ADDRESS = '0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a
 const SENDER_ADDRESS = StarknetAddress.of('0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef');
 const RECIPIENT_ADDRESS = StarknetAddress.of('0x07edcba9876543210fedcba9876543210fedcba9876543210fedcba987654321');
 const TREASURY_ADDRESS = StarknetAddress.of('0x027367ddd36d7efc4694e1af5742f8d26626369c07abf15d136ff422b9a40fa0');
-const TX_HASH = '0xabc123';
 const DEPOSIT_ADDRESS = '0x05abbccdd00112233445566778899aabbccdd00112233445566778899aabbcc';
 const VALID_INVOICE = 'lntb1000n1pjtest0pp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypq';
 const BTC_BECH32 = 'bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4';
@@ -95,22 +94,14 @@ const mockParseService = {
 
 describe('PayService', () => {
   // ===========================================================================
-  // EXECUTE — Starknet
+  // PREPARE CALLS — Starknet
   // ===========================================================================
 
-  describe('execute — starknet', () => {
+  describe('prepareCalls — starknet', () => {
     let service: PayService;
-    let mockStarknetGateway: StarknetGateway;
-    let mockTransactionRepository: TransactionRepository;
 
     beforeEach(() => {
       vi.resetAllMocks();
-
-      mockStarknetGateway = {
-        executeCalls: vi.fn().mockResolvedValue({txHash: TX_HASH}),
-      } as unknown as StarknetGateway;
-
-      mockTransactionRepository = createMockTransactionRepository();
 
       vi.mocked(mockParseService.parse).mockReturnValue({
         network: 'starknet',
@@ -123,55 +114,35 @@ describe('PayService', () => {
       service = new PayService({
         parseService: mockParseService,
         erc20CallFactory: new Erc20CallFactory(feeConfig),
-        starknetGateway: mockStarknetGateway,
+        starknetGateway: {} as unknown as StarknetGateway,
         swapService: {} as unknown as SwapService,
-        transactionRepository: mockTransactionRepository,
+        transactionRepository: createMockTransactionRepository(),
         starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS, strkTokenAddress: STRK_TOKEN_ADDRESS},
         feeConfig,
-        logger: logger,
+        logger,
       });
     });
 
-    it('executes a transfer via the gateway (calls executeCalls with transfer + fee calls)', async () => {
-      const result = await service.execute({
-        paymentPayload: 'starknet:...',
-        senderAddress: SENDER_ADDRESS,
-        accountId: ACCOUNT_ID,
-        description: 'Sent',
-      });
-
-      expect(result.network).toBe('starknet');
-
-      const callArgs = vi.mocked(mockStarknetGateway.executeCalls).mock.calls[0]![0];
-      expect(callArgs.senderAddress).toBe(SENDER_ADDRESS);
-      expect(callArgs.calls).toHaveLength(2); // transfer + fee
-      expect(callArgs.calls[0]).toEqual({
-        contractAddress: ETH_TOKEN_ADDRESS,
-        entrypoint: 'transfer',
-        calldata: [RECIPIENT_ADDRESS, '100000000', '0'],
-      });
-      expect(callArgs.calls[1]!.calldata[0]).toBe(TREASURY_ADDRESS.toString());
-    });
-
-    it('returns txHash, amount, feeAmount, recipientAddress, tokenAddress', async () => {
-      const result = await service.execute({
-        paymentPayload: 'starknet:...',
-        senderAddress: SENDER_ADDRESS,
-        accountId: ACCOUNT_ID,
-        description: 'Sent',
-      });
+    it('returns starknet calls with transfer + fee', async () => {
+      const result = await service.prepareCalls('starknet:...', SENDER_ADDRESS, ACCOUNT_ID, 'Sent');
 
       expect(result.network).toBe('starknet');
       if (result.network !== 'starknet') return;
 
-      expect(result.txHash).toBe(TX_HASH);
+      expect(result.calls).toHaveLength(2);
+      expect(result.calls[0]).toEqual({
+        contractAddress: ETH_TOKEN_ADDRESS,
+        entrypoint: 'transfer',
+        calldata: [RECIPIENT_ADDRESS, '100000000', '0'],
+      });
+      expect(result.calls[1]!.calldata[0]).toBe(TREASURY_ADDRESS.toString());
       expect(result.amount.getSat()).toBe(100_000_000n);
-      expect(result.feeAmount.getSat()).toBe(100_000n); // 0.1% fee applied
+      expect(result.feeAmount.getSat()).toBe(100_000n);
       expect(result.recipientAddress).toBe(RECIPIENT_ADDRESS);
       expect(result.tokenAddress).toBe(ETH_TOKEN_ADDRESS);
     });
 
-    it('sends only transfer call when fee rounds to zero', async () => {
+    it('returns single transfer call when fee rounds to zero', async () => {
       vi.mocked(mockParseService.parse).mockReturnValue({
         network: 'starknet',
         address: RECIPIENT_ADDRESS,
@@ -180,18 +151,11 @@ describe('PayService', () => {
         description: '',
       });
 
-      const result = await service.execute({
-        paymentPayload: 'starknet:...',
-        senderAddress: SENDER_ADDRESS,
-        accountId: ACCOUNT_ID,
-        description: 'Sent',
-      });
+      const result = await service.prepareCalls('starknet:...', SENDER_ADDRESS, ACCOUNT_ID, 'Sent');
 
       if (result.network !== 'starknet') return;
       expect(result.feeAmount.isZero()).toBe(true);
-
-      const callArgs = vi.mocked(mockStarknetGateway.executeCalls).mock.calls[0]![0];
-      expect(callArgs.calls).toHaveLength(1);
+      expect(result.calls).toHaveLength(1);
     });
 
     it('throws InvalidPaymentAmountError when parsed amount is 0', async () => {
@@ -204,7 +168,7 @@ describe('PayService', () => {
       });
 
       await expect(
-        service.execute({paymentPayload: 'starknet:...', senderAddress: SENDER_ADDRESS, accountId: ACCOUNT_ID, description: 'Sent'}),
+        service.prepareCalls('starknet:...', SENDER_ADDRESS, ACCOUNT_ID, 'Sent'),
       ).rejects.toThrow(InvalidPaymentAmountError);
     });
 
@@ -218,19 +182,18 @@ describe('PayService', () => {
       });
 
       await expect(
-        service.execute({paymentPayload: 'starknet:...', senderAddress: SENDER_ADDRESS, accountId: ACCOUNT_ID, description: 'Sent'}),
+        service.prepareCalls('starknet:...', SENDER_ADDRESS, ACCOUNT_ID, 'Sent'),
       ).rejects.toThrow(SameAddressPaymentError);
     });
   });
 
   // ===========================================================================
-  // EXECUTE — Lightning
+  // PREPARE CALLS — Lightning
   // ===========================================================================
 
-  describe('execute — lightning', () => {
+  describe('prepareCalls — lightning', () => {
     let service: PayService;
     let mockSwapService: SwapService;
-    let mockStarknetGateway: StarknetGateway;
 
     beforeEach(() => {
       vi.resetAllMocks();
@@ -243,10 +206,6 @@ describe('PayService', () => {
         }),
       } as unknown as SwapService;
 
-      mockStarknetGateway = {
-        executeCalls: vi.fn().mockResolvedValue({txHash: TX_HASH}),
-      } as unknown as StarknetGateway;
-
       vi.mocked(mockParseService.parse).mockReturnValue({
         network: 'lightning',
         invoice: LightningInvoice.of(VALID_INVOICE),
@@ -257,19 +216,18 @@ describe('PayService', () => {
       service = new PayService({
         parseService: mockParseService,
         erc20CallFactory: new Erc20CallFactory({percentage: 0, recipientAddress: TREASURY_ADDRESS}),
-        starknetGateway: mockStarknetGateway,
+        starknetGateway: {} as unknown as StarknetGateway,
         swapService: mockSwapService,
         transactionRepository: createMockTransactionRepository(),
         starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS, strkTokenAddress: STRK_TOKEN_ADDRESS},
         feeConfig,
-        logger: logger,
+        logger,
       });
     });
 
-    it('creates swap then executes WBTC deposit', async () => {
-      await service.execute({paymentPayload: VALID_INVOICE, senderAddress: SENDER_ADDRESS, accountId: ACCOUNT_ID, description: 'Sent'});
+    it('creates swap and returns WBTC transfer calls', async () => {
+      const result = await service.prepareCalls(VALID_INVOICE, SENDER_ADDRESS, ACCOUNT_ID, 'Sent');
 
-      // Step 1: create swap
       expect(mockSwapService.createStarknetToLightning).toHaveBeenCalledWith({
         invoice: LightningInvoice.of(VALID_INVOICE),
         sourceAddress: SENDER_ADDRESS,
@@ -277,29 +235,18 @@ describe('PayService', () => {
         description: 'Sent',
       });
 
-      // Step 2: execute WBTC deposit to swap's deposit address
-      expect(mockStarknetGateway.executeCalls).toHaveBeenCalledWith({
-        senderAddress: SENDER_ADDRESS,
-        calls: [
-          {
-            contractAddress: WBTC_TOKEN_ADDRESS,
-            entrypoint: 'transfer',
-            calldata: [StarknetAddress.of(DEPOSIT_ADDRESS), '50000', '0'],
-          },
-        ],
-      });
-    });
-
-    it('returns txHash, swapId and swap details', async () => {
-      const result = await service.execute({paymentPayload: VALID_INVOICE, senderAddress: SENDER_ADDRESS, accountId: ACCOUNT_ID, description: 'Sent'});
-
       expect(result.network).toBe('lightning');
       if (result.network !== 'lightning') return;
 
-      expect(result.txHash).toBe(TX_HASH);
+      expect(result.calls).toHaveLength(1);
+      expect(result.calls[0]).toEqual({
+        contractAddress: WBTC_TOKEN_ADDRESS,
+        entrypoint: 'transfer',
+        calldata: [StarknetAddress.of(DEPOSIT_ADDRESS), '50000', '0'],
+      });
+      expect(result.amount.getSat()).toBe(50_000n);
       expect(result.swapId).toBe(SwapId.of('swap-123'));
       expect(result.invoice).toBe(LightningInvoice.of(VALID_INVOICE));
-      expect(result.amount.getSat()).toBe(50_000n);
       expect(result.expiresAt).toBeInstanceOf(Date);
     });
 
@@ -313,7 +260,7 @@ describe('PayService', () => {
       );
 
       await expect(
-        service.execute({paymentPayload: VALID_INVOICE, senderAddress: SENDER_ADDRESS, accountId: ACCOUNT_ID, description: 'Sent'}),
+        service.prepareCalls(VALID_INVOICE, SENDER_ADDRESS, ACCOUNT_ID, 'Sent'),
       ).rejects.toThrow(SwapAmountError);
     });
 
@@ -323,19 +270,18 @@ describe('PayService', () => {
       );
 
       await expect(
-        service.execute({paymentPayload: VALID_INVOICE, senderAddress: SENDER_ADDRESS, accountId: ACCOUNT_ID, description: 'Sent'}),
+        service.prepareCalls(VALID_INVOICE, SENDER_ADDRESS, ACCOUNT_ID, 'Sent'),
       ).rejects.toThrow(SwapCreationError);
     });
   });
 
   // ===========================================================================
-  // EXECUTE — Bitcoin
+  // PREPARE CALLS — Bitcoin
   // ===========================================================================
 
-  describe('execute — bitcoin', () => {
+  describe('prepareCalls — bitcoin', () => {
     let service: PayService;
     let mockSwapService: SwapService;
-    let mockStarknetGateway: StarknetGateway;
 
     beforeEach(() => {
       vi.resetAllMocks();
@@ -347,10 +293,6 @@ describe('PayService', () => {
         }),
       } as unknown as SwapService;
 
-      mockStarknetGateway = {
-        executeCalls: vi.fn().mockResolvedValue({txHash: TX_HASH}),
-      } as unknown as StarknetGateway;
-
       vi.mocked(mockParseService.parse).mockReturnValue({
         network: 'bitcoin',
         address: BitcoinAddress.of(BTC_BECH32),
@@ -361,19 +303,18 @@ describe('PayService', () => {
       service = new PayService({
         parseService: mockParseService,
         erc20CallFactory: new Erc20CallFactory({percentage: 0, recipientAddress: TREASURY_ADDRESS}),
-        starknetGateway: mockStarknetGateway,
+        starknetGateway: {} as unknown as StarknetGateway,
         swapService: mockSwapService,
         transactionRepository: createMockTransactionRepository(),
         starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS, strkTokenAddress: STRK_TOKEN_ADDRESS},
         feeConfig,
-        logger: logger,
+        logger,
       });
     });
 
-    it('creates swap then executes WBTC deposit', async () => {
-      await service.execute({paymentPayload: `bitcoin:${BTC_BECH32}?amount=0.001`, senderAddress: SENDER_ADDRESS, accountId: ACCOUNT_ID, description: 'Sent'});
+    it('creates swap and returns WBTC transfer calls', async () => {
+      const result = await service.prepareCalls(`bitcoin:${BTC_BECH32}?amount=0.001`, SENDER_ADDRESS, ACCOUNT_ID, 'Sent');
 
-      // Step 1: create swap
       expect(mockSwapService.createStarknetToBitcoin).toHaveBeenCalledWith({
         amount: Amount.ofSatoshi(100_000n),
         destinationAddress: BitcoinAddress.of(BTC_BECH32),
@@ -382,33 +323,17 @@ describe('PayService', () => {
         description: 'Sent',
       });
 
-      // Step 2: execute WBTC deposit
-      expect(mockStarknetGateway.executeCalls).toHaveBeenCalledWith({
-        senderAddress: SENDER_ADDRESS,
-        calls: [
-          {
-            contractAddress: WBTC_TOKEN_ADDRESS,
-            entrypoint: 'transfer',
-            calldata: [StarknetAddress.of(DEPOSIT_ADDRESS), '100000', '0'],
-          },
-        ],
-      });
-    });
-
-    it('returns txHash, swapId and payment details', async () => {
-      const result = await service.execute({
-        paymentPayload: `bitcoin:${BTC_BECH32}?amount=0.001`,
-        senderAddress: SENDER_ADDRESS,
-        accountId: ACCOUNT_ID,
-        description: 'Sent',
-      });
-
       expect(result.network).toBe('bitcoin');
       if (result.network !== 'bitcoin') return;
 
-      expect(result.txHash).toBe(TX_HASH);
-      expect(result.swapId).toBe(SwapId.of('swap-btc-456'));
+      expect(result.calls).toHaveLength(1);
+      expect(result.calls[0]).toEqual({
+        contractAddress: WBTC_TOKEN_ADDRESS,
+        entrypoint: 'transfer',
+        calldata: [StarknetAddress.of(DEPOSIT_ADDRESS), '100000', '0'],
+      });
       expect(result.amount.getSat()).toBe(100_000n);
+      expect(result.swapId).toBe(SwapId.of('swap-btc-456'));
       expect(result.destinationAddress).toBe(BitcoinAddress.of(BTC_BECH32));
       expect(result.expiresAt).toBeInstanceOf(Date);
     });
@@ -422,7 +347,7 @@ describe('PayService', () => {
       });
 
       await expect(
-        service.execute({paymentPayload: `bitcoin:${BTC_BECH32}?amount=0`, senderAddress: SENDER_ADDRESS, accountId: ACCOUNT_ID, description: 'Sent'}),
+        service.prepareCalls(`bitcoin:${BTC_BECH32}?amount=0`, SENDER_ADDRESS, ACCOUNT_ID, 'Sent'),
       ).rejects.toThrow(InvalidPaymentAmountError);
     });
 
@@ -436,7 +361,7 @@ describe('PayService', () => {
       );
 
       await expect(
-        service.execute({paymentPayload: `bitcoin:${BTC_BECH32}?amount=0.001`, senderAddress: SENDER_ADDRESS, accountId: ACCOUNT_ID, description: 'Sent'}),
+        service.prepareCalls(`bitcoin:${BTC_BECH32}?amount=0.001`, SENDER_ADDRESS, ACCOUNT_ID, 'Sent'),
       ).rejects.toThrow(SwapAmountError);
     });
 
@@ -446,8 +371,110 @@ describe('PayService', () => {
       );
 
       await expect(
-        service.execute({paymentPayload: `bitcoin:${BTC_BECH32}?amount=0.001`, senderAddress: SENDER_ADDRESS, accountId: ACCOUNT_ID, description: 'Sent'}),
+        service.prepareCalls(`bitcoin:${BTC_BECH32}?amount=0.001`, SENDER_ADDRESS, ACCOUNT_ID, 'Sent'),
       ).rejects.toThrow(SwapCreationError);
+    });
+  });
+
+  // ===========================================================================
+  // PREPARE (parse + fee calculation)
+  // ===========================================================================
+
+  describe('prepare', () => {
+    let service: PayService;
+
+    beforeEach(() => {
+      vi.resetAllMocks();
+
+      service = new PayService({
+        parseService: mockParseService,
+        erc20CallFactory: new Erc20CallFactory(feeConfig),
+        starknetGateway: {} as unknown as StarknetGateway,
+        swapService: {} as unknown as SwapService,
+        transactionRepository: createMockTransactionRepository(),
+        starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS, strkTokenAddress: STRK_TOKEN_ADDRESS},
+        feeConfig,
+        logger,
+      });
+    });
+
+    it('applies BIM fee for starknet payments', () => {
+      vi.mocked(mockParseService.parse).mockReturnValue({
+        network: 'starknet',
+        address: RECIPIENT_ADDRESS,
+        amount: Amount.ofSatoshi(100_000_000n),
+        tokenAddress: ETH_TOKEN_ADDRESS,
+        description: '',
+      });
+
+      const result = service.prepare('starknet:...');
+
+      expect(result.network).toBe('starknet');
+      expect(result.fee.getSat()).toBe(100_000n);
+    });
+
+    it('returns zero fee for lightning payments', () => {
+      vi.mocked(mockParseService.parse).mockReturnValue({
+        network: 'lightning',
+        invoice: LightningInvoice.of(VALID_INVOICE),
+        amount: Amount.ofSatoshi(50_000n),
+        description: 'test',
+      });
+
+      const result = service.prepare(VALID_INVOICE);
+
+      expect(result.network).toBe('lightning');
+      expect(result.fee.isZero()).toBe(true);
+    });
+
+    it('returns zero fee for bitcoin payments', () => {
+      vi.mocked(mockParseService.parse).mockReturnValue({
+        network: 'bitcoin',
+        address: BitcoinAddress.of(BTC_BECH32),
+        amount: Amount.ofSatoshi(100_000n),
+        description: '',
+      });
+
+      const result = service.prepare(`bitcoin:${BTC_BECH32}?amount=0.001`);
+
+      expect(result.network).toBe('bitcoin');
+      expect(result.fee.isZero()).toBe(true);
+    });
+  });
+
+  // ===========================================================================
+  // SAVE PAYMENT RESULT
+  // ===========================================================================
+
+  describe('savePaymentResult', () => {
+    let service: PayService;
+    let mockTransactionRepository: TransactionRepository;
+
+    beforeEach(() => {
+      vi.resetAllMocks();
+
+      mockTransactionRepository = createMockTransactionRepository();
+
+      service = new PayService({
+        parseService: mockParseService,
+        erc20CallFactory: new Erc20CallFactory(feeConfig),
+        starknetGateway: {} as unknown as StarknetGateway,
+        swapService: {} as unknown as SwapService,
+        transactionRepository: mockTransactionRepository,
+        starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS, strkTokenAddress: STRK_TOKEN_ADDRESS},
+        feeConfig,
+        logger,
+      });
+    });
+
+    it('saves transaction description to repository', async () => {
+      await service.savePaymentResult({
+        txHash: '0xabc123',
+        accountId: ACCOUNT_ID,
+        description: 'Payment for coffee',
+      });
+
+      expect(mockTransactionRepository.saveDescription).toHaveBeenCalledOnce();
     });
   });
 });

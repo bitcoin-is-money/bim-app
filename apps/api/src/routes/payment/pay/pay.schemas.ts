@@ -23,9 +23,3 @@ export const ExecuteSignedPaymentSchema = z.object({
   buildId: z.uuid(),
   assertion: WebAuthnAssertionSchema,
 });
-
-/** @deprecated Use BuildPaymentSchema + ExecuteSignedPaymentSchema */
-export const ExecutePaymentSchema = z.object({
-  paymentPayload: z.string().min(1),
-  description: z.string().max(100).optional(),
-});
