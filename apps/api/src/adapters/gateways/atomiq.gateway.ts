@@ -21,6 +21,18 @@ import {existsSync, mkdirSync} from 'node:fs';
 
 import type {Logger} from "pino";
 
+/* eslint-disable
+   @typescript-eslint/no-unsafe-assignment,
+   @typescript-eslint/no-unsafe-member-access,
+   @typescript-eslint/no-unsafe-call,
+   @typescript-eslint/no-unsafe-argument,
+   @typescript-eslint/no-explicit-any,
+   @typescript-eslint/no-non-null-assertion
+   ---
+   @atomiqlabs/sdk exposes untyped (any) APIs at runtime.
+   These rules are disabled file-wide because virtually every SDK interaction triggers them.
+*/
+
 /**
  * Configuration for Atomiq gateway.
  */
@@ -82,8 +94,10 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         : BitcoinNetwork.TESTNET;
 
       const {storagePath, autoCreateStorage} = this.config;
+      // eslint-disable-next-line security/detect-non-literal-fs-filename -- path from server config, not user input
       if (!existsSync(storagePath)) {
         if (autoCreateStorage) {
+          // eslint-disable-next-line security/detect-non-literal-fs-filename -- path from server config, not user input
           mkdirSync(storagePath, {recursive: true});
         } else {
           throw new Error(
@@ -139,7 +153,6 @@ export class AtomiqSdkGateway implements AtomiqGateway {
    * Gets the tokens from SwapperFactory.
    * Unable to remove this any, otherwise IDE is not able to understand dynamic registered types.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private getTokens(): any {
     if (!this.swapperFactory) {
       throw new ExternalServiceError('Atomiq', 'SwapperFactory not initialized');
@@ -152,7 +165,6 @@ export class AtomiqSdkGateway implements AtomiqGateway {
   /**
    * Returns the configured Starknet swap token from the SDK's token registry.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private getSwapToken(): any {
     const Tokens = this.getTokens();
     const token = Tokens.STARKNET[this.config.swapToken];
@@ -190,6 +202,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         true, // exactOut = true: user receives exactly the requested amount, payer covers fees
       );
 
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive: SDK may return null at runtime
       if (!swap) {
         throw new Error('SDK returned null swap object');
       }
@@ -239,13 +252,14 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         params.invoice.toString(),
       );
 
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive: SDK may return null at runtime
       if (!swap) {
         throw new Error('SDK returned null swap object');
       }
 
       const swapId = swap.getId();
       const depositAddress = swap.getInputAddress() ?? '';
-      const amountSats = swap.getInput().rawAmount ?? 0n;
+      const amountSats = swap.getInput().rawAmount ?? 0n; // eslint-disable-line @typescript-eslint/no-unnecessary-condition -- defensive
 
       const quoteExpiry: any = swap.getQuoteExpiry();
       this.logSwapExpiry(swapId, quoteExpiry, direction);
@@ -296,6 +310,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         exactOut,
       );
 
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive: SDK may return null at runtime
       if (!swap) {
         throw new Error('SDK returned null swap object');
       }
@@ -303,7 +318,6 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       const swapId = swap.getId();
       const depositAddress = swap.getAddress();
       const bip21Uri = `bitcoin:${depositAddress}?amount=${Number(params.amountSats) / 100000000}`;
-
 
       const quoteExpiry: any = swap.getQuoteExpiry();
       this.logSwapExpiry(swapId, quoteExpiry, direction);
@@ -351,6 +365,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         exactOut,
       );
 
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive: SDK may return null at runtime
       if (!swap) {
         throw new Error('SDK returned null swap object');
       }
@@ -363,6 +378,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       // Extract Call[] from StarknetTx[] and convert to StarknetCall[]
       const commitCalls: StarknetCall[] = [];
       for (const tx of commitTxs) {
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive: SDK tx structure may vary
         if (tx && typeof tx === 'object' && 'type' in tx && tx.type === 'INVOKE' && 'tx' in tx) {
           const calls = tx.tx as {contractAddress: string; entrypoint: string; calldata?: string[]}[];
           for (const call of calls) {
@@ -466,6 +482,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         true, // exactIn
       );
 
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive: SDK may return null at runtime
       if (!swap) {
         throw new Error('SDK returned null swap object');
       }
@@ -538,13 +555,14 @@ export class AtomiqSdkGateway implements AtomiqGateway {
   private getSwapFeePercent(swapType: SwapType): number {
     const DEFAULT_FEE = 0.5;
 
-    const intermediaries = this.swapper?.intermediaryDiscovery?.intermediaries;
+    const intermediaries = this.swapper?.intermediaryDiscovery.intermediaries;
     if (!intermediaries?.length) {
       return DEFAULT_FEE;
     }
 
     let lowestFee = Infinity;
     for (const intermediary of intermediaries) {
+      // eslint-disable-next-line security/detect-object-injection -- swapType is a SwapType enum, not user input
       const service = intermediary.services[swapType];
       if (service?.swapFeePPM !== undefined) {
         // Convert PPM (parts per million) to percentage
@@ -634,7 +652,6 @@ export class AtomiqSdkGateway implements AtomiqGateway {
    * Returns any because subclass methods (txsClaim, claim, etc.) are
    * not on the ISwap base type — we use duck-typing to call them.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async getSwapObject(swapId: string): Promise<any> {
     await this.ensureInitialized();
     return this.swapper!.getSwapById(swapId, 'STARKNET');
