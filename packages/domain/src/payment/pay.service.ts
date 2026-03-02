@@ -303,7 +303,7 @@ export class PayService {
 
   private async payBitcoin(
     input: ExecutePaymentInput,
-    parsed: Extract<import('./types').ParsedPaymentData, {network: 'bitcoin'}>,
+    parsed: Extract<ParsedPaymentData, {network: 'bitcoin'}>,
   ) {
     if (!parsed.amount.isPositive()) {
       throw new InvalidPaymentAmountError('bitcoin', parsed.amount.getSat());

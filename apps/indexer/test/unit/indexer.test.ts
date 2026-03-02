@@ -1,4 +1,5 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest';
+import type * as LibLogger from '@bim/lib/logger';
 
 // ---------------------------------------------------------------------------
 // Module mocks (hoisted by vitest before any import)
@@ -8,7 +9,7 @@ vi.mock('@bim/lib/logger', async (importOriginal) => {
 
   const LOG_LEVEL = 'silent';
 
-  const mod = await importOriginal<typeof import('@bim/lib/logger')>();
+  const mod = await importOriginal<typeof LibLogger>();
   const logger = mod.createLogger(LOG_LEVEL, {...mod.DEFAULT_LOGGER_CONFIG, requestId: undefined});
   for (const m of ['fatal', 'error', 'warn', 'info', 'debug', 'trace']) {
     vi.spyOn(logger, m as any);

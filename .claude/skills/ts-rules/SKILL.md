@@ -11,6 +11,7 @@ description: Guide for TypeScript coding conventions. This skill should be used 
 |------|--------|
 | No `any` | Use `unknown` + type guards |
 | No `null` | Use `undefined` for absence |
+| No inline `import()` types | Use top-level `import type` statements, never `param: import('./types').Foo` |
 | No direct `as` casts | Branded types via `Type.of()` factory only |
 | Explicit return types | Required on all exported functions |
 | Strict mode | `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes` |

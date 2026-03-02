@@ -1,4 +1,5 @@
 import type {PaymentResult, PreparedCalls, PreparedPayment} from '@bim/domain/payment';
+import type {Amount} from '@bim/domain/shared';
 import type {TypedResponse} from 'hono';
 import {Hono} from 'hono';
 import {randomUUID} from 'node:crypto';
@@ -185,7 +186,7 @@ function buildPaymentResult(txHash: string, preparedCalls: PreparedCalls): Payme
 // Serialization
 // =============================================================================
 
-function serializeAmount(amount: import('@bim/domain/shared').Amount): AmountResponse {
+function serializeAmount(amount: Amount): AmountResponse {
   return {value: Number(amount.getSat()), currency: 'SAT'};
 }
 

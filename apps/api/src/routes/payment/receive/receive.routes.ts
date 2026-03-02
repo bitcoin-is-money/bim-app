@@ -1,4 +1,4 @@
-import type {ReceiveResult} from '@bim/domain/payment';
+import type {BitcoinReceiveResult, ReceiveResult} from '@bim/domain/payment';
 import type {StarknetCall} from '@bim/domain/ports';
 import {Amount, InsufficientBalanceError} from '@bim/domain/shared';
 import type {TypedResponse} from 'hono';
@@ -260,7 +260,7 @@ function serializeReceiveResult(result: ReceiveResult): ReceiveResponse {
         // Should not reach here — handled above in the route
         throw new Error('Unexpected pending_commit result in serializeReceiveResult');
       }
-      const btcResult = result as {network: 'bitcoin'} & import('@bim/domain/payment').BitcoinReceiveResult;
+      const btcResult = result as {network: 'bitcoin'} & BitcoinReceiveResult;
       return {
         network: 'bitcoin',
         swapId: btcResult.swapId,
