@@ -17,6 +17,7 @@ export default tseslint.config(
       'patches/',
       '**/public/',
       'scripts/',
+      '**/vitest.config*.ts',
       '**/*.js',
       '**/*.mjs',
     ],
