@@ -10,6 +10,7 @@ import type {
 import {ExternalServiceError, InsufficientBalanceError} from "@bim/domain/shared";
 
 import type {Logger} from "pino";
+import type {WALLET_API} from '@starknet-io/starknet-types-010';
 import {type ExecutableUserTransaction, type ExecutionParameters, PaymasterRpc, type UserTransaction} from 'starknet';
 
 /**
@@ -169,7 +170,7 @@ export class AvnuPaymasterGateway implements PaymasterGateway {
         type: 'invoke' as const,
         invoke: {
           userAddress: accountAddress,
-          typedData: params.typedData as import('@starknet-io/starknet-types-010').WALLET_API.OutsideExecutionTypedData,
+          typedData: params.typedData as WALLET_API.OutsideExecutionTypedData,
           signature: params.signature,
         },
       };
