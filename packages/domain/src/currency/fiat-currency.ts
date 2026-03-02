@@ -18,8 +18,11 @@ export namespace FiatCurrency {
     return normalized as FiatCurrency;
   }
 
-  export function ofAll(values: string[]): FiatCurrency[] {
-    return values.map(of);
+  export function ofAll(values: string[]): [FiatCurrency, ...FiatCurrency[]] {
+    if (values.length === 0) {
+      throw new UnsupportedCurrencyError('(empty list)', [...SUPPORTED_CURRENCIES]);
+    }
+    return values.map(of) as [FiatCurrency, ...FiatCurrency[]];
   }
 
   export function isSupported(value: string): boolean {

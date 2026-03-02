@@ -135,6 +135,7 @@ export class DrizzleSwapRepository implements SwapRepository {
     }
   }
 
+  /* eslint-disable @typescript-eslint/no-non-null-assertion -- DB invariant: nullable columns are guaranteed non-null per status */
   private columnsToState(record: schema.SwapRecord): SwapState {
     switch (record.status) {
       case 'pending':
@@ -153,6 +154,7 @@ export class DrizzleSwapRepository implements SwapRepository {
         throw new Error(`Unknown swap status: ${record.status}`);
     }
   }
+  /* eslint-enable @typescript-eslint/no-non-null-assertion */
 
   private toSwap(record: schema.SwapRecord): Swap {
     return new Swap(

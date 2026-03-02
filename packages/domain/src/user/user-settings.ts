@@ -79,13 +79,10 @@ export class UserSettings {
    * All currencies must be supported, and at least one is required.
    * If the current defaultCurrency is not in the new list, it is set to the first element.
    */
-  setPreferredCurrencies(currencies: FiatCurrency[]): void {
-    if (currencies.length === 0) {
-      throw new Error('At least one preferred currency is required');
-    }
+  setPreferredCurrencies(currencies: [FiatCurrency, ...FiatCurrency[]]): void {
     this.preferredCurrencies = [...currencies];
     if (!this.preferredCurrencies.includes(this.defaultCurrency)) {
-      this.defaultCurrency = this.preferredCurrencies[0]!;
+      this.defaultCurrency = currencies[0];
     }
     this.updatedAt = new Date();
   }

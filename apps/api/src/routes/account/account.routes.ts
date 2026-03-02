@@ -59,7 +59,7 @@ export function createAccountRoutes(appCtx: AppContext): AuthenticatedHono {
       return honoCtx.json<DeployAccountResponse>({
         txHash: result.txHash,
         status: result.account.getStatus(),
-        starknetAddress: result.account.getStarknetAddress()!,
+        starknetAddress: result.account.requireStarknetAddress(),
       });
     } catch (error) {
       return handleDomainError(honoCtx, error, log);

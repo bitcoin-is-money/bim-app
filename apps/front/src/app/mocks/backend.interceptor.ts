@@ -112,8 +112,8 @@ export const backendInterceptor: HttpInterceptorFn = (
 
   // Swap routes
   else if (url.startsWith('/api/swap/status/') && method === 'GET') {
-    const swapId = url.split('/api/swap/status/')[1];
-    response = mockSwapHandler.getStatus(swapId!);
+    const swapId = url.replace('/api/swap/status/', '');
+    response = mockSwapHandler.getStatus(swapId);
   }
 
   if (response) {
@@ -126,7 +126,6 @@ export const backendInterceptor: HttpInterceptorFn = (
         mergeMap(() => throwError(() => new HttpErrorResponse({
           error: response.body,
           status: response.status,
-          statusText: response.statusText,
           url: url,
         })))
       );
