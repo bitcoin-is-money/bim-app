@@ -41,6 +41,7 @@ export class ReceiveService {
    * @throws SwapAmountError if amount is outside swap limits
    * @throws SwapCreationError if invoice/address generation fails
    */
+  // TODO: amount should become optional for all networks (amountless invoices / open deposits)
   async receive(input: ReceivePaymentInput): Promise<ReceiveResult> {
     if (input.network !== 'starknet' && (!input.amount?.isPositive())) {
       throw new InvalidPaymentAmountError(input.network, input.amount?.getSat() ?? 0n);
@@ -55,11 +56,13 @@ export class ReceiveService {
       case 'lightning':
         return {
           network: 'lightning',
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           ...(await this.receiveLightning(input.destinationAddress, input.amount!, input.accountId, input.description))};
       case 'bitcoin':
         return {
           network: 'bitcoin',
           status: 'pending_commit' as const,
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           ...(await this.prepareBitcoinReceive(input.destinationAddress, input.amount!, input.accountId, input.description))};
     }
   }

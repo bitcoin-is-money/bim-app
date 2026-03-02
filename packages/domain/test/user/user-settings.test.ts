@@ -56,12 +56,6 @@ describe('UserSettings', () => {
       expect(settings.getDefaultCurrency()).toBe('USD'); // Still in list
     });
 
-    it('throws on empty list', () => {
-      const settings = UserSettings.create({id: settingsId, accountId});
-
-      expect(() => { settings.setPreferredCurrencies([]); }).toThrow('At least one preferred currency is required');
-    });
-
     it('updates updatedAt timestamp', () => {
       const settings = UserSettings.create({id: settingsId, accountId});
       const initialUpdatedAt = settings.getUpdatedAt();

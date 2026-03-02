@@ -188,7 +188,7 @@ export function createReceiveRoutes(appContext: AppContext): AuthenticatedHono {
       await appContext.gateways.starknet.waitForTransaction(txHash);
 
       // 6. Complete the swap (SDK detects on-chain commit, returns deposit address)
-      const starknetAddress = account.getStarknetAddress()!;
+      const starknetAddress = account.requireStarknetAddress();
       const completeResult = await receiveService.completeBitcoinReceive({
         swapId: build.swapId,
         destinationAddress: starknetAddress,
@@ -223,11 +223,15 @@ export function createReceiveRoutes(appContext: AppContext): AuthenticatedHono {
  * The approve call has entrypoint 'approve' with calldata [spender, amount_low, amount_high].
  * Amount is u256 = low + high * 2^128.
  */
-function extractApproveAmount(calls: readonly StarknetCall[]): {amount: bigint; tokenAddress: string} | undefined {
+function extractApproveAmount(
+  calls: readonly StarknetCall[]
+): {amount: bigint; tokenAddress: string} | undefined {
   const approveCall = calls.find(c => c.entrypoint === 'approve');
   if (!approveCall || approveCall.calldata.length < 3) return undefined;
   try {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- length >= 3 checked above, try/catch handles any runtime issue
     const low = BigInt(approveCall.calldata[1]!);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const high = BigInt(approveCall.calldata[2]!);
     return {
       amount: low + (high << 128n),

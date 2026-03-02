@@ -4,7 +4,7 @@ import type {ParsePaymentResponse} from '../services/pay.http.service';
 
 export interface MockSwapConfig {
   /** Predefined status progression for created swaps: status after N polls */
-  statusProgression: SwapStatus[];
+  statusProgression: [SwapStatus, ...SwapStatus[]];
 }
 
 export interface MockUserProfile {
@@ -26,7 +26,7 @@ export interface MockUserProfile {
   language: Language;
 }
 
-export const MOCK_USERS: MockUserProfile[] = [
+export const MOCK_USERS: [MockUserProfile, ...MockUserProfile[]] = [
   {
     // STARKNET USER - NO SWAPS (starknet doesn't create swaps)
     username: 'alice',
@@ -173,7 +173,7 @@ export const MOCK_USERS: MockUserProfile[] = [
   }
 ];
 
-export const DEFAULT_MOCK_USER: MockUserProfile = MOCK_USERS[0]!; // alice
+export const DEFAULT_MOCK_USER: MockUserProfile = MOCK_USERS[0]; // alice
 
 export function getMockUser(username: string): MockUserProfile {
   return MOCK_USERS.find(u => u.username === username) ?? DEFAULT_MOCK_USER;

@@ -26,7 +26,7 @@ export interface FetchUserSettingsOutput {
 }
 
 export interface UserSettingsUpdate {
-  preferredCurrencies: FiatCurrency[];
+  preferredCurrencies: [FiatCurrency, ...FiatCurrency[]];
   defaultCurrency: FiatCurrency;
   language: Language;
 }

@@ -13,7 +13,7 @@ interface LanguageOption {
   name: string;
 }
 
-const LANGUAGE_OPTIONS: LanguageOption[] = [
+const LANGUAGE_OPTIONS: [LanguageOption, ...LanguageOption[]] = [
   {code: 'en', flag: '🇬🇧', name: 'English'},
   {code: 'fr', flag: '🇫🇷', name: 'Français'},
 ];
@@ -53,6 +53,7 @@ export class SettingsPage {
   }
 
   getSelectedOption(): LanguageOption {
-    return LANGUAGE_OPTIONS.find(l => l.code === this.currentLanguage()) ?? LANGUAGE_OPTIONS[0]!;
+    return LANGUAGE_OPTIONS
+      .find(l => l.code === this.currentLanguage()) ?? LANGUAGE_OPTIONS[0];
   }
 }

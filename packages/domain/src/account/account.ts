@@ -79,6 +79,16 @@ export class Account {
   }
 
   /**
+   * Returns the Starknet address or throws if the account has no address yet.
+   */
+  requireStarknetAddress(): StarknetAddress {
+    if (!this.starknetAddress) {
+      throw new InvalidStateTransitionError(this.status, 'requires starknet address');
+    }
+    return this.starknetAddress;
+  }
+
+  /**
    * Returns the deployment transaction hash if the deployment has started.
    */
   getDeploymentTxHash(): string | undefined {

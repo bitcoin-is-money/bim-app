@@ -139,7 +139,7 @@ export namespace AppConfig {
       ...config,
       database: {
         ...config.database,
-        url: redactUrl(config.database.url!),
+        url: redactUrl(config.database.url),
         ...(config.database.startupRequiredTable !== undefined && {
           startupRequiredTable: getTableName(config.database.startupRequiredTable)
         })
