@@ -34,7 +34,7 @@ export function createPayRoutes(appContext: AppContext): AuthenticatedHono {
     try {
       const {paymentPayload} = ParsePaymentSchema.parse(await honoCtx.req.json());
 
-      const prepared = payService.prepare(paymentPayload);
+      const prepared = await payService.prepare(paymentPayload);
 
       const response = serializePreparedPayment(prepared);
       return honoCtx.json(response) as TypedResponse<PreparedPaymentResponse>;
@@ -80,7 +80,7 @@ export function createPayRoutes(appContext: AppContext): AuthenticatedHono {
       });
 
       // 4. Return challenge + payment info for display
-      const prepared = payService.prepare(input.paymentPayload);
+      const prepared = await payService.prepare(input.paymentPayload);
 
       const response: BuildPaymentResponse = {
         buildId,

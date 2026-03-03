@@ -382,15 +382,22 @@ describe('PayService', () => {
 
   describe('prepare', () => {
     let service: PayService;
+    let mockSwapService: SwapService;
 
     beforeEach(() => {
       vi.resetAllMocks();
+
+      mockSwapService = {
+        fetchLimits: vi.fn().mockResolvedValue({
+          limits: {minSats: 1n, maxSats: BigInt(Number.MAX_SAFE_INTEGER), feePercent: 0.3},
+        }),
+      } as unknown as SwapService;
 
       service = new PayService({
         parseService: mockParseService,
         erc20CallFactory: new Erc20CallFactory(feeConfig),
         starknetGateway: {} as unknown as StarknetGateway,
-        swapService: {} as unknown as SwapService,
+        swapService: mockSwapService,
         transactionRepository: createMockTransactionRepository(),
         starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS, strkTokenAddress: STRK_TOKEN_ADDRESS},
         feeConfig,
@@ -398,7 +405,7 @@ describe('PayService', () => {
       });
     });
 
-    it('applies BIM fee for starknet payments', () => {
+    it('applies BIM fee for starknet payments', async () => {
       vi.mocked(mockParseService.parse).mockReturnValue({
         network: 'starknet',
         address: RECIPIENT_ADDRESS,
@@ -407,13 +414,13 @@ describe('PayService', () => {
         description: '',
       });
 
-      const result = service.prepare('starknet:...');
+      const result = await service.prepare('starknet:...');
 
       expect(result.network).toBe('starknet');
       expect(result.fee.getSat()).toBe(100_000n);
     });
 
-    it('returns zero fee for lightning payments', () => {
+    it('estimates swap fee for lightning payments from limits', async () => {
       vi.mocked(mockParseService.parse).mockReturnValue({
         network: 'lightning',
         invoice: LightningInvoice.of(VALID_INVOICE),
@@ -421,13 +428,15 @@ describe('PayService', () => {
         description: 'test',
       });
 
-      const result = service.prepare(VALID_INVOICE);
+      const result = await service.prepare(VALID_INVOICE);
 
       expect(result.network).toBe('lightning');
-      expect(result.fee.isZero()).toBe(true);
+      // 50_000 * 0.3% = 150 sats
+      expect(result.fee.getSat()).toBe(150n);
+      expect(mockSwapService.fetchLimits).toHaveBeenCalledWith({direction: 'starknet_to_lightning'});
     });
 
-    it('returns zero fee for bitcoin payments', () => {
+    it('estimates swap fee for bitcoin payments from limits', async () => {
       vi.mocked(mockParseService.parse).mockReturnValue({
         network: 'bitcoin',
         address: BitcoinAddress.of(BTC_BECH32),
@@ -435,10 +444,12 @@ describe('PayService', () => {
         description: '',
       });
 
-      const result = service.prepare(`bitcoin:${BTC_BECH32}?amount=0.001`);
+      const result = await service.prepare(`bitcoin:${BTC_BECH32}?amount=0.001`);
 
       expect(result.network).toBe('bitcoin');
-      expect(result.fee.isZero()).toBe(true);
+      // 100_000 * 0.3% = 300 sats
+      expect(result.fee.getSat()).toBe(300n);
+      expect(mockSwapService.fetchLimits).toHaveBeenCalledWith({direction: 'starknet_to_bitcoin'});
     });
   });
 
