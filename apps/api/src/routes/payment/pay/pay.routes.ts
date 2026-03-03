@@ -131,17 +131,15 @@ export function createPayRoutes(appContext: AppContext): AuthenticatedHono {
         signature,
       });
 
-      // 5. Save description for Starknet transfers only (instant/final).
-      // For Lightning/Bitcoin swaps, description is saved later by SwapService
-      // when the swap completes — avoids misleading labels on expired swaps.
-      if (build.preparedCalls.network === 'starknet') {
-        await payService.savePaymentResult({
-          txHash,
-          accountId: build.accountId,
-          description: build.description,
-        });
+      // 5. Save description for the sender's transaction
+      await payService.savePaymentResult({
+        txHash,
+        accountId: build.accountId,
+        description: build.description,
+      });
 
-        // Also save description for recipient (if they're a BIM user)
+      // Also save description for recipient (if Starknet transfer to a BIM user)
+      if (build.preparedCalls.network === 'starknet') {
         const recipientAccount = await appContext.repositories.account.findByStarknetAddress(
           build.preparedCalls.recipientAddress,
         );
