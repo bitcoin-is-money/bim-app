@@ -11,11 +11,13 @@ import {SwapStorageService} from './swap-storage.service';
 
 const POLL_INTERVAL_MS = 5000;
 const POLL_DURATION_MS = 5 * 60 * 1000;
+const MAX_CONSECUTIVE_ERRORS = 3;
 
 interface ActivePoll {
   swapId: string;
   subscription: Subscription;
   startedAt: number;
+  consecutiveErrors: number;
 }
 
 @Injectable({
@@ -48,6 +50,11 @@ export class SwapPollingService implements OnDestroy {
       return;
     }
 
+    const storedSwap = this.storageService.getSwap(swapId);
+    if (storedSwap && isTerminalStatus(storedSwap.lastKnownStatus)) {
+      return;
+    }
+
     const startedAt = Date.now();
 
     const subscription = interval(POLL_INTERVAL_MS)
@@ -58,12 +65,15 @@ export class SwapPollingService implements OnDestroy {
           this.httpService.getStatus(swapId, {silent: true}).pipe(
             catchError((err) => {
               this.logSwapError(swapId, err);
+              this.incrementErrors(swapId);
               return of(null);
             })
           )
         ),
         tap((response) => {
           if (!response) return;
+
+          this.resetErrors(swapId);
 
           const storedSwap = this.storageService.getSwap(swapId);
           const previousStatus = storedSwap?.lastKnownStatus;
@@ -86,6 +96,7 @@ export class SwapPollingService implements OnDestroy {
       swapId,
       subscription,
       startedAt,
+      consecutiveErrors: 0,
     });
   }
 
@@ -151,6 +162,24 @@ export class SwapPollingService implements OnDestroy {
           message: this.i18n.t('notifications.swapFailed', {type}),
         });
         break;
+    }
+  }
+
+  private incrementErrors(swapId: string): void {
+    const poll = this.activePolls.get(swapId);
+    if (!poll) return;
+
+    poll.consecutiveErrors++;
+    if (poll.consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
+      console.warn(`Stopping polling for swap ${swapId} after ${poll.consecutiveErrors} consecutive errors`);
+      this.stopPolling(swapId);
+    }
+  }
+
+  private resetErrors(swapId: string): void {
+    const poll = this.activePolls.get(swapId);
+    if (poll) {
+      poll.consecutiveErrors = 0;
     }
   }
 

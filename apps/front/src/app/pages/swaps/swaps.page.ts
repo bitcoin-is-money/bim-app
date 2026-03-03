@@ -4,6 +4,7 @@ import {TranslateModule} from '@ngx-translate/core';
 import {ButtonComponent} from "../../components/button/button.component";
 import {GoBackHeaderComponent} from '../../components/go-back-header/go-back-header.component';
 import {FullPageLayoutComponent} from "../../layout";
+import {isTerminalStatus} from '../../model';
 import {SwapPollingService} from '../../services/swap-polling.service';
 import {SwapStorageService} from '../../services/swap-storage.service';
 import {SwapItemComponent} from './components/swap-item/swap-item.component';
@@ -33,7 +34,8 @@ export class SwapsPage implements OnInit {
 
     this.isRefreshing.set(true);
 
-    for (const swap of swaps.slice(0, 20)) {
+    const activeSwaps = swaps.filter((s) => !isTerminalStatus(s.lastKnownStatus));
+    for (const swap of activeSwaps.slice(0, 20)) {
       this.pollingService.fetchStatusOnce(swap.id);
     }
 
