@@ -13,6 +13,7 @@ import {registerIcons} from "../icons";
 import {routes} from './app.routes';
 import {httpNotificationInterceptor} from "./interceptor/http-notification.interceptor";
 import {backendInterceptor} from './mocks/backend.interceptor';
+import {AuthService} from './services/auth.service';
 
 // Interceptors run in order: first intercepts request first, but catches errors last
 // So: httpNotificationInterceptor catches errors from backendInterceptor
@@ -30,6 +31,10 @@ export const appConfig: ApplicationConfig = {
     provideHotToastConfig({
       dismissible: true,
       autoClose: true,
+    }),
+    provideAppInitializer(async () => {
+      const authService = inject(AuthService);
+      await authService.loadCurrentUser();
     }),
     provideAppInitializer(() => {
       const library = inject(FaIconLibrary);
