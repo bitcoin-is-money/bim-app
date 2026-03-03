@@ -6,6 +6,7 @@
   [icon]="['fas', 'coins']"
   placeholder="0"
   (valueChange)="onValueChange($event)"
+  (focusin)="onFocus($event)"
   (focusout)="onBlur()">
 
   @if (currencyToggle()) {
