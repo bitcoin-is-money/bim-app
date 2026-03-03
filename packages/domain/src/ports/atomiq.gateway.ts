@@ -129,7 +129,7 @@ export interface AtomiqSwapResult {
 
 export interface AtomiqReverseSwapResult {
   swapId: string;
-  depositAddress: string;
+  commitCalls: StarknetCall[];
   amountSats: bigint;
   expiresAt: Date;
 }

@@ -82,7 +82,7 @@ export interface CreateStarknetToLightningInput {
 
 export interface CreateStarknetToLightningOutput {
   swap: Swap;
-  depositAddress: string;
+  commitCalls: readonly StarknetCall[];
   amount: Amount;
 }
 
@@ -100,7 +100,7 @@ export interface CreateStarknetToBitcoinInput {
 
 export interface CreateStarknetToBitcoinOutput {
   swap: Swap;
-  depositAddress: string;
+  commitCalls: readonly StarknetCall[];
 }
 
 // =============================================================================
@@ -309,8 +309,8 @@ export class SwapService {
       sourceAddress,
     });
 
-    if (!atomiqSwap.depositAddress) {
-      throw new SwapCreationError('Failed to generate Starknet deposit address');
+    if (atomiqSwap.commitCalls.length === 0) {
+      throw new SwapCreationError('Failed to generate escrow commit calls');
     }
 
     // Convert from port bigint to Amount, then validate
@@ -322,7 +322,7 @@ export class SwapService {
       amount: swapAmount,
       sourceAddress,
       invoice,
-      depositAddress: atomiqSwap.depositAddress,
+      depositAddress: atomiqSwap.commitCalls[0]!.contractAddress,
       expiresAt: atomiqSwap.expiresAt,
       description: input.description,
       accountId: input.accountId,
@@ -336,7 +336,7 @@ export class SwapService {
     }, 'Starknet-to-Lightning swap created');
     return {
       swap,
-      depositAddress: atomiqSwap.depositAddress,
+      commitCalls: atomiqSwap.commitCalls,
       amount: swapAmount,
     };
   }
@@ -366,8 +366,8 @@ export class SwapService {
       sourceAddress,
     });
 
-    if (!atomiqSwap.depositAddress) {
-      throw new SwapCreationError('Failed to generate Starknet deposit address');
+    if (atomiqSwap.commitCalls.length === 0) {
+      throw new SwapCreationError('Failed to generate escrow commit calls');
     }
 
     const swap = Swap.createStarknetToBitcoin({
@@ -375,7 +375,7 @@ export class SwapService {
       amount: input.amount,
       sourceAddress,
       destinationAddress,
-      depositAddress: atomiqSwap.depositAddress,
+      depositAddress: atomiqSwap.commitCalls[0]!.contractAddress,
       expiresAt: atomiqSwap.expiresAt,
       description: input.description,
       accountId: input.accountId,
@@ -389,7 +389,7 @@ export class SwapService {
     }, 'Starknet-to-Bitcoin swap created');
     return {
       swap,
-      depositAddress: atomiqSwap.depositAddress,
+      commitCalls: atomiqSwap.commitCalls,
     };
   }
 
