@@ -76,11 +76,6 @@ describe('ReceiveService', () => {
         swap: createMockLightningReceiveSwap(),
         invoice: VALID_INVOICE,
       }),
-      createBitcoinToStarknet: vi.fn().mockResolvedValue({
-        swap: createMockBitcoinReceiveSwap(),
-        depositAddress: BTC_DEPOSIT_ADDRESS,
-        bip21Uri: `bitcoin:${BTC_DEPOSIT_ADDRESS}?amount=0.002`,
-      }),
       prepareBitcoinToStarknet: vi.fn().mockResolvedValue({
         swapId: 'recv-btc-002',
         commitCalls: MOCK_COMMIT_CALLS,

@@ -20,15 +20,6 @@ export interface AtomiqGateway {
   }): Promise<AtomiqSwapResult>;
 
   /**
-   * Creates a Bitcoin → Starknet swap.
-   * @deprecated Use prepareBitcoinToStarknetSwap + completeBitcoinSwapCommit for the two-phase flow.
-   */
-  createBitcoinToStarknetSwap(params: {
-    amountSats: bigint;
-    destinationAddress: StarknetAddress;
-  }): Promise<AtomiqSwapResult>;
-
-  /**
    * Prepares a Bitcoin → Starknet swap (phase 1).
    * Creates the swap quote and returns unsigned commit transactions
    * that must be signed and submitted before the Bitcoin address becomes available.
