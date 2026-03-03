@@ -5,7 +5,7 @@
         <div class="transaction-bullet"></div>
         <div class="transaction-info">
           <div class="transaction-label">{{ transaction.original.description ?? ('transactions.type.' + transaction.original.type | translate) }}</div>
-          <div class="transaction-date">{{ transaction.original.timestamp | date:'short' }}</div>
+          <div class="transaction-date">{{ transaction.original.timestamp | date:'short':'':locale() }}</div>
         </div>
         <div
           class="transaction-amount"

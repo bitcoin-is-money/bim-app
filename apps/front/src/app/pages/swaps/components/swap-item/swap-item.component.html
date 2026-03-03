@@ -3,7 +3,7 @@
     <div class="swap-status-indicator" [class.polling]="isPolling()"></div>
     <div class="swap-info">
       <div class="swap-direction">{{ directionKey() | translate }}</div>
-      <div class="swap-date">{{ swap().createdAt | date:'short' }}</div>
+      <div class="swap-date">{{ swap().createdAt | date:'short':'':locale() }}</div>
     </div>
     <div class="swap-right">
       <div
