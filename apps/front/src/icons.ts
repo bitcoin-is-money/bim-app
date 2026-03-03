@@ -3,12 +3,14 @@ import {faGithub} from '@fortawesome/free-brands-svg-icons';
 import {
   faArrowLeft,
   faCircleCheck,
+  faClock,
   faCoins,
   faLocationArrow,
   faPaste,
   faPen,
   faQrcode,
-  faShareNodes, faSyncAlt
+  faShareNodes,
+  faSyncAlt
 } from '@fortawesome/free-solid-svg-icons';
 
 export function registerIcons(library: FaIconLibrary): void {
@@ -22,6 +24,7 @@ export function registerIcons(library: FaIconLibrary): void {
     faShareNodes,     // Share: 'fas', 'share-nodes'
     faCoins,          // Money: 'fas', 'coins'
     faArrowLeft,      // back: 'fas', 'arrow-left'
-    faSyncAlt         // refresh, 'fas', 'sync-alt'
+    faSyncAlt,        // refresh, 'fas', 'sync-alt'
+    faClock           // Payment in progress: 'fas', 'clock'
   );
 }
