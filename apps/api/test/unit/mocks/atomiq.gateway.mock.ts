@@ -51,11 +51,18 @@ export class AtomiqGatewayMock implements AtomiqGateway {
     const swapId = crypto.randomUUID();
     const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
     const amountSats = 100000n;
-    const depositAddress = `0x${'0'.repeat(62)}${swapId.slice(0, 2)}`;
 
     this.knownSwapIds.add(swapId);
 
-    return {swapId, depositAddress, amountSats, expiresAt};
+    return {
+      swapId,
+      commitCalls: [
+        {contractAddress: '0x0123456789abcdef', entrypoint: 'approve', calldata: ['0x1', '0x2']},
+        {contractAddress: '0x0123456789abcdef', entrypoint: 'initiate', calldata: ['0x3', '0x4']},
+      ],
+      amountSats,
+      expiresAt,
+    };
   }
 
   async createStarknetToBitcoinSwap(params: {
@@ -65,11 +72,18 @@ export class AtomiqGatewayMock implements AtomiqGateway {
   }): Promise<AtomiqReverseSwapResult> {
     const swapId = crypto.randomUUID();
     const expiresAt = new Date(Date.now() + 3 * 60 * 60 * 1000);
-    const depositAddress = `0x${'0'.repeat(62)}${swapId.slice(0, 2)}`;
 
     this.knownSwapIds.add(swapId);
 
-    return {swapId, depositAddress, amountSats: params.amountSats, expiresAt};
+    return {
+      swapId,
+      commitCalls: [
+        {contractAddress: '0x0123456789abcdef', entrypoint: 'approve', calldata: ['0x1', '0x2']},
+        {contractAddress: '0x0123456789abcdef', entrypoint: 'initiate', calldata: ['0x3', '0x4']},
+      ],
+      amountSats: params.amountSats,
+      expiresAt,
+    };
   }
 
   // ===========================================================================

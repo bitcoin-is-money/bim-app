@@ -258,19 +258,22 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       }
 
       const swapId = swap.getId();
-      const depositAddress = swap.getInputAddress() ?? '';
       const amountSats = swap.getInput().rawAmount ?? 0n; // eslint-disable-line @typescript-eslint/no-unnecessary-condition -- defensive
+
+      // Get commit transactions (escrow creation on Starknet)
+      const commitCalls = await this.extractCommitCalls(swap);
 
       const quoteExpiry: any = swap.getQuoteExpiry();
       this.logSwapExpiry(swapId, quoteExpiry, direction);
 
       this.log.info({
         swapId,
-        amountSats: amountSats.toString()
+        amountSats: amountSats.toString(),
+        commitCallsCount: commitCalls.length,
       }, `${direction} swap created`);
       return {
         swapId,
-        depositAddress,
+        commitCalls,
         amountSats,
         expiresAt: new Date(quoteExpiry),
       };
@@ -314,28 +317,8 @@ export class AtomiqSdkGateway implements AtomiqGateway {
 
       const swapId = swap.getId();
 
-      // Get unsigned commit transactions (Starknet escrow creation)
-      const commitTxs = await swap.txsCommit();
-
-      // Extract Call[] from StarknetTx[] and convert to StarknetCall[]
-      const commitCalls: StarknetCall[] = [];
-      for (const tx of commitTxs) {
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive: SDK tx structure may vary
-        if (tx && typeof tx === 'object' && 'type' in tx && tx.type === 'INVOKE' && 'tx' in tx) {
-          const calls = tx.tx as {contractAddress: string; entrypoint: string; calldata?: string[]}[];
-          for (const call of calls) {
-            commitCalls.push({
-              contractAddress: call.contractAddress,
-              entrypoint: call.entrypoint,
-              calldata: call.calldata ?? [],
-            });
-          }
-        }
-      }
-
-      if (commitCalls.length === 0) {
-        throw new Error('No commit calls extracted from SDK transactions');
-      }
+      // Get commit transactions (escrow creation on Starknet)
+      const commitCalls = await this.extractCommitCalls(swap);
 
       const quoteExpiry: any = swap.getQuoteExpiry();
       this.logSwapExpiry(swapId, quoteExpiry, direction);
@@ -430,7 +413,9 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       }
 
       const swapId = swap.getId();
-      const depositAddress = swap.getInputAddress() ?? '';
+
+      // Get commit transactions (escrow creation on Starknet)
+      const commitCalls = await this.extractCommitCalls(swap);
 
       const quoteExpiry = swap.getQuoteExpiry();
       this.logSwapExpiry(swapId, quoteExpiry, direction);
@@ -438,10 +423,11 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       this.log.info({
         swapId,
         amountSats: params.amountSats,
+        commitCallsCount: commitCalls.length,
       }, `${direction} swap created`);
       return {
         swapId,
-        depositAddress,
+        commitCalls,
         amountSats: params.amountSats,
         expiresAt: new Date(quoteExpiry),
       };
@@ -453,6 +439,32 @@ export class AtomiqSdkGateway implements AtomiqGateway {
           : String(error)}`,
       );
     }
+  }
+
+  /**
+   * Extracts StarknetCall[] from SDK commit transactions.
+   * Shared between forward and reverse swap creation.
+   */
+  private async extractCommitCalls(swap: any): Promise<StarknetCall[]> {
+    const commitTxs = await swap.txsCommit();
+    const commitCalls: StarknetCall[] = [];
+    for (const tx of commitTxs) {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive: SDK tx structure may vary
+      if (tx && typeof tx === 'object' && 'type' in tx && tx.type === 'INVOKE' && 'tx' in tx) {
+        const calls = tx.tx as {contractAddress: string; entrypoint: string; calldata?: string[]}[];
+        for (const call of calls) {
+          commitCalls.push({
+            contractAddress: call.contractAddress,
+            entrypoint: call.entrypoint,
+            calldata: call.calldata ?? [],
+          });
+        }
+      }
+    }
+    if (commitCalls.length === 0) {
+      throw new Error('No commit calls extracted from SDK transactions');
+    }
+    return commitCalls;
   }
 
   /**

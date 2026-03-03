@@ -143,17 +143,9 @@ export class PayService {
       description,
     });
 
-    const depositAddress = StarknetAddress.of(swapResult.depositAddress);
-    const {calls} = this.deps.erc20CallFactory.createTransfer({
-      tokenAddress: this.deps.starknetConfig.wbtcTokenAddress,
-      recipientAddress: depositAddress.toString(),
-      amount: swapResult.amount,
-      applyFee: false,
-    });
-
     return {
       network: 'lightning',
-      calls,
+      calls: swapResult.commitCalls,
       amount: swapResult.amount,
       swapId: swapResult.swap.id,
       invoice: parsed.invoice,
@@ -179,17 +171,9 @@ export class PayService {
       description,
     });
 
-    const depositAddress = StarknetAddress.of(swapResult.depositAddress);
-    const {calls} = this.deps.erc20CallFactory.createTransfer({
-      tokenAddress: this.deps.starknetConfig.wbtcTokenAddress,
-      recipientAddress: depositAddress.toString(),
-      amount: parsed.amount,
-      applyFee: false,
-    });
-
     return {
       network: 'bitcoin',
-      calls,
+      calls: swapResult.commitCalls,
       amount: parsed.amount,
       swapId: swapResult.swap.id,
       destinationAddress: parsed.address,

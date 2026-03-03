@@ -201,7 +201,10 @@ describe('PayService', () => {
       mockSwapService = {
         createStarknetToLightning: vi.fn().mockResolvedValue({
           swap: createMockLightningPaySwap(),
-          depositAddress: DEPOSIT_ADDRESS,
+          commitCalls: [
+            {contractAddress: '0x0123456789abcdef', entrypoint: 'approve', calldata: ['0x1', '0x2']},
+            {contractAddress: '0x0123456789abcdef', entrypoint: 'initiate', calldata: ['0x3', '0x4']},
+          ],
           amount: Amount.ofSatoshi(50_000n),
         }),
       } as unknown as SwapService;
@@ -225,7 +228,7 @@ describe('PayService', () => {
       });
     });
 
-    it('creates swap and returns WBTC transfer calls', async () => {
+    it('creates swap and returns SDK commit calls', async () => {
       const result = await service.prepareCalls(VALID_INVOICE, SENDER_ADDRESS, ACCOUNT_ID, 'Sent');
 
       expect(mockSwapService.createStarknetToLightning).toHaveBeenCalledWith({
@@ -238,11 +241,16 @@ describe('PayService', () => {
       expect(result.network).toBe('lightning');
       if (result.network !== 'lightning') return;
 
-      expect(result.calls).toHaveLength(1);
+      expect(result.calls).toHaveLength(2);
       expect(result.calls[0]).toEqual({
-        contractAddress: WBTC_TOKEN_ADDRESS,
-        entrypoint: 'transfer',
-        calldata: [StarknetAddress.of(DEPOSIT_ADDRESS), '50000', '0'],
+        contractAddress: '0x0123456789abcdef',
+        entrypoint: 'approve',
+        calldata: ['0x1', '0x2'],
+      });
+      expect(result.calls[1]).toEqual({
+        contractAddress: '0x0123456789abcdef',
+        entrypoint: 'initiate',
+        calldata: ['0x3', '0x4'],
       });
       expect(result.amount.getSat()).toBe(50_000n);
       expect(result.swapId).toBe(SwapId.of('swap-123'));
@@ -289,7 +297,10 @@ describe('PayService', () => {
       mockSwapService = {
         createStarknetToBitcoin: vi.fn().mockResolvedValue({
           swap: createMockBitcoinPaySwap(),
-          depositAddress: DEPOSIT_ADDRESS,
+          commitCalls: [
+            {contractAddress: '0x0123456789abcdef', entrypoint: 'approve', calldata: ['0x1', '0x2']},
+            {contractAddress: '0x0123456789abcdef', entrypoint: 'initiate', calldata: ['0x3', '0x4']},
+          ],
         }),
       } as unknown as SwapService;
 
@@ -312,7 +323,7 @@ describe('PayService', () => {
       });
     });
 
-    it('creates swap and returns WBTC transfer calls', async () => {
+    it('creates swap and returns SDK commit calls', async () => {
       const result = await service.prepareCalls(`bitcoin:${BTC_BECH32}?amount=0.001`, SENDER_ADDRESS, ACCOUNT_ID, 'Sent');
 
       expect(mockSwapService.createStarknetToBitcoin).toHaveBeenCalledWith({
@@ -326,11 +337,16 @@ describe('PayService', () => {
       expect(result.network).toBe('bitcoin');
       if (result.network !== 'bitcoin') return;
 
-      expect(result.calls).toHaveLength(1);
+      expect(result.calls).toHaveLength(2);
       expect(result.calls[0]).toEqual({
-        contractAddress: WBTC_TOKEN_ADDRESS,
-        entrypoint: 'transfer',
-        calldata: [StarknetAddress.of(DEPOSIT_ADDRESS), '100000', '0'],
+        contractAddress: '0x0123456789abcdef',
+        entrypoint: 'approve',
+        calldata: ['0x1', '0x2'],
+      });
+      expect(result.calls[1]).toEqual({
+        contractAddress: '0x0123456789abcdef',
+        entrypoint: 'initiate',
+        calldata: ['0x3', '0x4'],
       });
       expect(result.amount.getSat()).toBe(100_000n);
       expect(result.swapId).toBe(SwapId.of('swap-btc-456'));
