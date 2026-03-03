@@ -19,6 +19,10 @@
     @apply w-full;
   }
 
+  .loading-state {
+    @apply flex-1 flex items-center justify-center;
+  }
+
   .no-payment {
     @apply text-center text-gray-400;
   }

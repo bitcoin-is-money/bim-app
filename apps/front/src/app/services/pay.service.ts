@@ -32,6 +32,8 @@ export class PayService {
     this.isLoading.set(true);
     this.rawData = data;
     this.cachedBuild = null;
+    this.parsedPayment.set(null);
+    void this.router.navigate(['/pay/confirm']);
     this.httpService.build(data).subscribe({
       next: (buildResponse) => {
         this.cachedBuild = buildResponse;
@@ -39,10 +41,10 @@ export class PayService {
         this.parsedPayment.set(payment);
         this.description = payment.description || null;
         this.isLoading.set(false);
-        void this.router.navigate(['/pay/confirm']);
       },
       error: () => {
         this.isLoading.set(false);
+        void this.router.navigate(['/pay']);
       },
     });
   }

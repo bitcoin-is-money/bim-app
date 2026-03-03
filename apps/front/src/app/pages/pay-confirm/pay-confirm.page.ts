@@ -7,6 +7,7 @@ import {ButtonComponent} from '../../components/button/button.component';
 import {FieldComponent} from '../../components/field/field.component';
 import {GoBackHeaderComponent} from '../../components/go-back-header/go-back-header.component';
 import {NetworkLogoComponent} from '../../components/network-logo/network-logo.component';
+import {SpinnerComponent} from '../../components/spinner/spinner.component';
 import {FullPageLayoutComponent} from '../../layout';
 import type {Amount} from "../../model";
 import {AccountService} from '../../services/account.service';
@@ -18,7 +19,7 @@ import {PayService} from '../../services/pay.service';
 @Component({
   selector: 'app-pay-confirm',
   standalone: true,
-  imports: [CommonModule, TranslateModule, ButtonComponent, GoBackHeaderComponent, NetworkLogoComponent, FieldComponent, AmountFieldComponent, AmountHighlightComponent, FullPageLayoutComponent],
+  imports: [CommonModule, TranslateModule, ButtonComponent, GoBackHeaderComponent, NetworkLogoComponent, FieldComponent, AmountFieldComponent, AmountHighlightComponent, FullPageLayoutComponent, SpinnerComponent],
   templateUrl: './pay-confirm.page.html',
   styleUrl: './pay-confirm.page.scss',
 })
@@ -31,6 +32,7 @@ export class PayConfirmPage {
   private readonly notificationService = inject(NotificationService);
 
   payment = this.paymentService.parsedPayment;
+  readonly isLoading = this.paymentService.isLoading;
   description = signal('');
 
   computedFee = computed((): Amount | undefined => {
