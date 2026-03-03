@@ -81,6 +81,7 @@ export class AuthService {
       ));
 
       this.isNewUser.set(true);
+      await this.currency.init();
       await this.router.navigate(['/account-setup']);
     } catch (error) {
       // HTTP errors are already handled by the interceptor

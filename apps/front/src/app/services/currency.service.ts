@@ -25,8 +25,7 @@ export class CurrencyService implements OnDestroy {
   readonly rates = this._rates.asReadonly();
 
   constructor() {
-    this.fetchRates();
-    this.startAutoRefresh();
+    // Rates and auto-refresh are started in init(), called after authentication
   }
 
   setCurrentCurrency(currency: Currency): void {
@@ -55,6 +54,7 @@ export class CurrencyService implements OnDestroy {
       console.warn('Failed to load currency preferences');
     }
     this.fetchRates();
+    this.startAutoRefresh();
   }
 
   /**
