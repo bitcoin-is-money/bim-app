@@ -18,6 +18,7 @@ export class PayService {
 
   parsedPayment = signal<ParsedPayment | null>(null);
   isLoading = signal(false);
+  isBuilding = signal(false);
   isProcessing = signal(false);
 
   /** Network of the last executed payment (used by success page to distinguish instant vs swap). */
@@ -33,18 +34,32 @@ export class PayService {
     this.rawData = data;
     this.cachedBuild = null;
     this.parsedPayment.set(null);
-    void this.router.navigate(['/pay/confirm']);
-    this.httpService.build(data).subscribe({
-      next: (buildResponse) => {
-        this.cachedBuild = buildResponse;
-        const payment = ParsedPayment.fromResponse(buildResponse.payment);
+
+    // 1. Parse: fast decode → display payment details immediately
+    this.httpService.parse(data).subscribe({
+      next: (parseResponse) => {
+        const payment = ParsedPayment.fromResponse(parseResponse);
         this.parsedPayment.set(payment);
         this.description = payment.description || null;
         this.isLoading.set(false);
+        void this.router.navigate(['/pay/confirm']);
+
+        // 2. Build: get real fee from LP quote in background
+        this.isBuilding.set(true);
+        this.httpService.build(data).subscribe({
+          next: (buildResponse) => {
+            this.cachedBuild = buildResponse;
+            const updatedPayment = ParsedPayment.fromResponse(buildResponse.payment);
+            this.parsedPayment.set(updatedPayment);
+            this.isBuilding.set(false);
+          },
+          error: () => {
+            this.isBuilding.set(false);
+          },
+        });
       },
       error: () => {
         this.isLoading.set(false);
-        void this.router.navigate(['/pay']);
       },
     });
   }
@@ -121,6 +136,7 @@ export class PayService {
     this.rawData = null;
     this.description = null;
     this.cachedBuild = null;
+    this.isBuilding.set(false);
     this.lastPaymentNetwork.set(response.network);
 
     if (response.network !== 'starknet' && 'swapId' in response) {

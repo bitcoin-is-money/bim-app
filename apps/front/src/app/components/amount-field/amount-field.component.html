@@ -1,6 +1,6 @@
 <app-field
-  [value]="displayValue()"
-  [editable]="editable()"
+  [value]="loading() ? '' : displayValue()"
+  [editable]="!loading() && editable()"
   [inputFilter]="sanitizeNumber"
   [label]="label()"
   [icon]="['fas', 'coins']"
@@ -9,9 +9,13 @@
   (focusin)="onFocus($event)"
   (focusout)="onBlur()">
 
+  @if (loading()) {
+    <app-spinner variant="secondary" class="fee-spinner" />
+  }
+
   @if (currencyToggle()) {
     <app-currency-display [currency]="displayCurrency()" />
   } @else {
-    <span class="currency-label">{{ amount().currency }}</span>
+    <span class="currency-label">{{ displayCurrency() }}</span>
   }
 </app-field>

@@ -4,11 +4,12 @@ import {CurrencyService} from '../../services/currency.service';
 import {I18nService} from '../../services/i18n.service';
 import {CurrencyDisplayComponent} from '../currency-display/currency-display.component';
 import {FieldComponent} from '../field/field.component';
+import {SpinnerComponent} from '../spinner/spinner.component';
 
 @Component({
   selector: 'app-amount-field',
   standalone: true,
-  imports: [FieldComponent, CurrencyDisplayComponent],
+  imports: [FieldComponent, CurrencyDisplayComponent, SpinnerComponent],
   templateUrl: './amount-field.component.html',
   styleUrl: './amount-field.component.scss',
 })
@@ -16,7 +17,8 @@ export class AmountFieldComponent {
   private readonly currencyService = inject(CurrencyService);
   private readonly i18nService = inject(I18nService);
 
-  readonly amount = model<Amount>(Amount.zero());
+  readonly amount = model<Amount | undefined>(undefined);
+  readonly loading = computed(() => this.amount() === undefined);
   readonly editable = input(false);
   readonly label = input<string | undefined>();
 
@@ -29,15 +31,18 @@ export class AmountFieldComponent {
   private editing = false;
   readonly displayValue = signal('');
 
-  readonly displayCurrency = computed(() =>
-    this.currencyToggle()
+  readonly displayCurrency = computed(() => {
+    const amount = this.amount();
+    return this.currencyToggle()
       ? this.currencyService.currentCurrency()
-      : this.amount().currency
-  );
+      : amount?.currency ?? 'SAT';
+  });
 
   readonly formattedAmount = computed(() => {
+    const amount = this.amount();
+    if (!amount) return '';
     const currency = this.displayCurrency();
-    return this.currencyService.convert(this.amount(), currency).format(this.i18nService.currentLocale());
+    return this.currencyService.convert(amount, currency).format(this.i18nService.currentLocale());
   });
 
   constructor() {
@@ -68,12 +73,10 @@ export class AmountFieldComponent {
   };
 
   onFocus(event: FocusEvent): void {
-    if (!(event.target instanceof HTMLInputElement)) {
-      // Ignore when clicking on the change currency button, icon...
-      return;
-    }
+    const amount = this.amount();
+    if (!amount || !(event.target instanceof HTMLInputElement)) return;
     this.editing = true;
-    const displayAmount = this.currencyService.convert(this.amount(), this.displayCurrency());
+    const displayAmount = this.currencyService.convert(amount, this.displayCurrency());
     if (displayAmount.value === 0) {
       this.displayValue.set('');
     } else {
@@ -82,13 +85,15 @@ export class AmountFieldComponent {
   }
 
   onValueChange(value: string): void {
+    const amount = this.amount();
+    if (!amount) return;
     this.editing = true;
     const parsed = Number.parseFloat(value);
     if (Number.isNaN(parsed)) {
-      this.amount.set(Amount.of(0, this.amount().currency));
+      this.amount.set(Amount.of(0, amount.currency));
     } else {
       const displayAmount = Amount.of(parsed, this.displayCurrency());
-      const modelAmount = this.currencyService.convert(displayAmount, this.amount().currency);
+      const modelAmount = this.currencyService.convert(displayAmount, amount.currency);
       this.amount.set(modelAmount);
     }
   }
