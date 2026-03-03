@@ -1,7 +1,8 @@
 import {CommonModule, DatePipe} from '@angular/common';
-import {Component, input} from '@angular/core';
+import {Component, computed, inject, input} from '@angular/core';
 import {TranslateModule} from '@ngx-translate/core';
 import type {DisplayedTransaction} from '../../../../services/transaction.service';
+import {I18nService} from '../../../../services/i18n.service';
 
 @Component({
   selector: 'app-transaction-list',
@@ -11,5 +12,8 @@ import type {DisplayedTransaction} from '../../../../services/transaction.servic
   styleUrl: './transaction-list.component.scss',
 })
 export class TransactionListComponent {
+  private readonly i18nService = inject(I18nService);
+
   transactions = input.required<DisplayedTransaction[]>();
+  readonly locale = computed(() => this.i18nService.currentLocale());
 }

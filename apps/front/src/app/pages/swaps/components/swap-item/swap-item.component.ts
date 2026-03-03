@@ -42,6 +42,8 @@ export class SwapItemComponent {
     return `${sign}${amount.format(this.i18nService.currentLocale())} ${Currency.symbol(currency)}`;
   });
 
+  readonly locale = computed(() => this.i18nService.currentLocale());
+
   readonly statusClass = computed(() => {
     const status = this.swap().lastKnownStatus;
     return `status-${status}`;
