@@ -1,5 +1,5 @@
 import {Component, computed, effect, inject, input, model, signal} from '@angular/core';
-import {Amount} from '../../model';
+import {Amount, Currency} from '../../model';
 import {CurrencyService} from '../../services/currency.service';
 import {I18nService} from '../../services/i18n.service';
 import {CurrencyDisplayComponent} from '../currency-display/currency-display.component';
@@ -49,14 +49,20 @@ export class AmountFieldComponent {
     });
   }
 
-  /** Sanitizes input to allow only digits and a single decimal point */
+  /** Sanitizes input to allow only digits and a single decimal point, respecting currency decimals */
   readonly sanitizeNumber = (value: string): string => {
+    const maxDecimals = Currency.decimals(this.displayCurrency());
     let sanitized = value.replaceAll(/[^\d.]/g, '');
-    const dotIndex = sanitized.indexOf('.');
-    if (dotIndex !== -1) {
-      sanitized = sanitized.slice(0, dotIndex + 1) + sanitized
-        .slice(dotIndex + 1)
-        .replaceAll('.', '');
+    if (maxDecimals === 0) {
+      sanitized = sanitized.replaceAll('.', '');
+    } else {
+      const dotIndex = sanitized.indexOf('.');
+      if (dotIndex !== -1) {
+        sanitized = sanitized.slice(0, dotIndex + 1) + sanitized
+          .slice(dotIndex + 1)
+          .replaceAll('.', '')
+          .slice(0, maxDecimals);
+      }
     }
     return sanitized;
   };
