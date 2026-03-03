@@ -3,7 +3,11 @@
     <app-go-back-header [title]="'payConfirm.title' | translate"></app-go-back-header>
 
     <main class="pay-confirm-main">
-      @if (payment(); as p) {
+      @if (isLoading()) {
+        <div class="loading-state">
+          <app-spinner />
+        </div>
+      } @else if (payment(); as p) {
         <div class="payment-details">
           <app-network-logo [network]="p.network" style="height:48px"/>
           <app-amount-highlight [originalAmount]="p.amount"/>
