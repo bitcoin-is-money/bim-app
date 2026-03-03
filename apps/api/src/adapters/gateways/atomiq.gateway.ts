@@ -599,14 +599,14 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     return this.swapper!.getSwapById(swapId, 'STARKNET');
   }
 
-  async getSwapStatus(swapId: SwapId): Promise<AtomiqSwapStatus> {
-    this.log.debug({swapId}, 'Getting swap status');
+  async getSwapStatus(swapId: SwapId, direction?: SwapDirection): Promise<AtomiqSwapStatus> {
+    this.log.debug({swapId, direction}, 'Getting swap status');
 
     try {
       const swap = await this.getSwapObject(swapId);
       const state = swap.getState();
 
-      const {isPaid, isCompleted, isFailed, isExpired} = this.mapStateToStatus(state);
+      const {isPaid, isCompleted, isFailed, isExpired} = this.mapStateToStatus(state, direction);
       const result: AtomiqSwapStatus = {
         state,
         isPaid,
@@ -637,8 +637,13 @@ export class AtomiqSdkGateway implements AtomiqGateway {
    * - State 0: Created/pending
    * - State 1+: Payment received/committed
    * - State 3+: Completed/claimed
+   *
+   * For bitcoin_to_starknet (FromBTC) swaps, state 1 means "Starknet commit confirmed"
+   * (escrow locked), NOT "Bitcoin deposit received". The actual Bitcoin deposit
+   * is detected at state 2. Without this distinction, the frontend shows a
+   * misleading "Receive detected, confirming..." notification right after swap creation.
    */
-  private mapStateToStatus(state: number): {
+  private mapStateToStatus(state: number, direction?: SwapDirection): {
     isPaid: boolean;
     isCompleted: boolean;
     isFailed: boolean;
@@ -653,8 +658,12 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       };
     }
 
+    // For Bitcoin-to-Starknet swaps, the commit (state 1) happens before the
+    // Bitcoin deposit (state 2). Only treat as "paid" once BTC is actually received.
+    const paidThreshold = direction === 'bitcoin_to_starknet' ? 2 : 1;
+
     return {
-      isPaid: state >= 1,
+      isPaid: state >= paidThreshold,
       isCompleted: state >= 3,
       isFailed: false,
       isExpired: false,

@@ -550,8 +550,8 @@ export class SwapService {
    */
   private async syncWithAtomiq(swap: Swap): Promise<void> {
     try {
-      const atomiqStatus = await this.deps.atomiqGateway.getSwapStatus(swap.id);
-      this.log.debug({atomiqStatus}, 'Sync swap with Atomiq');
+      const atomiqStatus = await this.deps.atomiqGateway.getSwapStatus(swap.id, swap.direction);
+      this.log.debug({atomiqStatus, direction: swap.direction}, 'Sync swap with Atomiq');
 
       if (atomiqStatus.isCompleted) {
         // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- empty txHash should fallback

@@ -11,7 +11,7 @@ import type {
 } from '@bim/domain/ports';
 import {ExternalServiceError} from "@bim/domain/shared";
 import type {BitcoinAddress, LightningInvoice, SwapId} from '@bim/domain/swap';
-import type { SwapLimits} from '@bim/domain/swap';
+import type {SwapDirection, SwapLimits} from '@bim/domain/swap';
 
 /**
  * Mock implementation of AtomiqGateway for testing purposes.
@@ -136,7 +136,7 @@ export class AtomiqGatewayMock implements AtomiqGateway {
   // Swap Monitoring
   // ===========================================================================
 
-  async getSwapStatus(swapId: SwapId): Promise<AtomiqSwapStatus> {
+  async getSwapStatus(swapId: SwapId, _direction?: SwapDirection): Promise<AtomiqSwapStatus> {
     const defaults: AtomiqSwapStatus = {
       state: 0,
       isPaid: false,
