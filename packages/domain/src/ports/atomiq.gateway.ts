@@ -1,6 +1,6 @@
 import type {StarknetAddress} from '../account';
 import type {BitcoinAddress, LightningInvoice, SwapId} from '../swap';
-import type { SwapLimits} from '../swap';
+import type {SwapDirection, SwapLimits} from '../swap';
 import type {StarknetCall} from './starknet.gateway';
 
 /**
@@ -83,8 +83,12 @@ export interface AtomiqGateway {
 
   /**
    * Gets the current status of a swap from Atomiq.
+   *
+   * @param direction - Swap direction, used to correctly interpret SDK state numbers.
+   *   For bitcoin_to_starknet swaps, state 1 means "committed" (not "paid"),
+   *   so isPaid requires state >= 2.
    */
-  getSwapStatus(swapId: SwapId): Promise<AtomiqSwapStatus>;
+  getSwapStatus(swapId: SwapId, direction?: SwapDirection): Promise<AtomiqSwapStatus>;
 
   /**
    * Checks if a swap payment has been received.
