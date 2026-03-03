@@ -30,7 +30,7 @@ export interface ReceivePaymentInput {
   destinationAddress: StarknetAddress;
   amount?: Amount;
   tokenAddress?: string;
-  description: string;
+  description?: string | undefined;
   accountId: string;
   useUriPrefix: boolean;
 }

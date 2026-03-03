@@ -113,7 +113,7 @@ describe('ReceiveService', () => {
           destinationAddress: DESTINATION_ADDRESS,
           amount: Amount.zero(),
           accountId: ACCOUNT_ID,
-          description: 'Received',
+          description: undefined,
           useUriPrefix: true,
         }),
       ).rejects.toThrow(InvalidPaymentAmountError);
@@ -125,7 +125,7 @@ describe('ReceiveService', () => {
           network: 'lightning',
           destinationAddress: DESTINATION_ADDRESS,
           accountId: ACCOUNT_ID,
-          description: 'Received',
+          description: undefined,
           useUriPrefix: true,
         }),
       ).rejects.toThrow(InvalidPaymentAmountError);
@@ -143,7 +143,7 @@ describe('ReceiveService', () => {
         destinationAddress: SENDER_ADDRESS,
         amount: Amount.ofSatoshi(50_000n),
         accountId: ACCOUNT_ID,
-        description: 'Received',
+        description: undefined,
         useUriPrefix: true,
       });
 
@@ -160,7 +160,7 @@ describe('ReceiveService', () => {
         amount: Amount.ofSatoshi(1_000n),
         tokenAddress: ETH_TOKEN_ADDRESS,
         accountId: ACCOUNT_ID,
-        description: 'Received',
+        description: undefined,
         useUriPrefix: true,
       });
 
@@ -174,7 +174,7 @@ describe('ReceiveService', () => {
         destinationAddress: SENDER_ADDRESS,
         amount: Amount.ofSatoshi(50_000n),
         accountId: ACCOUNT_ID,
-        description: 'Received',
+        description: undefined,
         useUriPrefix: false,
       });
 
@@ -188,7 +188,7 @@ describe('ReceiveService', () => {
         destinationAddress: SENDER_ADDRESS,
         amount: Amount.ofSatoshi(50_000n),
         accountId: ACCOUNT_ID,
-        description: 'Received',
+        description: undefined,
         useUriPrefix: true,
       });
 
@@ -201,7 +201,7 @@ describe('ReceiveService', () => {
         network: 'starknet',
         destinationAddress: SENDER_ADDRESS,
         accountId: ACCOUNT_ID,
-        description: 'Received',
+        description: undefined,
         useUriPrefix: true,
       });
 
@@ -216,7 +216,7 @@ describe('ReceiveService', () => {
         destinationAddress: SENDER_ADDRESS,
         amount: Amount.zero(),
         accountId: ACCOUNT_ID,
-        description: 'Received',
+        description: undefined,
         useUriPrefix: true,
       });
 
@@ -236,7 +236,7 @@ describe('ReceiveService', () => {
         destinationAddress: DESTINATION_ADDRESS,
         amount: Amount.ofSatoshi(50_000n),
         accountId: ACCOUNT_ID,
-        description: 'Received',
+        description: undefined,
         useUriPrefix: true,
       });
 
@@ -254,7 +254,7 @@ describe('ReceiveService', () => {
         destinationAddress: DESTINATION_ADDRESS,
         amount: Amount.ofSatoshi(50_000n),
         accountId: ACCOUNT_ID,
-        description: 'Received',
+        description: undefined,
         useUriPrefix: true,
       });
 
@@ -281,7 +281,7 @@ describe('ReceiveService', () => {
           destinationAddress: DESTINATION_ADDRESS,
           amount: Amount.ofSatoshi(50_000n),
           accountId: ACCOUNT_ID,
-          description: 'Received',
+          description: undefined,
           useUriPrefix: true,
         }),
       ).rejects.toThrow(SwapAmountError);
@@ -298,7 +298,7 @@ describe('ReceiveService', () => {
           destinationAddress: DESTINATION_ADDRESS,
           amount: Amount.ofSatoshi(50_000n),
           accountId: ACCOUNT_ID,
-          description: 'Received',
+          description: undefined,
           useUriPrefix: true,
         }),
       ).rejects.toThrow(SwapCreationError);
@@ -316,7 +316,7 @@ describe('ReceiveService', () => {
         destinationAddress: DESTINATION_ADDRESS,
         amount: Amount.ofSatoshi(200_000n),
         accountId: ACCOUNT_ID,
-        description: 'Received',
+        description: undefined,
         useUriPrefix: true,
       });
 
@@ -334,7 +334,7 @@ describe('ReceiveService', () => {
         destinationAddress: DESTINATION_ADDRESS,
         amount: Amount.ofSatoshi(200_000n),
         accountId: ACCOUNT_ID,
-        description: 'Received',
+        description: undefined,
         useUriPrefix: true,
       });
 
@@ -359,7 +359,7 @@ describe('ReceiveService', () => {
           destinationAddress: DESTINATION_ADDRESS,
           amount: Amount.ofSatoshi(200_000n),
           accountId: ACCOUNT_ID,
-          description: 'Received',
+          description: undefined,
           useUriPrefix: true,
         }),
       ).rejects.toThrow(SwapCreationError);

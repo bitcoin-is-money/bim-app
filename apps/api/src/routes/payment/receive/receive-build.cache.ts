@@ -17,8 +17,8 @@ export interface ReceiveBuildData {
   amount: Amount;
   /** Quote expiry */
   expiresAt: Date;
-  /** Payment description (user-provided or empty) */
-  description: string;
+  /** Payment description (user-provided, may be undefined) */
+  description?: string | undefined;
   /** Whether to use BIP21 URI prefix */
   useUriPrefix: boolean;
   /** When this build was created */

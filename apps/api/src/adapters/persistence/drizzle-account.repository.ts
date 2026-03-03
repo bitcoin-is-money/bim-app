@@ -83,6 +83,18 @@ export class DrizzleAccountRepository implements AccountRepository {
     return this.toAccount(record);
   }
 
+  async findByStarknetAddress(address: StarknetAddress): Promise<Account | undefined> {
+    const record = await this.db.query.accounts.findFirst({
+      where: eq(schema.accounts.starknetAddress, address),
+    });
+
+    if (!record) {
+      return undefined;
+    }
+
+    return this.toAccount(record);
+  }
+
   async existsByUsername(username: string): Promise<boolean> {
     const record = await this.db.query.accounts.findFirst({
       where: eq(schema.accounts.username, username),
