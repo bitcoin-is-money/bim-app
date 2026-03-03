@@ -35,7 +35,8 @@ export class AuthService {
   isNewUser = signal(false);
 
   constructor() {
-    this.loadCurrentUser();
+    // Session loading is handled by provideAppInitializer in app.config.ts
+    // to ensure it completes before route guards run.
   }
 
   // ===========================================================================
@@ -162,26 +163,25 @@ export class AuthService {
   // Private Methods
   // ===========================================================================
 
-  private loadCurrentUser(): void {
-    this.httpService
-      .getSession()
-      .pipe(
-        catchError(() => {
-          return [{ authenticated: false }];
-        })
-      )
-      .subscribe((response: UserSessionResponse) => {
-        if (response.authenticated && response.account) {
-          this.currentUser.set(response.account);
-          // Load user preferences
-          void this.i18n.init();
-          void this.currency.init();
-        } else {
-          this.currentUser.set(null);
-          // Use browser language for unauthenticated users
-          void this.i18n.initFromBrowser();
-        }
-      });
+  async loadCurrentUser(): Promise<void> {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.getSession().pipe(
+          catchError(() => [{ authenticated: false } as UserSessionResponse])
+        )
+      );
+      if (response.authenticated && response.account) {
+        this.currentUser.set(response.account);
+        await this.i18n.init();
+        await this.currency.init();
+      } else {
+        this.currentUser.set(null);
+        await this.i18n.initFromBrowser();
+      }
+    } catch {
+      this.currentUser.set(null);
+      await this.i18n.initFromBrowser();
+    }
   }
 
   private completeLogin(challengeId: string, credential: PublicKeyCredential): Observable<AuthResponse> {
