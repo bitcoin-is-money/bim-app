@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@noble/curves": "^1.9.7",
-    "@noble/hashes": "^2.0.1",
+    "@noble/hashes": "^1.8.0",
     "@simplewebauthn/server": "^13.2.3"
   }
 }
