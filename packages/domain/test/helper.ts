@@ -7,6 +7,7 @@ export function createAccountRepoMock(): AccountRepository {
     save: vi.fn(),
     findById: vi.fn(),
     findByCredentialId: vi.fn(),
+    findByStarknetAddress: vi.fn(),
     findByUsername: vi.fn(),
     existsByUsername: vi.fn(),
     delete: vi.fn(),

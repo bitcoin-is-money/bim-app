@@ -52,18 +52,22 @@ export class ReceiveService {
       case 'starknet':
         return {
           network: 'starknet',
-          ...this.receiveStarknet(input.destinationAddress, input.amount, input.tokenAddress, input.useUriPrefix)};
-      case 'lightning':
+          ...this.receiveStarknet(input.destinationAddress, input.amount, input.tokenAddress, input.useUriPrefix, input.description)};
+      case 'lightning': {
+        const description = input.description || 'Received';
         return {
           network: 'lightning',
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          ...(await this.receiveLightning(input.destinationAddress, input.amount!, input.accountId, input.description))};
-      case 'bitcoin':
+          ...(await this.receiveLightning(input.destinationAddress, input.amount!, input.accountId, description))};
+      }
+      case 'bitcoin': {
+        const description = input.description || 'Received';
         return {
           network: 'bitcoin',
           status: 'pending_commit' as const,
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          ...(await this.prepareBitcoinReceive(input.destinationAddress, input.amount!, input.accountId, input.description))};
+          ...(await this.prepareBitcoinReceive(input.destinationAddress, input.amount!, input.accountId, description))};
+      }
     }
   }
 
@@ -71,13 +75,22 @@ export class ReceiveService {
   // Starknet — generate starknet: URI
   // ===========================================================================
 
-  private receiveStarknet(address: StarknetAddress, amount?: Amount, tokenAddress?: string, useUriPrefix = true) {
+  private receiveStarknet(address: StarknetAddress, amount?: Amount, tokenAddress?: string, useUriPrefix = true, description?: string) {
     const token = tokenAddress ?? this.deps.starknetConfig.wbtcTokenAddress;
     const prefix = useUriPrefix ? 'starknet:' : '';
 
     let uri = `${prefix}${address}`;
+    const params = new URLSearchParams();
     if (amount?.isPositive()) {
-      uri += `?amount=${amount.toSatString()}&token=${token}`;
+      params.set('amount', amount.toSatString());
+      params.set('token', token);
+    }
+    if (description) {
+      params.set('description', description);
+    }
+    const qs = params.toString();
+    if (qs) {
+      uri += `?${qs}`;
     }
 
     return {address, uri};

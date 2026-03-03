@@ -125,14 +125,28 @@ export function createPayRoutes(appContext: AppContext): AuthenticatedHono {
         signature,
       });
 
-      // 5. Save description if provided
+      // 5. Save description for sender
       await payService.savePaymentResult({
         txHash,
         accountId: build.accountId,
         description: build.description,
       });
 
-      // 6. Build response from cached prepared calls
+      // 6. For Starknet transfers, also save description for recipient (if they're a BIM user)
+      if (build.preparedCalls.network === 'starknet') {
+        const recipientAccount = await appContext.repositories.account.findByStarknetAddress(
+          build.preparedCalls.recipientAddress,
+        );
+        if (recipientAccount) {
+          await payService.savePaymentResult({
+            txHash,
+            accountId: recipientAccount.id,
+            description: build.description,
+          });
+        }
+      }
+
+      // 7. Build response from cached prepared calls
       const result = buildPaymentResult(txHash, build.preparedCalls);
 
       return honoCtx.json<PaymentResultResponse>(serializePaymentResult(result));

@@ -1,4 +1,4 @@
-import type {Account, AccountId, CredentialId} from '../account';
+import type {Account, AccountId, CredentialId, StarknetAddress} from '../account';
 
 /**
  * Repository interface for Account persistence.
@@ -23,6 +23,11 @@ export interface AccountRepository {
    * Finds an account by credential ID.
    */
   findByCredentialId(credentialId: CredentialId): Promise<Account | undefined>;
+
+  /**
+   * Finds an account by its Starknet address.
+   */
+  findByStarknetAddress(address: StarknetAddress): Promise<Account | undefined>;
 
   /**
    * Checks if a username already exists.

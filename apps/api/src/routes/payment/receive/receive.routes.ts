@@ -48,8 +48,7 @@ export function createReceiveRoutes(appContext: AppContext): AuthenticatedHono {
         ? Amount.ofSatoshi(BigInt(input.amount))
         : undefined;
       const tokenAddress = input.tokenAddress;
-      // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- empty description should fallback
-      const description = input.description || 'Received';
+      const description = input.description?.trim();
 
       const result = await receiveService.receive({
         network: input.network,
@@ -192,7 +191,7 @@ export function createReceiveRoutes(appContext: AppContext): AuthenticatedHono {
         swapId: build.swapId,
         destinationAddress: starknetAddress,
         amount: build.amount,
-        description: build.description,
+        description: build.description || 'Received',
         accountId: build.accountId,
         useUriPrefix: build.useUriPrefix,
       });
