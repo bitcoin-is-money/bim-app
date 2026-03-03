@@ -41,10 +41,7 @@ export class NotificationService {
     this.show(data, {
       ...DEFAULT_OPTIONS,
       ...options,
-      style: {
-        '--hot-toast-bg': '#67cc35',
-        '--hot-toast-color': '#151515',
-      },
+      className: 'hot-toast-success',
     });
     if (data.useConfetti) {
       void confetti({
@@ -62,10 +59,7 @@ export class NotificationService {
     this.show(data, {
       ...DEFAULT_ERROR_OPTIONS,
       ...options,
-      style: {
-        '--hot-toast-bg': '#c83030',
-        '--hot-toast-color': '#ffffff',
-      },
+      className: 'hot-toast-error',
     });
   }
 
@@ -76,13 +70,8 @@ export class NotificationService {
     this.show(data, {
       ...DEFAULT_OPTIONS,
       ...options,
-      style: {
-        '--hot-toast-bg': '#fff',
-        '--hot-toast-color': '#151515',
-      },
+      className: 'hot-toast-info',
     });
-
-    //icon: "fas qrcode"
   }
 
   show(
