@@ -284,64 +284,6 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     }
   }
 
-  async createBitcoinToStarknetSwap(params: {
-    amountSats: bigint;
-    destinationAddress: StarknetAddress;
-  }): Promise<AtomiqSwapResult> {
-    const direction: SwapDirection = 'bitcoin_to_starknet';
-    this.log.debug({
-      amountSats: params.amountSats.toString(),
-      destination: params.destinationAddress.toString()
-    }, `Creating ${direction} swap`);
-    await this.ensureInitialized();
-
-    try {
-      const swapToken = this.getSwapToken();
-
-      // Force escrow-based swap (FromBTCSwap) instead of SPV vault swap,
-      // because SPV vault swaps use a PSBT-based flow with no deposit address,
-      // which is incompatible with BIM's "show QR code" receive flow.
-      const exactOut = false; // i.e. exactIn = true
-      const swap: FromBTCSwap<StarknetChainType> = await this.swapper!.createFromBTCSwap(
-        'STARKNET',
-        params.destinationAddress.toString(),
-        swapToken.address,
-        params.amountSats,
-        exactOut,
-      );
-
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive: SDK may return null at runtime
-      if (!swap) {
-        throw new Error('SDK returned null swap object');
-      }
-
-      const swapId = swap.getId();
-      const depositAddress = swap.getAddress();
-      const bip21Uri = `bitcoin:${depositAddress}?amount=${Number(params.amountSats) / 100000000}`;
-
-      const quoteExpiry: any = swap.getQuoteExpiry();
-      this.logSwapExpiry(swapId, quoteExpiry, direction);
-
-      this.log.info({
-        swapId,
-        amountSats: params.amountSats.toString()
-      }, `${direction} swap created`);
-      return {
-        swapId,
-        depositAddress,
-        bip21Uri,
-        expiresAt: new Date(quoteExpiry),
-      };
-    } catch (error) {
-      throw new ExternalServiceError(
-        'Atomiq',
-        `Failed to create ${direction} swap: ${error instanceof Error
-          ? error.message
-          : String(error)}`,
-      );
-    }
-  }
-
   async prepareBitcoinToStarknetSwap(params: {
     amountSats: bigint;
     destinationAddress: StarknetAddress;

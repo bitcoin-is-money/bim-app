@@ -41,19 +41,6 @@ export interface CreateLightningToStarknetOutput {
 // Input/Output Types - Bitcoin → Starknet
 // =============================================================================
 
-export interface CreateBitcoinToStarknetInput {
-  amount: Amount;
-  destinationAddress: string;
-  description: string;
-  accountId: string;
-}
-
-export interface CreateBitcoinToStarknetOutput {
-  swap: Swap;
-  depositAddress: string;
-  bip21Uri: string;
-}
-
 export interface PrepareBitcoinToStarknetInput {
   amount: Amount;
   destinationAddress: string;
@@ -212,56 +199,6 @@ export class SwapService {
       amountSats: input.amount.toSatString()
     }, 'Lightning-to-Starknet swap created');
     return {swap, invoice: atomiqSwap.invoice};
-  }
-
-  /**
-   * Creates a Bitcoin → Starknet swap.
-   * User sends BTC to a deposit address, receives tokens on Starknet.
-   *
-   * @throws SwapAmountError if amount is outside limits
-   * @throws SwapCreationError if deposit address generation fails
-   */
-  async createBitcoinToStarknet(
-    input: CreateBitcoinToStarknetInput,
-  ): Promise<CreateBitcoinToStarknetOutput> {
-    this.log.debug({input}, 'Creating Bitcoin-to-Starknet swap');
-    const destinationAddress = StarknetAddress.of(input.destinationAddress);
-
-    // Validate amount against limits
-    const limits = await this.deps.atomiqGateway.getBitcoinToStarknetLimits();
-    this.validateAmountAgainstLimits(input.amount, limits);
-
-    // Create swap via Atomiq (port uses bigint)
-    const atomiqSwap = await this.deps.atomiqGateway.createBitcoinToStarknetSwap({
-      amountSats: input.amount.getSat(),
-      destinationAddress,
-    });
-
-    if (!atomiqSwap.depositAddress) {
-      throw new SwapCreationError('Failed to generate Bitcoin deposit address');
-    }
-
-    const swap = Swap.createBitcoinToStarknet({
-      id: SwapId.of(atomiqSwap.swapId),
-      amount: input.amount,
-      destinationAddress,
-      depositAddress: atomiqSwap.depositAddress,
-      expiresAt: atomiqSwap.expiresAt,
-      description: input.description,
-      accountId: input.accountId,
-    });
-
-    await this.deps.swapRepository.save(swap);
-
-    this.log.info({
-        swapId: atomiqSwap.swapId,
-        amountSats: input.amount.toSatString()
-      },'Bitcoin-to-Starknet swap created');
-    return {
-      swap,
-      depositAddress: atomiqSwap.depositAddress,
-      bip21Uri: atomiqSwap.bip21Uri ?? `bitcoin:${atomiqSwap.depositAddress}`,
-    };
   }
 
   /**

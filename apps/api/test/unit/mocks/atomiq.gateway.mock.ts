@@ -44,21 +44,6 @@ export class AtomiqGatewayMock implements AtomiqGateway {
     return {swapId, invoice, expiresAt};
   }
 
-  async createBitcoinToStarknetSwap(params: {
-    amountSats: bigint;
-    destinationAddress: StarknetAddress;
-  }): Promise<AtomiqSwapResult> {
-    const swapId = crypto.randomUUID();
-    const expiresAt = new Date(Date.now() + 3 * 60 * 60 * 1000);
-    const hex = swapId.replaceAll('-', '');
-    const depositAddress = `tb1q${hex}${hex}`.slice(0, 42);
-    const bip21Uri = `bitcoin:${depositAddress}?amount=${Number(params.amountSats) / 100000000}`;
-
-    this.knownSwapIds.add(swapId);
-
-    return {swapId, depositAddress, bip21Uri, expiresAt};
-  }
-
   async createStarknetToLightningSwap(params: {
     invoice: LightningInvoice;
     sourceAddress: StarknetAddress;
