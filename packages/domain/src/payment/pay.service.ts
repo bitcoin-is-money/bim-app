@@ -52,14 +52,29 @@ export class PayService {
   /**
    * Parse payment data and calculate the applicable fee.
    *
-   * BIM fee is applied only to Starknet direct transfers.
-   * Lightning and Bitcoin swaps have no BIM fee (swap fees are handled by Atomiq).
+   * - Starknet direct transfers: BIM fee (configured percentage).
+   * - Lightning/Bitcoin swaps: estimated fee from Atomiq intermediary rates.
    */
-  prepare(paymentPayload: string): PreparedPayment {
+  async prepare(paymentPayload: string): Promise<PreparedPayment> {
     const parsed = this.deps.parseService.parse(paymentPayload);
-    const fee = parsed.network === 'starknet'
-      ? FeeCalculator.calculateFee(parsed.amount, this.deps.feeConfig.percentage)
-      : Amount.zero();
+
+    let fee: Amount;
+    switch (parsed.network) {
+      case 'starknet':
+        fee = FeeCalculator.calculateFee(parsed.amount, this.deps.feeConfig.percentage);
+        break;
+      case 'lightning': {
+        const limits = await this.deps.swapService.fetchLimits({direction: 'starknet_to_lightning'});
+        fee = FeeCalculator.calculateFee(parsed.amount, limits.limits.feePercent / 100);
+        break;
+      }
+      case 'bitcoin': {
+        const limits = await this.deps.swapService.fetchLimits({direction: 'starknet_to_bitcoin'});
+        fee = FeeCalculator.calculateFee(parsed.amount, limits.limits.feePercent / 100);
+        break;
+      }
+    }
+
     return {...parsed, fee};
   }
 
