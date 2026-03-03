@@ -38,6 +38,7 @@ export namespace TestApp {
     const {app} = await createApp({
       skipStaticFiles: true,
       skipMonitor: true,
+      skipRateLimit: true,
       config: {logLevel: 'silent'},
       ...options,
     });
@@ -54,6 +55,7 @@ export namespace TestApp {
     return createApp({
       skipStaticFiles: true,
       skipMonitor: true,
+      skipRateLimit: true,
       config: {logLevel: 'info'},
       ...options,
     });
@@ -68,6 +70,7 @@ export namespace TestApp {
     DatabaseConnection.reset();
     return createApp({
       skipStaticFiles: true,
+      skipRateLimit: true,
       config: {logLevel: 'silent'},
       ...options,
     });

@@ -19,6 +19,7 @@ export namespace TestnetApp {
     const {app} = await createApp({
       skipStaticFiles: true,
       skipMonitor: true,
+      skipRateLimit: true,
       config: {logLevel: 'silent'},
       ...options,
     });
