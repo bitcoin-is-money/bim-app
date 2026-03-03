@@ -61,6 +61,20 @@ export class AmountFieldComponent {
     return sanitized;
   };
 
+  onFocus(event: FocusEvent): void {
+    if (!(event.target instanceof HTMLInputElement)) {
+      // Ignore when clicking on the change currency button, icon...
+      return;
+    }
+    this.editing = true;
+    const displayAmount = this.currencyService.convert(this.amount(), this.displayCurrency());
+    if (displayAmount.value === 0) {
+      this.displayValue.set('');
+    } else {
+      this.displayValue.set(displayAmount.format('en-US').replaceAll(',', ''));
+    }
+  }
+
   onValueChange(value: string): void {
     this.editing = true;
     const parsed = Number.parseFloat(value);
