@@ -11,3 +11,16 @@
 .hot-toast-close-btn {
   //margin-top: 5px;
 }
+
+.hot-toast-bar-base.hot-toast-success {
+  --hot-toast-bg: #67cc35;
+  --hot-toast-color: #151515;
+}
+.hot-toast-bar-base.hot-toast-error {
+  --hot-toast-bg: #c83030;
+  --hot-toast-color: #ffffff;
+}
+.hot-toast-bar-base.hot-toast-info {
+  --hot-toast-bg: #fff;
+  --hot-toast-color: #151515;
+}
