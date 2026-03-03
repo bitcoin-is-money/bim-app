@@ -16,6 +16,8 @@ export interface MockUserProfile {
   hasTransactions: boolean;
   balance: string; // raw WBTC amount (8 decimals), e.g. "125050000" = 1.2505 BTC
   paymentParseResult: ParsePaymentResponse | null; // null = 400 error on parse
+  /** Real LP fee returned by /build (null = same as parse fee) */
+  paymentBuildFee: { value: number; currency: 'SAT' } | null;
   paymentExecuteSuccess: boolean;
   receiveInvoiceSuccess: boolean;
   /** Existing swaps for this user (preloaded in localStorage on login) */
@@ -46,6 +48,7 @@ export const MOCK_USERS: [MockUserProfile, ...MockUserProfile[]] = [
       address: '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d',
       tokenAddress: '0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac',
     },
+    paymentBuildFee: null, // Starknet: same fee as parse
     existingSwaps: [],
     swapConfig: {statusProgression: ['pending', 'paid', 'confirming', 'completed']},
     language: 'en',
@@ -64,11 +67,12 @@ export const MOCK_USERS: [MockUserProfile, ...MockUserProfile[]] = [
     paymentParseResult: {
       network: 'lightning',
       amount: {value: 500_000, currency: 'SAT'}, // 0.005 BTC
-      fee: {value: 0, currency: 'SAT'}, // no BIM fee on Lightning swaps
+      fee: {value: 3, currency: 'SAT'}, // estimated percentage fee from parse
       description: 'Lightning coffee payment',
       invoice: 'lnbc5m1pnxk7aasp5fake0invoice0for0testing0purposes0only0mock0data0qqqqqqqqqqqqqqqq',
       expiresAt: new Date(Date.now() + 3_600_000).toISOString(),
     },
+    paymentBuildFee: {value: 24, currency: 'SAT'}, // real LP fee from build
     existingSwaps: [
       {id: 'swap-bob-completed', type: 'receive', direction: 'lightning_to_starknet', amountSats: 100000, createdAt: new Date(Date.now() - 86400000).toISOString(), lastKnownStatus: 'completed'},
       {id: 'swap-bob-confirming', type: 'send', direction: 'starknet_to_lightning', amountSats: 50000, createdAt: new Date(Date.now() - 3600000).toISOString(), lastKnownStatus: 'confirming'},
@@ -94,10 +98,11 @@ export const MOCK_USERS: [MockUserProfile, ...MockUserProfile[]] = [
     paymentParseResult: {
       network: 'bitcoin',
       amount: {value: 10_000, currency: 'SAT'}, // 0.1 BTC
-      fee: {value: 0, currency: 'SAT'}, // no BIM fee on Bitcoin swaps
+      fee: {value: 5, currency: 'SAT'}, // estimated percentage fee from parse
       description: 'Bitcoin on-chain transfer',
       address: 'bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4',
     },
+    paymentBuildFee: {value: 42, currency: 'SAT'}, // real LP fee from build
     existingSwaps: [],
     swapConfig: {statusProgression: ['pending', 'paid', 'confirming', 'completed']},
     language: 'en',
@@ -121,6 +126,7 @@ export const MOCK_USERS: [MockUserProfile, ...MockUserProfile[]] = [
       address: '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d',
       tokenAddress: '0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac',
     },
+    paymentBuildFee: null,
     existingSwaps: [],
     swapConfig: {statusProgression: ['pending', 'paid', 'confirming', 'completed']},
     language: 'en',
@@ -144,6 +150,7 @@ export const MOCK_USERS: [MockUserProfile, ...MockUserProfile[]] = [
       address: '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d',
       tokenAddress: '0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac',
     },
+    paymentBuildFee: null,
     existingSwaps: [],
     swapConfig: {statusProgression: ['pending', 'failed']},
     language: 'fr',
@@ -167,6 +174,7 @@ export const MOCK_USERS: [MockUserProfile, ...MockUserProfile[]] = [
       address: '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d',
       tokenAddress: '0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac',
     },
+    paymentBuildFee: null,
     existingSwaps: [],
     swapConfig: {statusProgression: ['pending', 'expired']},
     language: 'fr',

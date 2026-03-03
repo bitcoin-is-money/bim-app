@@ -33,15 +33,18 @@ export class PayConfirmPage {
 
   payment = this.paymentService.parsedPayment;
   readonly isLoading = this.paymentService.isLoading;
+  readonly isBuilding = this.paymentService.isBuilding;
   description = signal('');
 
   computedFee = computed((): Amount | undefined => {
+    if (this.isBuilding()) return undefined;
     const p = this.payment();
     if (!p) return undefined;
     return this.currencyService.convert(p.fee, this.currencyService.currentCurrency());
   });
 
   paymentAvailable = computed((): boolean => {
+    if (this.isBuilding()) return false;
     const balance = this.accountService.balance();
     const p = this.payment();
     if (!balance || !p) {
