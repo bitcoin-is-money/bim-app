@@ -616,6 +616,18 @@ export class AtomiqSdkGateway implements AtomiqGateway {
 
     try {
       const swap = await this.getSwapObject(swapId);
+
+      // Force the SDK to check on-chain state before reading.
+      // This can recover a swap from QUOTE_SOFT_EXPIRED (-1) to COMMITED (1)
+      // when the commit transaction was submitted externally (via AVNU paymaster).
+      if (typeof swap._sync === 'function') {
+        try {
+          await swap._sync(true);
+        } catch (syncErr) {
+          this.log.warn({swapId, error: String(syncErr)}, 'SDK _sync() failed, reading state as-is');
+        }
+      }
+
       const state = swap.getState();
 
       const {isPaid, isCompleted, isFailed, isExpired} = this.mapStateToStatus(state, direction);
@@ -662,6 +674,16 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     isExpired: boolean;
   } {
     if (state < 0) {
+      // QUOTE_SOFT_EXPIRED (-1): The LP authorization expired, but an on-chain
+      // commit may still be pending confirmation. For reverse swaps (Starknet →
+      // Lightning/Bitcoin), BIM submits the commit externally via AVNU paymaster,
+      // so the SDK doesn't know about it until _sync() detects it on-chain.
+      // Treat -1 as "still pending" for reverse swaps to avoid premature expiration.
+      const isReverseSwap = direction === 'starknet_to_lightning' || direction === 'starknet_to_bitcoin';
+      if (state === -1 && isReverseSwap) {
+        return {isPaid: false, isCompleted: false, isFailed: false, isExpired: false};
+      }
+
       return {
         isPaid: false,
         isCompleted: false,
