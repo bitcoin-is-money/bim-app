@@ -4,10 +4,12 @@ import {inject, Injectable} from '@angular/core';
 import type { Subscription} from 'rxjs';
 import {catchError, filter, interval, of, switchMap, takeWhile, tap} from 'rxjs';
 import {isTerminalStatus, type StoredSwap, type SwapStatus} from '../model';
+import {AccountService} from './account.service';
 import {I18nService} from './i18n.service';
 import {NotificationService} from './notification.service';
 import {SwapHttpService} from './swap.http.service';
 import {SwapStorageService} from './swap-storage.service';
+import {TransactionService} from './transaction.service';
 
 const POLL_INTERVAL_MS = 5000;
 const POLL_DURATION_MS = 5 * 60 * 1000;
@@ -27,6 +29,8 @@ export class SwapPollingService implements OnDestroy {
   private readonly httpService = inject(SwapHttpService);
   private readonly storageService = inject(SwapStorageService);
   private readonly notificationService = inject(NotificationService);
+  private readonly accountService = inject(AccountService);
+  private readonly transactionService = inject(TransactionService);
   private readonly i18n = inject(I18nService);
 
   private readonly activePolls = new Map<string, ActivePoll>();
@@ -83,6 +87,11 @@ export class SwapPollingService implements OnDestroy {
 
           if (previousStatus && previousStatus !== newStatus) {
             this.showStatusNotification(storedSwap, newStatus);
+          }
+
+          if (newStatus === 'completed') {
+            this.accountService.loadBalance();
+            this.transactionService.loadFirst();
           }
 
           if (isTerminalStatus(newStatus)) {
