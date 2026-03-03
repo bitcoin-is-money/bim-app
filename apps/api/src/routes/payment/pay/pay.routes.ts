@@ -57,18 +57,21 @@ export function createPayRoutes(appContext: AppContext): AuthenticatedHono {
         return createErrorResponse(honoCtx, 400, ErrorCode.ACCOUNT_NOT_DEPLOYED, 'Account not deployed');
       }
 
-      // 1. Prepare calls (parse + create swap if needed)
+      // 1. Parse first to extract invoice description (for fallback)
+      const prepared = await payService.prepare(input.paymentPayload);
+
+      // 2. Prepare calls (parse + create swap if needed)
       // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- empty description should fallback
-      const description = input.description || 'Sent';
+      const description = input.description || prepared.description || 'Sent';
       const preparedCalls = await payService.prepareCalls(input.paymentPayload, senderAddress, account.id, description);
 
-      // 2. Build typed data via AVNU paymaster
+      // 3. Build typed data via AVNU paymaster
       const {typedData, messageHash} = await appContext.gateways.starknet.buildCalls({
         senderAddress,
         calls: preparedCalls.calls,
       });
 
-      // 3. Cache for execute step
+      // 4. Cache for execute step
       const buildId = randomUUID();
       buildCache.set(buildId, {
         preparedCalls,
@@ -78,9 +81,6 @@ export function createPayRoutes(appContext: AppContext): AuthenticatedHono {
         description,
         createdAt: Date.now(),
       });
-
-      // 4. Return challenge + payment info for display
-      const prepared = await payService.prepare(input.paymentPayload);
 
       const response: BuildPaymentResponse = {
         buildId,
