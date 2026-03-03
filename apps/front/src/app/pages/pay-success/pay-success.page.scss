@@ -12,6 +12,11 @@
     font-size: 5rem;
   }
 
+  .progress-icon {
+    color: var(--color-orange, #f59e0b);
+    font-size: 5rem;
+  }
+
   .success-text {
     @apply text-2xl font-semibold text-white;
   }

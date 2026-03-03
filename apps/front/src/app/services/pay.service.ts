@@ -3,7 +3,7 @@ import {Router} from '@angular/router';
 import {Base64Url} from '@bim/lib/encoding';
 import {firstValueFrom} from 'rxjs';
 import {ParsedPayment, type StoredSwap} from '../model';
-import {type ExecutePaymentResponse, PayHttpService} from './pay.http.service';
+import {type ExecutePaymentResponse, type PaymentNetwork, PayHttpService} from './pay.http.service';
 import {SwapPollingService} from './swap-polling.service';
 import {SwapStorageService} from './swap-storage.service';
 
@@ -19,6 +19,9 @@ export class PayService {
   parsedPayment = signal<ParsedPayment | null>(null);
   isLoading = signal(false);
   isProcessing = signal(false);
+
+  /** Network of the last executed payment (used by success page to distinguish instant vs swap). */
+  lastPaymentNetwork = signal<PaymentNetwork | null>(null);
 
   /** Original payment payload (invoice, BIP21 URI, Starknet URI, or raw address) kept for the execute call. */
   private rawData: string | null = null;
@@ -109,6 +112,7 @@ export class PayService {
     this.parsedPayment.set(null);
     this.rawData = null;
     this.description = null;
+    this.lastPaymentNetwork.set(response.network);
 
     if (response.network !== 'starknet' && 'swapId' in response) {
       const swap: StoredSwap = {

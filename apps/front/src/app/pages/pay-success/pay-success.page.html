@@ -1,8 +1,13 @@
 <app-full-page-layout [showFooter]="true">
   <div class="pay-success-page">
     <main class="pay-success-main">
-      <fa-icon class="success-icon" [icon]="['fas', 'circle-check']"></fa-icon>
-      <h1 class="success-text">{{ 'paySuccess.title' | translate }}</h1>
+      @if (isSwap()) {
+        <fa-icon class="progress-icon" [icon]="['fas', 'clock']"></fa-icon>
+        <h1 class="success-text">{{ 'paySuccess.inProgress' | translate }}</h1>
+      } @else {
+        <fa-icon class="success-icon" [icon]="['fas', 'circle-check']"></fa-icon>
+        <h1 class="success-text">{{ 'paySuccess.title' | translate }}</h1>
+      }
     </main>
   </div>
 </app-full-page-layout>
