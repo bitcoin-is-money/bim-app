@@ -35,6 +35,7 @@ describe('Bitcoin Receive Swap Lifecycle', () => {
 
   // Per-test state
   let sessionCookie: string;
+  let accountId: string;
 
   const STARKNET_ADDRESS = '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
 
@@ -63,6 +64,7 @@ describe('Bitcoin Receive Swap Lifecycle', () => {
       status: 'deployed',
       starknetAddress: STARKNET_ADDRESS,
     });
+    accountId = account.id;
     const session = await authFixture.insertSession(account.id);
     sessionCookie = `session=${session.id}`;
   });
@@ -106,9 +108,9 @@ describe('Bitcoin Receive Swap Lifecycle', () => {
 
     // Insert directly into DB
     await pool.query(
-      `INSERT INTO bim_swaps (id, direction, amount_sats, destination_address, deposit_address, status, expires_at, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
-      [swapId, 'bitcoin_to_starknet', amount, STARKNET_ADDRESS.toLowerCase(), depositAddress, 'pending', new Date(Date.now() + 3 * 60 * 60 * 1000)],
+      `INSERT INTO bim_swaps (id, direction, amount_sats, destination_address, deposit_address, description, account_id, status, expires_at, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())`,
+      [swapId, 'bitcoin_to_starknet', amount, STARKNET_ADDRESS.toLowerCase(), depositAddress, 'Received', accountId, 'pending', new Date(Date.now() + 3 * 60 * 60 * 1000)],
     );
 
     return {swapId, depositAddress};

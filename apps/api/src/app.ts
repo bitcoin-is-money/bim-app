@@ -26,6 +26,7 @@ export interface CreateAppOptions {
   context?: AppContextOverrides;
   skipStaticFiles?: boolean;
   skipMonitor?: boolean;
+  skipRateLimit?: boolean;
 }
 
 export interface AppInstance {
@@ -70,9 +71,11 @@ export async function createApp(options: CreateAppOptions = {}): Promise<AppInst
   );
 
   // Rate limiting
-  app.use('/api/*', createGlobalRateLimit());
-  app.use('/api/auth/*', createAuthRateLimit());
-  app.use('/api/payment/pay/execute', createPaymentExecuteRateLimit());
+  if (!options.skipRateLimit) {
+    app.use('/api/*', createGlobalRateLimit());
+    app.use('/api/auth/*', createAuthRateLimit());
+    app.use('/api/payment/pay/execute', createPaymentExecuteRateLimit());
+  }
 
   // API routes
   app.route('/api/account', createAccountRoutes(context));
