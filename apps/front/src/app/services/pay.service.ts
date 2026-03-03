@@ -3,7 +3,7 @@ import {Router} from '@angular/router';
 import {Base64Url} from '@bim/lib/encoding';
 import {firstValueFrom} from 'rxjs';
 import {ParsedPayment, type StoredSwap} from '../model';
-import {type ExecutePaymentResponse, type PaymentNetwork, PayHttpService} from './pay.http.service';
+import {type BuildPaymentResponse, type ExecutePaymentResponse, type PaymentNetwork, PayHttpService} from './pay.http.service';
 import {SwapPollingService} from './swap-polling.service';
 import {SwapStorageService} from './swap-storage.service';
 
@@ -26,13 +26,16 @@ export class PayService {
   /** Original payment payload (invoice, BIP21 URI, Starknet URI, or raw address) kept for the execute call. */
   private rawData: string | null = null;
   private description: string | null = null;
+  private cachedBuild: BuildPaymentResponse | null = null;
 
   parseAndNavigate(data: string): void {
     this.isLoading.set(true);
     this.rawData = data;
-    this.httpService.parse(data).subscribe({
-      next: (response) => {
-        const payment = ParsedPayment.fromResponse(response);
+    this.cachedBuild = null;
+    this.httpService.build(data).subscribe({
+      next: (buildResponse) => {
+        this.cachedBuild = buildResponse;
+        const payment = ParsedPayment.fromResponse(buildResponse.payment);
         this.parsedPayment.set(payment);
         this.description = payment.description || null;
         this.isLoading.set(false);
@@ -45,12 +48,16 @@ export class PayService {
   }
 
   setDescription(value: string): void {
-    this.description = value || null;
+    const newDescription = value || null;
+    if (newDescription !== this.description) {
+      this.description = newDescription;
+      this.cachedBuild = null;
+    }
   }
 
   /**
-   * Executes a payment using the 3-step SNIP-29 WebAuthn flow:
-   * 1. Build: backend prepares calls + typed data, returns challenge
+   * Executes a payment using the WebAuthn flow:
+   * 1. Build (if not cached): backend prepares calls + typed data, returns challenge
    * 2. Sign: user approves with biometrics (WebAuthn assertion)
    * 3. Execute: backend verifies signature + submits transaction
    */
@@ -59,10 +66,9 @@ export class PayService {
     this.isProcessing.set(true);
 
     try {
-      // 1. Build (get challenge from backend)
-      const buildResponse = await firstValueFrom(
-        this.httpService.build(this.rawData, this.description ?? undefined),
-      );
+      // 1. Use cached build or re-build (if description changed)
+      const buildResponse = this.cachedBuild
+        ?? await firstValueFrom(this.httpService.build(this.rawData, this.description ?? undefined));
 
       // 2. WebAuthn sign (user approves with biometrics)
       const challenge = hexToBytes(buildResponse.messageHash).buffer as ArrayBuffer;
@@ -112,6 +118,7 @@ export class PayService {
     this.parsedPayment.set(null);
     this.rawData = null;
     this.description = null;
+    this.cachedBuild = null;
     this.lastPaymentNetwork.set(response.network);
 
     if (response.network !== 'starknet' && 'swapId' in response) {
