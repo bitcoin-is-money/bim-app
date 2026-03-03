@@ -25,6 +25,7 @@ import type {SwapDirection, SwapLimits} from '@bim/domain/swap';
 export class AtomiqGatewayMock implements AtomiqGateway {
   private readonly mockStatuses = new Map<string, Partial<AtomiqSwapStatus>>();
   private readonly knownSwapIds = new Set<string>();
+  private reverseSwapAmountSats: bigint | null = null;
 
   // ===========================================================================
   // Swap Creation
@@ -50,7 +51,7 @@ export class AtomiqGatewayMock implements AtomiqGateway {
   }): Promise<AtomiqReverseSwapResult> {
     const swapId = crypto.randomUUID();
     const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
-    const amountSats = 100000n;
+    const amountSats = this.reverseSwapAmountSats ?? 100000n;
 
     this.knownSwapIds.add(swapId);
 
@@ -213,6 +214,11 @@ export class AtomiqGatewayMock implements AtomiqGateway {
   clearSwaps(): void {
     this.knownSwapIds.clear();
     this.mockStatuses.clear();
+    this.reverseSwapAmountSats = null;
+  }
+
+  setReverseSwapAmountSats(amount: bigint): void {
+    this.reverseSwapAmountSats = amount;
   }
 
   setSwapStatus(swapId: string, status: Partial<AtomiqSwapStatus>): void {

@@ -82,6 +82,12 @@ export function createPayRoutes(appContext: AppContext): AuthenticatedHono {
         createdAt: Date.now(),
       });
 
+      // 5. For swap networks, use the real LP-quoted fee instead of the estimated percentage.
+      // The LP total (preparedCalls.amount) includes both the percentage fee and a base/routing fee.
+      if (preparedCalls.network === 'lightning' || preparedCalls.network === 'bitcoin') {
+        prepared.fee = preparedCalls.amount.subtract(prepared.amount);
+      }
+
       const response: BuildPaymentResponse = {
         buildId,
         messageHash,

@@ -53,6 +53,8 @@ describe('Pay Lightning — invoice description propagation', () => {
   beforeEach(async () => {
     await TestDatabase.reset(pool);
     atomiqMock.clearSwaps();
+    // BOLT11 test invoice is 250,000 sats; LP total must be >= invoice amount
+    atomiqMock.setReverseSwapAmountSats(251250n);
 
     const account = await accountFixture.insertAccount({
       status: 'deployed',
