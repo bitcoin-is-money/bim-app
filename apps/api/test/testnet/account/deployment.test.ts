@@ -69,7 +69,7 @@ describe('Deployment Flow (Testnet)', () => {
   });
 
   describe('POST /api/account/deploy', () => {
-    it('deploys account to Starknet Sepolia via AVNU paymaster', async () => {
+    it('deploys account to Starknet Sepolia via AVNU paymaster', async ({skip}) => {
       const username = 'tn_deploy_test';
       const {sessionCookie, account} = await register(username);
 
@@ -82,6 +82,9 @@ describe('Deployment Flow (Testnet)', () => {
         .request(app)
         .post('/api/account/deploy', {}, {headers: {Cookie: sessionCookie}});
 
+      if (deployResponse.status === 502) {
+        skip('External service unavailable (AVNU Paymaster)');
+      }
       if (deployResponse.status !== 200) {
         const errorBody = await deployResponse.text();
         throw new Error(
