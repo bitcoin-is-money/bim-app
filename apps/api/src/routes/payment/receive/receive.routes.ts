@@ -26,7 +26,7 @@ export function createReceiveRoutes(appContext: AppContext): AuthenticatedHono {
   const signatureProcessor = new WebAuthnSignatureProcessor({
     origin: appContext.webauthn.origin,
     rpId: appContext.webauthn.rpId,
-  });
+  }, log);
 
   // ---------------------------------------------------------------------------
   // Create receive request

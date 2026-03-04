@@ -24,7 +24,7 @@ export function createPayRoutes(appContext: AppContext): AuthenticatedHono {
   const signatureProcessor = new WebAuthnSignatureProcessor({
     origin: appContext.webauthn.origin,
     rpId: appContext.webauthn.rpId,
-  });
+  }, log);
 
   // ---------------------------------------------------------------------------
   // Parse + prepare payment (returns parsed data + fee)
