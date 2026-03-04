@@ -1,4 +1,6 @@
 import {computed, inject, Injectable, signal} from '@angular/core';
+import type {Observable} from 'rxjs';
+import {map, tap} from 'rxjs';
 import {TransactionHttpService} from './transaction.http.service';
 import type {Transaction} from './transaction.http.service';
 import {CurrencyService} from './currency.service';
@@ -75,6 +77,19 @@ export class TransactionService {
     this._transactions.set(undefined);
     this._hasMore.set(true);
     this.loadNext();
+  }
+
+  refresh(): Observable<void> {
+    this.offset = 0;
+    this._hasMore.set(true);
+    return this.httpService.getTransactions(PAGE_SIZE, 0).pipe(
+      tap((response) => {
+        this._transactions.set(response.transactions);
+        this.offset = response.transactions.length;
+        this._hasMore.set(this.offset < response.total);
+      }),
+      map(() => undefined),
+    );
   }
 
   loadMore(): void {
