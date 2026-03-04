@@ -218,7 +218,7 @@ describe('PayService', () => {
 
       service = new PayService({
         parseService: mockParseService,
-        erc20CallFactory: new Erc20CallFactory({percentage: 0, recipientAddress: TREASURY_ADDRESS}),
+        erc20CallFactory: new Erc20CallFactory(feeConfig),
         starknetGateway: {} as unknown as StarknetGateway,
         swapService: mockSwapService,
         transactionRepository: createMockTransactionRepository(),
@@ -228,7 +228,7 @@ describe('PayService', () => {
       });
     });
 
-    it('creates swap and returns SDK commit calls', async () => {
+    it('creates swap and returns SDK commit calls with BIM fee call', async () => {
       const result = await service.prepareCalls(VALID_INVOICE, SENDER_ADDRESS, ACCOUNT_ID, 'Sent');
 
       expect(mockSwapService.createStarknetToLightning).toHaveBeenCalledWith({
@@ -241,7 +241,8 @@ describe('PayService', () => {
       expect(result.network).toBe('lightning');
       if (result.network !== 'lightning') return;
 
-      expect(result.calls).toHaveLength(2);
+      // 2 commit calls (approve + initiate) + 1 BIM fee call
+      expect(result.calls).toHaveLength(3);
       expect(result.calls[0]).toEqual({
         contractAddress: '0x0123456789abcdef',
         entrypoint: 'approve',
@@ -252,7 +253,14 @@ describe('PayService', () => {
         entrypoint: 'initiate',
         calldata: ['0x3', '0x4'],
       });
+      // Fee call: 0.1% of 50,000 sats = 50 sats, sent to treasury in WBTC
+      expect(result.calls[2]).toEqual({
+        contractAddress: WBTC_TOKEN_ADDRESS,
+        entrypoint: 'transfer',
+        calldata: [TREASURY_ADDRESS.toString(), '50', '0'],
+      });
       expect(result.amount.getSat()).toBe(50_000n);
+      expect(result.feeAmount.getSat()).toBe(50n);
       expect(result.swapId).toBe(SwapId.of('swap-123'));
       expect(result.invoice).toBe(LightningInvoice.of(VALID_INVOICE));
       expect(result.expiresAt).toBeInstanceOf(Date);
@@ -313,7 +321,7 @@ describe('PayService', () => {
 
       service = new PayService({
         parseService: mockParseService,
-        erc20CallFactory: new Erc20CallFactory({percentage: 0, recipientAddress: TREASURY_ADDRESS}),
+        erc20CallFactory: new Erc20CallFactory(feeConfig),
         starknetGateway: {} as unknown as StarknetGateway,
         swapService: mockSwapService,
         transactionRepository: createMockTransactionRepository(),
@@ -323,7 +331,7 @@ describe('PayService', () => {
       });
     });
 
-    it('creates swap and returns SDK commit calls', async () => {
+    it('creates swap and returns SDK commit calls with BIM fee call', async () => {
       const result = await service.prepareCalls(`bitcoin:${BTC_BECH32}?amount=0.001`, SENDER_ADDRESS, ACCOUNT_ID, 'Sent');
 
       expect(mockSwapService.createStarknetToBitcoin).toHaveBeenCalledWith({
@@ -337,7 +345,8 @@ describe('PayService', () => {
       expect(result.network).toBe('bitcoin');
       if (result.network !== 'bitcoin') return;
 
-      expect(result.calls).toHaveLength(2);
+      // 2 commit calls (approve + initiate) + 1 BIM fee call
+      expect(result.calls).toHaveLength(3);
       expect(result.calls[0]).toEqual({
         contractAddress: '0x0123456789abcdef',
         entrypoint: 'approve',
@@ -348,7 +357,14 @@ describe('PayService', () => {
         entrypoint: 'initiate',
         calldata: ['0x3', '0x4'],
       });
+      // Fee call: 0.1% of 100,000 sats = 100 sats, sent to treasury in WBTC
+      expect(result.calls[2]).toEqual({
+        contractAddress: WBTC_TOKEN_ADDRESS,
+        entrypoint: 'transfer',
+        calldata: [TREASURY_ADDRESS.toString(), '100', '0'],
+      });
       expect(result.amount.getSat()).toBe(100_000n);
+      expect(result.feeAmount.getSat()).toBe(100n);
       expect(result.swapId).toBe(SwapId.of('swap-btc-456'));
       expect(result.destinationAddress).toBe(BitcoinAddress.of(BTC_BECH32));
       expect(result.expiresAt).toBeInstanceOf(Date);
@@ -436,7 +452,7 @@ describe('PayService', () => {
       expect(result.fee.getSat()).toBe(100_000n);
     });
 
-    it('estimates swap fee for lightning payments from limits', async () => {
+    it('estimates LP fee + BIM fee for lightning payments', async () => {
       vi.mocked(mockParseService.parse).mockReturnValue({
         network: 'lightning',
         invoice: LightningInvoice.of(VALID_INVOICE),
@@ -447,12 +463,12 @@ describe('PayService', () => {
       const result = await service.prepare(VALID_INVOICE);
 
       expect(result.network).toBe('lightning');
-      // 50_000 * 0.3% = 150 sats
-      expect(result.fee.getSat()).toBe(150n);
+      // LP fee: 50,000 * 0.3% = 150 sats + BIM fee: 50,000 * 0.1% = 50 sats = 200 sats
+      expect(result.fee.getSat()).toBe(200n);
       expect(mockSwapService.fetchLimits).toHaveBeenCalledWith({direction: 'starknet_to_lightning'});
     });
 
-    it('estimates swap fee for bitcoin payments from limits', async () => {
+    it('estimates LP fee + BIM fee for bitcoin payments', async () => {
       vi.mocked(mockParseService.parse).mockReturnValue({
         network: 'bitcoin',
         address: BitcoinAddress.of(BTC_BECH32),
@@ -463,8 +479,8 @@ describe('PayService', () => {
       const result = await service.prepare(`bitcoin:${BTC_BECH32}?amount=0.001`);
 
       expect(result.network).toBe('bitcoin');
-      // 100_000 * 0.3% = 300 sats
-      expect(result.fee.getSat()).toBe(300n);
+      // LP fee: 100,000 * 0.3% = 300 sats + BIM fee: 100,000 * 0.1% = 100 sats = 400 sats
+      expect(result.fee.getSat()).toBe(400n);
       expect(mockSwapService.fetchLimits).toHaveBeenCalledWith({direction: 'starknet_to_bitcoin'});
     });
   });

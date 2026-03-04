@@ -21,6 +21,7 @@ export type PreparedCalls =
       network: 'lightning';
       calls: readonly StarknetCall[];
       amount: Amount;
+      feeAmount: Amount;
       swapId: SwapId;
       invoice: LightningInvoice;
       expiresAt: Date;
@@ -29,6 +30,7 @@ export type PreparedCalls =
       network: 'bitcoin';
       calls: readonly StarknetCall[];
       amount: Amount;
+      feeAmount: Amount;
       swapId: SwapId;
       destinationAddress: BitcoinAddress;
       expiresAt: Date;

@@ -65,12 +65,16 @@ export class PayService {
         break;
       case 'lightning': {
         const limits = await this.deps.swapService.fetchLimits({direction: 'starknet_to_lightning'});
-        fee = FeeCalculator.calculateFee(parsed.amount, limits.limits.feePercent / 100);
+        const lpFeeEstimate = FeeCalculator.calculateFee(parsed.amount, limits.limits.feePercent / 100);
+        const bimFeeLn = FeeCalculator.calculateFee(parsed.amount, this.deps.feeConfig.percentage);
+        fee = lpFeeEstimate.add(bimFeeLn);
         break;
       }
       case 'bitcoin': {
         const limits = await this.deps.swapService.fetchLimits({direction: 'starknet_to_bitcoin'});
-        fee = FeeCalculator.calculateFee(parsed.amount, limits.limits.feePercent / 100);
+        const lpFeeEstimate = FeeCalculator.calculateFee(parsed.amount, limits.limits.feePercent / 100);
+        const bimFeeBtc = FeeCalculator.calculateFee(parsed.amount, this.deps.feeConfig.percentage);
+        fee = lpFeeEstimate.add(bimFeeBtc);
         break;
       }
     }
@@ -143,10 +147,17 @@ export class PayService {
       description,
     });
 
+    // BIM fee on the invoice amount (what the recipient receives)
+    const {calls: feeCalls, feeAmount} = this.deps.erc20CallFactory.createFeeCall(
+      this.deps.starknetConfig.wbtcTokenAddress,
+      parsed.amount,
+    );
+
     return {
       network: 'lightning',
-      calls: swapResult.commitCalls,
+      calls: [...swapResult.commitCalls, ...feeCalls],
       amount: swapResult.amount,
+      feeAmount,
       swapId: swapResult.swap.id,
       invoice: parsed.invoice,
       expiresAt: swapResult.swap.expiresAt,
@@ -171,10 +182,17 @@ export class PayService {
       description,
     });
 
+    // BIM fee on the destination amount (what the recipient receives)
+    const {calls: feeCalls, feeAmount} = this.deps.erc20CallFactory.createFeeCall(
+      this.deps.starknetConfig.wbtcTokenAddress,
+      parsed.amount,
+    );
+
     return {
       network: 'bitcoin',
-      calls: swapResult.commitCalls,
+      calls: [...swapResult.commitCalls, ...feeCalls],
       amount: parsed.amount,
+      feeAmount,
       swapId: swapResult.swap.id,
       destinationAddress: parsed.address,
       expiresAt: swapResult.swap.expiresAt,

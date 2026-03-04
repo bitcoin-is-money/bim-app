@@ -164,6 +164,50 @@ describe('Erc20CallFactory', () => {
     });
   });
 
+  describe('createFeeCall', () => {
+    const WBTC_TOKEN_ADDRESS = '0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac';
+
+    it('creates a fee-only call to treasury', () => {
+      const {calls, feeAmount} = factory.createFeeCall(
+        WBTC_TOKEN_ADDRESS,
+        Amount.ofSatoshi(100_000_000n),
+      );
+
+      expect(calls).toHaveLength(1);
+      expect(feeAmount.getSat()).toBe(100_000n); // 0.1% of 100M sats
+      expect(calls[0]!.contractAddress).toBe(WBTC_TOKEN_ADDRESS);
+      expect(calls[0]!.entrypoint).toBe('transfer');
+      expect(calls[0]!.calldata[0]).toBe(TREASURY_ADDRESS.toString());
+      expect(calls[0]!.calldata[1]).toBe('100000');
+      expect(calls[0]!.calldata[2]).toBe('0');
+    });
+
+    it('returns empty calls when amount too small for fee', () => {
+      const {calls, feeAmount} = factory.createFeeCall(
+        WBTC_TOKEN_ADDRESS,
+        Amount.ofMilliSatoshi(999n),
+      );
+
+      expect(calls).toHaveLength(0);
+      expect(feeAmount.isZero()).toBe(true);
+    });
+
+    it('returns empty calls with zero-fee config', () => {
+      const zeroFactory = new Erc20CallFactory({
+        percentage: 0,
+        recipientAddress: TREASURY_ADDRESS,
+      });
+
+      const {calls, feeAmount} = zeroFactory.createFeeCall(
+        WBTC_TOKEN_ADDRESS,
+        Amount.ofSatoshi(100_000_000n),
+      );
+
+      expect(calls).toHaveLength(0);
+      expect(feeAmount.isZero()).toBe(true);
+    });
+  });
+
   describe('with zero-fee config', () => {
     const zeroFeeFactory = new Erc20CallFactory({
       percentage: 0,
