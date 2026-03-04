@@ -6,6 +6,7 @@ import {Base64Url} from '@bim/lib/encoding';
 import {p256} from '@noble/curves/p256';
 import {sha256} from '@noble/hashes/sha2';
 import {bytesToHex, concatBytes} from '@noble/hashes/utils';
+import type {Logger} from 'pino';
 import {uint256} from 'starknet';
 
 // =============================================================================
@@ -35,10 +36,12 @@ const TEXT_ENCODER = new TextEncoder();
 export class WebAuthnSignatureProcessor {
   private readonly rpIdHash: Uint8Array;
   private readonly originBytes: Uint8Array;
+  private readonly log: Logger;
 
-  constructor(private readonly config: WebAuthnSignatureConfig) {
+  constructor(private readonly config: WebAuthnSignatureConfig, logger: Logger) {
     this.rpIdHash = sha256(config.rpId);
     this.originBytes = TEXT_ENCODER.encode(config.origin);
+    this.log = logger.child({name: 'webauthn-signature.processor.ts'});
   }
 
   /**
@@ -72,7 +75,11 @@ export class WebAuthnSignatureProcessor {
     const outro = extractClientDataJsonOutro(clientDataJSON);
 
     // 6. Build compact_no_legacy format
-    return this.buildCompactNoLegacy(publicKeyHex, outro, flags, signCount, sig.r, sig.s, yParity);
+    const signature = this.buildCompactNoLegacy(publicKeyHex, outro, flags, signCount, sig.r, sig.s, yParity);
+
+    this.log.info({signature, authDataLen: authenticatorData.length}, 'Built compact_no_legacy signature');
+
+    return signature;
   }
 
   /**
@@ -139,13 +146,17 @@ function computeYParity(messageHash: Uint8Array, pubkeyX: bigint, sig: InstanceT
 function extractClientDataJsonOutro(clientDataJSON: Uint8Array): Uint8Array {
   const originKey = TEXT_ENCODER.encode('"origin":"');
   const keyIndex = indexOfSubarray(clientDataJSON, originKey);
-  if (keyIndex === -1) return new Uint8Array();
+  if (keyIndex === -1) {
+    throw new Error('clientDataJSON does not contain "origin" field');
+  }
 
   // Scan past origin key to find the closing quote of the origin value
   let i = keyIndex + originKey.length;
   // eslint-disable-next-line security/detect-object-injection -- numeric index on Uint8Array
   while (i < clientDataJSON.length && clientDataJSON[i] !== 0x22 /* '"' */) i++;
-  if (i >= clientDataJSON.length) return new Uint8Array();
+  if (i >= clientDataJSON.length) {
+    throw new Error('clientDataJSON has malformed "origin" value (no closing quote)');
+  }
 
   const outro = clientDataJSON.slice(i + 1);
   // If outro is just '}', treat as empty per Argent spec
