@@ -1,3 +1,5 @@
-@if (src()) {
+@if (loading()) {
+  <div class="skeleton-box"></div>
+} @else if (src()) {
   <img [src]="src()" [alt]="alt()" [style]="style()"/>
 }

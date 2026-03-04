@@ -14,8 +14,9 @@ const NETWORK_LOGOS: Record<string, string> = {
   styleUrl: './network-logo.component.scss',
 })
 export class NetworkLogoComponent {
-  network = input.required<string>();
+  network = input<string>('');
   style = input<string>('');
+  loading = input(false);
 
   src = computed(() => NETWORK_LOGOS[this.network()] ?? '');
   alt = computed(() => `${this.network()} logo`);
