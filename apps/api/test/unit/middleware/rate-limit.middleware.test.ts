@@ -42,7 +42,7 @@ describe('rate-limit middleware', () => {
       // Use a dedicated rate limiter with low limit for fast testing
       const strictApp = createTestApp(createAuthRateLimit());
 
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 10; i++) {
         await strictApp.request(requestWithIp('/test', '10.0.0.1'));
       }
 
@@ -57,7 +57,7 @@ describe('rate-limit middleware', () => {
     it('tracks limits independently per IP', async () => {
       const strictApp = createTestApp(createAuthRateLimit());
 
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 10; i++) {
         await strictApp.request(requestWithIp('/test', '10.0.0.1'));
       }
 
@@ -82,8 +82,8 @@ describe('rate-limit middleware', () => {
       app = createTestApp(createAuthRateLimit());
     });
 
-    it('allows up to 5 requests per minute', async () => {
-      for (let i = 0; i < 5; i++) {
+    it('allows up to 10 requests per minute', async () => {
+      for (let i = 0; i < 10; i++) {
         const res = await app.request(requestWithIp('/test', '20.0.0.1'));
         expect(res.status).toBe(200);
       }
