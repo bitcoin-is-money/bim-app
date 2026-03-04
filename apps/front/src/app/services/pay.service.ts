@@ -1,7 +1,7 @@
 import {inject, Injectable, signal} from '@angular/core';
 import {Router} from '@angular/router';
 import {Base64Url} from '@bim/lib/encoding';
-import {firstValueFrom} from 'rxjs';
+import {firstValueFrom, Subscription} from 'rxjs';
 import {ParsedPayment, type StoredSwap} from '../model';
 import {type BuildPaymentResponse, type ExecutePaymentResponse, type PaymentNetwork, PayHttpService} from './pay.http.service';
 import {SwapPollingService} from './swap-polling.service';
@@ -28,15 +28,20 @@ export class PayService {
   private rawData: string | null = null;
   private description: string | null = null;
   private cachedBuild: BuildPaymentResponse | null = null;
+  private flowSubscription: Subscription | null = null;
 
   parseAndNavigate(data: string): void {
+    // Cancel any in-flight parse/build from a previous scan
+    this.flowSubscription?.unsubscribe();
     this.isLoading.set(true);
+    this.isBuilding.set(false);
+    this.isProcessing.set(false);
     this.rawData = data;
     this.cachedBuild = null;
     this.parsedPayment.set(null);
 
     // 1. Parse: fast decode → display payment details immediately
-    this.httpService.parse(data).subscribe({
+    this.flowSubscription = this.httpService.parse(data).subscribe({
       next: (parseResponse) => {
         const payment = ParsedPayment.fromResponse(parseResponse);
         this.parsedPayment.set(payment);
@@ -46,7 +51,7 @@ export class PayService {
 
         // 2. Build: get real fee from LP quote in background
         this.isBuilding.set(true);
-        this.httpService.build(data).subscribe({
+        this.flowSubscription = this.httpService.build(data).subscribe({
           next: (buildResponse) => {
             this.cachedBuild = buildResponse;
             const updatedPayment = ParsedPayment.fromResponse(buildResponse.payment);
