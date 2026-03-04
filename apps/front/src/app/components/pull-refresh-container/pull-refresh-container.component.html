@@ -1,15 +1,11 @@
+<app-progress-bar [active]="isRefreshing()" />
+
 <div class="pull-refresh-inner"
   [style.transform]="'translateY(' + pullDistance() + 'px)'"
   [class.snapping]="pullDistance() === 0 && !isRefreshing()"
   (touchstart)="onTouchStart($event)"
   (touchmove)="onTouchMove($event)"
   (touchend)="onTouchEnd()">
-
-  @if (isRefreshing()) {
-    <div class="pull-indicator">
-      <app-spinner variant="secondary" class="pull-spinner" />
-    </div>
-  }
 
   <ng-content />
 </div>

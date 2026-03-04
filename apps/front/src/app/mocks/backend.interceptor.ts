@@ -90,7 +90,7 @@ export const backendInterceptor: HttpInterceptorFn = (
   // Transaction routes
   else if (url.startsWith('/api/user/transactions') && method === 'GET') {
     response = mockTransactionHandler.getTransactions(req);
-    httpFakeDelay = 2000;
+    httpFakeDelay = 5000;
   }
 
   // User settings routes
