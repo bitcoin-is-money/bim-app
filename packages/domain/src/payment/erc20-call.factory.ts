@@ -92,6 +92,31 @@ export class Erc20CallFactory {
     };
   }
 
+  /**
+   * Creates only the BIM fee transfer call for a given token and amount.
+   *
+   * Used for swap payments (Lightning/Bitcoin) where the main transfer is
+   * handled by Atomiq commit calls, but BIM still needs to collect its fee.
+   */
+  createFeeCall(tokenAddress: string, amount: Amount): TransferResult {
+    const feeAmount = FeeCalculator.calculateFee(
+      amount,
+      this.feeConfig.percentage,
+    );
+
+    if (feeAmount.getSat() === 0n) {
+      return {calls: [], feeAmount: Amount.zero()};
+    }
+
+    const feeCall = this.buildCall(
+      tokenAddress,
+      this.feeConfig.recipientAddress.toString(),
+      feeAmount,
+    );
+
+    return {calls: [feeCall], feeAmount};
+  }
+
   private buildCall(
     tokenAddress: string,
     recipientAddress: string,
