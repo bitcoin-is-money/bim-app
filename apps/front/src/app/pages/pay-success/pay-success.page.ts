@@ -24,6 +24,6 @@ export class PaySuccessPage implements OnInit {
   });
 
   ngOnInit(): void {
-    setTimeout(() => this.router.navigate(['/home']), 2000);
+    setTimeout(() => this.router.navigate(['/home']), 4000);
   }
 }
