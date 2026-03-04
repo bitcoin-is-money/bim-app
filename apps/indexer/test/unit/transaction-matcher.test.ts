@@ -76,6 +76,44 @@ describe('TransactionMatcher', () => {
     expect(rows[0].timestamp).toBe(timestamp);
   });
 
+  it('aggregates multiple transfers in same txHash into one spent row', () => {
+    const TREASURY = '0x' + '5'.repeat(64);
+    const transfers = [
+      {from: ALICE, to: BOB, amount: '1000', txHash: TX_HASH},
+      {from: ALICE, to: TREASURY, amount: '1', txHash: TX_HASH},
+    ];
+    const rows = matcher.match(transfers, accounts, '100', timestamp);
+
+    const spentRows = rows.filter(r => r.transactionType === 'spent');
+    expect(spentRows).toHaveLength(1);
+    expect(spentRows[0].amount).toBe('1001'); // 1000 + 1
+    expect(spentRows[0].toAddress).toBe(BOB); // keeps primary (largest) transfer address
+  });
+
+  it('aggregates multiple receipts in same txHash into one receipt row', () => {
+    const STRANGER2 = '0x' + '8'.repeat(64);
+    const transfers = [
+      {from: STRANGER, to: ALICE, amount: '500', txHash: TX_HASH},
+      {from: STRANGER2, to: ALICE, amount: '100', txHash: TX_HASH},
+    ];
+    const rows = matcher.match(transfers, accounts, '100', timestamp);
+
+    const receiptRows = rows.filter(r => r.transactionType === 'receipt');
+    expect(receiptRows).toHaveLength(1);
+    expect(receiptRows[0].amount).toBe('600'); // 500 + 100
+    expect(receiptRows[0].fromAddress).toBe(STRANGER); // keeps primary (largest) transfer address
+  });
+
+  it('keeps spent and receipt separate even in same txHash', () => {
+    // Alice sends to Bob — produces 1 spent (Alice) + 1 receipt (Bob), not aggregated
+    const transfers = [{from: ALICE, to: BOB, amount: '4096', txHash: TX_HASH}];
+    const rows = matcher.match(transfers, accounts, '100', timestamp);
+
+    expect(rows).toHaveLength(2);
+    expect(rows.find(r => r.transactionType === 'spent')!.accountId).toBe('acc-alice');
+    expect(rows.find(r => r.transactionType === 'receipt')!.accountId).toBe('acc-bob');
+  });
+
   it('handles case-insensitive address matching', () => {
     const upperAccounts: AccountMatch[] = [
       {id: 'acc-1', starknetAddress: '0x' + 'A'.repeat(64)},

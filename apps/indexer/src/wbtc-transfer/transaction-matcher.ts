@@ -73,7 +73,35 @@ export class TransactionMatcher {
       }
     }
 
-    this.logger.debug(`[Block ${blockNumber}] Transactions matched (${rows.length})`);
-    return rows;
+    // Aggregate rows that share the same (txHash, accountId, transactionType).
+    // A multicall transaction (e.g. transfer + fee) emits multiple Transfer events
+    // that must be merged into a single row (DB has a unique constraint on txHash+accountId).
+    const aggregated = this.aggregate(rows);
+
+    this.logger.debug(`[Block ${blockNumber}] Transactions matched (${aggregated.length})`);
+    return aggregated;
+  }
+
+  private aggregate(rows: NewTransactionRecord[]): NewTransactionRecord[] {
+    if (rows.length <= 1) return rows;
+
+    const grouped = new Map<string, NewTransactionRecord[]>();
+    for (const row of rows) {
+      const key = `${row.transactionHash}|${row.accountId}|${row.transactionType}`;
+      const group = grouped.get(key);
+      if (group) {
+        group.push(row);
+      } else {
+        grouped.set(key, [row]);
+      }
+    }
+
+    return [...grouped.values()].map(group => {
+      if (group.length === 1) return group[0]!;
+      // Sum amounts and keep address fields from the largest transfer (the main one, not the fee)
+      const totalAmount = group.reduce((sum, r) => sum + BigInt(r.amount), 0n);
+      const primary = group.reduce((a, b) => BigInt(a.amount) >= BigInt(b.amount) ? a : b);
+      return {...primary, amount: totalAmount.toString()};
+    });
   }
 }
