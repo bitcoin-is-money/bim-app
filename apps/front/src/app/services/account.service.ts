@@ -1,6 +1,6 @@
 import {inject, Injectable, signal} from '@angular/core';
 import type { Observable} from 'rxjs';
-import {map} from 'rxjs';
+import {map, tap} from 'rxjs';
 import {Amount} from "../model";
 import type { AccountInfoResponse, DeployAccountResponse, DeploymentStatusResponse} from './account.http.service';
 import {AccountHttpService} from './account.http.service';
@@ -18,21 +18,21 @@ export class AccountService {
   private readonly httpService = inject(AccountHttpService);
 
   loadBalance(): void {
-    this.getBalance().subscribe({
-      next: (balance) => { this.balance.set(balance); },
+    this.refreshBalance().subscribe({
       error: (err) => { console.error('Error loading balance:', err); },
     });
   }
 
-  getBalance(): Observable<Amount> {
+  refreshBalance(): Observable<void> {
     return this.httpService
       .getBalance()
       .pipe(
-        map((response) => {
+        tap((response) => {
           this.strkBalance.set(formatTokenBalance(response.strkBalance.amount, response.strkBalance.decimals));
           const sats = Number(response.wbtcBalance.amount);
-          return Amount.of(sats, 'SAT');
-        })
+          this.balance.set(Amount.of(sats, 'SAT'));
+        }),
+        map(() => undefined),
       );
   }
 
