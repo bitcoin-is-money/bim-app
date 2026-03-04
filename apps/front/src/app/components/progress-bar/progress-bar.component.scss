@@ -1,0 +1,26 @@
+@reference "tailwindcss";
+
+:host {
+  @apply block absolute top-0 left-0 right-0 z-50;
+  height: 2px;
+}
+
+.track {
+  @apply relative w-full h-full overflow-hidden bg-transparent;
+
+}
+
+.bar {
+  @apply absolute h-full bg-amber-500;
+  width: 40%;
+  animation: indeterminate 1.2s ease-in-out infinite;
+}
+
+@keyframes indeterminate {
+  0% {
+    left: -40%;
+  }
+  100% {
+    left: 100%;
+  }
+}

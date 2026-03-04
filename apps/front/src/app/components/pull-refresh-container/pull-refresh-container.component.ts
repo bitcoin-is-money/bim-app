@@ -1,5 +1,5 @@
 import {Component, ElementRef, inject, input, output, signal} from '@angular/core';
-import {SpinnerComponent} from '../spinner/spinner.component';
+import {ProgressBarComponent} from '../progress-bar/progress-bar.component';
 
 const THRESHOLD = 20;
 const MAX_PULL = 50;
@@ -14,7 +14,7 @@ export class PullRefreshEvent {
 @Component({
   selector: 'app-pull-refresh-container',
   standalone: true,
-  imports: [SpinnerComponent],
+  imports: [ProgressBarComponent],
   templateUrl: './pull-refresh-container.component.html',
   styleUrl: './pull-refresh-container.component.scss',
 })
