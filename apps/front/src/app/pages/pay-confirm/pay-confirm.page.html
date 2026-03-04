@@ -3,8 +3,8 @@
     <app-go-back-header [title]="'payConfirm.title' | translate"></app-go-back-header>
 
     <main class="pay-confirm-main">
-      @if (payment(); as p) {
-        <div class="payment-details">
+      <div class="payment-details">
+        @if (payment(); as p) {
           <app-network-logo [network]="p.network" style="height:48px"/>
           <app-amount-highlight [originalAmount]="p.amount"/>
           <div class="payment-fields">
@@ -25,29 +25,41 @@
               [label]="'payConfirm.fee' | translate"
             />
           </div>
-          <app-button
-            class="confirm-button"
-            variant="tertiary"
-            [icon]="['fas', 'location-arrow']"
-            [loading]="isProcessing()"
-            [disabled]="!paymentAvailable() || isProcessing()"
-            (click)="confirm()"
-          >
-            @if (isProcessing()) {
-              {{ 'payConfirm.processing' | translate }}
-            } @else {
-              {{ 'payConfirm.pay' | translate }}
-            }
-          </app-button>
-        </div>
-
-      } @else if (isLoading()) {
-        <div class="loading-state">
-          <app-spinner />
-        </div>
-      } @else {
-        <p class="no-payment">{{ 'payConfirm.noPaymentData' | translate }}</p>
-      }
+        } @else {
+          <app-network-logo [loading]="true" style="height:48px"/>
+          <app-amount-highlight/>
+          <div class="payment-fields">
+            <app-field
+              [label]="'payConfirm.to' | translate"
+              value=""
+              [monospace]="true"
+            />
+            <app-field
+              [editable]="true"
+              [value]="description()"
+              (valueChange)="onDescriptionChange($event)"
+            />
+            <app-amount-field
+              [currencyToggle]="false"
+              [label]="'payConfirm.fee' | translate"
+            />
+          </div>
+        }
+        <app-button
+          class="confirm-button"
+          variant="tertiary"
+          [icon]="['fas', 'location-arrow']"
+          [loading]="isProcessing()"
+          [disabled]="!paymentAvailable() || isProcessing()"
+          (click)="confirm()"
+        >
+          @if (isProcessing()) {
+            {{ 'payConfirm.processing' | translate }}
+          } @else {
+            {{ 'payConfirm.pay' | translate }}
+          }
+        </app-button>
+      </div>
     </main>
   </div>
 </app-full-page-layout>
