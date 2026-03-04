@@ -3,8 +3,10 @@ import type { OnInit} from '@angular/core';
 import {Component, inject} from '@angular/core';
 import {Router} from '@angular/router';
 import {TranslateModule} from '@ngx-translate/core';
+import {forkJoin} from 'rxjs';
 import {AmountHighlightComponent} from '../../components/amount-highlight/amount-highlight.component';
 import {ButtonComponent} from "../../components/button/button.component";
+import {type PullRefreshEvent, PullRefreshContainerComponent} from '../../components/pull-refresh-container/pull-refresh-container.component';
 import {SpinnerComponent} from '../../components/spinner/spinner.component';
 import {FullPageLayoutComponent} from '../../layout';
 import {AccountService} from "../../services/account.service";
@@ -16,7 +18,7 @@ import {TransactionListComponent} from './components/transaction-list/transactio
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, TranslateModule, AmountHighlightComponent, TransactionListComponent, EmptyTransactionComponent, SpinnerComponent, ButtonComponent, FullPageLayoutComponent],
+  imports: [CommonModule, TranslateModule, AmountHighlightComponent, TransactionListComponent, EmptyTransactionComponent, SpinnerComponent, ButtonComponent, FullPageLayoutComponent, PullRefreshContainerComponent],
   templateUrl: './home.page.html',
   styleUrl: './home.page.scss',
 })
@@ -40,6 +42,13 @@ export class HomePage implements OnInit {
     } else {
       this.transactionService.loadFirst();
     }
+  }
+
+  onRefresh(event: PullRefreshEvent): void {
+    forkJoin([
+      this.accountService.getBalance(),
+      this.transactionService.refresh(),
+    ]).subscribe(() => event.complete());
   }
 
   onScroll(event: Event): void {

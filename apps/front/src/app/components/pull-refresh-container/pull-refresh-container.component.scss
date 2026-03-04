@@ -1,0 +1,21 @@
+@reference "tailwindcss";
+
+:host {
+  @apply block h-full overflow-y-auto;
+}
+
+.pull-refresh-inner {
+  @apply min-h-full;
+
+  &.snapping {
+    transition: transform 0.2s ease-out;
+  }
+}
+
+.pull-indicator {
+  @apply flex justify-center py-4 h-12;
+}
+
+.pull-spinner {
+  @apply h-full w-auto;
+}
