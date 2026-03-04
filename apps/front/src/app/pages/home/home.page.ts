@@ -46,7 +46,7 @@ export class HomePage implements OnInit {
 
   onRefresh(event: PullRefreshEvent): void {
     forkJoin([
-      this.accountService.getBalance(),
+      this.accountService.refreshBalance(),
       this.transactionService.refresh(),
     ]).subscribe(() => event.complete());
   }
