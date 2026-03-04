@@ -40,14 +40,16 @@ export class PayService {
     this.cachedBuild = null;
     this.parsedPayment.set(null);
 
-    // 1. Parse: fast decode → display payment details immediately
+    // Navigate to confirm page immediately (shows spinner while parsing)
+    void this.router.navigate(['/pay/confirm']);
+
+    // 1. Parse: fast decode → display payment details
     this.flowSubscription = this.httpService.parse(data).subscribe({
       next: (parseResponse) => {
         const payment = ParsedPayment.fromResponse(parseResponse);
         this.parsedPayment.set(payment);
         this.description = payment.description || null;
         this.isLoading.set(false);
-        void this.router.navigate(['/pay/confirm']);
 
         // 2. Build: get real fee from LP quote in background
         this.isBuilding.set(true);
@@ -65,6 +67,8 @@ export class PayService {
       },
       error: () => {
         this.isLoading.set(false);
+        // Navigate back — error notification is shown by the interceptor
+        void this.router.navigate(['/pay'], {replaceUrl: true});
       },
     });
   }
