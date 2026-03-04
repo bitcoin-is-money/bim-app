@@ -40,14 +40,14 @@ describe('Rate limit middleware (integration)', () => {
   }
 
   // ---------------------------------------------------------------------------
-  // Auth rate limit (5 req/min)
+  // Auth rate limit (10 req/min)
   // ---------------------------------------------------------------------------
 
   describe('auth rate limit', () => {
-    it('returns 429 after 5 requests to auth endpoints from the same IP', async () => {
+    it('returns 429 after 10 requests to auth endpoints from the same IP', async () => {
       const ip = '10.0.0.1';
 
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 10; i++) {
         const res = await app.request(requestWithIp('/api/auth/session', ip));
         expect(res.status).not.toBe(429);
       }
@@ -61,7 +61,7 @@ describe('Rate limit middleware (integration)', () => {
 
     it('tracks limits independently per IP', async () => {
       // Exhaust limit for IP A
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 10; i++) {
         await app.request(requestWithIp('/api/auth/session', '10.0.1.1'));
       }
       const blockedRes = await app.request(requestWithIp('/api/auth/session', '10.0.1.1'));

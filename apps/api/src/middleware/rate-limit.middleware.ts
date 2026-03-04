@@ -22,11 +22,11 @@ export function createGlobalRateLimit() {
   });
 }
 
-/** 5 requests per minute per IP — auth endpoints (anti brute-force). */
+/** 10 requests per minute per IP — auth endpoints (anti brute-force). */
 export function createAuthRateLimit() {
   return rateLimiter({
     windowMs: 60 * 1000,
-    limit: 5,
+    limit: 10,
     keyGenerator: getClientIp,
     handler: (c) => rateLimitedResponse(c, 'Too many authentication attempts. Please try again later.'),
   });
