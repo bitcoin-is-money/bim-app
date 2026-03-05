@@ -2,7 +2,8 @@ import {Component, ElementRef, inject, input, output, signal} from '@angular/cor
 import {ProgressBarComponent} from '../progress-bar/progress-bar.component';
 
 const THRESHOLD = 20;
-const MAX_PULL = 50;
+const MAX_PULL = 80;
+const DAMPING = 120;
 
 export class PullRefreshEvent {
   constructor(
@@ -25,12 +26,13 @@ export class PullRefreshContainerComponent {
   readonly refreshRequest = output<PullRefreshEvent>();
   readonly pullDistance = signal(0);
   readonly isRefreshing = signal(false);
+  readonly isSnapping = signal(false);
 
   private startY: number | null = null;
   private pulling = false;
 
   onTouchStart(e: TouchEvent): void {
-    if (this.disabled() || this.isRefreshing()) return;
+    if (this.disabled()) return;
     const touch = e.touches[0];
     if (touch && this.el.nativeElement.scrollTop === 0) {
       this.startY = touch.clientY;
@@ -38,7 +40,7 @@ export class PullRefreshContainerComponent {
   }
 
   onTouchMove(e: TouchEvent): void {
-    if (this.startY === null || this.isRefreshing()) return;
+    if (this.startY === null) return;
     const touch = e.touches[0];
     if (!touch) return;
 
@@ -46,12 +48,18 @@ export class PullRefreshContainerComponent {
     if (delta > 0) {
       this.pulling = true;
       e.preventDefault();
-      this.pullDistance.set(Math.min(delta, MAX_PULL));
+      this.pullDistance.set(MAX_PULL * (1 - Math.exp(-delta / DAMPING)));
     } else if (this.pulling) {
       this.pulling = false;
       this.startY = null;
-      this.pullDistance.set(0);
+      this.snapBack();
     }
+  }
+
+  private snapBack(): void {
+    this.isSnapping.set(true);
+    requestAnimationFrame(() => this.pullDistance.set(0));
+    setTimeout(() => this.isSnapping.set(false), 500);
   }
 
   onTouchEnd(): void {
@@ -59,12 +67,12 @@ export class PullRefreshContainerComponent {
     this.startY = null;
     this.pulling = false;
 
-    if (this.pullDistance() >= THRESHOLD) {
+    if (this.pullDistance() >= THRESHOLD && !this.isRefreshing()) {
       this.isRefreshing.set(true);
-      this.pullDistance.set(0);
+      this.snapBack();
       this.refreshRequest.emit(new PullRefreshEvent(() => this.isRefreshing.set(false)));
     } else {
-      this.pullDistance.set(0);
+      this.snapBack();
     }
   }
 }

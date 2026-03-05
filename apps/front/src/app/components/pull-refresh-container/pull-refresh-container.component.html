@@ -2,7 +2,7 @@
 
 <div class="pull-refresh-inner"
   [style.transform]="'translateY(' + pullDistance() + 'px)'"
-  [class.snapping]="pullDistance() === 0 && !isRefreshing()"
+  [class.snapping]="isSnapping()"
   (touchstart)="onTouchStart($event)"
   (touchmove)="onTouchMove($event)"
   (touchend)="onTouchEnd()">
