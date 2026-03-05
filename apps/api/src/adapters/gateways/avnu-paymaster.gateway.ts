@@ -140,7 +140,7 @@ export class AvnuPaymasterGateway implements PaymasterGateway {
       if (err instanceof ExternalServiceError) throw err;
       const message = err instanceof Error ? err.message : String(err);
       const messageLC = message.toLowerCase();
-      if (messageLC.includes('u256_sub overflow') || messageLC.includes('u256_add overflow')) {
+      if (messageLC.includes('u256_sub overflow') || messageLC.includes('u256_add overflow') || messageLC.includes('balance is too low')) {
         throw new InsufficientBalanceError();
       }
       throw new ExternalServiceError(
