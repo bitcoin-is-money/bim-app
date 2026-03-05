@@ -134,18 +134,16 @@ export class PayService {
       // 5. Handle success
       this.handleSuccess(response);
     } catch {
-      // HTTP errors are handled by the interceptor
+      // HTTP errors are handled by the interceptor.
+      // Invalidate cached build so retry triggers a fresh /build call
+      // (the server consumes the buildId even on failed execute).
+      this.cachedBuild = null;
     } finally {
       this.isProcessing.set(false);
     }
   }
 
   private handleSuccess(response: ExecutePaymentResponse): void {
-    this.parsedPayment.set(null);
-    this.rawData = null;
-    this.description = null;
-    this.cachedBuild = null;
-    this.isBuilding.set(false);
     this.lastPaymentNetwork.set(response.network);
 
     if (response.network !== 'starknet' && 'swapId' in response) {
@@ -161,7 +159,14 @@ export class PayService {
       this.swapPollingService.startPolling(swap.id);
     }
 
-    void this.router.navigate(['/pay/success']);
+    // Navigate first, then clean up UI state to avoid skeleton flash on confirm page
+    void this.router.navigate(['/pay/success']).then(() => {
+      this.parsedPayment.set(null);
+      this.rawData = null;
+      this.description = null;
+      this.cachedBuild = null;
+      this.isBuilding.set(false);
+    });
   }
 }
 
