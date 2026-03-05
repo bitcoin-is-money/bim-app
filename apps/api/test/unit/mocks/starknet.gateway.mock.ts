@@ -14,6 +14,17 @@ import type {
  * need the Starknet gateway without a real devnet or paymaster.
  */
 export class StarknetGatewayMock implements StarknetGateway {
+  private buildCallsError: Error | null = null;
+  private balanceOverrides = new Map<string, bigint>();
+
+  setBuildCallsError(error: Error | null): void {
+    this.buildCallsError = error;
+  }
+
+  setBalance(token: string, balance: bigint): void {
+    this.balanceOverrides.set(token, balance);
+  }
+
   calculateAccountAddress(_params: {publicKey: string}): StarknetAddress {
     return StarknetAddress.of('0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef');
   }
@@ -44,8 +55,8 @@ export class StarknetGatewayMock implements StarknetGateway {
     return 0n;
   }
 
-  async getBalance(_params: {address: StarknetAddress; token: string}): Promise<bigint> {
-    return 1000000000000000000n; // 1 ETH
+  async getBalance(params: {address: StarknetAddress; token: string}): Promise<bigint> {
+    return this.balanceOverrides.get(params.token) ?? 1000000000000000000n; // 1 ETH default
   }
 
   async estimateFee(_transaction: StarknetTransaction): Promise<bigint> {
@@ -56,6 +67,7 @@ export class StarknetGatewayMock implements StarknetGateway {
     senderAddress: StarknetAddress;
     calls: readonly StarknetCall[];
   }): Promise<{typedData: unknown; messageHash: string}> {
+    if (this.buildCallsError) throw this.buildCallsError;
     return {
       typedData: {mock: true},
       messageHash: `0x${crypto.randomUUID().replaceAll('-', '')}`,

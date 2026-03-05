@@ -223,6 +223,10 @@ export function handleDomainError(ctx: Context, error: unknown, logger: Logger):
 
   // --- Balance errors ---
   if (error instanceof InsufficientBalanceError) {
+    if (error.reason === 'security_deposit') {
+      return createErrorResponse(ctx, 400, ErrorCode.INSUFFICIENT_BALANCE_SECURITY_DEPOSIT,
+        'Insufficient balance to cover the security deposit. Fund your account before retrying.');
+    }
     if (error.requiredAmount !== undefined) {
       const formatted = formatTokenAmount(error.requiredAmount, 18);
       return createErrorResponse(ctx, 400, ErrorCode.INSUFFICIENT_BALANCE_WITH_AMOUNT,

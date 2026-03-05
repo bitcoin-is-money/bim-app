@@ -106,7 +106,7 @@ export class AtomiqGatewayMock implements AtomiqGateway {
         {
           contractAddress: '0x0123456789abcdef',
           entrypoint: 'approve',
-          calldata: ['0x1', '0x2'],
+          calldata: ['0x1', '0x2', '0x0'],
         },
       ],
       expiresAt,

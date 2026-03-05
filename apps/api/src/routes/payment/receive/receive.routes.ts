@@ -110,7 +110,7 @@ export function createReceiveRoutes(appContext: AppContext): AuthenticatedHono {
           });
         } catch (err) {
           if (err instanceof InsufficientBalanceError && approveInfo) {
-            throw new InsufficientBalanceError(approveInfo.amount, approveInfo.tokenAddress);
+            throw new InsufficientBalanceError(approveInfo.amount, approveInfo.tokenAddress, 'security_deposit');
           }
           throw err;
         }

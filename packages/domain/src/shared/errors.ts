@@ -87,6 +87,7 @@ export class InsufficientBalanceError extends DomainError {
   constructor(
     readonly requiredAmount?: bigint,
     readonly tokenAddress?: string,
+    readonly reason?: 'transfer' | 'security_deposit',
   ) {
     super('Insufficient balance for this operation');
   }
