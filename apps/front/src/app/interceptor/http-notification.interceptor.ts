@@ -44,7 +44,10 @@ export const httpNotificationInterceptor: HttpInterceptorFn = (
       if (response.status >= 400 && response.status < 500) {
         notifications.error({message});
       } else if (response.status >= 500) {
-        notifications.error({message: i18n.t('errors.INTERNAL_ERROR')});
+        // Use translated message when available (e.g. PAYMASTER_SERVICE_ERROR),
+        // fallback to generic INTERNAL_ERROR only for unstructured responses
+        const hasStructuredError = isApiErrorResponse(response.error);
+        notifications.error({message: hasStructuredError ? message : i18n.t('errors.INTERNAL_ERROR')});
       }
 
       return throwError(() => response);

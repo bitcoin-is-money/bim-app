@@ -104,3 +104,13 @@ export class ExternalServiceError extends DomainError {
     super(`External service '${service}' failed: ${reason}`);
   }
 }
+
+/**
+ * Error thrown when the paymaster service is misconfigured or unavailable
+ * (e.g. invalid API key, exhausted credits).
+ */
+export class PaymasterServiceError extends DomainError {
+  constructor(readonly reason: string) {
+    super(`Paymaster service error: ${reason}`);
+  }
+}

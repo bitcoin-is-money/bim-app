@@ -261,7 +261,7 @@ export class StarknetRpcGateway implements StarknetGateway {
       this.log.info({txHash: result.txHash}, 'Signed calls transaction submitted');
       return {txHash: result.txHash};
     } catch (error) {
-      if (error instanceof ExternalServiceError) throw error;
+      if (error instanceof DomainError) throw error;
       throw new ExternalServiceError(
         'Starknet',
         `Failed to execute signed calls: ${error instanceof Error ? error.message : String(error)}`,
