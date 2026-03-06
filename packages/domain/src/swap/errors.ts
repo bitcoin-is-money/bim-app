@@ -13,6 +13,12 @@ export class InvalidLightningInvoiceError extends DomainError {
   }
 }
 
+export class LightningInvoiceExpiredError extends DomainError {
+  constructor() {
+    super('Lightning invoice has expired');
+  }
+}
+
 export class SwapNotFoundError extends DomainError {
   constructor(readonly swapId: SwapId | string) {
     super(`Swap not found: ${swapId}`);
