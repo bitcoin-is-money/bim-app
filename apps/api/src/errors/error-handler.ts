@@ -36,6 +36,7 @@ import {
   ExternalServiceError,
   InsufficientBalanceError,
   InvalidStateTransitionError,
+  PaymasterServiceError,
   TimeoutError,
   UnauthorizedError,
   ValidationError,
@@ -250,6 +251,11 @@ export function handleDomainError(ctx: Context, error: unknown, logger: Logger):
     return createErrorResponse(ctx, 400, ErrorCode.INVALID_ACCOUNT_STATE, error.message, {
       from: error.from,
       to: error.to,
+    });
+  }
+  if (error instanceof PaymasterServiceError) {
+    return createErrorResponse(ctx, 502, ErrorCode.PAYMASTER_SERVICE_ERROR, 'Paymaster service error', {
+      reason: error.reason,
     });
   }
   if (error instanceof ExternalServiceError) {

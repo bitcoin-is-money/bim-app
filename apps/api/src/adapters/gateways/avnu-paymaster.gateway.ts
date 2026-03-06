@@ -7,7 +7,7 @@ import type {
   StarknetCall,
   StarknetTransaction
 } from "@bim/domain/ports";
-import {ExternalServiceError, InsufficientBalanceError} from "@bim/domain/shared";
+import {ExternalServiceError, InsufficientBalanceError, PaymasterServiceError} from "@bim/domain/shared";
 
 import type {Logger} from "pino";
 import type {WALLET_API} from '@starknet-io/starknet-types-010';
@@ -85,6 +85,14 @@ export class AvnuPaymasterGateway implements PaymasterGateway {
     );
   }
 
+  /**
+   * Detects AVNU error 163 (invalid/exhausted API key) from an error message.
+   * Both conditions must match: error code 163 AND "api-key" substring.
+   */
+  private isPaymasterApiKeyError(message: string): boolean {
+    return message.includes('163') && message.toLowerCase().includes('api-key');
+  }
+
   // ===========================================================================
   // SNIP-29 Invoke (build + execute with WebAuthn signature)
   // ===========================================================================
@@ -136,11 +144,20 @@ export class AvnuPaymasterGateway implements PaymasterGateway {
       );
 
       return {typedData: response.typed_data};
-    } catch (err) {
-      if (err instanceof ExternalServiceError) throw err;
-      const message = err instanceof Error ? err.message : String(err);
+    } catch (err: unknown) {
+      if (err instanceof ExternalServiceError || err instanceof PaymasterServiceError) {
+        throw err;
+      }
+      const message = err instanceof Error
+        ? err.message
+        : String(err);
+      if (this.isPaymasterApiKeyError(message)) {
+        throw new PaymasterServiceError(message);
+      }
       const messageLC = message.toLowerCase();
-      if (messageLC.includes('u256_sub overflow') || messageLC.includes('u256_add overflow') || messageLC.includes('balance is too low')) {
+      if (messageLC.includes('u256_sub overflow')
+        || messageLC.includes('u256_add overflow')
+        || messageLC.includes('balance is too low')) {
         throw new InsufficientBalanceError();
       }
       throw new ExternalServiceError(
@@ -192,10 +209,18 @@ export class AvnuPaymasterGateway implements PaymasterGateway {
         success: true,
       };
     } catch (err) {
-      if (err instanceof ExternalServiceError) throw err;
+      if (err instanceof ExternalServiceError || err instanceof PaymasterServiceError) {
+        throw err;
+      }
+      const message = err instanceof Error
+        ? err.message
+        : String(err);
+      if (this.isPaymasterApiKeyError(message)) {
+        throw new PaymasterServiceError(message);
+      }
       throw new ExternalServiceError(
         'AVNU Paymaster',
-        `SNIP-29 executeTransaction failed: ${err instanceof Error ? err.message : String(err)}`,
+        `SNIP-29 executeTransaction failed: ${message}`,
       );
     }
   }
@@ -270,9 +295,13 @@ export class AvnuPaymasterGateway implements PaymasterGateway {
 
       if (result.error) {
         const errorData = result.error.data ? ` (${JSON.stringify(result.error.data)})` : '';
+        const fullMessage = `${result.error.code}: ${result.error.message}${errorData}`;
+        if (this.isPaymasterApiKeyError(fullMessage)) {
+          throw new PaymasterServiceError(fullMessage);
+        }
         throw new ExternalServiceError(
           'AVNU Paymaster',
-          `SNIP-29 deploy RPC error ${result.error.code}: ${result.error.message}${errorData}`,
+          `SNIP-29 deploy RPC error ${fullMessage}`,
         );
       }
 
@@ -289,7 +318,7 @@ export class AvnuPaymasterGateway implements PaymasterGateway {
         success: true,
       };
     } catch (err) {
-      if (err instanceof ExternalServiceError) {
+      if (err instanceof PaymasterServiceError || err instanceof ExternalServiceError) {
         this.log.error({err}, 'SNIP-29 deploy failed');
         throw err;
       }

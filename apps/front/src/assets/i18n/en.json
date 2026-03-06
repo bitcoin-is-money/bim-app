@@ -213,6 +213,7 @@
     "INSUFFICIENT_BALANCE_WITH_AMOUNT": "Insufficient balance. This operation requires {{amount}} STRK.",
     "INSUFFICIENT_BALANCE_SECURITY_DEPOSIT": "Insufficient balance to cover the security deposit. Fund your account before retrying.",
     "EXTERNAL_SERVICE_ERROR": "External service is temporarily unavailable.",
+    "PAYMASTER_SERVICE_ERROR": "Payment service temporarily unavailable. Please try again later or contact support with code PAYMASTER_SERVICE_ERROR.",
     "TIMEOUT_ERROR": "Request timed out. Please try again."
   }
 }
