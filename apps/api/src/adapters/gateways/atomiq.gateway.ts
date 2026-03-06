@@ -182,6 +182,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
   async createLightningToStarknetSwap(params: {
     amountSats: bigint;
     destinationAddress: StarknetAddress;
+    description?: string;
   }): Promise<AtomiqSwapResult> {
     const direction: SwapDirection = 'lightning_to_starknet';
     this.log.debug({
@@ -200,6 +201,8 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         swapToken.address,
         params.amountSats,
         true, // exactOut = true: user receives exactly the requested amount, payer covers fees
+        undefined, // additionalParams
+        params.description ? {description: params.description} : undefined,
       );
 
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive: SDK may return null at runtime
