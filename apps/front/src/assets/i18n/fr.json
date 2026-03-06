@@ -205,6 +205,7 @@
     "UNSUPPORTED_NETWORK": "Réseau non supporté.",
     "UNSUPPORTED_TOKEN": "Jeton non supporté.",
     "INVALID_LIGHTNING_INVOICE": "Facture Lightning invalide.",
+    "LIGHTNING_INVOICE_EXPIRED": "La facture Lightning a expiré. Veuillez en générer une nouvelle.",
     "INVALID_BITCOIN_ADDRESS": "Adresse Bitcoin invalide.",
     "INVALID_PAYMENT_ADDRESS": "Adresse de paiement invalide.",
     "USER_SETTINGS_NOT_FOUND": "Paramètres utilisateur introuvables.",

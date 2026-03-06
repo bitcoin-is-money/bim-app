@@ -47,6 +47,7 @@ import {
   InvalidBitcoinAddressError,
   InvalidLightningInvoiceError,
   InvalidSwapStateError,
+  LightningInvoiceExpiredError,
   SwapAmountError,
   SwapClaimError,
   SwapCreationError,
@@ -204,6 +205,9 @@ export function handleDomainError(ctx: Context, error: unknown, logger: Logger):
   }
   if (error instanceof InvalidLightningInvoiceError) {
     return createErrorResponse(ctx, 400, ErrorCode.INVALID_LIGHTNING_INVOICE, 'Invalid Lightning invoice');
+  }
+  if (error instanceof LightningInvoiceExpiredError) {
+    return createErrorResponse(ctx, 400, ErrorCode.LIGHTNING_INVOICE_EXPIRED, 'Lightning invoice has expired');
   }
   if (error instanceof InvalidBitcoinAddressError) {
     return createErrorResponse(ctx, 400, ErrorCode.INVALID_BITCOIN_ADDRESS, 'Invalid Bitcoin address');

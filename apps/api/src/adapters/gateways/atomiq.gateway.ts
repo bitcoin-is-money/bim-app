@@ -16,6 +16,7 @@ import type {
 } from '@bim/domain/ports';
 import {ExternalServiceError} from "@bim/domain/shared";
 import type {SwapDirection, SwapLimits} from "@bim/domain/swap";
+import {LightningInvoiceExpiredError} from "@bim/domain/swap";
 import type {BitcoinAddress, LightningInvoice, SwapId} from '@bim/domain/swap';
 import {existsSync, mkdirSync} from 'node:fs';
 
@@ -281,11 +282,13 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         expiresAt: new Date(quoteExpiry),
       };
     } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (message.includes('pr - expired') || message.includes('pr -expired')) {
+        throw new LightningInvoiceExpiredError();
+      }
       throw new ExternalServiceError(
         'Atomiq',
-        `Failed to create ${direction} swap: ${error instanceof Error
-          ? error.message
-          : String(error)}`,
+        `Failed to create ${direction} swap: ${message}`,
       );
     }
   }
