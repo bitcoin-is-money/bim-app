@@ -26,6 +26,7 @@ export interface BitcoinPreparedPaymentResponse {
   fee: AmountResponse;
   description: string;
   address: string;
+  amountEditable?: boolean;
 }
 
 export interface StarknetPreparedPaymentResponse {

@@ -86,6 +86,25 @@ describe('ParseService', () => {
       expect(mockDecoder.decode).toHaveBeenCalled();
     });
 
+    it('routes bare Bitcoin address (bech32) to bitcoin parser', () => {
+      const result = service.parse(BTC_BECH32);
+      expect(result.network).toBe('bitcoin');
+      if (result.network === 'bitcoin') {
+        expect(result.address).toBe(BTC_BECH32);
+        expect(result.amountEditable).toBe(true);
+      }
+    });
+
+    it('routes bare testnet Bitcoin address (tb1) to bitcoin parser', () => {
+      const testnetAddress = 'tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx';
+      const result = service.parse(testnetAddress);
+      expect(result.network).toBe('bitcoin');
+      if (result.network === 'bitcoin') {
+        expect(result.address).toBe(testnetAddress);
+        expect(result.amountEditable).toBe(true);
+      }
+    });
+
     it('throws UnsupportedNetworkError for unrecognized data', () => {
       expect(() => service.parse('not-a-valid-address')).toThrow(UnsupportedNetworkError);
     });
@@ -294,8 +313,21 @@ describe('ParseService', () => {
       expect(result.amount.isZero()).toBe(true);
     });
 
-    it('throws MissingPaymentAmountError for bitcoin: URI without amount', () => {
-      expect(() => service.parse(`bitcoin:${BTC_BECH32}`)).toThrow(MissingPaymentAmountError);
+    it('returns amountEditable when bitcoin: URI has no amount', () => {
+      const result = service.parse(`bitcoin:${BTC_BECH32}`);
+      expect(result.network).toBe('bitcoin');
+      if (result.network === 'bitcoin') {
+        expect(result.address).toBe(BTC_BECH32);
+        expect(result.amount.isZero()).toBe(true);
+        expect(result.amountEditable).toBe(true);
+      }
+    });
+
+    it('does not set amountEditable when amount is present', () => {
+      const result = service.parse(`bitcoin:${BTC_BECH32}?amount=0.001`);
+      if (result.network === 'bitcoin') {
+        expect(result.amountEditable).toBeUndefined();
+      }
     });
 
     it('throws ValidationError when bitcoin amount is negative', () => {

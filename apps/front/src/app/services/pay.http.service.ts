@@ -19,6 +19,7 @@ export type ParsePaymentResponse =
       fee: { value: number; currency: 'SAT' };
       description: string;
       address: string;
+      amountEditable?: boolean;
     }
   | {
       network: 'starknet';

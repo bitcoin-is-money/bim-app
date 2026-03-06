@@ -59,6 +59,11 @@ export class ParseService {
       return this.wrapParsingErrors(() => this.parseStarknetUri(trimmed));
     }
 
+    if (BitcoinAddress.isValid(trimmed)) {
+      this.deps.logger.info(`Parsing bare Bitcoin address`);
+      return this.wrapParsingErrors(() => this.parseBitcoinUri(`bitcoin:${trimmed}`));
+    }
+
     throw new UnsupportedNetworkError(trimmed);
   }
 
@@ -102,19 +107,22 @@ export class ParseService {
    * @see https://github.com/bitcoin/bips/blob/master/bip-0021.mediawiki
    *
    * @throws InvalidPaymentAddressError if the address format is invalid
-   * @throws MissingPaymentAmountError if the amount parameter is absent
    */
   private parseBitcoinUri(uri: string): ParsedPaymentData & {network: 'bitcoin'} {
     const url = new URL(uri);
     const address = BitcoinAddress.of(url.pathname);
 
     const amountParam = url.searchParams.get('amount');
+    let amount: Amount;
+    let amountEditable: boolean | undefined;
     if (amountParam == undefined) {
-      throw new MissingPaymentAmountError('bitcoin');
+      amount = Amount.zero();
+      amountEditable = true;
+    } else {
+      const btcAmount = Number.parseFloat(amountParam);
+      const rawSats = BigInt(Math.round(btcAmount * 100_000_000));
+      amount = Amount.ofSatoshi(rawSats);
     }
-    const btcAmount = Number.parseFloat(amountParam);
-    const rawSats = BigInt(Math.round(btcAmount * 100_000_000));
-    const amount = Amount.ofSatoshi(rawSats);
 
     // BIP-21: "label" is for the recipient name, "message" is a note to the payer
     const description = url.searchParams.get('label')
@@ -126,6 +134,7 @@ export class ParseService {
       address,
       amount,
       description,
+      ...(amountEditable && {amountEditable}),
     };
   }
 

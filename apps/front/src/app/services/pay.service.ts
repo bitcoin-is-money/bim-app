@@ -51,6 +51,12 @@ export class PayService {
         this.description = payment.description || null;
         this.isLoading.set(false);
 
+        // When amount is editable (e.g. bare Bitcoin address), skip auto-build.
+        // The user must enter an amount first; build will happen on confirm.
+        if (payment.amountEditable) {
+          return;
+        }
+
         // 2. Build: get real fee from LP quote in background
         this.isBuilding.set(true);
         this.flowSubscription = this.httpService.build(data).subscribe({
@@ -71,6 +77,16 @@ export class PayService {
         void this.router.navigate(['/pay'], {replaceUrl: true});
       },
     });
+  }
+
+  /**
+   * Updates the payment amount for amountEditable payments (e.g. bare Bitcoin address).
+   * Reconstructs the rawData as a BIP-21 URI with the new amount.
+   */
+  updatePaymentAmount(destination: string, amountSats: number): void {
+    const btcAmount = amountSats / 100_000_000;
+    this.rawData = `bitcoin:${destination}?amount=${btcAmount}`;
+    this.cachedBuild = null;
   }
 
   setDescription(value: string): void {

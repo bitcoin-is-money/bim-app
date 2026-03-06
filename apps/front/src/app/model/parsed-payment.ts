@@ -8,6 +8,7 @@ export class ParsedPayment {
     readonly fee: Amount,
     readonly description: string,
     readonly destination: string,
+    readonly amountEditable: boolean,
     readonly expiresAt?: Date,
     readonly tokenAddress?: string,
   ) {}
@@ -34,12 +35,15 @@ export class ParsedPayment {
         break;
     }
 
+    const amountEditable = response.network === 'bitcoin' && response.amountEditable === true;
+
     return new ParsedPayment(
       response.network,
       amount,
       fee,
       response.description,
       destination,
+      amountEditable,
       expiresAt,
       tokenAddress,
     );
