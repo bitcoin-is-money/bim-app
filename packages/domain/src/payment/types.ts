@@ -33,6 +33,7 @@ export type ParsedPaymentData =
   | {
       network: 'bitcoin';
       amount: Amount;
+      amountEditable?: boolean;
       description: string;
       address: BitcoinAddress;
     }

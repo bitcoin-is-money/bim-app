@@ -227,7 +227,10 @@ function serializePreparedPayment(prepared: PreparedPayment): PreparedPaymentRes
       };
     }
     case 'bitcoin':
-      return {network: 'bitcoin', ...base, address: prepared.address.toString()};
+      return {
+        network: 'bitcoin', ...base, address: prepared.address.toString(),
+        ...(prepared.amountEditable && {amountEditable: true}),
+      };
     case 'starknet':
       return {
         network: 'starknet',
