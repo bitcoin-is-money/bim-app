@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@atomiqlabs/chain-starknet": "^8.1.10",
-    "@atomiqlabs/sdk": "^8.3.5",
+    "@atomiqlabs/sdk": "^8.4.3",
     "@atomiqlabs/storage-sqlite": "^5.0.0",
     "@bim/db": "*",
     "@bim/domain": "*",

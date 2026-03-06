@@ -176,6 +176,7 @@ export class SwapService {
     const atomiqSwap = await this.deps.atomiqGateway.createLightningToStarknetSwap({
       amountSats: input.amount.getSat(),
       destinationAddress,
+      description: input.description,
     });
 
     if (!atomiqSwap.invoice) {

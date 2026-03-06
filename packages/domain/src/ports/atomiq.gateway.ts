@@ -17,6 +17,7 @@ export interface AtomiqGateway {
   createLightningToStarknetSwap(params: {
     amountSats: bigint;
     destinationAddress: StarknetAddress;
+    description?: string;
   }): Promise<AtomiqSwapResult>;
 
   /**
