@@ -26,6 +26,7 @@ export class AtomiqGatewayMock implements AtomiqGateway {
   private readonly mockStatuses = new Map<string, Partial<AtomiqSwapStatus>>();
   private readonly knownSwapIds = new Set<string>();
   private reverseSwapAmountSats: bigint | null = null;
+  private bitcoinCommitCallsOverride: {contractAddress: string; entrypoint: string; calldata: string[]}[] | null = null;
 
   // ===========================================================================
   // Swap Creation
@@ -102,7 +103,7 @@ export class AtomiqGatewayMock implements AtomiqGateway {
 
     return {
       swapId,
-      commitCalls: [
+      commitCalls: this.bitcoinCommitCallsOverride ?? [
         {
           contractAddress: '0x0123456789abcdef',
           entrypoint: 'approve',
@@ -216,10 +217,15 @@ export class AtomiqGatewayMock implements AtomiqGateway {
     this.knownSwapIds.clear();
     this.mockStatuses.clear();
     this.reverseSwapAmountSats = null;
+    this.bitcoinCommitCallsOverride = null;
   }
 
   setReverseSwapAmountSats(amount: bigint): void {
     this.reverseSwapAmountSats = amount;
+  }
+
+  setBitcoinCommitCalls(calls: {contractAddress: string; entrypoint: string; calldata: string[]}[]): void {
+    this.bitcoinCommitCallsOverride = calls;
   }
 
   setSwapStatus(swapId: string, status: Partial<AtomiqSwapStatus>): void {
