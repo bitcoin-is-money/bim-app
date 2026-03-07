@@ -230,12 +230,15 @@ export function handleDomainError(ctx: Context, error: unknown, logger: Logger):
   if (error instanceof InsufficientBalanceError) {
     if (error.reason === 'security_deposit') {
       const args: Record<string, string> = {};
+      const decimals = error.tokenDecimals ?? 18;
+      const symbol = error.tokenSymbol ?? 'STRK';
       if (error.requiredAmount !== undefined) {
-        args.amount = formatTokenAmount(error.requiredAmount, 18);
+        args.amount = formatTokenAmount(error.requiredAmount, decimals);
+        args.token = symbol;
       }
       return createErrorResponse(ctx, 400, ErrorCode.INSUFFICIENT_BALANCE_SECURITY_DEPOSIT,
         args.amount
-          ? `Insufficient balance to cover the security deposit (~${args.amount} STRK). Fund your account before retrying.`
+          ? `Insufficient balance to cover the security deposit (~${args.amount} ${symbol}). Fund your account before retrying.`
           : 'Insufficient balance to cover the security deposit. Fund your account before retrying.',
         args);
     }

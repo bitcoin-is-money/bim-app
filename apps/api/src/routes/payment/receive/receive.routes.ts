@@ -99,6 +99,22 @@ export function createReceiveRoutes(appContext: AppContext): AuthenticatedHono {
               swapCallCount: swapResult.calls.length,
             }, 'AVNU swap calls obtained, prepending to commit calls');
 
+            // Pre-check: verify the account has enough WBTC to cover the auto-swap
+            const wbtcBalance = await appContext.gateways.starknet.getBalance({
+              address: starknetAddress,
+              token: 'WBTC',
+            });
+            if (wbtcBalance < swapResult.sellAmount) {
+              log.warn({
+                requiredWbtc: swapResult.sellAmount.toString(),
+                currentWbtc: wbtcBalance.toString(),
+                securityDepositStrk: approveInfo.amount.toString(),
+              }, 'Insufficient WBTC balance to cover security deposit auto-swap');
+              throw new InsufficientBalanceError(
+                swapResult.sellAmount, appContext.starknetConfig.wbtcTokenAddress, 'security_deposit', 'WBTC', 8,
+              );
+            }
+
             finalCalls = [...swapResult.calls, ...result.commitCalls];
           }
         }
@@ -112,7 +128,7 @@ export function createReceiveRoutes(appContext: AppContext): AuthenticatedHono {
           });
         } catch (err) {
           if (err instanceof InsufficientBalanceError && approveInfo) {
-            throw new InsufficientBalanceError(approveInfo.amount, approveInfo.tokenAddress, 'security_deposit');
+            throw new InsufficientBalanceError(approveInfo.amount, approveInfo.tokenAddress, 'security_deposit', 'STRK', 18);
           }
           throw err;
         }
