@@ -157,7 +157,8 @@ export class AvnuPaymasterGateway implements PaymasterGateway {
       const messageLC = message.toLowerCase();
       if (messageLC.includes('u256_sub overflow')
         || messageLC.includes('u256_add overflow')
-        || messageLC.includes('balance is too low')) {
+        || messageLC.includes('balance is too low')
+        || messageLC.includes('insufficient token from amount')) {
         throw new InsufficientBalanceError();
       }
       throw new ExternalServiceError(

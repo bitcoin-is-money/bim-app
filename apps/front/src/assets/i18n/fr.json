@@ -212,7 +212,7 @@
     "UNSUPPORTED_CURRENCY": "Devise non supportée.",
     "INSUFFICIENT_BALANCE": "Solde insuffisant pour cette opération.",
     "INSUFFICIENT_BALANCE_WITH_AMOUNT": "Solde insuffisant. Cette opération nécessite {{amount}} STRK.",
-    "INSUFFICIENT_BALANCE_SECURITY_DEPOSIT": "Solde insuffisant pour couvrir le dépôt de garantie. Approvisionnez votre compte avant de réessayer.",
+    "INSUFFICIENT_BALANCE_SECURITY_DEPOSIT": "Solde insuffisant pour couvrir le dépôt de garantie (~{{amount}} STRK). Approvisionnez votre compte avant de réessayer.",
     "EXTERNAL_SERVICE_ERROR": "Le service externe est temporairement indisponible.",
     "PAYMASTER_SERVICE_ERROR": "Service de paiement temporairement indisponible. Réessayez plus tard ou contactez le support avec le code PAYMASTER_SERVICE_ERROR.",
     "TIMEOUT_ERROR": "La requête a expiré. Veuillez réessayer."
