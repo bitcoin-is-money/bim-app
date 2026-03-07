@@ -158,6 +158,7 @@ export class AtomiqGatewayMock implements AtomiqGateway {
       isCompleted: false,
       isFailed: false,
       isExpired: false,
+      isRefunded: false,
     };
 
     if (!this.knownSwapIds.has(swapId)) {

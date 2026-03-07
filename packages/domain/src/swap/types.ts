@@ -54,6 +54,7 @@ export type SwapStatus =
   | 'confirming'      // Transaction submitted, waiting for confirmation
   | 'completed'       // Swap successfully completed
   | 'expired'         // Swap expired without completion
+  | 'refunded'        // Security deposit automatically refunded after expiry
   | 'failed';         // Swap failed due to an error
 
 // =============================================================================
@@ -66,6 +67,7 @@ export type SwapState =
   | { status: 'confirming'; txHash: string; confirmedAt: Date }
   | { status: 'completed'; txHash: string; completedAt: Date }
   | { status: 'expired'; expiredAt: Date }
+  | { status: 'refunded'; refundedAt: Date }
   | { status: 'failed'; error: string; failedAt: Date };
 
 // =============================================================================

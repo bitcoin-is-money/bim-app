@@ -636,13 +636,14 @@ export class AtomiqSdkGateway implements AtomiqGateway {
 
       const state = swap.getState();
 
-      const {isPaid, isCompleted, isFailed, isExpired} = this.mapStateToStatus(state, direction);
+      const {isPaid, isCompleted, isFailed, isExpired, isRefunded} = this.mapStateToStatus(state, direction);
       const result: AtomiqSwapStatus = {
         state,
         isPaid,
         isCompleted,
         isFailed,
         isExpired,
+        isRefunded,
         txHash: swap.getOutputTxId() ?? swap.getInputTxId() ?? undefined,
       };
       this.log.debug({...result}, 'getSwapStatus result');
@@ -654,6 +655,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         isCompleted: false,
         isFailed: false,
         isExpired: true,
+        isRefunded: false,
         error: `Swap ${swapId} not found in SDK storage`,
       };
     }
@@ -678,6 +680,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     isCompleted: boolean;
     isFailed: boolean;
     isExpired: boolean;
+    isRefunded: boolean;
   } {
     if (state < 0) {
       // QUOTE_SOFT_EXPIRED (-1): The LP authorization expired, but an on-chain
@@ -687,7 +690,12 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       // Treat -1 as "still pending" for reverse swaps to avoid premature expiration.
       const isReverseSwap = direction === 'starknet_to_lightning' || direction === 'starknet_to_bitcoin';
       if (state === -1 && isReverseSwap) {
-        return {isPaid: false, isCompleted: false, isFailed: false, isExpired: false};
+        return {isPaid: false, isCompleted: false, isFailed: false, isExpired: false, isRefunded: false};
+      }
+
+      // State -3 for bitcoin_to_starknet = REFUNDED (security deposit returned by smart contract)
+      if (state === -3 && direction === 'bitcoin_to_starknet') {
+        return {isPaid: false, isCompleted: false, isFailed: false, isExpired: false, isRefunded: true};
       }
 
       return {
@@ -695,6 +703,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         isCompleted: false,
         isFailed: state <= -3,
         isExpired: state > -3,
+        isRefunded: false,
       };
     }
 
@@ -707,6 +716,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       isCompleted: state >= 3,
       isFailed: false,
       isExpired: false,
+      isRefunded: false,
     };
   }
 

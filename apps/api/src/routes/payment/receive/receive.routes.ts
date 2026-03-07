@@ -1,3 +1,4 @@
+import {AccountId} from '@bim/domain/account';
 import type {BitcoinReceiveResult, ReceiveResult} from '@bim/domain/payment';
 import type {StarknetCall} from '@bim/domain/ports';
 import {Amount, InsufficientBalanceError} from '@bim/domain/shared';
@@ -189,7 +190,7 @@ export function createReceiveRoutes(appContext: AppContext): AuthenticatedHono {
       // 5b. Label the commit transaction as "Security deposit" (otherwise defaults to "Sent")
       try {
         await appContext.repositories.transaction.saveDescription(
-          TransactionHash.of(txHash), build.accountId, 'Security deposit',
+          TransactionHash.of(txHash), AccountId.of(build.accountId), 'Security deposit',
         );
       } catch (descErr) {
         log.warn({txHash, err: descErr}, 'Failed to save security deposit description (non-fatal)');

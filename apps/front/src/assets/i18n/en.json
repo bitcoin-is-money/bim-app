@@ -124,6 +124,7 @@
       "confirming": "Confirming",
       "completed": "Completed",
       "expired": "Expired",
+      "refunded": "Refunded",
       "failed": "Failed"
     }
   },

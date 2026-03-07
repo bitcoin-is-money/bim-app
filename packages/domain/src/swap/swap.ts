@@ -181,7 +181,13 @@ export class Swap {
    * Checks if the swap is in a terminal state.
    */
   isTerminal(): boolean {
-    return ['completed', 'expired', 'failed'].includes(this.state.status);
+    // Expired bitcoin_to_starknet swaps are NOT terminal: the Atomiq smart contract
+    // will auto-refund the security deposit after timelock expiry (state -3).
+    // Keep monitoring until the refund is confirmed.
+    if (this.state.status === 'expired' && this.direction === 'bitcoin_to_starknet') {
+      return false;
+    }
+    return ['completed', 'expired', 'failed', 'refunded'].includes(this.state.status);
   }
 
   /**
@@ -231,6 +237,13 @@ export class Swap {
     };
   }
 
+  markAsRefunded(): void {
+    this.state = {
+      status: 'refunded',
+      refundedAt: new Date(),
+    };
+  }
+
   markAsFailed(error: string): void {
     this.state = {
       status: 'failed',
@@ -257,6 +270,7 @@ export class Swap {
       case 'completed':
         return 100;
       case 'expired':
+      case 'refunded':
       case 'failed':
         return 0;
     }

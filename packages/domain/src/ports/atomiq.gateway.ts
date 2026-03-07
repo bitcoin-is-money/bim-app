@@ -141,6 +141,7 @@ export interface AtomiqSwapStatus {
   isCompleted: boolean;
   isFailed: boolean;
   isExpired: boolean;
+  isRefunded: boolean;
   txHash?: string;
   error?: string;
 }
