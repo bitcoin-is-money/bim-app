@@ -78,5 +78,7 @@ describe('Receive — Insufficient Balance for Security Deposit', () => {
     const body = await response.json() as ApiErrorResponse;
     expect(body.error.code).toBe('INSUFFICIENT_BALANCE_SECURITY_DEPOSIT');
     expect(body.error.message).toContain('security deposit');
+    expect(body.error.args).toBeDefined();
+    expect(body.error.args!.amount).toBeDefined();
   });
 });
