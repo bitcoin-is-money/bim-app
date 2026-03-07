@@ -1,6 +1,7 @@
 import type {BitcoinReceiveResult, ReceiveResult} from '@bim/domain/payment';
 import type {StarknetCall} from '@bim/domain/ports';
 import {Amount, InsufficientBalanceError} from '@bim/domain/shared';
+import {TransactionHash} from '@bim/domain/user';
 import type {TypedResponse} from 'hono';
 import {Hono} from 'hono';
 import {randomUUID} from 'node:crypto';
@@ -184,6 +185,15 @@ export function createReceiveRoutes(appContext: AppContext): AuthenticatedHono {
 
       // 5. Wait for Starknet confirmation
       await appContext.gateways.starknet.waitForTransaction(txHash);
+
+      // 5b. Label the commit transaction as "Security deposit" (otherwise defaults to "Sent")
+      try {
+        await appContext.repositories.transaction.saveDescription(
+          TransactionHash.of(txHash), build.accountId, 'Security deposit',
+        );
+      } catch (descErr) {
+        log.warn({txHash, err: descErr}, 'Failed to save security deposit description (non-fatal)');
+      }
 
       // 6. Complete the swap (SDK detects on-chain commit, returns deposit address)
       const starknetAddress = account.requireStarknetAddress();
