@@ -56,6 +56,10 @@
     @apply bg-red-500;
   }
 
+  &.status-refunded .swap-status-indicator {
+    @apply bg-blue-400;
+  }
+
   &.status-pending .swap-status-indicator {
     @apply bg-neutral-400;
   }

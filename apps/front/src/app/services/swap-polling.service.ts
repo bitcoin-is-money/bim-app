@@ -55,7 +55,7 @@ export class SwapPollingService implements OnDestroy {
     }
 
     const storedSwap = this.storageService.getSwap(swapId);
-    if (storedSwap && isTerminalStatus(storedSwap.lastKnownStatus)) {
+    if (storedSwap && isTerminalStatus(storedSwap.lastKnownStatus, storedSwap.direction)) {
       return;
     }
 
@@ -94,7 +94,7 @@ export class SwapPollingService implements OnDestroy {
             this.transactionService.loadFirst();
           }
 
-          if (isTerminalStatus(newStatus)) {
+          if (isTerminalStatus(newStatus, storedSwap?.direction)) {
             this.stopPolling(swapId);
           }
         })

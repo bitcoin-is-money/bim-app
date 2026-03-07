@@ -2,10 +2,10 @@ import * as schema from '@bim/db';
 import type {SwapRepository} from '@bim/domain/ports';
 import {Amount} from '@bim/domain/shared';
 import {Swap, type SwapDirection, SwapId, type SwapState, type SwapStatus} from '@bim/domain/swap';
-import {and, eq, lt, notInArray} from 'drizzle-orm';
+import {and, eq, lt, notInArray, or} from 'drizzle-orm';
 import type {NodePgDatabase} from 'drizzle-orm/node-postgres';
 
-const TERMINAL_STATUSES: SwapStatus[] = ['completed', 'expired', 'failed'];
+const TERMINAL_STATUSES: SwapStatus[] = ['completed', 'expired', 'failed', 'refunded'];
 
 /**
  * Drizzle-based implementation of SwapRepository.
@@ -72,7 +72,15 @@ export class DrizzleSwapRepository implements SwapRepository {
 
   async findActive(): Promise<Swap[]> {
     const records = await this.db.query.swaps.findMany({
-      where: notInArray(schema.swaps.status, TERMINAL_STATUSES),
+      where: or(
+        notInArray(schema.swaps.status, TERMINAL_STATUSES),
+        // Expired bitcoin_to_starknet swaps are still active: the Atomiq smart
+        // contract will auto-refund the security deposit after timelock expiry.
+        and(
+          eq(schema.swaps.status, 'expired'),
+          eq(schema.swaps.direction, 'bitcoin_to_starknet'),
+        ),
+      ),
     });
 
     return records.map((record) => this.toSwap(record));
@@ -130,6 +138,8 @@ export class DrizzleSwapRepository implements SwapRepository {
         return {...base, txHash: state.txHash, completedAt: state.completedAt};
       case 'expired':
         return {...base, expiredAt: state.expiredAt};
+      case 'refunded':
+        return {...base, expiredAt: state.refundedAt};
       case 'failed':
         return {...base, errorMessage: state.error, failedAt: state.failedAt};
     }
@@ -148,6 +158,8 @@ export class DrizzleSwapRepository implements SwapRepository {
         return {status: 'completed', txHash: record.txHash!, completedAt: record.completedAt!};
       case 'expired':
         return {status: 'expired', expiredAt: record.expiredAt!};
+      case 'refunded':
+        return {status: 'refunded', refundedAt: record.expiredAt!};
       case 'failed':
         return {status: 'failed', error: record.errorMessage!, failedAt: record.failedAt!};
       default:

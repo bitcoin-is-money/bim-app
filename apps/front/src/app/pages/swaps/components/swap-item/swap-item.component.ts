@@ -29,7 +29,7 @@ export class SwapItemComponent {
   swap = input.required<StoredSwap>();
 
   readonly isPolling = computed(() => this.pollingService.isPolling(this.swap().id));
-  readonly isTerminal = computed(() => isTerminalStatus(this.swap().lastKnownStatus));
+  readonly isTerminal = computed(() => isTerminalStatus(this.swap().lastKnownStatus, this.swap().direction));
   readonly directionKey = computed(() => DIRECTION_KEYS[this.swap().direction]);
   readonly statusKey = computed(() => `swaps.status.${this.swap().lastKnownStatus}`);
 

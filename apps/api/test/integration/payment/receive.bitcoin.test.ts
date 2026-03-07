@@ -273,15 +273,20 @@ describe('Bitcoin Receive Swap Lifecycle', () => {
     it('does not change terminal status on subsequent polls', async () => {
       const {swapId} = await insertBitcoinSwap('btc-swap-022');
 
-      // Mark as expired
+      // Mark as expired, then refunded (security deposit returned)
       atomiqMock.setSwapStatus(swapId, {isExpired: true, state: -1});
       const status1 = await getSwapStatus(swapId);
       expect(status1.status).toBe('expired');
 
-      // Change mock to paid — should NOT change because expired is terminal
-      atomiqMock.setSwapStatus(swapId, {isPaid: true, state: 1});
+      // Atomiq refunds → status transitions to refunded
+      atomiqMock.setSwapStatus(swapId, {isRefunded: true, state: -3});
       const status2 = await getSwapStatus(swapId);
-      expect(status2.status).toBe('expired');
+      expect(status2.status).toBe('refunded');
+
+      // Change mock to paid — should NOT change because refunded is terminal
+      atomiqMock.setSwapStatus(swapId, {isPaid: true, state: 1});
+      const status3 = await getSwapStatus(swapId);
+      expect(status3.status).toBe('refunded');
     });
   });
 });

@@ -562,6 +562,9 @@ export class SwapService {
       } else if (atomiqStatus.isPaid) {
         swap.markAsPaid();
         await this.deps.swapRepository.save(swap);
+      } else if (atomiqStatus.isRefunded) {
+        swap.markAsRefunded();
+        await this.deps.swapRepository.save(swap);
       } else if (atomiqStatus.isFailed) {
         // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- empty error should fallback
         swap.markAsFailed(atomiqStatus.error || 'Unknown error');

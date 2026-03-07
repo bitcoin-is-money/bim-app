@@ -37,7 +37,7 @@ export class SwapStorageService {
   }
 
   getActiveSwaps(): StoredSwap[] {
-    return this.swaps().filter((s) => !isTerminalStatus(s.lastKnownStatus));
+    return this.swaps().filter((s) => !isTerminalStatus(s.lastKnownStatus, s.direction));
   }
 
   removeOldSwaps(): void {
@@ -45,7 +45,7 @@ export class SwapStorageService {
     const current = this.swaps();
     const filtered = current.filter((swap) => {
       const createdAt = new Date(swap.createdAt).getTime();
-      return createdAt > cutoff || !isTerminalStatus(swap.lastKnownStatus);
+      return createdAt > cutoff || !isTerminalStatus(swap.lastKnownStatus, swap.direction);
     });
 
     const trimmed = filtered.slice(0, MAX_SWAPS);

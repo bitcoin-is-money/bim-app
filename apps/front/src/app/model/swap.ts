@@ -10,6 +10,7 @@ export type SwapStatus =
   | 'confirming'
   | 'completed'
   | 'expired'
+  | 'refunded'
   | 'failed';
 
 export type SwapType = 'receive' | 'send';
@@ -34,8 +35,11 @@ export interface SwapStatusResponse {
   expiresAt: string;
 }
 
-export function isTerminalStatus(status: SwapStatus): boolean {
-  return ['completed', 'expired', 'failed'].includes(status);
+export function isTerminalStatus(status: SwapStatus, direction?: SwapDirection): boolean {
+  if (status === 'expired' && direction === 'bitcoin_to_starknet') {
+    return false;
+  }
+  return ['completed', 'expired', 'refunded', 'failed'].includes(status);
 }
 
 export function formatSwapDirection(direction: SwapDirection): string {

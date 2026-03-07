@@ -34,7 +34,7 @@ export class SwapsPage implements OnInit {
 
     this.isRefreshing.set(true);
 
-    const activeSwaps = swaps.filter((s) => !isTerminalStatus(s.lastKnownStatus));
+    const activeSwaps = swaps.filter((s) => !isTerminalStatus(s.lastKnownStatus, s.direction));
     for (const swap of activeSwaps.slice(0, 20)) {
       this.pollingService.fetchStatusOnce(swap.id);
     }
