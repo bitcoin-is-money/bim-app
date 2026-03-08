@@ -112,6 +112,7 @@
     "swapsWillAppear": "Swaps will appear here when you send or receive payments via Lightning or Bitcoin networks.",
     "refreshAll": "Refresh All",
     "refreshing": "Refreshing...",
+    "clearAll": "Clear All",
     "direction": {
       "lightningReceive": "Lightning Receive",
       "lightningPay": "Lightning Send",

@@ -112,6 +112,7 @@
     "swapsWillAppear": "Les échanges apparaîtront ici lorsque vous enverrez ou recevrez des paiements via les réseaux Lightning ou Bitcoin.",
     "refreshAll": "Tout rafraîchir",
     "refreshing": "Rafraîchissement...",
+    "clearAll": "Tout supprimer",
     "direction": {
       "lightningReceive": "Réception Lightning",
       "lightningPay": "Envoi Lightning",

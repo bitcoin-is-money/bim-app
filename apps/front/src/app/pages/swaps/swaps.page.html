@@ -30,6 +30,15 @@
               {{ 'swaps.refreshAll' | translate }}
             }
           </app-button>
+
+          <app-button
+            class="clear-button"
+            variant="tertiary"
+            [icon]="['fas', 'trash']"
+            (click)="clearAllSwaps()"
+          >
+            {{ 'swaps.clearAll' | translate }}
+          </app-button>
         </div>
       }
     </main>
