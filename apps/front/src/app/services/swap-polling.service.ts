@@ -194,7 +194,7 @@ export class SwapPollingService implements OnDestroy {
 
   private logSwapError(swapId: string, err: unknown): void {
     if (err instanceof HttpErrorResponse && err.status === 404) {
-      console.info(`Swap ${swapId} not found`);
+      console.warn(`Swap not found: ${swapId}`);
     } else {
       console.error(`Failed to fetch swap status ${swapId}:`, err);
     }

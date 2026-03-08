@@ -72,6 +72,14 @@ import {ErrorCode} from './error-codes';
  * All routes should use this function to handle errors consistently.
  */
 export function handleDomainError(ctx: Context, error: unknown, logger: Logger): TypedResponse<ApiErrorResponse> {
+  // Swap not found is expected (e.g. polling after container restart) — warn only, no stack trace
+  if (error instanceof SwapNotFoundError) {
+    logger.warn(`Swap not found: ${error.swapId}`);
+    return createErrorResponse(ctx, 404, ErrorCode.SWAP_NOT_FOUND, 'Swap not found', {
+      swapId: error.swapId,
+    });
+  }
+
   logger.error(error,'API error');
 
   // Zod validation errors
@@ -140,11 +148,6 @@ export function handleDomainError(ctx: Context, error: unknown, logger: Logger):
   }
 
   // --- Swap errors ---
-  if (error instanceof SwapNotFoundError) {
-    return createErrorResponse(ctx, 404, ErrorCode.SWAP_NOT_FOUND, 'Swap not found', {
-      swapId: error.swapId,
-    });
-  }
   if (error instanceof SwapExpiredError) {
     return createErrorResponse(ctx, 400, ErrorCode.SWAP_EXPIRED, 'Swap expired', {
       swapId: error.swapId,
