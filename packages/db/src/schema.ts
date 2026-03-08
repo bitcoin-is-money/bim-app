@@ -126,6 +126,8 @@ export const swaps = pgTable('bim_swaps', {
   confirmedAt: timestamp('confirmed_at'),
   completedAt: timestamp('completed_at'),
   expiredAt: timestamp('expired_at'),
+  refundedAt: timestamp('refunded_at'),
+  lostAt: timestamp('lost_at'),
   failedAt: timestamp('failed_at'),
 
   // Core timestamps
