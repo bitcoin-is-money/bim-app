@@ -570,7 +570,14 @@ export class SwapService {
         swap.markAsFailed(atomiqStatus.error || 'Unknown error');
         await this.deps.swapRepository.save(swap);
       } else if (atomiqStatus.isExpired) {
-        swap.markAsExpired();
+        // If the swap is not found in SDK storage (e.g. after container restart),
+        // mark as 'lost' so the monitor stops polling — the refund can never be
+        // detected without SDK data.
+        if (atomiqStatus.error?.includes('not found in SDK storage')) {
+          swap.markAsLost();
+        } else {
+          swap.markAsExpired();
+        }
         await this.deps.swapRepository.save(swap);
       }
     } catch (error) {

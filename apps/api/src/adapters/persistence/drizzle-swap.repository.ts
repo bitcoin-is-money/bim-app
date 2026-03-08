@@ -5,7 +5,7 @@ import {Swap, type SwapDirection, SwapId, type SwapState, type SwapStatus} from 
 import {and, eq, lt, notInArray, or} from 'drizzle-orm';
 import type {NodePgDatabase} from 'drizzle-orm/node-postgres';
 
-const TERMINAL_STATUSES: SwapStatus[] = ['completed', 'expired', 'failed', 'refunded'];
+const TERMINAL_STATUSES: SwapStatus[] = ['completed', 'expired', 'failed', 'refunded', 'lost'];
 
 /**
  * Drizzle-based implementation of SwapRepository.
@@ -142,6 +142,8 @@ export class DrizzleSwapRepository implements SwapRepository {
         return {...base, expiredAt: state.refundedAt};
       case 'failed':
         return {...base, errorMessage: state.error, failedAt: state.failedAt};
+      case 'lost':
+        return {...base, expiredAt: state.lostAt};
     }
   }
 
@@ -162,6 +164,8 @@ export class DrizzleSwapRepository implements SwapRepository {
         return {status: 'refunded', refundedAt: record.expiredAt!};
       case 'failed':
         return {status: 'failed', error: record.errorMessage!, failedAt: record.failedAt!};
+      case 'lost':
+        return {status: 'lost', lostAt: record.expiredAt!};
       default:
         throw new Error(`Unknown swap status: ${record.status}`);
     }

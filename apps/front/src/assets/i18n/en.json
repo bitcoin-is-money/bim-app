@@ -125,7 +125,8 @@
       "completed": "Completed",
       "expired": "Expired",
       "refunded": "Refunded",
-      "failed": "Failed"
+      "failed": "Failed",
+      "lost": "Lost"
     }
   },
   "gasTank": {
