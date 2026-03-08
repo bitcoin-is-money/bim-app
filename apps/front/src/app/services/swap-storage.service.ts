@@ -40,6 +40,11 @@ export class SwapStorageService {
     return this.swaps().filter((s) => !isTerminalStatus(s.lastKnownStatus, s.direction));
   }
 
+  clearAll(): void {
+    this.swaps.set([]);
+    this.persistToStorage([]);
+  }
+
   removeOldSwaps(): void {
     const cutoff = Date.now() - MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
     const current = this.swaps();

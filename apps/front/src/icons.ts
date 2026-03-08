@@ -10,7 +10,8 @@ import {
   faPen,
   faQrcode,
   faShareNodes,
-  faSyncAlt
+  faSyncAlt,
+  faTrash
 } from '@fortawesome/free-solid-svg-icons';
 
 export function registerIcons(library: FaIconLibrary): void {
@@ -25,6 +26,7 @@ export function registerIcons(library: FaIconLibrary): void {
     faCoins,          // Money: 'fas', 'coins'
     faArrowLeft,      // back: 'fas', 'arrow-left'
     faSyncAlt,        // refresh, 'fas', 'sync-alt'
-    faClock           // Payment in progress: 'fas', 'clock'
+    faClock,          // Payment in progress: 'fas', 'clock'
+    faTrash           // Delete: 'fas', 'trash'
   );
 }

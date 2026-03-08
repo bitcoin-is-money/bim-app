@@ -42,4 +42,8 @@ export class SwapsPage implements OnInit {
     // Reset refreshing state after a short delay (mocks are async)
     setTimeout(() => { this.isRefreshing.set(false); }, 1000);
   }
+
+  clearAllSwaps(): void {
+    this.storageService.clearAll();
+  }
 }
