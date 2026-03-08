@@ -77,9 +77,16 @@ export function createReceiveRoutes(appContext: AppContext): AuthenticatedHono {
             address: starknetAddress,
             token: 'STRK',
           });
-          const deficit = approveInfo.amount - strkBalance;
+          const rawDeficit = approveInfo.amount - strkBalance;
 
-          if (deficit > 0n) {
+          if (rawDeficit > 0n) {
+            // Add 10% buffer, round up to whole STRK, enforce minimum to avoid
+            // DEX "insufficient input amount" errors on tiny swaps.
+            const ONE_STRK = 10n ** 18n;
+            const MIN_SWAP = 50n * ONE_STRK; // 50 STRK — below this, DEX pools round to 0
+            const deficitWithBuffer = (rawDeficit * 110n) / 100n;
+            const rounded = ((deficitWithBuffer + ONE_STRK - 1n) / ONE_STRK) * ONE_STRK;
+            const deficit = rounded < MIN_SWAP ? MIN_SWAP : rounded;
             log.info({
               requiredStrk: approveInfo.amount.toString(),
               currentStrk: strkBalance.toString(),
