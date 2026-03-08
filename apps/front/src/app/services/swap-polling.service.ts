@@ -69,7 +69,12 @@ export class SwapPollingService implements OnDestroy {
           this.httpService.getStatus(swapId, {silent: true}).pipe(
             catchError((err) => {
               this.logSwapError(swapId, err);
-              this.incrementErrors(swapId);
+              if (err instanceof HttpErrorResponse && err.status === 404) {
+                this.storageService.updateSwapStatus(swapId, 'lost');
+                this.stopPolling(swapId);
+              } else {
+                this.incrementErrors(swapId);
+              }
               return of(null);
             })
           )
@@ -135,6 +140,9 @@ export class SwapPollingService implements OnDestroy {
       },
       error: (err) => {
         this.logSwapError(swapId, err);
+        if (err instanceof HttpErrorResponse && err.status === 404) {
+          this.storageService.updateSwapStatus(swapId, 'lost');
+        }
       },
     });
   }
