@@ -124,6 +124,8 @@ export class DrizzleSwapRepository implements SwapRepository {
       confirmedAt: null as Date | null,
       completedAt: null as Date | null,
       expiredAt: null as Date | null,
+      refundedAt: null as Date | null,
+      lostAt: null as Date | null,
       failedAt: null as Date | null,
     };
 
@@ -139,11 +141,11 @@ export class DrizzleSwapRepository implements SwapRepository {
       case 'expired':
         return {...base, expiredAt: state.expiredAt};
       case 'refunded':
-        return {...base, expiredAt: state.refundedAt};
+        return {...base, refundedAt: state.refundedAt};
       case 'failed':
         return {...base, errorMessage: state.error, failedAt: state.failedAt};
       case 'lost':
-        return {...base, expiredAt: state.lostAt};
+        return {...base, lostAt: state.lostAt};
     }
   }
 
@@ -161,11 +163,11 @@ export class DrizzleSwapRepository implements SwapRepository {
       case 'expired':
         return {status: 'expired', expiredAt: record.expiredAt!};
       case 'refunded':
-        return {status: 'refunded', refundedAt: record.expiredAt!};
+        return {status: 'refunded', refundedAt: record.refundedAt!};
       case 'failed':
         return {status: 'failed', error: record.errorMessage!, failedAt: record.failedAt!};
       case 'lost':
-        return {status: 'lost', lostAt: record.expiredAt!};
+        return {status: 'lost', lostAt: record.lostAt!};
       default:
         throw new Error(`Unknown swap status: ${record.status}`);
     }
