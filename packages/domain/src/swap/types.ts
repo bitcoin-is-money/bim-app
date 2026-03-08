@@ -55,7 +55,8 @@ export type SwapStatus =
   | 'completed'       // Swap successfully completed
   | 'expired'         // Swap expired without completion
   | 'refunded'        // Security deposit automatically refunded after expiry
-  | 'failed';         // Swap failed due to an error
+  | 'failed'          // Swap failed due to an error
+  | 'lost';           // Swap lost from SDK storage (e.g. after container restart)
 
 // =============================================================================
 // Swap State (Discriminated Union)
@@ -68,7 +69,8 @@ export type SwapState =
   | { status: 'completed'; txHash: string; completedAt: Date }
   | { status: 'expired'; expiredAt: Date }
   | { status: 'refunded'; refundedAt: Date }
-  | { status: 'failed'; error: string; failedAt: Date };
+  | { status: 'failed'; error: string; failedAt: Date }
+  | { status: 'lost'; lostAt: Date };
 
 // =============================================================================
 // Swap Creation Params

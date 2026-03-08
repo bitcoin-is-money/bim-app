@@ -11,7 +11,8 @@ export type SwapStatus =
   | 'completed'
   | 'expired'
   | 'refunded'
-  | 'failed';
+  | 'failed'
+  | 'lost';
 
 export type SwapType = 'receive' | 'send';
 
@@ -39,7 +40,7 @@ export function isTerminalStatus(status: SwapStatus, direction?: SwapDirection):
   if (status === 'expired' && direction === 'bitcoin_to_starknet') {
     return false;
   }
-  return ['completed', 'expired', 'refunded', 'failed'].includes(status);
+  return ['completed', 'expired', 'refunded', 'failed', 'lost'].includes(status);
 }
 
 export function formatSwapDirection(direction: SwapDirection): string {

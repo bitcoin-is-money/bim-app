@@ -187,7 +187,7 @@ export class Swap {
     if (this.state.status === 'expired' && this.direction === 'bitcoin_to_starknet') {
       return false;
     }
-    return ['completed', 'expired', 'failed', 'refunded'].includes(this.state.status);
+    return ['completed', 'expired', 'failed', 'refunded', 'lost'].includes(this.state.status);
   }
 
   /**
@@ -252,6 +252,13 @@ export class Swap {
     };
   }
 
+  markAsLost(): void {
+    this.state = {
+      status: 'lost',
+      lostAt: new Date(),
+    };
+  }
+
   // ===========================================================================
   // Progress Calculation
   // ===========================================================================
@@ -272,6 +279,7 @@ export class Swap {
       case 'expired':
       case 'refunded':
       case 'failed':
+      case 'lost':
         return 0;
     }
   }

@@ -52,7 +52,8 @@
   }
 
   &.status-failed .swap-status-indicator,
-  &.status-expired .swap-status-indicator {
+  &.status-expired .swap-status-indicator,
+  &.status-lost .swap-status-indicator {
     @apply bg-red-500;
   }
 
