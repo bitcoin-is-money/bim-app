@@ -15,16 +15,17 @@
           }
         </div>
 
-        <div class="refresh-section">
+        <div class="action-buttons">
           <app-button
             class="refresh-button"
+            colorVariant="white"
             variant="primary"
             [disabled]="isRefreshing()"
             [loading]="isRefreshing()"
             [icon]="['fas', 'sync-alt']"
             (click)="refreshAllStatuses()"
           >
-            @if (isRefreshing()) {
+            @if (isRefreshing()) {s
               {{ 'swaps.refreshing' | translate }}
             } @else {
               {{ 'swaps.refreshAll' | translate }}
@@ -33,7 +34,8 @@
 
           <app-button
             class="clear-button"
-            variant="tertiary"
+            colorVariant="danger"
+            variant="primary"
             [icon]="['fas', 'trash']"
             (click)="clearAllSwaps()"
           >

@@ -1,5 +1,5 @@
 import {Component, input} from '@angular/core';
-import type {StyleVariant} from "../variant";
+import type {ColorVariant} from "../variant";
 
 @Component({
   selector: 'app-spinner',
@@ -7,9 +7,9 @@ import type {StyleVariant} from "../variant";
   templateUrl: './spinner.component.html',
   styleUrl: './spinner.component.scss',
   host: {
-    '[class]': 'variant()',
+    '[class]': 'colorVariant() ?? ""',
   },
 })
 export class SpinnerComponent {
-  readonly variant = input<StyleVariant>('secondary');
+  readonly colorVariant = input<ColorVariant>();
 }

@@ -7,26 +7,22 @@
   @apply text-amber-500;
 }
 
-// Inverted colors: spinner contrasts with button background
+// Spinner color contrasts with its background
 
-:host(.primary) {
-  @apply text-neutral-900;  // dark on amber bg
+:host(.gold) {
+  @apply text-neutral-100;
 }
 
-:host(.secondary) {
-  @apply text-amber-500;  // light on transparent/dark bg
+:host(.white) {
+  @apply text-neutral-900;
 }
 
-:host(.tertiary) {
-  @apply text-neutral-900; // dark on white bg
+:host(.black) {
+  @apply text-neutral-200;
 }
 
-:host(.big) {
-  @apply text-neutral-200; // light on dark bg
-}
-
-:host(.transparent) {
-  @apply text-neutral-100; // light on transparent bg
+:host(.danger) {
+  @apply text-neutral-100;
 }
 
 svg {
