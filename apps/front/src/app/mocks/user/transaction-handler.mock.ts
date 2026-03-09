@@ -31,9 +31,9 @@ function mockTx(
 
 const MOCK_TRANSACTIONS: Transaction[] = [
   mockTx('1', 'receipt', '5000000', 1, 'Salary'),
-  mockTx('2', 'spent', '2500000', 2, 'Rent'),
+  mockTx('2', 'spent', '2500000', 2, 'Rent looooooooooooooooooooooooooooooooonnnnnnngggggggggggggggggggg and multi line '),
   mockTx('3', 'receipt', '15000000', 3),
-  mockTx('4', 'spent', '750000', 5, 'Coffee shop'),
+  mockTx('4', 'spent', '750000', 5, 'Coffeeeeeeeeeeeeeeeeeeeeeeeeee shop'),
   mockTx('5', 'receipt', '32000000', 6, 'Freelance gig'),
   mockTx('6', 'spent', '1200000', 8),
   mockTx('7', 'receipt', '8500000', 10, 'Refund'),

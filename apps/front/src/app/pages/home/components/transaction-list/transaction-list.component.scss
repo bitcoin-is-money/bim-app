@@ -18,6 +18,8 @@
 
         .transaction-label {
           @apply text-white font-medium;
+          overflow-wrap: break-word;
+          word-break: break-all;
         }
 
         .transaction-date {
