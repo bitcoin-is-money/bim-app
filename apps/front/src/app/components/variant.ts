@@ -1,4 +1,6 @@
 
-export type StyleVariant = 'special' | 'primary' | 'secondary' | 'tertiary' | 'contrast' | 'transparent';
+export type ColorVariant = 'gold' | 'white' | 'black' | 'transparent' | 'danger';
+
+export type StyleVariant = 'primary' | 'secondary' | 'action' | 'jumbo' | 'ghost';
 
 export type SizeVariant = 'base' | 'lg' | 'xl';

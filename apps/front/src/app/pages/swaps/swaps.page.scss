@@ -22,14 +22,8 @@
       @apply flex flex-col divide-y divide-neutral-800;
     }
 
-    .refresh-section {
-      //@apply mt-6 pt-4 border-t border-neutral-800;
-
-      .refresh-button {
-        //@apply w-full py-3 px-4 rounded-lg bg-neutral-800 text-white font-medium
-        //       hover:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed
-        //       transition-colors;
-      }
+    .action-buttons {
+      @apply flex flex-col gap-3;
     }
   }
 }

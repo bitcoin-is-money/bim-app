@@ -9,7 +9,7 @@
     } @else {
       <h1>{{ 'accountSetup.failed' | translate }}</h1>
       <p class="error-message">{{ errorMessage() }}</p>
-      <app-button variant="secondary" (click)="goBack()">{{ 'accountSetup.back' | translate }}</app-button>
+      <app-button colorVariant="black" variant="secondary" (click)="goBack()">{{ 'accountSetup.back' | translate }}</app-button>
     }
   </div>
 </app-full-page-layout>

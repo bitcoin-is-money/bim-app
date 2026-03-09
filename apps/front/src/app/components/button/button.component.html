@@ -1,18 +1,22 @@
 <button
         type="button"
         class="btn"
-        [class.btn-special]="variant() === 'special'"
+        [class.btn-color-gold]="colorVariant() === 'gold'"
+        [class.btn-color-white]="colorVariant() === 'white'"
+        [class.btn-color-black]="colorVariant() === 'black'"
+        [class.btn-color-transparent]="colorVariant() === 'transparent'"
+        [class.btn-color-danger]="colorVariant() === 'danger'"
         [class.btn-primary]="variant() === 'primary'"
         [class.btn-secondary]="variant() === 'secondary'"
-        [class.btn-tertiary]="variant() === 'tertiary'"
-        [class.btn-contrast]="variant() === 'contrast'"
-        [class.btn-transparent]="variant() === 'transparent'"
+        [class.btn-action]="variant() === 'action'"
+        [class.btn-jumbo]="variant() === 'jumbo'"
+        [class.btn-ghost]="variant() === 'ghost'"
         [class.btn-size-lg]="sizeVariant() === 'lg'"
         [class.btn-size-xl]="sizeVariant() === 'xl'"
         [disabled]="disabled()"
 >
     @if (loading()) {
-        <app-spinner class="btn-spinner" [variant]="variant()" aria-hidden="true"/>
+        <app-spinner class="btn-spinner" [colorVariant]="colorVariant()" aria-hidden="true"/>
     } @else if (icon()) {
         <fa-icon [icon]="icon()!" class="btn-icon" aria-hidden="true"/>
     }

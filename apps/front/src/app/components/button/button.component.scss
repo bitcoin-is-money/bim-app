@@ -12,71 +12,106 @@
   disabled:opacity-50 disabled:cursor-not-allowed w-full;
 }
 
-/* ---------- Special (Yellow) ---------- */
+/* ========== Color variants ========== */
 
-.btn-special {
-  @apply bg-amber-500 border-2 border-amber-500 text-neutral-100;
-  @apply enabled:hover:bg-amber-600 enabled:hover:border-amber-600;
-  @apply enabled:active:bg-amber-600 enabled:active:border-amber-600;
-  @apply disabled:opacity-50 disabled:cursor-not-allowed;
+.btn-color-gold {
+  @apply bg-amber-500 text-neutral-100;
+  @apply enabled:hover:bg-amber-600;
+  @apply enabled:active:bg-amber-600;
 }
 
-/* ---------- Primary (white) ---------- */
+.btn-color-white {
+  @apply bg-neutral-100 text-neutral-900;
+  @apply enabled:hover:bg-neutral-200;
+  @apply enabled:active:bg-neutral-200;
+}
 
+.btn-color-black {
+  @apply bg-neutral-800 text-neutral-200;
+}
+
+.btn-color-transparent {
+  @apply bg-transparent text-neutral-100;
+}
+
+.btn-color-danger {
+  @apply bg-red-800 text-neutral-100;
+  @apply enabled:hover:bg-red-700;
+  @apply enabled:active:bg-red-700;
+}
+
+/* ========== Style variants ========== */
+
+/* Primary: solid border matching bg color */
 .btn-primary {
-  @apply bg-neutral-100 border-2 border-neutral-100 text-neutral-900;
-  @apply enabled:hover:bg-amber-600 enabled:hover:border-amber-600;
-  @apply enabled:active:bg-amber-600 enabled:active:border-amber-600;
-  @apply disabled:opacity-50 disabled:cursor-not-allowed;
+  @apply border-2;
+
+  &.btn-color-gold {
+    @apply border-amber-500;
+    @apply enabled:hover:border-amber-600;
+    @apply enabled:active:border-amber-600;
+  }
+
+  &.btn-color-white {
+    @apply border-neutral-100;
+    @apply enabled:hover:border-neutral-200;
+    @apply enabled:active:border-neutral-200;
+  }
+
+  &.btn-color-black {
+    @apply border-neutral-800;
+  }
+
+  &.btn-color-danger {
+    @apply border-red-800;
+    @apply enabled:hover:border-red-700;
+    @apply enabled:active:border-red-700;
+  }
 }
 
-/* ---------- Secondary ---------- */
-
+/* Secondary: white outlined border */
 .btn-secondary {
-  @apply bg-transparent
-  border-2 border-neutral-100
-  text-neutral-100;
-
+  @apply border-2 border-neutral-100;
   @apply enabled:hover:bg-neutral-200 enabled:hover:text-neutral-900;
   @apply enabled:active:bg-neutral-200 enabled:active:text-neutral-900;
-  @apply disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
-/* ---------- Tertiary ---------- */
-
-.btn-tertiary {
-  @apply bg-white rounded-full
-  border-2 border-neutral-100
-  text-neutral-900;
-
-  @apply enabled:hover:bg-neutral-200 enabled:hover:text-neutral-900;
-  @apply enabled:active:bg-neutral-200 enabled:active:text-neutral-900;
-  @apply disabled:opacity-50 disabled:cursor-not-allowed;
+/* Action: pill shape with white border */
+.btn-action {
+  @apply rounded-full border-2 border-neutral-100;
 }
 
-/* ---------- Contrast ---------- */
+/* Jumbo: large button with extra padding and bigger icon */
+.btn-jumbo {
+  @apply border-2 py-8 text-xl;
 
-.btn-contrast {
-  @apply bg-neutral-800
-    border-2 border-neutral-800
-    text-neutral-200 text-xl
-    py-8;
+  &.btn-color-gold {
+    @apply border-amber-500;
+  }
+
+  &.btn-color-white {
+    @apply border-neutral-100;
+  }
+
+  &.btn-color-black {
+    @apply border-neutral-800;
+  }
+
+  &.btn-color-danger {
+    @apply border-red-800;
+  }
 
   .btn-icon {
     font-size: 150%;
   }
 }
 
-/* ---------- Transparent ---------- */
-
-.btn-transparent {
-  @apply bg-transparent
-  border border-transparent
-  text-neutral-100;
-  @apply disabled:opacity-50 disabled:cursor-not-allowed;
+/* Ghost: no visible border */
+.btn-ghost {
+  @apply border border-transparent text-lg;
 }
 
-/* ---------- Icon ---------- */
+/* ========== Icon ========== */
 
 .btn-icon {
   @apply inline-flex items-center;
@@ -88,7 +123,7 @@
   height: 1.25em;
 }
 
-/* ---------- Sizes ---------- */
+/* ========== Sizes ========== */
 
 .btn-size-lg {
   @apply text-lg;

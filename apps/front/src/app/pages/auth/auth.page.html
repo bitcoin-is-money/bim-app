@@ -10,7 +10,8 @@
         <p>{{ 'auth.useDeviceSecurity' | translate }}</p>
         <app-button
           class="sign-in-button"
-          variant="special"
+          colorVariant="gold"
+          variant="primary"
           (click)="onSignIn()"
           [disabled]="authService.isLoading()"
         >
@@ -31,6 +32,7 @@
         />
         <app-button
           class="sign-up-button"
+          colorVariant="black"
           variant="secondary"
           (click)="onSignUp()"
           [disabled]="authService.isLoading() || !username()"

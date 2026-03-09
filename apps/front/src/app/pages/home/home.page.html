@@ -39,8 +39,8 @@
       <app-button
         [icon]="['fas', 'qrcode']"
         class="footer-button"
-        variant="transparent"
-        sizeVariant="lg"
+        colorVariant="transparent"
+        variant="ghost"
         (click)="onReceive()"
       >
         {{ 'home.receive' | translate }}
@@ -49,8 +49,8 @@
       <app-button
         [icon]="['fas', 'location-arrow']"
         class="footer-button"
-        variant="transparent"
-        sizeVariant="lg"
+        colorVariant="transparent"
+        variant="ghost"
         (click)="onPay()"
       >
         {{ 'home.pay' | translate }}
