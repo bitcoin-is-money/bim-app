@@ -173,6 +173,11 @@ export class AuthService {
     }
     challenge.consume();
 
+    // Verify challenge purpose
+    if (challenge.purpose !== 'registration') {
+      throw new InvalidChallengeError(challengeId, 'challenge is not for registration');
+    }
+
     // Verify the accountId matches the one bound to the challenge
     const accountId = AccountId.of(input.accountId);
     if (challenge.accountId !== input.accountId) {
@@ -263,6 +268,11 @@ export class AuthService {
       throw new ChallengeNotFoundError(challengeId);
     }
     challenge.consume();
+
+    // Verify challenge purpose
+    if (challenge.purpose !== 'authentication') {
+      throw new InvalidChallengeError(challengeId, 'challenge is not for authentication');
+    }
 
     // Username-less flow: decode userHandle to get AccountId
     const userHandle = input.credential.response.userHandle;
