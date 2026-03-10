@@ -16,6 +16,7 @@ describe('Challenge', () => {
       const challenge = Challenge.createForRegistration({
         rpId: 'localhost',
         origin: 'http://localhost:3000',
+        accountId: '550e8400-e29b-41d4-a716-446655440000',
       });
 
       expect(challenge.purpose).toBe('registration');
@@ -31,6 +32,7 @@ describe('Challenge', () => {
       const challenge = Challenge.createForRegistration({
         rpId: 'localhost',
         origin: 'http://localhost:3000',
+        accountId: '550e8400-e29b-41d4-a716-446655440000',
       });
 
       const expectedExpiry = new Date(Date.now() + CHALLENGE_DURATION_MS);
@@ -58,6 +60,7 @@ describe('Challenge', () => {
       const challenge = Challenge.createForRegistration({
         rpId: 'localhost',
         origin: 'http://localhost:3000',
+        accountId: '550e8400-e29b-41d4-a716-446655440000',
       });
 
       expect(challenge.isExpired()).toBe(false);
@@ -67,6 +70,7 @@ describe('Challenge', () => {
       const challenge = Challenge.createForRegistration({
         rpId: 'localhost',
         origin: 'http://localhost:3000',
+        accountId: '550e8400-e29b-41d4-a716-446655440000',
       });
 
       vi.advanceTimersByTime(CHALLENGE_DURATION_MS + 1000);
@@ -80,6 +84,7 @@ describe('Challenge', () => {
       const challenge = Challenge.createForRegistration({
         rpId: 'localhost',
         origin: 'http://localhost:3000',
+        accountId: '550e8400-e29b-41d4-a716-446655440000',
       });
 
       challenge.consume();
@@ -91,6 +96,7 @@ describe('Challenge', () => {
       const challenge = Challenge.createForRegistration({
         rpId: 'localhost',
         origin: 'http://localhost:3000',
+        accountId: '550e8400-e29b-41d4-a716-446655440000',
       });
 
       vi.advanceTimersByTime(CHALLENGE_DURATION_MS + 1000);
@@ -102,6 +108,7 @@ describe('Challenge', () => {
       const challenge = Challenge.createForRegistration({
         rpId: 'localhost',
         origin: 'http://localhost:3000',
+        accountId: '550e8400-e29b-41d4-a716-446655440000',
       });
 
       challenge.consume();
@@ -115,6 +122,7 @@ describe('Challenge', () => {
       const challenge = Challenge.createForRegistration({
         rpId: 'localhost',
         origin: 'http://localhost:3000',
+        accountId: '550e8400-e29b-41d4-a716-446655440000',
       });
 
       expect(() => { challenge.validate(); }).not.toThrow();
@@ -124,6 +132,7 @@ describe('Challenge', () => {
       const challenge = Challenge.createForRegistration({
         rpId: 'localhost',
         origin: 'http://localhost:3000',
+        accountId: '550e8400-e29b-41d4-a716-446655440000',
       });
 
       vi.advanceTimersByTime(CHALLENGE_DURATION_MS + 1000);
@@ -135,6 +144,7 @@ describe('Challenge', () => {
       const challenge = Challenge.createForRegistration({
         rpId: 'localhost',
         origin: 'http://localhost:3000',
+        accountId: '550e8400-e29b-41d4-a716-446655440000',
       });
 
       challenge.consume();
@@ -146,6 +156,7 @@ describe('Challenge', () => {
       const challenge = Challenge.createForRegistration({
         rpId: 'localhost',
         origin: 'http://localhost:3000',
+        accountId: '550e8400-e29b-41d4-a716-446655440000',
       });
 
       challenge.validate();

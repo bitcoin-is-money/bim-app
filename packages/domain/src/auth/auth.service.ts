@@ -127,6 +127,7 @@ export class AuthService {
     const challenge = Challenge.createForRegistration({
       rpId: this.config.rpId,
       origin: this.config.origin,
+      accountId,
     });
 
     await this.deps.challengeRepository.save(challenge);
@@ -172,8 +173,11 @@ export class AuthService {
     }
     challenge.consume();
 
-    // Parse the account ID from input
+    // Verify the accountId matches the one bound to the challenge
     const accountId = AccountId.of(input.accountId);
+    if (challenge.accountId !== input.accountId) {
+      throw new InvalidChallengeError(challengeId, 'accountId does not match challenge');
+    }
 
     // Validate challenge has required WebAuthn fields
     if (!challenge.origin || !challenge.rpId) {

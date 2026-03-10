@@ -41,6 +41,7 @@ export const challenges = pgTable('bim_challenges', {
   purpose: text('purpose').notNull(),
   rpId: text('rp_id'),
   origin: text('origin'),
+  accountId: text('account_id'),
   used: boolean('used').notNull().default(false),
   expiresAt: timestamp('expires_at').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),

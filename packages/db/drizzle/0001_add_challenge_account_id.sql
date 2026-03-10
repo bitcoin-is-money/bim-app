@@ -1,0 +1,1 @@
+ALTER TABLE "bim_challenges" ADD COLUMN "account_id" text;
