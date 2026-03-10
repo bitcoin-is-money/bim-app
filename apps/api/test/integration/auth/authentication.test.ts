@@ -176,6 +176,37 @@ describe('Authentication Flow', () => {
       expect(body.error.code).toBe('CHALLENGE_NOT_FOUND');
     });
 
+    it('rejects registration challenge used for authentication', async () => {
+      const username = 'cross_purpose_auth';
+      await register(username);
+
+      // Start a REGISTRATION challenge (wrong purpose)
+      const regBeginResponse = await TestApp
+        .request(app)
+        .post('/api/auth/register/begin', {username: 'decoy_user'});
+      const regBeginBody = await regBeginResponse.json() as { challengeId: string };
+
+      // Start a real authentication to get valid assertion options
+      const authBeginResponse = await TestApp
+        .request(app)
+        .post('/api/auth/login/begin', {});
+      const authBeginBody = await authBeginResponse.json() as BeginAuthenticationResponse;
+      const assertion = await authenticator
+        .getAssertion(toAuthenticationOptions(authBeginBody, rpId));
+
+      // Try to complete authentication using the REGISTRATION challenge ID
+      const completeResponse = await TestApp
+        .request(app)
+        .post('/api/auth/login/complete', {
+          challengeId: regBeginBody.challengeId,
+          credential: assertion,
+        });
+
+      expect(completeResponse.status).toBe(400);
+      const body = await completeResponse.json() as ApiErrorResponse;
+      expect(body.error.code).toBe('INVALID_CHALLENGE');
+    });
+
     it('rejects tampered assertion signature', async () => {
       const username = 'tampered_sig_user';
       await register(username);
