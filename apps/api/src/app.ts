@@ -20,6 +20,7 @@ import {
   createUserRoutes,
 } from './routes';
 import {AppConfig} from './app-config';
+import {installGlobalErrorHandler} from './middleware/global-error-handler';
 
 export interface CreateAppOptions {
   config?: Partial<AppConfig.Config>;
@@ -53,6 +54,7 @@ export async function createApp(options: CreateAppOptions = {}): Promise<AppInst
   const db = dbConnection.getDb();
   const context = AppContext.createDefault(config, db, rootLogger, options.context);
   const app = new Hono();
+  installGlobalErrorHandler(app);
 
   app.use('*', createRequestLoggerMiddleware(context.logger, {
     apiOnly: true,
