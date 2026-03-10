@@ -1,12 +1,15 @@
 import type {TypedResponse} from 'hono';
 import {Hono} from 'hono';
 
+import type {Account} from '@bim/domain/account';
+import {SwapOwnershipError} from '@bim/domain/swap';
+
 import type {AppContext} from '../../app-context';
 import {type ApiErrorResponse, handleDomainError} from '../../errors';
 import {createAuthMiddleware} from '../../middleware/auth.middleware';
 import type {AuthenticatedHono} from '../../types.js';
 import {SwapDirectionSchema} from './swap.schemas';
-import type {SwapClaimResponse, SwapLimitsResponse, SwapStatusResponse} from './swap.types';
+import type {SwapLimitsResponse, SwapStatusResponse} from './swap.types';
 
 // =============================================================================
 // Routes
@@ -47,9 +50,14 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
 
   app.get('/status/:swapId', async (honoCtx): Promise<TypedResponse<SwapStatusResponse | ApiErrorResponse>> => {
     try {
+      const account: Account = honoCtx.get('account');
       const swapId = honoCtx.req.param('swapId');
 
       const result = await swapService.fetchStatus({swapId});
+
+      if (result.swap.accountId !== account.id) {
+        throw new SwapOwnershipError(swapId);
+      }
 
       return honoCtx.json<SwapStatusResponse>({
         swapId: result.swap.id,
@@ -60,26 +68,6 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
         amountSats: result.swap.amount.toSatString(),
         destinationAddress: result.swap.destinationAddress,
         expiresAt: result.swap.expiresAt.toISOString(),
-      });
-    } catch (error) {
-      return handleDomainError(honoCtx, error, log);
-    }
-  });
-
-  // ---------------------------------------------------------------------------
-  // Claim Swap (used by SwapMonitor and tests — not called by frontend)
-  // ---------------------------------------------------------------------------
-
-  app.post('/claim/:swapId', async (honoCtx): Promise<TypedResponse<SwapClaimResponse | ApiErrorResponse>> => {
-    try {
-      const swapId = honoCtx.req.param('swapId');
-
-      const result = await swapService.claim({swapId});
-
-      return honoCtx.json<SwapClaimResponse>({
-        swapId: result.swap.id,
-        txHash: result.txHash,
-        status: result.swap.getStatus(),
       });
     } catch (error) {
       return handleDomainError(honoCtx, error, log);

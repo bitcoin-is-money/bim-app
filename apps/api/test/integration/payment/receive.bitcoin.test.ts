@@ -248,18 +248,6 @@ describe('Bitcoin Receive Swap Lifecycle', () => {
       expect(status.status).toBe('paid');
     });
 
-    it('rejects claim on non-paid swap', async () => {
-      const {swapId} = await insertBitcoinSwap('btc-swap-021');
-
-      const response = await request().post(`/api/swap/claim/${swapId}`, {}, {
-        headers: {Cookie: sessionCookie},
-      });
-
-      expect(response.status).toBe(400);
-      const body = await response.json() as ApiErrorResponse;
-      expect(body.error.code).toBeDefined();
-    });
-
     it('returns swap not found for unknown swapId', async () => {
       const response = await request().get('/api/swap/status/unknown-swap-id', {
         headers: {Cookie: sessionCookie},

@@ -62,9 +62,6 @@ function createMockGateway(): AtomiqGateway {
     getStarknetToBitcoinLimits: vi.fn(),
     getSwapStatus: vi.fn(),
     isSwapPaid: vi.fn(),
-    claimSwap: vi.fn(),
-    waitForClaimConfirmation: vi.fn(),
-    getUnsignedClaimTransactions: vi.fn(),
   };
 }
 

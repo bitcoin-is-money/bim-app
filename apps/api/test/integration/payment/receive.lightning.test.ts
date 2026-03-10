@@ -201,18 +201,6 @@ describe('Lightning Receive Swap Lifecycle', () => {
   // ---------------------------------------------------------------------------
 
   describe('Edge Cases', () => {
-    it('rejects claim on non-paid swap', async () => {
-      const swap = await createLightningSwap();
-
-      const response = await request().post(`/api/swap/claim/${swap.swapId}`, {}, {
-        headers: {Cookie: sessionCookie},
-      });
-
-      expect(response.status).toBe(400);
-      const body = await response.json() as ApiErrorResponse;
-      expect(body.error.code).toBeDefined();
-    });
-
     it('returns swap not found for unknown swapId', async () => {
       const response = await request().get('/api/swap/status/unknown-swap-id', {
         headers: {Cookie: sessionCookie},
