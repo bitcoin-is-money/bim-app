@@ -8,6 +8,7 @@ import {AppContext, type AppContextOverrides} from "./app-context";
 import {DatabaseConnection} from '@bim/db/connection';
 import {createGlobalRateLimit, createAuthRateLimit, createPaymentExecuteRateLimit} from './middleware/rate-limit.middleware';
 import {createRequestLoggerMiddleware} from './middleware/request-logger.middleware';
+import {createSecurityHeadersMiddleware} from './middleware/security-headers.middleware';
 import {SwapMonitor} from './monitoring/swap.monitor';
 import {
   createAccountRoutes,
@@ -56,6 +57,7 @@ export async function createApp(options: CreateAppOptions = {}): Promise<AppInst
   const app = new Hono();
   installGlobalErrorHandler(app);
 
+  app.use('*', createSecurityHeadersMiddleware());
   app.use('*', createRequestLoggerMiddleware(context.logger, {
     apiOnly: true,
     silencedPaths: [
