@@ -14,6 +14,7 @@ export class Challenge {
     readonly purpose: ChallengePurpose,
     readonly rpId: string | undefined,
     readonly origin: string | undefined,
+    readonly accountId: string | undefined,
     readonly expiresAt: Date,
     readonly createdAt: Date,
     used: boolean,
@@ -27,6 +28,7 @@ export class Challenge {
   static createForRegistration(params: {
     rpId: string;
     origin: string;
+    accountId: string;
   }): Challenge {
     const now = new Date();
     const challenge = generateSecureChallenge();
@@ -37,6 +39,7 @@ export class Challenge {
       'registration',
       params.rpId,
       params.origin,
+      params.accountId,
       new Date(now.getTime() + CHALLENGE_DURATION_MS),
       now,
       false,
@@ -59,6 +62,7 @@ export class Challenge {
       'authentication',
       params.rpId,
       params.origin,
+      undefined,
       new Date(now.getTime() + CHALLENGE_DURATION_MS),
       now,
       false,

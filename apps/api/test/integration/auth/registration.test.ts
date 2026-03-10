@@ -156,6 +156,35 @@ describe('Registration Flow', () => {
       expect(body.error.code).toBe('CHALLENGE_EXPIRED');
     });
 
+    it('rejects registration with a different accountId than the one bound to the challenge', async () => {
+      const username = 'tampered_account';
+
+      // Begin registration — server returns challengeId + accountId
+      const beginResponse = await TestApp
+        .request(app)
+        .post('/api/auth/register/begin', {username});
+      const beginBody = await beginResponse.json() as BeginRegistrationResponse;
+
+      // Create credential with the original accountId (as WebAuthn would)
+      const credential = await authenticator
+        .createCredential(toRegistrationOptions(beginBody));
+
+      // Complete registration with a DIFFERENT accountId (attacker-controlled)
+      const tamperedAccountId = '00000000-0000-4000-a000-000000000000';
+      const completeResponse = await TestApp
+        .request(app)
+        .post('/api/auth/register/complete', {
+          challengeId: beginBody.challengeId,
+          accountId: tamperedAccountId,
+          username,
+          credential,
+        });
+
+      expect(completeResponse.status).toBe(400);
+      const body = await completeResponse.json() as ApiErrorResponse;
+      expect(body.error.code).toBe('INVALID_CHALLENGE');
+    });
+
     it('rejects invalid challenge ID', async () => {
       const username = 'invalid_challenge';
 
