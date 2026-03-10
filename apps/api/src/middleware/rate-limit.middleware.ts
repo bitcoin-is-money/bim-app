@@ -1,11 +1,25 @@
+import {getConnInfo} from '@hono/node-server/conninfo';
 import type {Context} from 'hono';
 import {rateLimiter} from 'hono-rate-limiter';
 
-import type {ApiErrorResponse} from '../errors/api-error';
-import {ErrorCode} from '../errors/error-codes';
+import type {ApiErrorResponse} from '../errors';
+import {ErrorCode} from '../errors';
 
 function getClientIp(c: Context): string {
-  return c.req.header('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
+  // Prefer real socket IP (not spoofable)
+  try {
+    const info = getConnInfo(c);
+    if (info.remote.address) return info.remote.address;
+  } catch {
+    // getConnInfo unavailable (e.g. app.request() in tests)
+  }
+  // Fallback: last entry in X-Forwarded-For (proxy-appended, not client-controlled)
+  const forwarded = c.req.header('x-forwarded-for');
+  if (forwarded) {
+    const parts = forwarded.split(',');
+    return parts[parts.length - 1]!.trim();
+  }
+  return 'unknown';
 }
 
 function rateLimitedResponse(c: Context, message: string) {

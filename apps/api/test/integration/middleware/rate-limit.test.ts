@@ -87,4 +87,38 @@ describe('Rate limit middleware (integration)', () => {
       expect(res.headers.get('RateLimit-Reset')).toBeDefined();
     });
   });
+
+  // ---------------------------------------------------------------------------
+  // X-Forwarded-For spoofing protection
+  // ---------------------------------------------------------------------------
+
+  describe('X-Forwarded-For spoofing protection', () => {
+    it('uses last X-Forwarded-For entry (proxy-appended), not first (client-controlled)', async () => {
+      // A separate app to get a fresh rate limiter state
+      const freshApp = await TestApp.createTestApp({skipRateLimit: false});
+      const realIp = '10.0.50.1';
+
+      // Attacker sends different spoofed first entries, but real IP (last) stays the same
+      for (let i = 0; i < 10; i++) {
+        const res = await freshApp.request(new Request('http://localhost/api/auth/session', {
+          method: 'GET',
+          headers: {
+            'x-forwarded-for': `${i}.${i}.${i}.${i}, ${realIp}`,
+            'Content-Type': 'application/json',
+          },
+        }));
+        expect(res.status).not.toBe(429);
+      }
+
+      // 11th request — should be blocked because all 10 came from the same real IP
+      const blocked = await freshApp.request(new Request('http://localhost/api/auth/session', {
+        method: 'GET',
+        headers: {
+          'x-forwarded-for': `99.99.99.99, ${realIp}`,
+          'Content-Type': 'application/json',
+        },
+      }));
+      expect(blocked.status).toBe(429);
+    });
+  });
 });
