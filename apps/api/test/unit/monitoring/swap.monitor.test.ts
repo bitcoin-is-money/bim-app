@@ -24,7 +24,6 @@ function createMockSwapService(): SwapService {
   return {
     getActiveSwaps: vi.fn().mockResolvedValue([]),
     fetchStatus: vi.fn(),
-    claim: vi.fn(),
     createLightningToStarknet: vi.fn(),
     createBitcoinToStarknet: vi.fn(),
     createStarknetToLightning: vi.fn(),
@@ -56,20 +55,6 @@ describe('SwapMonitor', () => {
 
       expect(swapService.getActiveSwaps).toHaveBeenCalledOnce();
       expect(swapService.fetchStatus).toHaveBeenCalledWith({swapId: 's1'});
-    });
-
-    it('does not call claim — LP/watchtower handles claiming cooperatively', async () => {
-      const swap = createLightningSwap('s1');
-      vi.mocked(swapService.getActiveSwaps).mockResolvedValue([swap]);
-      vi.mocked(swapService.fetchStatus).mockResolvedValue({
-        swap,
-        status: 'paid',
-        progress: 33,
-      });
-
-      await monitor.runIteration();
-
-      expect(swapService.claim).not.toHaveBeenCalled();
     });
 
     it('continues processing other swaps when one fails', async () => {

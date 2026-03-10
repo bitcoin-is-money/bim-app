@@ -6,8 +6,6 @@ import type {
   AtomiqSwapStatus,
   BitcoinSwapCommitResult,
   BitcoinSwapQuote,
-  ClaimResult,
-  UnsignedClaimTransactions
 } from '@bim/domain/ports';
 import {ExternalServiceError} from "@bim/domain/shared";
 import type {BitcoinAddress, LightningInvoice, SwapId} from '@bim/domain/swap';
@@ -182,31 +180,6 @@ export class AtomiqGatewayMock implements AtomiqGateway {
   async isSwapPaid(swapId: SwapId): Promise<boolean> {
     const status = await this.getSwapStatus(swapId);
     return status.isPaid;
-  }
-
-  // ===========================================================================
-  // Swap Claiming
-  // ===========================================================================
-
-  async claimSwap(swapId: SwapId): Promise<ClaimResult> {
-    if (!this.knownSwapIds.has(swapId)) {
-      throw new ExternalServiceError('Atomiq', `Swap not found: ${swapId}`);
-    }
-    return {
-      txHash: `0x${crypto.randomUUID().replaceAll('-', '')}`,
-      success: true,
-    };
-  }
-
-  async waitForClaimConfirmation(_swapId: SwapId): Promise<void> {
-    await new Promise((resolve) => setTimeout(resolve, 10));
-  }
-
-  async getUnsignedClaimTransactions(swapId: SwapId): Promise<UnsignedClaimTransactions> {
-    if (!this.knownSwapIds.has(swapId)) {
-      throw new ExternalServiceError('Atomiq', `Swap not found: ${swapId}`);
-    }
-    return {transactions: [], message: 'Mock claim transactions ready'};
   }
 
   // ===========================================================================

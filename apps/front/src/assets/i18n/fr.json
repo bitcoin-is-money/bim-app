@@ -199,7 +199,6 @@
     "SWAP_EXPIRED": "L'échange a expiré.",
     "SWAP_AMOUNT_OUT_OF_RANGE": "Le montant doit être entre {{min}} et {{max}} {{unit}}.",
     "SWAP_CREATION_FAILED": "Échec de la création de l'échange.",
-    "SWAP_CLAIM_FAILED": "Échec de la réclamation de l'échange.",
     "INVALID_SWAP_STATE": "État de l'échange invalide.",
     "PAYMENT_PARSING_ERROR": "Impossible d'analyser les données de paiement.",
     "INVALID_PAYMENT_AMOUNT": "Montant de paiement invalide.",

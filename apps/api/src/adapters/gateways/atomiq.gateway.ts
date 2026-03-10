@@ -10,9 +10,7 @@ import type {
   AtomiqSwapStatus,
   BitcoinSwapCommitResult,
   BitcoinSwapQuote,
-  ClaimResult,
   StarknetCall,
-  UnsignedClaimTransactions
 } from '@bim/domain/ports';
 import {ExternalServiceError} from "@bim/domain/shared";
 import type {SwapDirection, SwapLimits} from "@bim/domain/swap";
@@ -723,91 +721,6 @@ export class AtomiqSdkGateway implements AtomiqGateway {
   async isSwapPaid(swapId: SwapId): Promise<boolean> {
     const status = await this.getSwapStatus(swapId);
     return status.isPaid;
-  }
-
-  // ===========================================================================
-  // Swap Claiming
-  // ===========================================================================
-
-  /**
-   * Waits for the intermediary/watchtower cooperative claim to complete.
-   *
-   * BIM has no Starknet signer (WebAuthn accounts), so we cannot call
-   * txsClaim()/claim() ourselves. Instead we rely on the LP or watchtower
-   * network to claim on-chain, and just wait for completion.
-   */
-  async claimSwap(swapId: SwapId): Promise<ClaimResult> {
-    this.log.debug({swapId}, 'Waiting for cooperative claim');
-    const swap = await this.getSwapObject(swapId);
-
-    try {
-      if (typeof swap.waitTillClaimed === 'function') {
-        await swap.waitTillClaimed();
-      }
-
-      const txHash = swap.getOutputTxId() ?? swap.getInputTxId() ?? `0x${crypto.randomUUID().replaceAll('-', '')}`;
-      const result: ClaimResult = {
-        txHash,
-        success: true,
-      };
-      this.log.debug({...result}, 'claimSwap result (cooperative claim completed)');
-      return result;
-    } catch (error) {
-      throw new ExternalServiceError(
-        'Atomiq',
-        `Failed to wait for cooperative claim: ${error instanceof Error ? error.message : String(error)}`,
-      );
-    }
-  }
-
-  async waitForClaimConfirmation(swapId: SwapId): Promise<void> {
-    const swap = await this.getSwapObject(swapId);
-
-    if (typeof swap.waitTillClaimed === 'function') {
-      await swap.waitTillClaimed();
-    }
-  }
-
-  async getUnsignedClaimTransactions(
-    swapId: SwapId,
-  ): Promise<UnsignedClaimTransactions> {
-    this.log.debug({swapId}, 'Getting unsigned claim transactions');
-    const swap = await this.getSwapObject(swapId);
-    const state = swap.getState();
-    const swapType = swap.getType();
-
-    try {
-      let transactions: unknown[] = [];
-      let message = '';
-
-      // Determine which transactions to get based on swap type and state
-      if (swapType === SwapType.TO_BTCLN || swapType === SwapType.TO_BTC) {
-        // Reverse swaps (Starknet → BTC/Lightning)
-        if (state === 0 && typeof swap.txsCommit === 'function') {
-          transactions = await swap.txsCommit();
-          message = 'Commit transactions ready';
-        } else if (state === 1 && typeof swap.txsRefund === 'function') {
-          transactions = await swap.txsRefund();
-          message = 'Refund transactions ready';
-        }
-      } else {
-        // Forward swaps (BTC/Lightning → Starknet)
-        if (state === 2 && typeof swap.txsClaim === 'function') {
-          transactions = await swap.txsClaim();
-          message = 'Claim transactions ready';
-        }
-      }
-
-      return {
-        transactions,
-        message: message || 'No transactions available for current state',
-      };
-    } catch (error) {
-      throw new ExternalServiceError(
-        'Atomiq',
-        `Failed to get unsigned transactions: ${error instanceof Error ? error.message : String(error)}`,
-      );
-    }
   }
 
   // ===========================================================================

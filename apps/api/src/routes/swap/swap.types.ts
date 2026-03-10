@@ -23,13 +23,3 @@ export interface SwapStatusResponse {
   destinationAddress: string;
   expiresAt: string;
 }
-
-// =============================================================================
-// POST /api/swap/claim/:swapId
-// =============================================================================
-
-export interface SwapClaimResponse {
-  swapId: string;
-  txHash: string;
-  status: string;
-}

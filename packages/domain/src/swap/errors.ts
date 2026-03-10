@@ -56,11 +56,9 @@ export class SwapCreationError extends DomainError {
   }
 }
 
-export class SwapClaimError extends DomainError {
-  constructor(
-    readonly swapId: SwapId,
-    readonly reason: string,
-  ) {
-    super(`Failed to claim swap ${swapId}: ${reason}`);
+export class SwapOwnershipError extends DomainError {
+  constructor(readonly swapId: SwapId | string) {
+    super(`Swap ${swapId} does not belong to this account`);
   }
 }
+

@@ -96,24 +96,6 @@ export interface AtomiqGateway {
    */
   isSwapPaid(swapId: SwapId): Promise<boolean>;
 
-  // ===========================================================================
-  // Swap Claiming
-  // ===========================================================================
-
-  /**
-   * Claims a swap after payment has been received.
-   */
-  claimSwap(swapId: SwapId): Promise<ClaimResult>;
-
-  /**
-   * Waits for claim confirmation.
-   */
-  waitForClaimConfirmation(swapId: SwapId): Promise<void>;
-
-  /**
-   * Gets unsigned claim transactions for manual signing.
-   */
-  getUnsignedClaimTransactions(swapId: SwapId): Promise<UnsignedClaimTransactions>;
 }
 
 // =============================================================================
@@ -144,16 +126,6 @@ export interface AtomiqSwapStatus {
   isRefunded: boolean;
   txHash?: string;
   error?: string;
-}
-
-export interface ClaimResult {
-  txHash: string;
-  success: boolean;
-}
-
-export interface UnsignedClaimTransactions {
-  transactions: unknown[];
-  message: string;
 }
 
 export interface BitcoinSwapQuote {

@@ -190,13 +190,6 @@ export class Swap {
     return ['completed', 'expired', 'failed', 'refunded', 'lost'].includes(this.state.status);
   }
 
-  /**
-   * Checks if the swap can be claimed.
-   */
-  canClaim(): boolean {
-    return this.state.status === 'paid';
-  }
-
   // ===========================================================================
   // State Transitions
   // ===========================================================================

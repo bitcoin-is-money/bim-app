@@ -1,12 +1,12 @@
 
 import type {Logger} from 'pino';
 import {AccountId, StarknetAddress} from '../account';
-import type {AtomiqGateway, ClaimResult, StarknetCall, SwapRepository, TransactionRepository} from '../ports';
+import type {AtomiqGateway, StarknetCall, SwapRepository, TransactionRepository} from '../ports';
 import {Amount} from '../shared';
 import {TransactionHash} from '../user/types';
 import {Swap} from './swap';
 import {BitcoinAddress} from './bitcoin-address';
-import {InvalidSwapStateError, SwapAmountError, SwapClaimError, SwapCreationError, SwapNotFoundError} from './errors';
+import {SwapAmountError, SwapCreationError, SwapNotFoundError} from './errors';
 import {LightningInvoice} from './lightning-invoice';
 import {type SwapDirection, SwapId, type SwapLimits, type SwapStatus} from './types';
 
@@ -124,15 +124,6 @@ export interface FetchSwapLimitsInput {
 
 export interface FetchSwapLimitsOutput {
   limits: SwapLimits;
-}
-
-export interface ClaimSwapInput {
-  swapId: string;
-}
-
-export interface ClaimSwapOutput {
-  swap: Swap;
-  txHash: string;
 }
 
 // =============================================================================
@@ -453,50 +444,6 @@ export class SwapService {
   }
 
   // ===========================================================================
-  // Claim
-  // ===========================================================================
-
-  /**
-   * Waits for a swap to be cooperatively claimed by the LP/watchtower.
-   * BIM has no Starknet signer, so the gateway just waits for on-chain completion.
-   *
-   * @throws SwapNotFoundError if swap doesn't exist
-   * @throws InvalidSwapStateError if swap cannot be claimed
-   * @throws SwapClaimError if the cooperative claim times out or fails
-   */
-  async claim(input: ClaimSwapInput): Promise<ClaimSwapOutput> {
-    const swapId = SwapId.of(input.swapId);
-
-    const swap = await this.deps.swapRepository.findById(swapId);
-    if (!swap) {
-      throw new SwapNotFoundError(swapId);
-    }
-
-    if (!swap.canClaim()) {
-      throw new InvalidSwapStateError(swap.getStatus(), 'claim');
-    }
-
-    try {
-      this.log.info({swapId: swap.id}, 'Claiming swap');
-      const result: ClaimResult = await this.deps.atomiqGateway.claimSwap(swapId);
-
-      swap.markAsConfirming(result.txHash);
-      await this.deps.swapRepository.save(swap);
-
-      // @review-accepted: fire-and-forget intentional — try/catch inside waitForClaimConfirmation
-      void this.waitForClaimConfirmation(swap, result.txHash);
-
-      return {swap, txHash: result.txHash};
-    } catch (error) {
-      const message = error instanceof Error
-        ? error.message
-        : String(error);
-      await this.deps.swapRepository.save(swap);
-      throw new SwapClaimError(swapId, message);
-    }
-  }
-
-  // ===========================================================================
   // Active Swaps
   // ===========================================================================
 
@@ -588,17 +535,4 @@ export class SwapService {
     }
   }
 
-  /**
-   * Waits for on-chain confirmation and updates swap status.
-   */
-  private async waitForClaimConfirmation(swap: Swap, txHash: string): Promise<void> {
-    try {
-      await this.deps.atomiqGateway.waitForClaimConfirmation(swap.id);
-      swap.markAsCompleted(txHash);
-      await this.deps.swapRepository.save(swap);
-      await this.persistDescription(swap);
-    } catch {
-      // Don't mark as failed - let the monitor handle the final state
-    }
-  }
 }

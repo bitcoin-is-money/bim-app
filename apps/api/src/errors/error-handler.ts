@@ -49,10 +49,10 @@ import {
   InvalidSwapStateError,
   LightningInvoiceExpiredError,
   SwapAmountError,
-  SwapClaimError,
   SwapCreationError,
   SwapExpiredError,
   SwapNotFoundError,
+  SwapOwnershipError,
 } from '@bim/domain/swap';
 
 // Domain errors - Currency
@@ -166,17 +166,14 @@ export function handleDomainError(ctx: Context, error: unknown, logger: Logger):
       reason: error.reason,
     });
   }
-  if (error instanceof SwapClaimError) {
-    return createErrorResponse(ctx, 500, ErrorCode.SWAP_CLAIM_FAILED, error.message, {
-      swapId: error.swapId,
-      reason: error.reason,
-    });
-  }
   if (error instanceof InvalidSwapStateError) {
     return createErrorResponse(ctx, 400, ErrorCode.INVALID_SWAP_STATE, error.message, {
       status: error.currentStatus,
       action: error.attemptedAction,
     });
+  }
+  if (error instanceof SwapOwnershipError) {
+    return createErrorResponse(ctx, 403, ErrorCode.FORBIDDEN, 'Swap does not belong to this account');
   }
 
   // --- Payment errors ---
