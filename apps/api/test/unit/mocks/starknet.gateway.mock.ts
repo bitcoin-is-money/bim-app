@@ -51,6 +51,10 @@ export class StarknetGatewayMock implements StarknetGateway {
     };
   }
 
+  async isDeployed(_address: StarknetAddress): Promise<boolean> {
+    return true;
+  }
+
   async getNonce(_address: StarknetAddress): Promise<bigint> {
     return 0n;
   }

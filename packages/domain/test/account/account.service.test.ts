@@ -30,6 +30,7 @@ describe('AccountService', () => {
       calculateAccountAddress: vi.fn().mockReturnValue(starknetAddress),
       buildDeployTransaction: vi.fn().mockReturnValue({calls: []}),
       waitForTransaction: vi.fn().mockResolvedValue(undefined),
+      isDeployed: vi.fn().mockResolvedValue(true),
       getBalance: vi.fn().mockResolvedValue(BigInt(1000)),
     } as unknown as StarknetGateway;
     mockPaymasterGateway = {

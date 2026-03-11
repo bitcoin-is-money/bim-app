@@ -217,8 +217,16 @@ export class AccountService {
   private async waitForDeploymentConfirmation(account: Account, txHash: string): Promise<void> {
     try {
       await this.deps.starknetGateway.waitForTransaction(txHash);
-      account.markAsDeployed();
-      this.log.info({accountId: account.id, txHash}, 'Account deployment confirmed');
+
+      // Verify the contract is actually deployed at the expected address
+      const address = account.getStarknetAddress();
+      if (!address || !(await this.deps.starknetGateway.isDeployed(address))) {
+        this.log.error({accountId: account.id, txHash, address}, 'Post-deployment verification failed: no contract at expected address');
+        account.markAsFailed();
+      } else {
+        account.markAsDeployed();
+        this.log.info({accountId: account.id, txHash}, 'Account deployment confirmed');
+      }
     } catch {
       account.markAsFailed();
       this.log.error({accountId: account.id, txHash}, 'Account deployment failed');

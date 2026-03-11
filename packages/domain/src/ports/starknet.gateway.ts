@@ -25,6 +25,11 @@ export interface StarknetGateway {
   waitForTransaction(txHash: string): Promise<TransactionReceipt>;
 
   /**
+   * Checks whether a contract is deployed at the given address.
+   */
+  isDeployed(address: StarknetAddress): Promise<boolean>;
+
+  /**
    * Gets the current nonce for an account.
    */
   getNonce(address: StarknetAddress): Promise<bigint>;
