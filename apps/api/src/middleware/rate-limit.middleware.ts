@@ -6,18 +6,14 @@ import type {ApiErrorResponse} from '../errors';
 import {ErrorCode} from '../errors';
 
 function getClientIp(c: Context): string {
-  // Prefer real socket IP (not spoofable)
+  // Use real socket IP only (not spoofable).
+  // X-Forwarded-For is client-controlled and must NOT be used as a rate limit key,
+  // otherwise an attacker can bypass all limits by rotating the header value.
   try {
     const info = getConnInfo(c);
     if (info.remote.address) return info.remote.address;
   } catch {
     // getConnInfo unavailable (e.g. app.request() in tests)
-  }
-  // Fallback: last entry in X-Forwarded-For (proxy-appended, not client-controlled)
-  const forwarded = c.req.header('x-forwarded-for');
-  if (forwarded) {
-    const parts = forwarded.split(',');
-    return parts[parts.length - 1]!.trim();
   }
   return 'unknown';
 }

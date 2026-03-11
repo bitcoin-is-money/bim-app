@@ -55,16 +55,19 @@ describe('rate-limit middleware', () => {
       expect(body.error.message).toEqual(expect.any(String));
     });
 
-    it('tracks limits independently per IP', async () => {
+    // X-Forwarded-For is client-controlled and must not be used as a rate limit key.
+    // An attacker could send a different value on every request to get a fresh bucket
+    // and bypass all rate limits.
+    it('does not allow spoofed X-Forwarded-For to bypass rate limiting', async () => {
       const strictApp = createTestApp(createAuthRateLimit());
 
       for (let i = 0; i < 10; i++) {
         await strictApp.request(requestWithIp('/test', '10.0.0.1'));
       }
 
-      // Different IP should still be allowed
-      const res = await strictApp.request(requestWithIp('/test', '10.0.0.2'));
-      expect(res.status).toBe(200);
+      // Spoofing a different X-Forwarded-For must NOT bypass the limit
+      const res = await strictApp.request(requestWithIp('/test', '10.0.0.99'));
+      expect(res.status).toBe(429);
     });
 
     it('includes RateLimit headers', async () => {
