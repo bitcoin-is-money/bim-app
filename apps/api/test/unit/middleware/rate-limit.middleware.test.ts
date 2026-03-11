@@ -4,6 +4,7 @@ import {beforeEach, describe, expect, it} from 'vitest';
 import {
   createAuthRateLimit,
   createGlobalRateLimit,
+  createPaymentRateLimit,
   createPaymentExecuteRateLimit,
 } from '../../../src/middleware/rate-limit.middleware';
 
@@ -89,6 +90,24 @@ describe('rate-limit middleware', () => {
       }
 
       const res = await app.request(requestWithIp('/test', '20.0.0.1'));
+      expect(res.status).toBe(429);
+    });
+  });
+
+  describe('payment rate limit', () => {
+    let app: Hono;
+
+    beforeEach(() => {
+      app = createTestApp(createPaymentRateLimit());
+    });
+
+    it('allows up to 30 requests per minute', async () => {
+      for (let idx = 0; idx < 30; idx++) {
+        const res = await app.request(requestWithIp('/test', '25.0.0.1', 'POST'));
+        expect(res.status).toBe(200);
+      }
+
+      const res = await app.request(requestWithIp('/test', '25.0.0.1', 'POST'));
       expect(res.status).toBe(429);
     });
   });

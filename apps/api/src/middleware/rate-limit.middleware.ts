@@ -46,6 +46,16 @@ export function createAuthRateLimit() {
   });
 }
 
+/** 30 requests per minute per IP — payment operations (parse, build, receive). */
+export function createPaymentRateLimit() {
+  return rateLimiter({
+    windowMs: 60 * 1000,
+    limit: 30,
+    keyGenerator: getClientIp,
+    handler: (c) => rateLimitedResponse(c, 'Too many payment requests. Please try again later.'),
+  });
+}
+
 /** 10 requests per 5 minutes per IP — payment execution (financial protection). */
 export function createPaymentExecuteRateLimit() {
   return rateLimiter({

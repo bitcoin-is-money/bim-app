@@ -6,7 +6,7 @@ import {cors} from 'hono/cors';
 import type {Logger} from 'pino';
 import {AppContext, type AppContextOverrides} from "./app-context";
 import {Database} from '@bim/db/database';
-import {createGlobalRateLimit, createAuthRateLimit, createPaymentExecuteRateLimit} from './middleware/rate-limit.middleware';
+import {createGlobalRateLimit, createAuthRateLimit, createPaymentRateLimit, createPaymentExecuteRateLimit} from './middleware/rate-limit.middleware';
 import {createRequestLoggerMiddleware} from './middleware/request-logger.middleware';
 import {createSecurityHeadersMiddleware} from './middleware/security-headers.middleware';
 import {SwapMonitor} from './monitoring/swap.monitor';
@@ -77,6 +77,7 @@ export async function createApp(options: CreateAppOptions = {}): Promise<AppInst
   if (!options.skipRateLimit) {
     app.use('/api/*', createGlobalRateLimit());
     app.use('/api/auth/*', createAuthRateLimit());
+    app.use('/api/payment/*', createPaymentRateLimit());
     app.use('/api/payment/pay/execute', createPaymentExecuteRateLimit());
   }
 
