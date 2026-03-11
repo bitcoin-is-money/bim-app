@@ -3,6 +3,7 @@ import type {MiddlewareHandler} from 'hono';
 /**
  * Adds defense-in-depth security headers to every response.
  *
+ * - Content-Security-Policy: restricts resource loading to prevent XSS
  * - X-Content-Type-Options: prevents MIME type sniffing
  * - X-Frame-Options: prevents clickjacking
  * - Referrer-Policy: limits referrer leakage on cross-origin navigation
@@ -12,6 +13,7 @@ import type {MiddlewareHandler} from 'hono';
 export function createSecurityHeadersMiddleware(): MiddlewareHandler {
   return async (c, next) => {
     await next();
+    c.header('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
     c.header('X-Content-Type-Options', 'nosniff');
     c.header('X-Frame-Options', 'DENY');
     c.header('Referrer-Policy', 'strict-origin-when-cross-origin');

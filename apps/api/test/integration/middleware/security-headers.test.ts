@@ -52,6 +52,18 @@ describe('Security response headers', () => {
     expect(policy).toContain('geolocation=()');
   });
 
+  // CSP prevents XSS by restricting which scripts, styles, and resources the browser
+  // is allowed to load. Without it, an attacker who injects HTML (e.g. via a stored
+  // payload) can execute arbitrary JavaScript in the user's session.
+  it('sets Content-Security-Policy to restrict resource loading', async () => {
+    const headers = await getHeaders();
+    const csp = headers.get('content-security-policy');
+    expect(csp).not.toBeNull();
+    expect(csp).toContain("default-src 'self'");
+    expect(csp).toContain("script-src 'self'");
+    expect(csp).toContain("frame-ancestors 'none'");
+  });
+
   it('sets Strict-Transport-Security for HTTPS enforcement', async () => {
     const headers = await getHeaders();
     const hsts = headers.get('strict-transport-security');
