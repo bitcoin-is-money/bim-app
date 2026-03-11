@@ -2,7 +2,7 @@ import {WebauthnUserHandleDecoder} from "@bim/lib/auth";
 
 import type {Logger} from 'pino';
 import {Account, AccountAlreadyExistsError, AccountId, AccountNotFoundError, CredentialId} from '../account';
-import type {AccountRepository, ChallengeRepository, SessionRepository, WebAuthnGateway,} from '../ports';
+import type {AccountRepository, ChallengeRepository, SessionRepository, TransactionManager, WebAuthnGateway,} from '../ports';
 import {Challenge} from './challenge';
 import {Session} from './session';
 import {
@@ -22,6 +22,7 @@ export interface AuthServiceDeps {
   accountRepository: AccountRepository;
   challengeRepository: ChallengeRepository;
   sessionRepository: SessionRepository;
+  transactionManager: TransactionManager;
   webAuthnGateway: WebAuthnGateway;
   logger: Logger;
 }
@@ -212,10 +213,12 @@ export class AuthService {
 
     const session = Session.create(account.id);
 
-    // Persist
-    await this.deps.challengeRepository.save(challenge);
-    await this.deps.accountRepository.save(account);
-    await this.deps.sessionRepository.save(session);
+    // Persist atomically
+    await this.deps.transactionManager.execute(async () => {
+      await this.deps.challengeRepository.save(challenge);
+      await this.deps.accountRepository.save(account);
+      await this.deps.sessionRepository.save(session);
+    });
 
     this.log.info({accountId: account.id, username: input.username}, 'Registration completed');
     return {account, session};
@@ -317,10 +320,12 @@ export class AuthService {
 
     const session = Session.create(account.id);
 
-    // Persist
-    await this.deps.challengeRepository.save(challenge);
-    await this.deps.accountRepository.save(account);
-    await this.deps.sessionRepository.save(session);
+    // Persist atomically
+    await this.deps.transactionManager.execute(async () => {
+      await this.deps.challengeRepository.save(challenge);
+      await this.deps.accountRepository.save(account);
+      await this.deps.sessionRepository.save(session);
+    });
 
     this.log.info({accountId: account.id}, 'Authentication completed');
     return {account, session};

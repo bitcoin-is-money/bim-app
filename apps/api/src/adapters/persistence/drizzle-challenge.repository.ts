@@ -1,17 +1,20 @@
 import * as schema from '@bim/db';
+import type {Database} from '@bim/db/database';
 import {Challenge, ChallengeId, type ChallengePurpose} from "@bim/domain/auth";
 import type {ChallengeRepository} from "@bim/domain/ports";
 import {eq, lt} from 'drizzle-orm';
-import type {NodePgDatabase} from 'drizzle-orm/node-postgres';
+import {AbstractDrizzleRepository} from './abstract-drizzle.repository';
 
 /**
  * Drizzle-based implementation of ChallengeRepository.
  */
-export class DrizzleChallengeRepository implements ChallengeRepository {
-  constructor(private readonly db: NodePgDatabase<typeof schema>) {}
+export class DrizzleChallengeRepository extends AbstractDrizzleRepository implements ChallengeRepository {
+  constructor(db: Database) {
+    super(db);
+  }
 
   async save(challenge: Challenge): Promise<void> {
-    await this.db
+    await this.resolveDb()
       .insert(schema.challenges)
       .values({
         id: challenge.id,
@@ -33,7 +36,7 @@ export class DrizzleChallengeRepository implements ChallengeRepository {
   }
 
   async findById(id: ChallengeId): Promise<Challenge | undefined> {
-    const record = await this.db.query.challenges.findFirst({
+    const record = await this.resolveDb().query.challenges.findFirst({
       where: eq(schema.challenges.id, id),
     });
 
@@ -45,7 +48,7 @@ export class DrizzleChallengeRepository implements ChallengeRepository {
   }
 
   async findByChallenge(challenge: string): Promise<Challenge | undefined> {
-    const record = await this.db.query.challenges.findFirst({
+    const record = await this.resolveDb().query.challenges.findFirst({
       where: eq(schema.challenges.challenge, challenge),
     });
 
@@ -57,13 +60,13 @@ export class DrizzleChallengeRepository implements ChallengeRepository {
   }
 
   async delete(id: ChallengeId): Promise<void> {
-    await this.db
+    await this.resolveDb()
       .delete(schema.challenges)
       .where(eq(schema.challenges.id, id));
   }
 
   async deleteExpired(): Promise<number> {
-    const result = await this.db
+    const result = await this.resolveDb()
       .delete(schema.challenges)
       .where(lt(schema.challenges.expiresAt, new Date()));
 

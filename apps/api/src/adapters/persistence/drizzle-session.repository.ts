@@ -1,18 +1,21 @@
 import * as schema from '@bim/db';
+import type {Database} from '@bim/db/database';
 import {AccountId} from "@bim/domain/account";
 import {Session, SessionId} from "@bim/domain/auth";
 import type {SessionRepository} from "@bim/domain/ports";
 import {eq, lt} from 'drizzle-orm';
-import type {NodePgDatabase} from 'drizzle-orm/node-postgres';
+import {AbstractDrizzleRepository} from './abstract-drizzle.repository';
 
 /**
  * Drizzle-based implementation of SessionRepository.
  */
-export class DrizzleSessionRepository implements SessionRepository {
-  constructor(private readonly db: NodePgDatabase<typeof schema>) {}
+export class DrizzleSessionRepository extends AbstractDrizzleRepository implements SessionRepository {
+  constructor(db: Database) {
+    super(db);
+  }
 
   async save(session: Session): Promise<void> {
-    await this.db
+    await this.resolveDb()
       .insert(schema.sessions)
       .values({
         id: session.id,
@@ -29,7 +32,7 @@ export class DrizzleSessionRepository implements SessionRepository {
   }
 
   async findById(id: SessionId): Promise<Session | undefined> {
-    const record = await this.db.query.sessions.findFirst({
+    const record = await this.resolveDb().query.sessions.findFirst({
       where: eq(schema.sessions.id, id),
     });
 
@@ -41,7 +44,7 @@ export class DrizzleSessionRepository implements SessionRepository {
   }
 
   async findByAccountId(accountId: AccountId): Promise<Session[]> {
-    const records = await this.db.query.sessions.findMany({
+    const records = await this.resolveDb().query.sessions.findMany({
       where: eq(schema.sessions.accountId, accountId),
     });
 
@@ -49,17 +52,17 @@ export class DrizzleSessionRepository implements SessionRepository {
   }
 
   async delete(id: SessionId): Promise<void> {
-    await this.db.delete(schema.sessions).where(eq(schema.sessions.id, id));
+    await this.resolveDb().delete(schema.sessions).where(eq(schema.sessions.id, id));
   }
 
   async deleteByAccountId(accountId: AccountId): Promise<void> {
-    await this.db
+    await this.resolveDb()
       .delete(schema.sessions)
       .where(eq(schema.sessions.accountId, accountId));
   }
 
   async deleteExpired(): Promise<number> {
-    const result = await this.db
+    const result = await this.resolveDb()
       .delete(schema.sessions)
       .where(lt(schema.sessions.expiresAt, new Date()));
 

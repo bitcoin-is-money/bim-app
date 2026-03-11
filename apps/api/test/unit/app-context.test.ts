@@ -16,6 +16,7 @@ vi.mock('../../src/adapters/index.js', () => {
     DrizzleUserSettingsRepository: class { name = 'drizzle-userSettings'; },
     DrizzleTransactionRepository: class { name = 'drizzle-transaction'; },
     DrizzleSwapRepository: class { name = 'drizzle-swap'; },
+    DrizzleTransactionManager: class { name = 'drizzle-tx-manager'; },
     SimpleWebAuthnGateway: class { name = 'simple-webauthn'; },
     StarknetRpcGateway: class { name = 'starknet-rpc'; },
     AvnuPaymasterGateway: class { name = 'avnu-paymaster'; },
@@ -25,6 +26,8 @@ vi.mock('../../src/adapters/index.js', () => {
     CoinGeckoPriceGateway: class { name = 'coingecko-price'; },
   };
 });
+
+const mockDb = {} as any;
 
 function createMockConfig(): AppConfig.Config {
   return {
@@ -50,9 +53,8 @@ describe('AppContext', () => {
   describe('createDefault', () => {
     it('creates context with default implementations when no overrides', () => {
       const config = createMockConfig();
-      const db = {} as any;
 
-      const context = AppContext.createDefault(config, db, logger);
+      const context = AppContext.createDefault(config, mockDb, logger);
 
       expect(context.repositories).toBeDefined();
       expect(context.gateways).toBeDefined();
@@ -62,7 +64,6 @@ describe('AppContext', () => {
 
     it('applies gateway overrides', () => {
       const config = createMockConfig();
-      const db = {} as any;
       const mockPaymaster = {name: 'mock-paymaster'} as unknown as PaymasterGateway;
       const overrides: AppContextOverrides = {
         gateways: {
@@ -70,14 +71,13 @@ describe('AppContext', () => {
         },
       };
 
-      const context = AppContext.createDefault(config, db, logger, overrides);
+      const context = AppContext.createDefault(config, mockDb, logger, overrides);
 
       expect((context.gateways.paymaster as any).name).toBe('mock-paymaster');
     });
 
     it('applies repository overrides', () => {
       const config = createMockConfig();
-      const db = {} as any;
       const mockAccountRepo = {name: 'mock-account'} as unknown as AccountRepository;
       const overrides: AppContextOverrides = {
         repositories: {
@@ -85,21 +85,20 @@ describe('AppContext', () => {
         },
       };
 
-      const context = AppContext.createDefault(config, db, logger, overrides);
+      const context = AppContext.createDefault(config, mockDb, logger, overrides);
 
       expect((context.repositories.account as any).name).toBe('mock-account');
     });
 
     it('applies webauthn config overrides', () => {
       const config = createMockConfig();
-      const db = {} as any;
       const overrides: AppContextOverrides = {
         webauthn: {
           rpId: 'override-rpId',
         },
       };
 
-      const context = AppContext.createDefault(config, db, logger, overrides);
+      const context = AppContext.createDefault(config, mockDb, logger, overrides);
 
       expect(context.webauthn.rpId).toBe('override-rpId');
       // Other webauthn fields should come from config
@@ -108,7 +107,6 @@ describe('AppContext', () => {
 
     it('services use overridden gateways', () => {
       const config = createMockConfig();
-      const db = {} as any;
       const mockPaymaster = {
         name: 'mock-paymaster',
         executeTransaction: vi.fn(),
@@ -119,7 +117,7 @@ describe('AppContext', () => {
         },
       };
 
-      const context = AppContext.createDefault(config, db, logger, overrides);
+      const context = AppContext.createDefault(config, mockDb, logger, overrides);
 
       // Verify the gateway is the mocked one
       expect((context.gateways.paymaster as any).name).toBe('mock-paymaster');
@@ -129,7 +127,6 @@ describe('AppContext', () => {
 
     it('services use overridden repositories', () => {
       const config = createMockConfig();
-      const db = {} as any;
       const mockAccountRepo = {
         name: 'mock-account',
         findById: vi.fn(),
@@ -141,7 +138,7 @@ describe('AppContext', () => {
         },
       };
 
-      const context = AppContext.createDefault(config, db, logger, overrides);
+      const context = AppContext.createDefault(config, mockDb, logger, overrides);
 
       expect((context.repositories.account as any).name).toBe('mock-account');
     });

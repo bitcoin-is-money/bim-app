@@ -11,4 +11,4 @@ export * from './atomiq.gateway';
 export * from './swap.gateway';
 export * from './lightning.decoder';
 export * from './price.gateway';
-
+export * from './transaction-manager';

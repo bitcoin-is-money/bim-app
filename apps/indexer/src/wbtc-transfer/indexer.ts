@@ -2,7 +2,7 @@ import {defineIndexer, type HandlerArgs} from '@apibara/indexer';
 import {drizzle as apibaraDrizzle, drizzleStorage, useDrizzleStorage} from '@apibara/plugin-drizzle';
 import {type Block, getSelector, StarknetStream} from '@apibara/starknet';
 import * as schema from '@bim/db';
-import {DatabaseConnection} from '@bim/db/connection';
+import {Database} from '@bim/db/database';
 import {createLogger} from '@bim/lib/logger';
 import {redactUrl} from '@bim/lib/url';
 import type {ApibaraRuntimeConfig} from 'apibara/types';
@@ -46,7 +46,7 @@ async function createWbtcTransferIndexerInternal(
   const connectionString: string = runtimeConfig.connectionString;
 
   logger.info({connectionString: redactUrl(connectionString)}, 'Checking database availability');
-  await DatabaseConnection.checkAvailability({url: connectionString}, logger);
+  await Database.checkAvailability({url: connectionString}, logger);
   logger.info('Database connectivity verified');
 
   const decoder = new TransferEventDecoder(logger);

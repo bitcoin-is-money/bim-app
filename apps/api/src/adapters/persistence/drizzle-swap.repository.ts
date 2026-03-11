@@ -1,9 +1,10 @@
 import * as schema from '@bim/db';
+import type {Database} from '@bim/db/database';
 import type {SwapRepository} from '@bim/domain/ports';
 import {Amount} from '@bim/domain/shared';
 import {Swap, type SwapDirection, SwapId, type SwapState, type SwapStatus} from '@bim/domain/swap';
 import {and, eq, lt, notInArray, or} from 'drizzle-orm';
-import type {NodePgDatabase} from 'drizzle-orm/node-postgres';
+import {AbstractDrizzleRepository} from './abstract-drizzle.repository';
 
 const TERMINAL_STATUSES: SwapStatus[] = ['completed', 'expired', 'failed', 'refunded', 'lost'];
 
@@ -11,16 +12,16 @@ const TERMINAL_STATUSES: SwapStatus[] = ['completed', 'expired', 'failed', 'refu
  * Drizzle-based implementation of SwapRepository.
  * Persists swap data in PostgreSQL via the bim_swaps table.
  */
-export class DrizzleSwapRepository implements SwapRepository {
+export class DrizzleSwapRepository extends AbstractDrizzleRepository implements SwapRepository {
 
-  constructor(
-    private readonly db: NodePgDatabase<typeof schema>,
-  ) {}
+  constructor(db: Database) {
+    super(db);
+  }
 
   async save(swap: Swap): Promise<void> {
     const stateColumns = this.stateToColumns(swap.getState());
 
-    await this.db
+    await this.resolveDb()
       .insert(schema.swaps)
       .values({
         id: swap.id,
@@ -43,7 +44,7 @@ export class DrizzleSwapRepository implements SwapRepository {
   }
 
   async findById(id: SwapId): Promise<Swap | undefined> {
-    const record = await this.db.query.swaps.findFirst({
+    const record = await this.resolveDb().query.swaps.findFirst({
       where: eq(schema.swaps.id, id),
     });
 
@@ -55,7 +56,7 @@ export class DrizzleSwapRepository implements SwapRepository {
   }
 
   async findByStatus(status: SwapStatus): Promise<Swap[]> {
-    const records = await this.db.query.swaps.findMany({
+    const records = await this.resolveDb().query.swaps.findMany({
       where: eq(schema.swaps.status, status),
     });
 
@@ -63,7 +64,7 @@ export class DrizzleSwapRepository implements SwapRepository {
   }
 
   async findByDestinationAddress(address: string): Promise<Swap[]> {
-    const records = await this.db.query.swaps.findMany({
+    const records = await this.resolveDb().query.swaps.findMany({
       where: eq(schema.swaps.destinationAddress, address.toLowerCase()),
     });
 
@@ -71,7 +72,7 @@ export class DrizzleSwapRepository implements SwapRepository {
   }
 
   async findActive(): Promise<Swap[]> {
-    const records = await this.db.query.swaps.findMany({
+    const records = await this.resolveDb().query.swaps.findMany({
       where: or(
         notInArray(schema.swaps.status, TERMINAL_STATUSES),
         // Expired bitcoin_to_starknet swaps are still active: the Atomiq smart
@@ -87,7 +88,7 @@ export class DrizzleSwapRepository implements SwapRepository {
   }
 
   async findByDirection(direction: SwapDirection): Promise<Swap[]> {
-    const records = await this.db.query.swaps.findMany({
+    const records = await this.resolveDb().query.swaps.findMany({
       where: eq(schema.swaps.direction, direction),
     });
 
@@ -95,11 +96,11 @@ export class DrizzleSwapRepository implements SwapRepository {
   }
 
   async delete(id: SwapId): Promise<void> {
-    await this.db.delete(schema.swaps).where(eq(schema.swaps.id, id));
+    await this.resolveDb().delete(schema.swaps).where(eq(schema.swaps.id, id));
   }
 
   async deleteExpiredBefore(date: Date): Promise<number> {
-    const result = await this.db
+    const result = await this.resolveDb()
       .delete(schema.swaps)
       .where(
         and(

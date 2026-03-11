@@ -1,6 +1,6 @@
 import * as schema from '@bim/db';
 import {WebauthnVirtualAuthenticator} from "@bim/test-toolkit/auth";
-import {eq} from 'drizzle-orm';
+import {eq, sql} from 'drizzle-orm';
 import type {Hono} from 'hono';
 import type pg from 'pg';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
@@ -205,6 +205,54 @@ describe('Authentication Flow', () => {
       expect(completeResponse.status).toBe(400);
       const body = await completeResponse.json() as ApiErrorResponse;
       expect(body.error.code).toBe('INVALID_CHALLENGE');
+    });
+
+    it('does not consume challenge when authentication fails', async () => {
+      const username = 'rollback_auth_test';
+      await register(username);
+
+      // Begin authentication
+      const beginResponse = await TestApp
+        .request(app)
+        .post('/api/auth/login/begin', {});
+      const beginBody = await beginResponse.json() as BeginAuthenticationResponse;
+      const assertion = await authenticator
+        .getAssertion(toAuthenticationOptions(beginBody, rpId));
+
+      // Install trigger to reject session creation — this makes sessionRepository.save() fail
+      // AFTER challengeRepository.save() and accountRepository.save() have already succeeded.
+      await db.execute(sql`
+        CREATE OR REPLACE FUNCTION fail_session_insert() RETURNS trigger AS $$
+        BEGIN
+          RAISE EXCEPTION 'simulated session creation failure';
+        END;
+        $$ LANGUAGE plpgsql;
+      `);
+      await db.execute(sql`
+        CREATE TRIGGER fail_session_insert_trigger
+          BEFORE INSERT ON bim_sessions
+          FOR EACH ROW
+          EXECUTE FUNCTION fail_session_insert();
+      `);
+
+      try {
+        const completeResponse = await TestApp
+          .request(app)
+          .post('/api/auth/login/complete', {
+            challengeId: beginBody.challengeId,
+            credential: assertion,
+          });
+        expect(completeResponse.status).not.toBe(200);
+
+        // Challenge should NOT be consumed (transaction should have rolled back)
+        const challengeRow = await db.execute(
+          sql`SELECT used FROM bim_challenges WHERE id = ${beginBody.challengeId}`,
+        );
+        expect((challengeRow.rows[0] as {used: boolean}).used).toBe(false);
+      } finally {
+        await db.execute(sql`DROP TRIGGER IF EXISTS fail_session_insert_trigger ON bim_sessions`);
+        await db.execute(sql`DROP FUNCTION IF EXISTS fail_session_insert()`);
+      }
     });
 
     it('rejects tampered assertion signature', async () => {

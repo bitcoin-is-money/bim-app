@@ -1,7 +1,7 @@
 import {accessSync, constants, mkdirSync} from 'node:fs';
 import * as schema from '@bim/db';
 import {redactUrl} from '@bim/lib/url';
-import type {DatabaseConfig} from '@bim/db/connection';
+import type {DatabaseConfig} from '@bim/db/database';
 import {getTableName} from 'drizzle-orm';
 import type {AtomiqGatewayConfig, AuthenticatorAttachment, WebAuthnConfig} from './adapters';
 

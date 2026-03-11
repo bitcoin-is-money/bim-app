@@ -1,4 +1,4 @@
-import {DatabaseConnection} from "@bim/db/connection";
+import {Database} from "@bim/db/database";
 import type {Hono} from 'hono';
 import {type AppInstance, createApp, type CreateAppOptions} from '../../../src/app';
 import {DEVNET_ACCOUNT_CLASS_HASH} from './devnet-paymaster.gateway';
@@ -34,7 +34,7 @@ export namespace TestApp {
    */
   export async function createTestApp(options: CreateAppOptions = {}): Promise<Hono> {
     setupTestEnv();
-    DatabaseConnection.reset();
+    Database.reset();
     const {app} = await createApp({
       skipStaticFiles: true,
       skipMonitor: true,
@@ -51,7 +51,7 @@ export namespace TestApp {
    */
   export async function createTestAppWithLogger(options: CreateAppOptions = {}): Promise<AppInstance> {
     setupTestEnv();
-    DatabaseConnection.reset();
+    Database.reset();
     return createApp({
       skipStaticFiles: true,
       skipMonitor: true,
@@ -67,7 +67,7 @@ export namespace TestApp {
    */
   export async function createTestAppWithSwapMonitor(options: CreateAppOptions = {}): Promise<AppInstance> {
     setupTestEnv();
-    DatabaseConnection.reset();
+    Database.reset();
     return createApp({
       skipStaticFiles: true,
       skipRateLimit: true,
