@@ -2,7 +2,7 @@ import * as schema from '@bim/db';
 import type {Database} from '@bim/db/database';
 import {Challenge, ChallengeId, type ChallengePurpose} from "@bim/domain/auth";
 import type {ChallengeRepository} from "@bim/domain/ports";
-import {eq, lt} from 'drizzle-orm';
+import {and, eq, gt, lt} from 'drizzle-orm';
 import {AbstractDrizzleRepository} from './abstract-drizzle.repository';
 
 /**
@@ -47,10 +47,31 @@ export class DrizzleChallengeRepository extends AbstractDrizzleRepository implem
     return this.toChallenge(record);
   }
 
+  async consumeById(id: ChallengeId): Promise<Challenge | undefined> {
+    const [row] = await this.resolveDb()
+      .update(schema.challenges)
+      .set({used: true})
+      .where(
+        and(
+          eq(schema.challenges.id, id),
+          eq(schema.challenges.used, false),
+          gt(schema.challenges.expiresAt, new Date()),
+        ),
+      )
+      .returning();
+
+    if (!row) {
+      return undefined;
+    }
+
+    return this.toChallenge(row);
+  }
+
   async findByChallenge(challenge: string): Promise<Challenge | undefined> {
-    const record = await this.resolveDb().query.challenges.findFirst({
-      where: eq(schema.challenges.challenge, challenge),
-    });
+    const record = await this
+      .resolveDb().query.challenges.findFirst({
+        where: eq(schema.challenges.challenge, challenge),
+      });
 
     if (!record) {
       return undefined;

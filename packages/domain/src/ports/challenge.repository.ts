@@ -15,6 +15,13 @@ export interface ChallengeRepository {
   findById(id: ChallengeId): Promise<Challenge | undefined>;
 
   /**
+   * Atomically marks a challenge as used and returns it.
+   * Returns undefined if the challenge does not exist, is already used, or has expired.
+   * This prevents TOCTOU race conditions on challenge consumption.
+   */
+  consumeById(id: ChallengeId): Promise<Challenge | undefined>;
+
+  /**
    * Finds a challenge by its challenge string.
    */
   findByChallenge(challenge: string): Promise<Challenge | undefined>;
