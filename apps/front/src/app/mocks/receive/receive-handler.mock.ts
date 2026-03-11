@@ -7,7 +7,6 @@ import {createErrorResponse} from '../mock-error';
 interface ReceiveRequestBody {
   network: 'lightning' | 'bitcoin' | 'starknet';
   amount: string;
-  tokenAddress?: string;
   description?: string;
 }
 

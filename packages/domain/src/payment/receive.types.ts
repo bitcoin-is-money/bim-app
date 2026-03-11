@@ -21,7 +21,6 @@ export interface ReceiveBitcoinInput {
 export interface ReceiveStarknetInput {
   starknetAddress: StarknetAddress;
   amount?: Amount;
-  tokenAddress?: string;
   useUriPrefix: boolean;
 }
 
@@ -29,7 +28,6 @@ export interface ReceivePaymentInput {
   network: PaymentNetwork;
   destinationAddress: StarknetAddress;
   amount?: Amount;
-  tokenAddress?: string;
   description?: string | undefined;
   accountId: string;
   useUriPrefix: boolean;

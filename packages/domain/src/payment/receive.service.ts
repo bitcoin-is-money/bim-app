@@ -52,7 +52,7 @@ export class ReceiveService {
       case 'starknet':
         return {
           network: 'starknet',
-          ...this.receiveStarknet(input.destinationAddress, input.amount, input.tokenAddress, input.useUriPrefix, input.description)};
+          ...this.receiveStarknet(input.destinationAddress, input.amount, input.useUriPrefix, input.description)};
       case 'lightning': {
         const description = input.description || 'Received';
         return {
@@ -75,8 +75,9 @@ export class ReceiveService {
   // Starknet — generate starknet: URI
   // ===========================================================================
 
-  private receiveStarknet(address: StarknetAddress, amount?: Amount, tokenAddress?: string, useUriPrefix = true, description?: string) {
-    const token = tokenAddress ?? this.deps.starknetConfig.wbtcTokenAddress;
+  // TODO: support multiple tokens when the app handles more than WBTC
+  private receiveStarknet(address: StarknetAddress, amount?: Amount, useUriPrefix = true, description?: string) {
+    const token = this.deps.starknetConfig.wbtcTokenAddress;
     const prefix = useUriPrefix ? 'starknet:' : '';
 
     let uri = `${prefix}${address}`;

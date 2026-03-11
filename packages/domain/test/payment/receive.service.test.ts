@@ -153,21 +153,6 @@ describe('ReceiveService', () => {
       expect(result.uri).toBe(`starknet:${SENDER_ADDRESS}?amount=50000&token=${WBTC_TOKEN_ADDRESS}`);
     });
 
-    it('uses the provided token address when specified', async () => {
-      const result = await service.receive({
-        network: 'starknet',
-        destinationAddress: SENDER_ADDRESS,
-        amount: Amount.ofSatoshi(1_000n),
-        tokenAddress: ETH_TOKEN_ADDRESS,
-        accountId: ACCOUNT_ID,
-        description: undefined,
-        useUriPrefix: true,
-      });
-
-      if (result.network !== 'starknet') throw new Error('Expected starknet result');
-      expect(result.uri).toBe(`starknet:${SENDER_ADDRESS}?amount=1000&token=${ETH_TOKEN_ADDRESS}`);
-    });
-
     it('omits the starknet: prefix when useUriPrefix is false', async () => {
       const result = await service.receive({
         network: 'starknet',

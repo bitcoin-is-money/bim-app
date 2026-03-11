@@ -49,14 +49,12 @@ export function createReceiveRoutes(appContext: AppContext): AuthenticatedHono {
       const amount = input.amount
         ? Amount.ofSatoshi(BigInt(input.amount))
         : undefined;
-      const tokenAddress = input.tokenAddress;
       const description = input.description?.trim();
 
       const result = await receiveService.receive({
         network: input.network,
         destinationAddress: starknetAddress,
         ...(amount !== undefined && {amount}),
-        ...(tokenAddress !== undefined && {tokenAddress}),
         description,
         accountId: account.id,
         useUriPrefix: input.useUriPrefix,
