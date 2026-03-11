@@ -7,6 +7,7 @@ import {Challenge} from './challenge';
 import {Session} from './session';
 import {
   AuthenticationFailedError,
+  ChallengeAlreadyUsedError,
   ChallengeNotFoundError,
   InvalidChallengeError,
   RegistrationFailedError,
@@ -166,13 +167,12 @@ export class AuthService {
       throw new AccountAlreadyExistsError(input.username);
     }
 
-    // Validate the challenge
+    // Atomically consume the challenge (prevents TOCTOU race condition)
     const challengeId = ChallengeId.of(input.challengeId);
-    const challenge = await this.deps.challengeRepository.findById(challengeId);
+    const challenge = await this.deps.challengeRepository.consumeById(challengeId);
     if (!challenge) {
-      throw new ChallengeNotFoundError(challengeId);
+      throw await this.throwChallengeConsumptionError(challengeId);
     }
-    challenge.consume();
 
     // Verify challenge purpose
     if (challenge.purpose !== 'registration') {
@@ -213,9 +213,8 @@ export class AuthService {
 
     const session = Session.create(account.id);
 
-    // Persist atomically
+    // Persist atomically (challenge already consumed atomically above)
     await this.deps.transactionManager.execute(async () => {
-      await this.deps.challengeRepository.save(challenge);
       await this.deps.accountRepository.save(account);
       await this.deps.sessionRepository.save(session);
     });
@@ -264,13 +263,12 @@ export class AuthService {
   async completeAuthentication(
     input: CompleteAuthenticationInput,
   ): Promise<CompleteAuthenticationOutput> {
-    // Validate the challenge
+    // Atomically consume the challenge (prevents TOCTOU race condition)
     const challengeId = ChallengeId.of(input.challengeId);
-    const challenge = await this.deps.challengeRepository.findById(challengeId);
+    const challenge = await this.deps.challengeRepository.consumeById(challengeId);
     if (!challenge) {
-      throw new ChallengeNotFoundError(challengeId);
+      throw await this.throwChallengeConsumptionError(challengeId);
     }
-    challenge.consume();
 
     // Verify challenge purpose
     if (challenge.purpose !== 'authentication') {
@@ -320,14 +318,33 @@ export class AuthService {
 
     const session = Session.create(account.id);
 
-    // Persist atomically
+    // Persist atomically (challenge already consumed atomically above)
     await this.deps.transactionManager.execute(async () => {
-      await this.deps.challengeRepository.save(challenge);
       await this.deps.accountRepository.save(account);
       await this.deps.sessionRepository.save(session);
     });
 
     this.log.info({accountId: account.id}, 'Authentication completed');
     return {account, session};
+  }
+
+  // ===========================================================================
+  // Private Helpers
+  // ===========================================================================
+
+  /**
+   * When atomic consumeById returns undefined, look up the challenge
+   * to throw the most specific error (not found / expired / already used).
+   */
+  private async throwChallengeConsumptionError(challengeId: ChallengeId): Promise<never> {
+    const stale = await this.deps.challengeRepository.findById(challengeId);
+    if (!stale) {
+      throw new ChallengeNotFoundError(challengeId);
+    }
+    // Re-use the entity's own validation to get the precise error
+    stale.validate();
+    // If validate() didn't throw, the challenge was consumed between our atomic
+    // UPDATE and this SELECT — which means a concurrent request won the race.
+    throw new ChallengeAlreadyUsedError(challengeId);
   }
 }
