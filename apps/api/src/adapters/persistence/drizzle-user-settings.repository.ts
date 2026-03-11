@@ -1,25 +1,26 @@
 import * as schema from '@bim/db';
+import type {Database} from '@bim/db/database';
 import {AccountId} from '@bim/domain/account';
 import type {UserSettingsRepository} from "@bim/domain/ports";
 import {FiatCurrency} from "@bim/domain/currency";
 import {Language, UserSettings, UserSettingsId} from "@bim/domain/user";
 
 import {eq} from 'drizzle-orm';
-import type {NodePgDatabase} from 'drizzle-orm/node-postgres';
+import {AbstractDrizzleRepository} from './abstract-drizzle.repository';
 
 /**
  * Drizzle-based implementation of UserSettingsRepository.
  */
-export class DrizzleUserSettingsRepository implements UserSettingsRepository {
+export class DrizzleUserSettingsRepository extends AbstractDrizzleRepository implements UserSettingsRepository {
 
-  constructor(
-    private readonly db: NodePgDatabase<typeof schema>
-  ) {}
+  constructor(db: Database) {
+    super(db);
+  }
 
   async save(settings: UserSettings): Promise<void> {
     const preferredCurrencies = settings.getPreferredCurrencies().join(',');
 
-    await this.db
+    await this.resolveDb()
       .insert(schema.userSettings)
       .values({
         id: settings.id,
@@ -42,7 +43,7 @@ export class DrizzleUserSettingsRepository implements UserSettingsRepository {
   }
 
   async findByAccountId(accountId: AccountId): Promise<UserSettings | undefined> {
-    const record = await this.db.query.userSettings.findFirst({
+    const record = await this.resolveDb().query.userSettings.findFirst({
       where: eq(schema.userSettings.accountId, accountId),
     });
 

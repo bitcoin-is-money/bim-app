@@ -8,9 +8,9 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./connection": {
-      "types": "./dist/connection.d.ts",
-      "import": "./dist/connection.js"
+    "./database": {
+      "types": "./dist/database.d.ts",
+      "import": "./dist/database.js"
     }
   },
   "scripts": {

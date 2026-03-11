@@ -1,20 +1,21 @@
 import * as schema from '@bim/db';
+import type {Database} from '@bim/db/database';
 import {Account, AccountId, type AccountStatus, CredentialId, StarknetAddress,} from '@bim/domain/account';
 import type {AccountRepository} from '@bim/domain/ports';
 import {eq} from 'drizzle-orm';
-import type {NodePgDatabase} from 'drizzle-orm/node-postgres';
+import {AbstractDrizzleRepository} from './abstract-drizzle.repository';
 
 /**
  * Drizzle-based implementation of AccountRepository.
  */
-export class DrizzleAccountRepository implements AccountRepository {
+export class DrizzleAccountRepository extends AbstractDrizzleRepository implements AccountRepository {
 
-  constructor(
-    private readonly db: NodePgDatabase<typeof schema>
-  ) {}
+  constructor(db: Database) {
+    super(db);
+  }
 
   async save(account: Account): Promise<void> {
-    await this.db
+    await this.resolveDb()
       .insert(schema.accounts)
       .values({
         id: account.id,
@@ -46,7 +47,7 @@ export class DrizzleAccountRepository implements AccountRepository {
   }
 
   async findById(id: AccountId): Promise<Account | undefined> {
-    const record = await this.db.query.accounts.findFirst({
+    const record = await this.resolveDb().query.accounts.findFirst({
       where: eq(schema.accounts.id, id),
     });
 
@@ -58,7 +59,7 @@ export class DrizzleAccountRepository implements AccountRepository {
   }
 
   async findByUsername(username: string): Promise<Account | undefined> {
-    const record = await this.db.query.accounts.findFirst({
+    const record = await this.resolveDb().query.accounts.findFirst({
       where: eq(schema.accounts.username, username),
     });
 
@@ -72,7 +73,7 @@ export class DrizzleAccountRepository implements AccountRepository {
   async findByCredentialId(
     credentialId: CredentialId,
   ): Promise<Account | undefined> {
-    const record = await this.db.query.accounts.findFirst({
+    const record = await this.resolveDb().query.accounts.findFirst({
       where: eq(schema.accounts.credentialId, credentialId),
     });
 
@@ -84,7 +85,7 @@ export class DrizzleAccountRepository implements AccountRepository {
   }
 
   async findByStarknetAddress(address: StarknetAddress): Promise<Account | undefined> {
-    const record = await this.db.query.accounts.findFirst({
+    const record = await this.resolveDb().query.accounts.findFirst({
       where: eq(schema.accounts.starknetAddress, address),
     });
 
@@ -96,7 +97,7 @@ export class DrizzleAccountRepository implements AccountRepository {
   }
 
   async existsByUsername(username: string): Promise<boolean> {
-    const record = await this.db.query.accounts.findFirst({
+    const record = await this.resolveDb().query.accounts.findFirst({
       where: eq(schema.accounts.username, username),
       columns: { id: true },
     });
@@ -105,7 +106,7 @@ export class DrizzleAccountRepository implements AccountRepository {
   }
 
   async delete(id: AccountId): Promise<void> {
-    await this.db.delete(schema.accounts).where(eq(schema.accounts.id, id));
+    await this.resolveDb().delete(schema.accounts).where(eq(schema.accounts.id, id));
   }
 
   private toAccount(record: schema.AccountRecord): Account {

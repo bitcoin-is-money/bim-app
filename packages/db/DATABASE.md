@@ -36,7 +36,7 @@ translation to PostgreSQL DDL.
 packages/db/
 ├── src/
 │   ├── schema.ts             # All table definitions (single source of truth)
-│   ├── connection.ts         # DatabaseConnection class (pool, retry, startup validation)
+│   ├── database.ts         # Database class (pool, retry, startup validation)
 │   └── index.ts              # Re-exports schema
 ├── drizzle.config.ts         # Drizzle Kit config
 ├── drizzle/                  # Generated migration files (if using generate + migrate)
@@ -46,7 +46,7 @@ packages/db/
 
 Sub-path exports:
 - `@bim/db` — schema only (tables, types)
-- `@bim/db/connection` — `DatabaseConnection` class (pool, retry, startup validation)
+- `@bim/db/database` — `Database` class (pool, retry, startup validation)
 
 ## Tables
 

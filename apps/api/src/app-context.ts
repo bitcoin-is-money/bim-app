@@ -33,10 +33,11 @@ import {
   DrizzleTransactionRepository,
   DrizzleUserSettingsRepository,
   DrizzleSwapRepository,
+  DrizzleTransactionManager,
   SimpleWebAuthnGateway,
   StarknetRpcGateway
 } from "./adapters";
-import type {Database} from "@bim/db/connection";
+import {Database} from "@bim/db/database";
 import type {AppConfig} from "./app-config";
 
 /**
@@ -173,6 +174,7 @@ export namespace AppContext {
         accountRepository: repositories.account,
         challengeRepository: repositories.challenge,
         sessionRepository: repositories.session,
+        transactionManager: new DrizzleTransactionManager(db),
         webAuthnGateway: gateways.webAuthn,
         logger: rootLogger,
       },

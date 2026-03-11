@@ -1,21 +1,22 @@
 import * as schema from '@bim/db';
+import type {Database} from '@bim/db/database';
 import {AccountId, StarknetAddress} from '@bim/domain/account';
 import type {TransactionPaginationOptions, TransactionRepository} from "@bim/domain/ports";
 import {Transaction, TransactionHash, TransactionId, type TransactionType} from "@bim/domain/user";
 import {and, count, desc, eq} from 'drizzle-orm';
-import type {NodePgDatabase} from 'drizzle-orm/node-postgres';
+import {AbstractDrizzleRepository} from './abstract-drizzle.repository';
 
 /**
  * Drizzle-based implementation of TransactionRepository.
  */
-export class DrizzleTransactionRepository implements TransactionRepository {
+export class DrizzleTransactionRepository extends AbstractDrizzleRepository implements TransactionRepository {
 
-  constructor(
-    private readonly db: NodePgDatabase<typeof schema>
-  ) {}
+  constructor(db: Database) {
+    super(db);
+  }
 
   async save(transaction: Transaction): Promise<void> {
-    await this.db
+    await this.resolveDb()
       .insert(schema.transactions)
       .values({
         id: transaction.id,
@@ -52,14 +53,14 @@ export class DrizzleTransactionRepository implements TransactionRepository {
       indexedAt: tx.indexedAt,
     }));
 
-    await this.db
+    await this.resolveDb()
       .insert(schema.transactions)
       .values(values)
       .onConflictDoNothing();
   }
 
   async findById(id: TransactionId): Promise<Transaction | undefined> {
-    const rows = await this.db
+    const rows = await this.resolveDb()
       .select({
         transaction: schema.transactions,
         description: schema.transactionDescriptions.description,
@@ -82,7 +83,7 @@ export class DrizzleTransactionRepository implements TransactionRepository {
   }
 
   async findByHash(hash: TransactionHash): Promise<Transaction | undefined> {
-    const rows = await this.db
+    const rows = await this.resolveDb()
       .select({
         transaction: schema.transactions,
         description: schema.transactionDescriptions.description,
@@ -109,7 +110,7 @@ export class DrizzleTransactionRepository implements TransactionRepository {
     accountId: AccountId,
     options: TransactionPaginationOptions,
   ): Promise<Transaction[]> {
-    const rows = await this.db
+    const rows = await this.resolveDb()
       .select({
         transaction: schema.transactions,
         description: schema.transactionDescriptions.description,
@@ -131,7 +132,7 @@ export class DrizzleTransactionRepository implements TransactionRepository {
   }
 
   async countByAccountId(accountId: AccountId): Promise<number> {
-    const result = await this.db
+    const result = await this.resolveDb()
       .select({count: count()})
       .from(schema.transactions)
       .where(eq(schema.transactions.accountId, accountId));
@@ -140,7 +141,7 @@ export class DrizzleTransactionRepository implements TransactionRepository {
   }
 
   async existsByHash(hash: TransactionHash): Promise<boolean> {
-    const record = await this.db.query.transactions.findFirst({
+    const record = await this.resolveDb().query.transactions.findFirst({
       where: eq(schema.transactions.transactionHash, hash),
       columns: {id: true},
     });
@@ -149,7 +150,7 @@ export class DrizzleTransactionRepository implements TransactionRepository {
   }
 
   async saveDescription(transactionHash: TransactionHash, accountId: AccountId, description: string): Promise<void> {
-    await this.db
+    await this.resolveDb()
       .insert(schema.transactionDescriptions)
       .values({
         id: crypto.randomUUID(),
@@ -164,7 +165,7 @@ export class DrizzleTransactionRepository implements TransactionRepository {
   }
 
   async deleteDescription(transactionHash: TransactionHash, accountId: AccountId): Promise<void> {
-    await this.db
+    await this.resolveDb()
       .delete(schema.transactionDescriptions)
       .where(
         and(

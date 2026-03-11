@@ -1,7 +1,7 @@
 import {serve} from '@hono/node-server';
 
 import {createApp} from './app';
-import {DatabaseConnection} from '@bim/db/connection';
+import {Database} from '@bim/db/database';
 import {loadEnv} from './load-env';
 
 loadEnv();
@@ -33,7 +33,7 @@ async function shutdown(signal: string): Promise<void> {
     await monitor.stop();
   }
   server.close();
-  await DatabaseConnection.get().close();
+  await Database.get().close();
   process.exit(0);
 }
 

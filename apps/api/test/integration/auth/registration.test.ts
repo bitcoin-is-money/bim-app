@@ -219,6 +219,60 @@ describe('Registration Flow', () => {
       expect(body.error.code).toBe('INVALID_CHALLENGE');
     });
 
+    it('rolls back challenge consumption when account creation fails', async () => {
+      const username = 'rollback_test';
+
+      // Begin registration
+      const beginResponse = await TestApp
+        .request(app)
+        .post('/api/auth/register/begin', {username});
+      const beginBody = await beginResponse.json() as BeginRegistrationResponse;
+
+      // Create valid credential
+      const credential = await authenticator
+        .createCredential(toRegistrationOptions(beginBody));
+
+      // Install a trigger that rejects INSERT on bim_accounts for this username.
+      // This makes accountRepository.save() fail AFTER challengeRepository.save() succeeds,
+      // simulating a race condition or unexpected DB failure between the two saves.
+      await db.execute(sql`
+        CREATE OR REPLACE FUNCTION fail_account_insert() RETURNS trigger AS $$
+        BEGIN
+          RAISE EXCEPTION 'simulated account creation failure';
+        END;
+        $$ LANGUAGE plpgsql;
+      `);
+      await db.execute(sql`
+        CREATE TRIGGER fail_account_insert_trigger
+          BEFORE INSERT ON bim_accounts
+          FOR EACH ROW
+          EXECUTE FUNCTION fail_account_insert();
+      `);
+
+      try {
+        // Complete should fail (trigger rejects account insert, after challenge was already saved as used)
+        const completeResponse = await TestApp
+          .request(app)
+          .post('/api/auth/register/complete', {
+            challengeId: beginBody.challengeId,
+            accountId: beginBody.accountId,
+            username,
+            credential,
+          });
+        expect(completeResponse.status).not.toBe(200);
+
+        // Challenge should NOT be consumed (transaction should have rolled back)
+        const challengeRow = await db.execute(
+          sql`SELECT used FROM bim_challenges WHERE id = ${beginBody.challengeId}`,
+        );
+        expect((challengeRow.rows[0] as {used: boolean}).used).toBe(false);
+      } finally {
+        // Clean up trigger
+        await db.execute(sql`DROP TRIGGER IF EXISTS fail_account_insert_trigger ON bim_accounts`);
+        await db.execute(sql`DROP FUNCTION IF EXISTS fail_account_insert()`);
+      }
+    });
+
     it('rejects invalid challenge ID', async () => {
       const username = 'invalid_challenge';
 

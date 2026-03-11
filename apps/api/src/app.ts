@@ -5,7 +5,7 @@ import {cors} from 'hono/cors';
 
 import type {Logger} from 'pino';
 import {AppContext, type AppContextOverrides} from "./app-context";
-import {DatabaseConnection} from '@bim/db/connection';
+import {Database} from '@bim/db/database';
 import {createGlobalRateLimit, createAuthRateLimit, createPaymentExecuteRateLimit} from './middleware/rate-limit.middleware';
 import {createRequestLoggerMiddleware} from './middleware/request-logger.middleware';
 import {createSecurityHeadersMiddleware} from './middleware/security-headers.middleware';
@@ -50,9 +50,8 @@ export async function createApp(options: CreateAppOptions = {}): Promise<AppInst
   };
   rootLogger.level = config.logLevel;
   logger.info(AppConfig.redact(config), "Application configuration:");
-  await DatabaseConnection.initialize(config.database, rootLogger);
-  const dbConnection = DatabaseConnection.get();
-  const db = dbConnection.getDb();
+  await Database.initialize(config.database, rootLogger);
+  const db = Database.get();
   const context = AppContext.createDefault(config, db, rootLogger, options.context);
   const app = new Hono();
   installGlobalErrorHandler(app);

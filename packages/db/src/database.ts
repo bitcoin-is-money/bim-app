@@ -1,3 +1,4 @@
+import {AsyncLocalStorage} from 'node:async_hooks';
 import * as schema from './schema.js';
 import {getTableName} from 'drizzle-orm';
 import {drizzle} from 'drizzle-orm/node-postgres';
@@ -5,7 +6,7 @@ import type {PgTable} from 'drizzle-orm/pg-core';
 import pg from 'pg';
 import type {Logger} from 'pino';
 
-export type Database = ReturnType<typeof drizzle<typeof schema>>;
+export type DrizzleDatabase = ReturnType<typeof drizzle<typeof schema>>;
 
 export interface DatabaseConfig {
   url: string;
@@ -31,25 +32,26 @@ const DEFAULT_CONFIG = {
  * Encapsulates the PostgreSQL connection pool and Drizzle ORM instance.
  *
  * Two usage patterns:
- * - **Singleton** (API): `DatabaseConnection.initialize(config, logger)` at startup,
- *   then `DatabaseConnection.get()` everywhere else.
- * - **Validation only** (Indexer): `DatabaseConnection.checkAvailability(config, logger)`
+ * - **Singleton** (API): `Database.initialize(config, logger)` at startup,
+ *   then `Database.get()` everywhere else.
+ * - **Validation only** (Indexer): `Database.checkAvailability(config, logger)`
  *   to verify connectivity and schema, without keeping a pool around.
  */
-export class DatabaseConnection {
-  private static instance: DatabaseConnection | undefined;
+export class Database {
+  private static instance: Database | undefined;
+  private static readonly txStore = new AsyncLocalStorage<DrizzleDatabase>();
 
   private readonly config: DatabaseConfig;
   private readonly logger: Logger;
   private pool: pg.Pool | undefined;
-  private db: Database | undefined;
+  private drizzleDb: DrizzleDatabase | undefined;
 
   constructor(config: Partial<DatabaseConfig>, logger: Logger) {
     this.config = {
       ...DEFAULT_CONFIG,
       ...config,
     };
-    this.logger = logger.child({name: 'DatabaseConnection'});
+    this.logger = logger.child({name: 'Database'});
     this.logger.debug('Initialized');
   }
 
@@ -61,15 +63,15 @@ export class DatabaseConnection {
   static async initialize(
     config: Partial<DatabaseConfig>,
     rootLogger: Logger
-  ): Promise<DatabaseConnection> {
-    if (DatabaseConnection.instance) {
-      throw new Error('DatabaseConnection already initialized, initialize should not be called twice');
+  ): Promise<Database> {
+    if (Database.instance) {
+      throw new Error('Database already initialized, initialize should not be called twice');
     }
-    const conn = new DatabaseConnection(config, rootLogger);
+    const conn = new Database(config, rootLogger);
     conn.assertUrlDefined();
     await conn.assertConnectionAvailable();
     await conn.assertTableExists(conn.config.startupRequiredTable);
-    DatabaseConnection.instance = conn;
+    Database.instance = conn;
     return conn;
   }
 
@@ -77,28 +79,28 @@ export class DatabaseConnection {
     config: Partial<DatabaseConfig>,
     rootLogger: Logger
   ): Promise<void> {
-    const conn = new DatabaseConnection(config, rootLogger);
-    conn.assertUrlDefined();
-    await conn.assertConnectionAvailable();
-    await conn.assertTableExists(conn.config.startupRequiredTable);
-    await conn.close();
+    const db = new Database(config, rootLogger);
+    db.assertUrlDefined();
+    await db.assertConnectionAvailable();
+    await db.assertTableExists(db.config.startupRequiredTable);
+    await db.close();
   }
 
   /**
    * Returns the singleton instance. Throws if `initialize()` was not called.
    */
-  static get(): DatabaseConnection {
-    if (!DatabaseConnection.instance) {
-      throw new Error('DatabaseConnection not initialized — call DatabaseConnection.initialize() first');
+  static get(): Database {
+    if (!Database.instance) {
+      throw new Error('Database not initialized — call Database.initialize() first');
     }
-    return DatabaseConnection.instance;
+    return Database.instance;
   }
 
   /**
    * Resets the singleton (for testing only).
    */
   static reset(): void {
-    DatabaseConnection.instance = undefined;
+    Database.instance = undefined;
   }
 
   /**
@@ -125,9 +127,28 @@ export class DatabaseConnection {
   /**
    * Returns the Drizzle ORM instance, creating it lazily on the first call.
    */
-  getDb(): Database {
-    this.db ??= drizzle(this.getPool(), {schema});
-    return this.db;
+  getDb(): DrizzleDatabase {
+    this.drizzleDb ??= drizzle(this.getPool(), {schema});
+    return this.drizzleDb;
+  }
+
+  /**
+   * Returns the transaction-scoped db if inside withTransaction(), else the root Drizzle instance.
+   * Used by repositories to transparently participate in transactions.
+   */
+  resolveDb(): DrizzleDatabase {
+    return Database.txStore.getStore() ?? this.getDb();
+  }
+
+  /**
+   * Runs fn inside a database transaction. All repositories using resolveDb()
+   * will automatically use the transaction-scoped connection.
+   * Auto-rollback on error.
+   */
+  async withTransaction<T>(fn: () => Promise<T>): Promise<T> {
+    return this.getDb().transaction(async (tx) =>
+      Database.txStore.run(tx as unknown as DrizzleDatabase, fn)
+    );
   }
 
   /**
@@ -202,7 +223,7 @@ export class DatabaseConnection {
       this.logger.info('Closing connection pool');
       await this.pool.end();
       this.pool = undefined;
-      this.db = undefined;
+      this.drizzleDb = undefined;
       this.logger.debug('Connection pool closed');
     }
   }

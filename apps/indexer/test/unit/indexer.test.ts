@@ -25,8 +25,8 @@ vi.mock('@bim/lib/url', () => ({
 const {mockCheckAvailability} = vi.hoisted(() => ({
   mockCheckAvailability: vi.fn(),
 }));
-vi.mock('@bim/db/connection', () => ({
-  DatabaseConnection: {
+vi.mock('@bim/db/database', () => ({
+  Database: {
     checkAvailability: mockCheckAvailability,
   },
 }));

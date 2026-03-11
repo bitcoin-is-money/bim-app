@@ -1,4 +1,4 @@
-import {DatabaseConnection} from "@bim/db/connection";
+import {Database} from "@bim/db/database";
 import type {Hono} from 'hono';
 import {createApp, type CreateAppOptions} from '../../../src/app.js';
 
@@ -15,7 +15,7 @@ export namespace TestnetApp {
    * Uses real Starknet RPC and AVNU paymaster (no devnet mocks).
    */
   export async function createTestApp(options: CreateAppOptions = {}): Promise<Hono> {
-    DatabaseConnection.reset();
+    Database.reset();
     const {app} = await createApp({
       skipStaticFiles: true,
       skipMonitor: true,
