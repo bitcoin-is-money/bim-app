@@ -1,5 +1,5 @@
 import type {SwapGateway, StarknetCall} from '@bim/domain/ports';
-import {ExternalServiceError} from '@bim/domain/shared';
+import {ExternalServiceError, validateExternalCalls} from '@bim/domain/shared';
 import type {Logger} from 'pino';
 
 /**
@@ -7,6 +7,8 @@ import type {Logger} from 'pino';
  */
 export interface AvnuSwapConfig {
   baseUrl: string;
+  /** Token contract addresses known to the system, used to validate external calls */
+  knownTokenAddresses: readonly string[];
 }
 
 /**
@@ -105,6 +107,8 @@ export class AvnuSwapGateway implements SwapGateway {
     }));
 
     this.log.info({callCount: calls.length}, 'AVNU swap calls built');
+
+    validateExternalCalls(calls, this.config.knownTokenAddresses, 'AVNU DEX');
 
     return {
       calls,

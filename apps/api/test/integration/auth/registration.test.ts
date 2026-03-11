@@ -250,7 +250,7 @@ describe('Registration Flow', () => {
       `);
 
       try {
-        // Complete should fail (trigger rejects account insert, after challenge was already saved as used)
+        // Complete should fail (trigger rejects account insert)
         const completeResponse = await TestApp
           .request(app)
           .post('/api/auth/register/complete', {
@@ -261,11 +261,13 @@ describe('Registration Flow', () => {
           });
         expect(completeResponse.status).not.toBe(200);
 
-        // Challenge should NOT be consumed (transaction should have rolled back)
+        // Challenge IS consumed: consumeById is atomic and runs outside the transaction.
+        // This is correct — a used challenge must never be replayable, even if the
+        // downstream operation fails.
         const challengeRow = await db.execute(
           sql`SELECT used FROM bim_challenges WHERE id = ${beginBody.challengeId}`,
         );
-        expect((challengeRow.rows[0] as {used: boolean}).used).toBe(false);
+        expect((challengeRow.rows[0] as {used: boolean}).used).toBe(true);
       } finally {
         // Clean up trigger
         await db.execute(sql`DROP TRIGGER IF EXISTS fail_account_insert_trigger ON bim_accounts`);

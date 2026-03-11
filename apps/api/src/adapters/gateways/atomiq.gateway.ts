@@ -12,7 +12,7 @@ import type {
   BitcoinSwapQuote,
   StarknetCall,
 } from '@bim/domain/ports';
-import {ExternalServiceError} from "@bim/domain/shared";
+import {ExternalServiceError, validateExternalCalls} from "@bim/domain/shared";
 import type {SwapDirection, SwapLimits} from "@bim/domain/swap";
 import {LightningInvoiceExpiredError} from "@bim/domain/swap";
 import type {BitcoinAddress, LightningInvoice, SwapId} from '@bim/domain/swap';
@@ -48,6 +48,8 @@ export interface AtomiqGatewayConfig {
   autoCreateStorage?: boolean;
   /** Token symbol used for swaps (e.g. 'WBTC') */
   swapToken: string;
+  /** Token contract addresses known to the system, used to validate external calls */
+  knownTokenAddresses: readonly string[];
 }
 
 type StarknetChainInitializers = readonly [StarknetInitializerType];
@@ -468,6 +470,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     if (commitCalls.length === 0) {
       throw new Error('No commit calls extracted from SDK transactions');
     }
+    validateExternalCalls(commitCalls, this.config.knownTokenAddresses, 'Atomiq');
     return commitCalls;
   }
 

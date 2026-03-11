@@ -220,7 +220,7 @@ describe('Authentication Flow', () => {
         .getAssertion(toAuthenticationOptions(beginBody, rpId));
 
       // Install trigger to reject session creation — this makes sessionRepository.save() fail
-      // AFTER challengeRepository.save() and accountRepository.save() have already succeeded.
+      // inside the transaction, AFTER the challenge was already atomically consumed.
       await db.execute(sql`
         CREATE OR REPLACE FUNCTION fail_session_insert() RETURNS trigger AS $$
         BEGIN
@@ -244,11 +244,13 @@ describe('Authentication Flow', () => {
           });
         expect(completeResponse.status).not.toBe(200);
 
-        // Challenge should NOT be consumed (transaction should have rolled back)
+        // Challenge IS consumed: consumeById is atomic and runs outside the transaction.
+        // This is correct — a used challenge must never be replayable, even if the
+        // downstream operation fails.
         const challengeRow = await db.execute(
           sql`SELECT used FROM bim_challenges WHERE id = ${beginBody.challengeId}`,
         );
-        expect((challengeRow.rows[0] as {used: boolean}).used).toBe(false);
+        expect((challengeRow.rows[0] as {used: boolean}).used).toBe(true);
       } finally {
         await db.execute(sql`DROP TRIGGER IF EXISTS fail_session_insert_trigger ON bim_sessions`);
         await db.execute(sql`DROP FUNCTION IF EXISTS fail_session_insert()`);

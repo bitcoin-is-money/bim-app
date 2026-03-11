@@ -116,3 +116,16 @@ export class PaymasterServiceError extends DomainError {
     super(`Paymaster service error: ${reason}`);
   }
 }
+
+/**
+ * Thrown when an external service returns calls that fail safety validation.
+ * This indicates either a compromised service or an unexpected protocol change.
+ */
+export class UnsafeExternalCallError extends DomainError {
+  constructor(
+    readonly service: string,
+    readonly reason: string,
+  ) {
+    super(`Unsafe call from '${service}': ${reason}`);
+  }
+}
