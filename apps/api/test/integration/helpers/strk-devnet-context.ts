@@ -5,6 +5,7 @@ import type {Logger} from "pino";
 import {Account, RpcProvider, Signer} from 'starknet';
 import {StarknetRpcGateway} from '../../../src/adapters';
 import {StarkSigner} from './crypto';
+import {DevnetStarknetGateway} from './devnet-starknet.gateway.js';
 import {
   DEVNET_ACCOUNT_CLASS_HASH,
   DevnetPaymasterGateway,
@@ -32,7 +33,7 @@ export const WBTC_TOKEN_ADDRESS = '0x00abbd7d98ad664568f204d6e1af6e02d6a5c55eb4e
 export class StrkDevnetContext {
 
   private readonly devnetProvider: RpcProvider;
-  private readonly starknetGateway: StarknetRpcGateway;
+  private readonly starknetGateway: DevnetStarknetGateway;
   private paymasterGateway: DevnetPaymasterGateway;
   private readonly p256Signer: P256Signer;
   private starkSigner: StarkSigner | null = null;
@@ -48,7 +49,7 @@ export class StrkDevnetContext {
     this.paymasterGateway = new DevnetPaymasterGateway(this.devnetUrl);
 
     this.logger = createLogger();
-    this.starknetGateway = new StarknetRpcGateway(
+    this.starknetGateway = new DevnetStarknetGateway(
       {
         rpcUrl: this.devnetUrl,
         accountClassHash: DEVNET_ACCOUNT_CLASS_HASH,
@@ -89,6 +90,10 @@ export class StrkDevnetContext {
     // Initialize the shared StarkSigner with the devnet account's key
     // setSharedStarkSigner(account.privateKey);
     this.starkSigner = StarkSigner.create(account.privateKey);
+
+    // Configure the starknet gateway to compute addresses using the STARK key
+    // (devnet uses OpenZeppelin account, not WebAuthn)
+    this.starknetGateway.setStarkPublicKey(this.starkSigner.getPublicKey());
 
     // Recreate paymaster gateway with the StarkSigner
     this.paymasterGateway = new DevnetPaymasterGateway(this.devnetUrl, this.starkSigner);
