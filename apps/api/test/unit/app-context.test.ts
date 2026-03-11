@@ -40,11 +40,11 @@ function createMockConfig(): AppConfig.Config {
     starknetRpcUrl: 'http://localhost:5050',
     accountClassHash: '0x123',
     wbtcTokenAddress: '0x456',
-    avnuApiUrl: 'http://localhost:9090',
-    avnuApiKey: 'test-key',
-    avnuSwapApiUrl: 'https://sepolia.api.avnu.fi',
+    strkTokenAddress: '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d',
+    avnuPaymaster: {apiUrl: 'http://localhost:9090', apiKey: 'test-key'},
+    avnuSwap: {baseUrl: 'https://sepolia.api.avnu.fi', knownTokenAddresses: ['0x456', '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d']},
     feeTreasuryAddress: '0x027367ddd36d7efc4694e1af5742f8d26626369c07abf15d136ff422b9a40fa0',
-    atomiq: {network: 'testnet', starknetRpcUrl: 'http://localhost:5050', storagePath: '/tmp/bim/atomiq', autoCreateStorage: true, swapToken: 'WBTC'},
+    atomiq: {network: 'testnet', starknetRpcUrl: 'http://localhost:5050', storagePath: '/tmp/bim/atomiq', autoCreateStorage: true, swapToken: 'WBTC', knownTokenAddresses: ['0x456', '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d']},
     logLevel: 'silent',
   };
 }

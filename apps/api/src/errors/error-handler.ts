@@ -39,6 +39,7 @@ import {
   PaymasterServiceError,
   TimeoutError,
   UnauthorizedError,
+  UnsafeExternalCallError,
   ValidationError,
 } from '@bim/domain/shared';
 
@@ -270,6 +271,12 @@ export function handleDomainError(ctx: Context, error: unknown, logger: Logger):
   if (error instanceof PaymasterServiceError) {
     return createErrorResponse(ctx, 502, ErrorCode.PAYMASTER_SERVICE_ERROR, 'Paymaster service error', {
       reason: error.reason,
+    });
+  }
+  if (error instanceof UnsafeExternalCallError) {
+    logger.error({service: error.service, reason: error.reason}, 'Unsafe external call detected');
+    return createErrorResponse(ctx, 502, ErrorCode.EXTERNAL_SERVICE_ERROR, 'External service returned unsafe data', {
+      service: error.service,
     });
   }
   if (error instanceof ExternalServiceError) {

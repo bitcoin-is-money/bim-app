@@ -3,7 +3,10 @@ import * as schema from '@bim/db';
 import {redactUrl} from '@bim/lib/url';
 import type {DatabaseConfig} from '@bim/db/database';
 import {getTableName} from 'drizzle-orm';
-import type {AtomiqGatewayConfig, AuthenticatorAttachment, WebAuthnConfig} from './adapters';
+import type {AtomiqGatewayConfig, AuthenticatorAttachment, AvnuPaymasterConfig, AvnuSwapConfig, WebAuthnConfig} from './adapters';
+
+/** Well-known STRK token contract address (same on mainnet and testnet). */
+const STRK_TOKEN_ADDRESS = '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d';
 
 export namespace AppConfig {
 
@@ -16,10 +19,10 @@ export namespace AppConfig {
     starknetRpcUrl: string;
     accountClassHash: string;
     wbtcTokenAddress: string;
-    avnuApiUrl: string;
-    avnuApiKey: string;
-    avnuSwapApiUrl: string;
+    strkTokenAddress: string;
     feeTreasuryAddress: string;
+    avnuPaymaster: AvnuPaymasterConfig;
+    avnuSwap: AvnuSwapConfig;
     atomiq: AtomiqGatewayConfig;
     webauthn: WebAuthnConfig;
     logLevel: string;
@@ -49,6 +52,8 @@ export namespace AppConfig {
     }
 
     const starknetRpcUrl = required('STARKNET_RPC_URL');
+    const wbtcTokenAddress = required('WBTC_TOKEN_ADDRESS');
+    const knownTokenAddresses = [wbtcTokenAddress, STRK_TOKEN_ADDRESS];
     const authenticatorAttachment = parseAuthenticatorAttachment(process.env.WEBAUTHN_AUTHENTICATOR_ATTACHMENT);
 
     return {
@@ -62,15 +67,21 @@ export namespace AppConfig {
       },
       starknetRpcUrl,
       accountClassHash: required('ACCOUNT_CLASS_HASH'),
-      wbtcTokenAddress: required('WBTC_TOKEN_ADDRESS'),
-      avnuApiUrl: optional('AVNU_API_URL', 'https://starknet.paymaster.avnu.fi'),
-      avnuApiKey: optional('AVNU_API_KEY', ''),
-      avnuSwapApiUrl: optional('AVNU_SWAP_API_URL',
-        starknetNetwork === 'mainnet'
-          ? 'https://starknet.api.avnu.fi'
-          : 'https://sepolia.api.avnu.fi'),
-      atomiq: loadAtomiqConfig(required, optional, starknetNetwork, starknetRpcUrl),
+      wbtcTokenAddress,
+      strkTokenAddress: STRK_TOKEN_ADDRESS,
       feeTreasuryAddress: required('FEE_TREASURY_ADDRESS'),
+      avnuPaymaster: {
+        apiUrl: optional('AVNU_API_URL', 'https://starknet.paymaster.avnu.fi'),
+        apiKey: optional('AVNU_API_KEY', ''),
+      },
+      avnuSwap: {
+        baseUrl: optional('AVNU_SWAP_API_URL',
+          starknetNetwork === 'mainnet'
+            ? 'https://starknet.api.avnu.fi'
+            : 'https://sepolia.api.avnu.fi'),
+        knownTokenAddresses,
+      },
+      atomiq: loadAtomiqConfig(required, optional, starknetNetwork, starknetRpcUrl, knownTokenAddresses),
       webauthn: {
         rpId: optional('WEBAUTHN_RP_ID', 'localhost'),
         rpName: optional('WEBAUTHN_RP_NAME', 'BIM'),
@@ -86,6 +97,7 @@ export namespace AppConfig {
     optional: (name: string, defaultValue: string) => string,
     starknetNetwork: 'mainnet' | 'testnet' | 'devnet',
     starknetRpcUrl: string,
+    knownTokenAddresses: readonly string[],
   ): AtomiqGatewayConfig {
     const storagePath = required('ATOMIQ_STORAGE_PATH');
     const autoCreateStorage = optional('ATOMIQ_AUTO_CREATE_STORAGE', 'false') === 'true';
@@ -120,6 +132,7 @@ export namespace AppConfig {
       starknetRpcUrl,
       storagePath,
       swapToken,
+      knownTokenAddresses,
       autoCreateStorage,
       ...(intermediaryUrl !== undefined && {intermediaryUrl}),
     };
@@ -148,7 +161,10 @@ export namespace AppConfig {
         })
       },
       starknetRpcUrl: redactUrl(config.starknetRpcUrl),
-      avnuApiKey: config.avnuApiKey ? '***' : '',
+      avnuPaymaster: {
+        ...config.avnuPaymaster,
+        apiKey: config.avnuPaymaster.apiKey ? '***' : '',
+      },
     };
   }
 }

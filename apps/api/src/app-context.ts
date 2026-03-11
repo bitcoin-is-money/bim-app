@@ -117,13 +117,7 @@ export namespace AppContext {
     };
 
     // Initialize paymaster first (needed by starknet gateway for executeCalls)
-    const paymasterGateway = new AvnuPaymasterGateway(
-      {
-        apiUrl: config.avnuApiUrl,
-        apiKey: config.avnuApiKey,
-      },
-      rootLogger,
-    );
+    const paymasterGateway = new AvnuPaymasterGateway(config.avnuPaymaster, rootLogger);
 
     // Initialize gateways (with optional overrides)
     const gateways: AppContext['gateways'] = {
@@ -134,7 +128,7 @@ export namespace AppContext {
           accountClassHash: config.accountClassHash,
           tokenAddresses: {
             WBTC: config.wbtcTokenAddress,
-            STRK: '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d',
+            STRK: config.strkTokenAddress,
           },
           webauthnOrigin: config.webauthn.origin,
           webauthnRpId: config.webauthn.rpId,
@@ -144,10 +138,7 @@ export namespace AppContext {
       ),
       paymaster: paymasterGateway,
       atomiq: new AtomiqSdkGateway(config.atomiq, rootLogger),
-      dex: new AvnuSwapGateway(
-        {baseUrl: config.avnuSwapApiUrl},
-        rootLogger,
-      ),
+      dex: new AvnuSwapGateway(config.avnuSwap, rootLogger),
       lightningDecoder: new Bolt11LightningDecoder(),
       price: new CoinGeckoPriceGateway(rootLogger),
       ...overrides?.gateways,
@@ -204,7 +195,7 @@ export namespace AppContext {
 
     const starknetConfig: StarknetConfig = {
       wbtcTokenAddress: StarknetAddress.of(config.wbtcTokenAddress),
-      strkTokenAddress: StarknetAddress.of('0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d'),
+      strkTokenAddress: StarknetAddress.of(config.strkTokenAddress),
     };
 
     const feeConfig = FeeConfig.create({
