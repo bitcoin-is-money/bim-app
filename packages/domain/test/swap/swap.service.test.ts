@@ -130,6 +130,7 @@ describe('SwapService', () => {
         isCompleted: false,
         isFailed: false,
         isExpired: true, // Atomiq says expired...
+        isRefunded: false,
       });
 
       const result = await service.fetchStatus({swapId: swap.id});
@@ -149,6 +150,7 @@ describe('SwapService', () => {
         isCompleted: false,
         isFailed: false,
         isExpired: true,
+        isRefunded: false,
       });
 
       const result = await service.fetchStatus({swapId: swap.id});
@@ -167,6 +169,7 @@ describe('SwapService', () => {
         isCompleted: false,
         isFailed: false,
         isExpired: true,
+        isRefunded: false,
       });
 
       const result = await service.fetchStatus({swapId: swap.id});
@@ -189,6 +192,7 @@ describe('SwapService', () => {
         isCompleted: false,
         isFailed: false,
         isExpired: false,
+        isRefunded: false,
       });
 
       const result = await service.fetchStatus({swapId: swap.id});
@@ -207,6 +211,7 @@ describe('SwapService', () => {
         isCompleted: true,
         isFailed: false,
         isExpired: false,
+        isRefunded: false,
         txHash: '0xabc',
       });
 
@@ -225,6 +230,7 @@ describe('SwapService', () => {
         isCompleted: false,
         isFailed: true,
         isExpired: false,
+        isRefunded: false,
         error: 'Network error',
       });
 
