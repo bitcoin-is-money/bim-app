@@ -126,6 +126,15 @@ export class StarknetRpcGateway implements StarknetGateway {
     }
   }
 
+  async isDeployed(address: StarknetAddress): Promise<boolean> {
+    try {
+      const classHash = await this.provider.getClassHashAt(address.toString());
+      return classHash !== '0x0';
+    } catch {
+      return false;
+    }
+  }
+
   async getNonce(address: StarknetAddress): Promise<bigint> {
     this.log.debug({address: address.toString()}, 'Getting nonce');
     try {
