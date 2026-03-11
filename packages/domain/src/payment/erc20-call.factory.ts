@@ -1,3 +1,4 @@
+import type {StarknetAddress} from '../account';
 import {Amount} from '../shared';
 import type {FeeConfig} from './fee';
 import {FeeCalculator} from './fee';
@@ -50,7 +51,7 @@ export class Erc20CallFactory {
    * @returns TransferResult with calls array and fee amount
    */
   createTransfer(params: {
-    tokenAddress: string;
+    tokenAddress: StarknetAddress;
     recipientAddress: string;
     amount: Amount;
     applyFee: boolean;
@@ -98,7 +99,7 @@ export class Erc20CallFactory {
    * Used for swap payments (Lightning/Bitcoin) where the main transfer is
    * handled by Atomiq commit calls, but BIM still needs to collect its fee.
    */
-  createFeeCall(tokenAddress: string, amount: Amount): TransferResult {
+  createFeeCall(tokenAddress: StarknetAddress, amount: Amount): TransferResult {
     const feeAmount = FeeCalculator.calculateFee(
       amount,
       this.feeConfig.percentage,

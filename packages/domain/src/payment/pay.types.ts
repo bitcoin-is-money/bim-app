@@ -15,7 +15,7 @@ export type PreparedCalls =
       amount: Amount;
       feeAmount: Amount;
       recipientAddress: StarknetAddress;
-      tokenAddress: string;
+      tokenAddress: StarknetAddress;
     }
   | {
       network: 'lightning';
@@ -54,7 +54,7 @@ export interface StarknetPaymentResult {
   amount: Amount;
   feeAmount: Amount;
   recipientAddress: StarknetAddress;
-  tokenAddress: string;
+  tokenAddress: StarknetAddress;
 }
 
 /**

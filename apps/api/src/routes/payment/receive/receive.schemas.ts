@@ -7,7 +7,6 @@ import {z} from 'zod';
 export const ReceiveSchema = z.object({
   network: z.enum(['lightning', 'bitcoin', 'starknet']),
   amount: z.string().regex(/^\d+$/, 'Amount must be a non-negative integer string').optional(),
-  tokenAddress: z.string().optional(),
   description: z.string().max(100).optional(),
   useUriPrefix: z.boolean().default(true),
 });

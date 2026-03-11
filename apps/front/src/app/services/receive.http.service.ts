@@ -7,7 +7,6 @@ export type ReceiveNetwork = 'lightning' | 'bitcoin' | 'starknet';
 export interface CreateInvoiceRequest {
   network: ReceiveNetwork;
   amount: number;
-  tokenAddress?: string;
   description?: string;
   useUriPrefix?: boolean;
 }
@@ -71,7 +70,6 @@ export class ReceiveHttpService {
     return this.http.post<ReceiveResponse>(this.apiUrl, {
       network: request.network,
       amount: String(request.amount),
-      tokenAddress: request.tokenAddress,
       ...(request.description ? {description: request.description} : {}),
       ...(request.useUriPrefix !== undefined ? {useUriPrefix: request.useUriPrefix} : {}),
     });

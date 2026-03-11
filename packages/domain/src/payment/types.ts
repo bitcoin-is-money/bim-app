@@ -42,5 +42,5 @@ export type ParsedPaymentData =
       amount: Amount;
       description: string;
       address: StarknetAddress;
-      tokenAddress: string;
+      tokenAddress: StarknetAddress;
     };
