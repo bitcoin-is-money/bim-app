@@ -254,6 +254,32 @@ describe('Account Deployment Flow', () => {
     });
   });
 
+  describe('Concurrent deployment protection', () => {
+    it('rejects concurrent deployment attempts', async () => {
+      const {sessionCookie} = await register('concurrent_deploy');
+
+      const [response1, response2] = await Promise.all([
+        TestApp.request(app).post('/api/account/deploy', {}, {
+          headers: {Cookie: sessionCookie},
+        }),
+        TestApp.request(app).post('/api/account/deploy', {}, {
+          headers: {Cookie: sessionCookie},
+        }),
+      ]);
+
+      const statuses = [response1.status, response2.status];
+
+      // Exactly one request must be rejected by the atomic lock
+      const rejectedResponses = statuses.filter(status => status === 400);
+      expect(rejectedResponses).toHaveLength(1);
+
+      // The rejected response must have the correct error code
+      const failedResponse = response1.status === 400 ? response1 : response2;
+      const errorBody = await failedResponse.json() as ApiErrorResponse;
+      expect(errorBody.error.code).toBe('INVALID_ACCOUNT_STATE');
+    });
+  });
+
   describe('Account State Transitions', () => {
 
     it('account has no Starknet address after registration', async () => {

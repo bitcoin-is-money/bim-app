@@ -35,6 +35,17 @@ export interface AccountRepository {
   existsByUsername(username: string): Promise<boolean>;
 
   /**
+   * Atomically transitions the account from 'pending' to 'deploying'.
+   * Sets the starknet address and deployment tx hash.
+   * Returns true if the transition succeeded (status was 'pending'), false if lost to a concurrent call.
+   */
+  markAsDeploying(
+    accountId: AccountId,
+    starknetAddress: StarknetAddress,
+    txHash: string,
+  ): Promise<boolean>;
+
+  /**
    * Deletes an account by ID.
    */
   delete(id: AccountId): Promise<void>;

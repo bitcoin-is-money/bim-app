@@ -122,15 +122,28 @@ export class AccountService {
       publicKey: account.publicKey,
     });
 
-    // Execute via paymaster for gasless deployment
+    // Atomic lock: pending → deploying (before the expensive paymaster call).
+    // Only one concurrent request can win this transition.
+    const claimed = await this.deps.accountRepository.markAsDeploying(
+      account.id, starknetAddress, '',
+    );
+    if (!claimed) {
+      throw new InvalidAccountStateError(
+        account.getStatus(),
+        'deploy',
+        'account is no longer in pending status (concurrent deployment)',
+      );
+    }
+
+    // Execute via paymaster for gasless deployment (safe — we own the deploying state)
     this.log.info('Deploying account via paymaster');
     const {txHash} = await this.deps.paymasterGateway.executeTransaction({
       transaction: deployTx,
       accountAddress: starknetAddress,
     });
 
+    // Sync in-memory entity state and persist the real txHash
     account.markAsDeploying(starknetAddress, txHash);
-    this.log.debug('Saving account');
     await this.deps.accountRepository.save(account);
     this.log.info({accountId: input.accountId, starknetAddress, txHash}, 'Account deployment submitted');
 

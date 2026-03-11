@@ -27,8 +27,8 @@ describe('AccountService', () => {
   beforeEach(() => {
     mockAccountRepo = createAccountRepoMock();
     mockStarknetGateway = {
-      calculateAccountAddress: vi.fn().mockResolvedValue(starknetAddress),
-      buildDeployTransaction: vi.fn().mockResolvedValue({calls: []}),
+      calculateAccountAddress: vi.fn().mockReturnValue(starknetAddress),
+      buildDeployTransaction: vi.fn().mockReturnValue({calls: []}),
       waitForTransaction: vi.fn().mockResolvedValue(undefined),
       getBalance: vi.fn().mockResolvedValue(BigInt(1000)),
     } as unknown as StarknetGateway;
@@ -79,6 +79,7 @@ describe('AccountService', () => {
     it('deploys pending account', async () => {
       const account = createAccount('pending', accountId, starknetAddress);
       vi.mocked(mockAccountRepo.findById).mockResolvedValue(account);
+      vi.mocked(mockAccountRepo.markAsDeploying).mockResolvedValue(true);
       // Make waitForTransaction never resolve during test to keep status as 'deploying'
       vi.mocked(mockStarknetGateway.waitForTransaction).mockReturnValue(new Promise(() => {}));
 
@@ -86,6 +87,9 @@ describe('AccountService', () => {
 
       expect(result.txHash).toBe('0xtxhash');
       expect(result.account.getStatus()).toBe('deploying');
+      expect(mockAccountRepo.markAsDeploying).toHaveBeenCalledWith(
+        accountId, starknetAddress, '',
+      );
       expect(mockPaymasterGateway.executeTransaction).toHaveBeenCalled();
     });
 
@@ -104,6 +108,18 @@ describe('AccountService', () => {
       await expect(
         service.deploy({accountId}),
       ).rejects.toThrow(InvalidAccountStateError);
+    });
+
+    it('throws if concurrent deployment wins the atomic lock', async () => {
+      const account = createAccount('pending', accountId, starknetAddress);
+      vi.mocked(mockAccountRepo.findById).mockResolvedValue(account);
+      vi.mocked(mockAccountRepo.markAsDeploying).mockResolvedValue(false);
+
+      await expect(
+        service.deploy({accountId}),
+      ).rejects.toThrow(InvalidAccountStateError);
+
+      expect(mockPaymasterGateway.executeTransaction).not.toHaveBeenCalled();
     });
   });
 

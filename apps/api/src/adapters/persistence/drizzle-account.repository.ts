@@ -2,7 +2,7 @@ import * as schema from '@bim/db';
 import type {Database} from '@bim/db/database';
 import {Account, AccountId, type AccountStatus, CredentialId, StarknetAddress,} from '@bim/domain/account';
 import type {AccountRepository} from '@bim/domain/ports';
-import {eq} from 'drizzle-orm';
+import {and, eq} from 'drizzle-orm';
 import {AbstractDrizzleRepository} from './abstract-drizzle.repository';
 
 /**
@@ -103,6 +103,28 @@ export class DrizzleAccountRepository extends AbstractDrizzleRepository implemen
     });
 
     return record !== undefined;
+  }
+
+  async markAsDeploying(
+    accountId: AccountId,
+    starknetAddress: StarknetAddress,
+    txHash: string,
+  ): Promise<boolean> {
+    const result = await this.resolveDb()
+      .update(schema.accounts)
+      .set({
+        status: 'deploying',
+        starknetAddress: starknetAddress.toString(),
+        deploymentTxHash: txHash,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(schema.accounts.id, accountId),
+          eq(schema.accounts.status, 'pending'),
+        ),
+      );
+    return (result.rowCount ?? 0) > 0;
   }
 
   async delete(id: AccountId): Promise<void> {
