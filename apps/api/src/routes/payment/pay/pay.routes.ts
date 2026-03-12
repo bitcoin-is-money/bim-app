@@ -1,4 +1,4 @@
-import type {PaymentResult, PreparedCalls, PreparedPayment} from '@bim/domain/payment';
+import type {PaymentResult, PreparedCalls, PreparedPaymentData} from '@bim/domain/payment';
 import type {Amount} from '@bim/domain/shared';
 import type {TypedResponse} from 'hono';
 import {Hono} from 'hono';
@@ -18,8 +18,7 @@ import type {AmountResponse, BuildPaymentResponse, PaymentResultResponse, Prepar
 export function createPayRoutes(appContext: AppContext): AuthenticatedHono {
   const log = appContext.logger.child({name: 'pay.routes.ts'});
   const app: AuthenticatedHono = new Hono();
-
-  const {pay: payService} = appContext.services;
+  const { payService, parseService } = appContext.services;
   const buildCache = new PaymentBuildCache();
   const signatureProcessor = new WebAuthnSignatureProcessor({
     origin: appContext.webauthn.origin,
@@ -57,13 +56,14 @@ export function createPayRoutes(appContext: AppContext): AuthenticatedHono {
         return createErrorResponse(honoCtx, 400, ErrorCode.ACCOUNT_NOT_DEPLOYED, 'Account not deployed');
       }
 
-      // 1. Parse first to extract invoice description (for fallback)
-      const prepared = await payService.prepare(input.paymentPayload);
+      // 1. Parse once — single source of truth for destination, amount, etc.
+      const parsed = parseService.parse(input.paymentPayload);
+      const prepared = await payService.prepare(parsed);
 
-      // 2. Prepare calls (parse + create swap if needed)
+      // 2. Prepare calls using already-parsed data
       // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- empty description should fallback
-      const description = input.description || prepared.description || 'Sent';
-      const preparedCalls = await payService.prepareCalls(input.paymentPayload, senderAddress, account.id, description);
+      const description = input.description || parsed.description || 'Sent';
+      const preparedCalls = await payService.prepareCalls(parsed, senderAddress, account.id, description);
 
       // 3. Build typed data via AVNU paymaster
       const {typedData, messageHash} = await appContext.gateways.starknet.buildCalls({
@@ -209,7 +209,7 @@ function serializeAmount(amount: Amount): AmountResponse {
   return {value: Number(amount.getSat()), currency: 'SAT'};
 }
 
-function serializePreparedPayment(prepared: PreparedPayment): PreparedPaymentResponse {
+function serializePreparedPayment(prepared: PreparedPaymentData): PreparedPaymentResponse {
   const base = {
     amount: serializeAmount(prepared.amount),
     fee: serializeAmount(prepared.fee),

@@ -68,7 +68,8 @@ export interface AppContext {
     swap: SwapService;
     userSettings: UserSettingsService;
     transaction: TransactionService;
-    pay: PayService;
+    parseService: ParseService;
+    payService: PayService;
     receive: ReceiveService;
     currency: CurrencyService;
   };
@@ -243,7 +244,8 @@ export namespace AppContext {
         swap: swapService,
         userSettings: userSettingsService,
         transaction: transactionService,
-        pay: payService,
+        parseService: parseService,
+        payService: payService,
         receive: receiveService,
         currency: currencyService,
       },
