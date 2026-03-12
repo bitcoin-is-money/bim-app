@@ -41,7 +41,7 @@ export const challenges = pgTable('bim_challenges', {
   purpose: text('purpose').notNull(),
   rpId: text('rp_id'),
   origin: text('origin'),
-  accountId: text('account_id'),
+  accountId: uuid('account_id'),
   used: boolean('used').notNull().default(false),
   expiresAt: timestamp('expires_at').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -115,7 +115,9 @@ export const swaps = pgTable('bim_swaps', {
   invoice: text('invoice'),
   depositAddress: text('deposit_address'),
   description: text('description').notNull(),
-  accountId: text('account_id').notNull(),
+  accountId: uuid('account_id')
+    .references(() => accounts.id, {onDelete: 'cascade'})
+    .notNull(),
 
   // Swap state (flat columns)
   status: text('status').notNull().default('pending'),
