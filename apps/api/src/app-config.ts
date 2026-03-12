@@ -1,6 +1,7 @@
 import {accessSync, constants, mkdirSync} from 'node:fs';
 import * as schema from '@bim/db';
 import {StarknetAddress} from '@bim/domain/account';
+import {SessionConfig} from '@bim/domain/auth';
 import {type StarknetConfig} from '@bim/domain/shared';
 import {StarknetNetwork} from '@bim/domain/shared';
 import {redactUrl} from '@bim/lib/url';
@@ -17,6 +18,7 @@ export namespace AppConfig {
     appVersion: string;
     port: number;
     nodeEnv: string;
+    session: SessionConfig;
     starknet: StarknetConfig;
     database: Partial<DatabaseConfig>;
     avnuPaymaster: AvnuPaymasterConfig;
@@ -68,6 +70,9 @@ export namespace AppConfig {
       appVersion: optional('APP_VERSION', 'dev'),
       port: Number.parseInt(optional('PORT', '8080'), 10),
       nodeEnv: optional('NODE_ENV', 'development'),
+      session: SessionConfig.create({
+        durationMs: Number.parseInt(optional('SESSION_DURATION_MS', String(SessionConfig.DEFAULT_DURATION_MS)), 10),
+      }),
       starknet,
       database: {
         url: required('DATABASE_URL'),

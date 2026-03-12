@@ -4,6 +4,7 @@ import {Hono} from 'hono';
 
 import type {AppContext} from '../../app-context';
 import {type ApiErrorResponse, handleDomainError} from '../../errors';
+import {clearSessionCookie, setSessionCookie} from '../../middleware/session-cookie';
 import {BeginRegistrationSchema, CompleteAuthenticationSchema, CompleteRegistrationSchema} from './auth.schemas';
 import type {
   BeginAuthenticationResponse,
@@ -24,6 +25,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
 
   // Services from AppContext (initialized once at startup)
   const {auth: authService, session: sessionService} = appContext.services;
+  const maxAgeSec = Math.floor(appContext.sessionConfig.durationMs / 1000);
 
   // ---------------------------------------------------------------------------
   // Registration
@@ -59,7 +61,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
       });
 
       // Set session cookie
-      setCookie(honoCtx, result.session.id);
+      setSessionCookie(honoCtx, result.session.id, maxAgeSec);
 
       return honoCtx.json<CompleteRegistrationResponse>({
         account: {
@@ -109,7 +111,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
       });
 
       // Set session cookie
-      setCookie(honoCtx, result.session.id);
+      setSessionCookie(honoCtx, result.session.id, maxAgeSec);
 
       return honoCtx.json<CompleteAuthenticationResponse>({
         account: {
@@ -152,7 +154,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
         error instanceof SessionNotFoundError ||
         error instanceof InvalidSessionIdError
       ) {
-        clearCookie(honoCtx);
+        clearSessionCookie(honoCtx);
         return honoCtx.json({authenticated: false});
       }
       return handleDomainError(honoCtx, error, log);
@@ -166,11 +168,11 @@ export function createAuthRoutes(appContext: AppContext): Hono {
         await sessionService.invalidate({sessionId});
       }
 
-      clearCookie(honoCtx);
+      clearSessionCookie(honoCtx);
       return honoCtx.json<LogoutResponse>({success: true});
     } catch (err) {
       log.error({err}, 'Logout error');
-      clearCookie(honoCtx);
+      clearSessionCookie(honoCtx);
       return honoCtx.json<LogoutResponse>({success: true});
     }
   });
@@ -190,24 +192,3 @@ function getSessionId(honoCtx: {req: {header: (name: string) => string | undefin
   return match?.[1];
 }
 
-function setCookie(honoCtx: {header: (name: string, value: string) => void}, sessionId: string): void {
-  const isProduction = process.env.NODE_ENV === 'production';
-  const maxAge = 7 * 24 * 60 * 60; // 7 days
-
-  const cookie = [
-    `session=${sessionId}`,
-    'Path=/',
-    `Max-Age=${maxAge}`,
-    'HttpOnly',
-    'SameSite=Strict',
-    isProduction ? 'Secure' : '',
-  ]
-    .filter(Boolean)
-    .join('; ');
-
-  honoCtx.header('Set-Cookie', cookie);
-}
-
-function clearCookie(honoCtx: {header: (name: string, value: string) => void}): void {
-  honoCtx.header('Set-Cookie', 'session=; Path=/; Max-Age=0; HttpOnly; SameSite=Strict');
-}

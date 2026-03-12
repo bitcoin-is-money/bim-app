@@ -2,9 +2,9 @@ import {Account, AccountId, CredentialId} from '@bim/domain/account';
 import {
   InvalidSessionIdError,
   Session,
+  SessionConfig,
   SessionExpiredError,
   SessionId,
-  SESSION_DURATION_MS,
   SessionNotFoundError,
   SessionService,
 } from '@bim/domain/auth';
@@ -15,6 +15,8 @@ import {createAccountRepoMock, createSessionRepoMock} from "../helper";
 
 const LOG_LEVEL = 'silent';
 const logger = createLogger(LOG_LEVEL);
+const DURATION_MS = SessionConfig.DEFAULT_DURATION_MS;
+const sessionConfig = SessionConfig.create({durationMs: DURATION_MS});
 
 describe('SessionService', () => {
   const accountId = AccountId.of('550e8400-e29b-41d4-a716-446655440000');
@@ -37,7 +39,7 @@ describe('SessionService', () => {
     return new Session(
       sessionId,
       accountId,
-      expiresAt ?? new Date(Date.now() + SESSION_DURATION_MS),
+      expiresAt ?? new Date(Date.now() + DURATION_MS),
       new Date(),
     );
   }
@@ -48,12 +50,13 @@ describe('SessionService', () => {
     service = new SessionService({
       sessionRepository: mockSessionRepo,
       accountRepository: mockAccountRepo,
+      sessionConfig,
       logger: logger,
     });
   });
 
   describe('validate', () => {
-    it('returns account and session for valid session', async () => {
+    it('returns account and renewed session for valid session', async () => {
       const account = createAccount();
       const session = createSession();
       vi.mocked(mockSessionRepo.findById).mockResolvedValue(session);
@@ -63,6 +66,28 @@ describe('SessionService', () => {
 
       expect(result.account.id).toBe(accountId);
       expect(result.session.id).toBe(sessionId);
+    });
+
+    it('renews session expiry and saves on successful validation', async () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2024-01-15T12:00:00Z'));
+
+      const account = createAccount();
+      const session = createSession();
+      vi.mocked(mockSessionRepo.findById).mockResolvedValue(session);
+      vi.mocked(mockAccountRepo.findById).mockResolvedValue(account);
+
+      // Advance 5 minutes into the session
+      vi.advanceTimersByTime(5 * 60 * 1000);
+
+      const result = await service.validate({sessionId: sessionId});
+
+      // Renewed session should have expiresAt = now + DURATION_MS (not original expiry)
+      expect(result.session.expiresAt.getTime()).toBe(Date.now() + DURATION_MS);
+      // Should save the renewed session to DB
+      expect(mockSessionRepo.save).toHaveBeenCalledWith(result.session);
+
+      vi.useRealTimers();
     });
 
     it('throws InvalidSessionIdError for invalid session ID format', async () => {

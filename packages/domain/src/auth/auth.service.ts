@@ -5,6 +5,7 @@ import {Account, AccountAlreadyExistsError, AccountId, AccountNotFoundError, Cre
 import type {AccountRepository, ChallengeRepository, SessionRepository, TransactionManager, WebAuthnGateway,} from '../ports';
 import {Challenge} from './challenge';
 import {Session} from './session';
+import type {SessionConfig} from './session.config';
 import {
   AuthenticationFailedError,
   ChallengeAlreadyUsedError,
@@ -25,6 +26,7 @@ export interface AuthServiceDeps {
   sessionRepository: SessionRepository;
   transactionManager: TransactionManager;
   webAuthnGateway: WebAuthnGateway;
+  sessionConfig: SessionConfig;
   logger: Logger;
 }
 
@@ -211,7 +213,7 @@ export class AuthService {
       credentialPublicKey: verification.encodedCredentialPublicKey,
     });
 
-    const session = Session.create(account.id);
+    const session = Session.create(account.id, this.deps.sessionConfig.durationMs);
 
     // Persist atomically (challenge already consumed atomically above)
     // Delete any prior sessions so only the latest login is valid (single-session).
@@ -318,7 +320,7 @@ export class AuthService {
       account.updateSignCount(verification.newSignCount);
     }
 
-    const session = Session.create(account.id);
+    const session = Session.create(account.id, this.deps.sessionConfig.durationMs);
 
     // Persist atomically (challenge already consumed atomically above)
     // Delete any prior sessions so only the latest login is valid (single-session).
