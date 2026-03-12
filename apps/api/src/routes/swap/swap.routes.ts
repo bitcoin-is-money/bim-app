@@ -2,7 +2,6 @@ import type {TypedResponse} from 'hono';
 import {Hono} from 'hono';
 
 import type {Account} from '@bim/domain/account';
-import {SwapOwnershipError} from '@bim/domain/swap';
 
 import type {AppContext} from '../../app-context';
 import {type ApiErrorResponse, handleDomainError} from '../../errors';
@@ -53,11 +52,7 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
       const account: Account = honoCtx.get('account');
       const swapId = honoCtx.req.param('swapId');
 
-      const result = await swapService.fetchStatus({swapId});
-
-      if (result.swap.accountId !== account.id) {
-        throw new SwapOwnershipError(swapId);
-      }
+      const result = await swapService.fetchStatus({swapId, accountId: account.id});
 
       return honoCtx.json<SwapStatusResponse>({
         swapId: result.swap.id,

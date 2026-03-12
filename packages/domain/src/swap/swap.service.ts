@@ -6,7 +6,7 @@ import {Amount} from '../shared';
 import {TransactionHash} from '../user/types';
 import {Swap} from './swap';
 import {BitcoinAddress} from './bitcoin-address';
-import {SwapAmountError, SwapCreationError, SwapNotFoundError} from './errors';
+import {SwapAmountError, SwapCreationError, SwapNotFoundError, SwapOwnershipError} from './errors';
 import {LightningInvoice} from './lightning-invoice';
 import {type SwapDirection, SwapId, type SwapLimits, type SwapStatus} from './types';
 
@@ -109,6 +109,7 @@ export interface CreateStarknetToBitcoinOutput {
 
 export interface FetchSwapStatusInput {
   swapId: string;
+  accountId: string;
 }
 
 export interface FetchSwapStatusOutput {
@@ -397,10 +398,15 @@ export class SwapService {
    */
   async fetchStatus(input: FetchSwapStatusInput): Promise<FetchSwapStatusOutput> {
     const swapId = SwapId.of(input.swapId);
+    const accountId = AccountId.of(input.accountId);
 
     const swap = await this.deps.swapRepository.findById(swapId);
     if (!swap) {
       throw new SwapNotFoundError(swapId);
+    }
+
+    if (swap.accountId !== accountId) {
+      throw new SwapOwnershipError(swapId);
     }
 
     // Sync with Atomiq if not in a terminal or in-flight (confirming) state.
