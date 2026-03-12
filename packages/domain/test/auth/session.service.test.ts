@@ -4,6 +4,7 @@ import {
   Session,
   SessionExpiredError,
   SessionId,
+  SESSION_DURATION_MS,
   SessionNotFoundError,
   SessionService,
 } from '@bim/domain/auth';
@@ -36,7 +37,7 @@ describe('SessionService', () => {
     return new Session(
       sessionId,
       accountId,
-      expiresAt ?? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      expiresAt ?? new Date(Date.now() + SESSION_DURATION_MS),
       new Date(),
     );
   }
