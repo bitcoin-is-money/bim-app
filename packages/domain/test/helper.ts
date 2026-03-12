@@ -22,7 +22,6 @@ export function createSessionRepoMock(): SessionRepository {
     findByAccountId: vi.fn(),
     delete: vi.fn(),
     deleteByAccountId: vi.fn(),
-    deleteExpired: vi.fn(),
   }
 }
 

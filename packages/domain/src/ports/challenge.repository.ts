@@ -30,9 +30,4 @@ export interface ChallengeRepository {
    * Deletes a challenge by ID.
    */
   delete(id: ChallengeId): Promise<void>;
-
-  /**
-   * Deletes all expired challenges.
-   */
-  deleteExpired(): Promise<number>;
 }
