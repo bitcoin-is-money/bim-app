@@ -119,9 +119,7 @@ export class ParseService {
       amount = Amount.zero();
       amountEditable = true;
     } else {
-      const btcAmount = Number.parseFloat(amountParam);
-      const rawSats = BigInt(Math.round(btcAmount * 100_000_000));
-      amount = Amount.ofSatoshi(rawSats);
+      amount = Amount.fromBtcString(amountParam);
     }
 
     // BIP-21: "label" is for the recipient name, "message" is a note to the payer

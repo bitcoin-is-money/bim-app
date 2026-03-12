@@ -48,6 +48,27 @@ export class Amount {
   }
 
   /**
+   * Create an Amount from a BTC decimal string (BIP-21 format).
+   * Uses string arithmetic to avoid IEEE 754 floating-point errors.
+   *
+   * @param btcString - BTC amount as string (e.g. "0.001", "1.23456789")
+   * @throws ValidationError if the string is not a valid BTC amount
+   */
+  static fromBtcString(btcString: string): Amount {
+    const trimmed = btcString.trim();
+    if (!/^\d+(\.\d+)?$/.test(trimmed)) {
+      throw new ValidationError('amount', `invalid BTC amount: ${btcString}`);
+    }
+    const [intPart, fracPart = ''] = trimmed.split('.');
+    if (fracPart.length > 8) {
+      throw new ValidationError('amount', `BTC amount exceeds satoshi precision: ${btcString}`);
+    }
+    const paddedFrac = fracPart.padEnd(8, '0');
+    const sats = BigInt(intPart + paddedFrac);
+    return Amount.ofSatoshi(sats);
+  }
+
+  /**
    * Create a zero Amount.
    */
   static zero(): Amount {
