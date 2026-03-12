@@ -1,4 +1,5 @@
-import type {AccountId, StarknetAddress} from '../account';
+import type {AccountId} from '../account';
+import type {StarknetAddress} from '../shared';
 import type {TransactionHash, TransactionId} from './types';
 import type { TransactionType} from './types';
 

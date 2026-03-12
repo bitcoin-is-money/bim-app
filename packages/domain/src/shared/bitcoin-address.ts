@@ -1,5 +1,5 @@
-import type {BitcoinNetwork} from '../shared';
-import {BitcoinAddressNetworkMismatchError, InvalidBitcoinAddressError} from './errors';
+import type {BitcoinNetwork} from './network';
+import {BitcoinAddressNetworkMismatchError, InvalidBitcoinAddressError} from '../swap/errors';
 
 /**
  * Bitcoin address (supports Bech32 and legacy formats).

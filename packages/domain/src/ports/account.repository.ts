@@ -1,4 +1,5 @@
-import type {Account, AccountId, CredentialId, StarknetAddress} from '../account';
+import type {Account, AccountId, CredentialId} from '../account';
+import type {StarknetAddress} from '../shared';
 
 /**
  * Repository interface for Account persistence.

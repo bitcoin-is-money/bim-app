@@ -1,5 +1,4 @@
-import type {StarknetAddress} from '../account';
-import {Amount} from '../shared';
+import {Amount, type StarknetAddress} from '../shared';
 import type {FeeConfig} from './fee';
 import {FeeCalculator} from './fee';
 

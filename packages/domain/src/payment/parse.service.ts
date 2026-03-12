@@ -1,8 +1,7 @@
 import type {Logger} from 'pino';
-import {StarknetAddress} from '../account';
 import type {LightningDecoder} from '../ports';
-import {Amount, DomainError, type StarknetConfig} from '../shared';
-import {BitcoinAddress, LightningInvoice} from '../swap';
+import {Amount, BitcoinAddress, DomainError, StarknetAddress, type StarknetConfig} from '../shared';
+import {LightningInvoice} from '../swap';
 import {
   MissingPaymentAmountError,
   PaymentParsingError,

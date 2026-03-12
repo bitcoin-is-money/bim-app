@@ -1,6 +1,5 @@
-import type {StarknetAddress} from '../account';
-import type {Amount} from '../shared';
-import type {BitcoinAddress, LightningInvoice} from '../swap';
+import type {Amount, BitcoinAddress, StarknetAddress} from '../shared';
+import type {LightningInvoice} from '../swap';
 
 // =============================================================================
 // Payment Network

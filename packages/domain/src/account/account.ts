@@ -1,5 +1,4 @@
-import {InvalidStateTransitionError} from '../shared';
-import type {StarknetAddress} from './starknet-address';
+import {InvalidStateTransitionError, type StarknetAddress} from '../shared';
 import type {AccountId, CredentialId} from './types';
 import type { AccountStatus} from './types';
 
