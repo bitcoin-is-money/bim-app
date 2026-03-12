@@ -47,7 +47,7 @@ describe('Security response headers', () => {
     const headers = await getHeaders();
     const policy = headers.get('permissions-policy');
     expect(policy).not.toBeNull();
-    expect(policy).toContain('camera=()');
+    expect(policy).toContain('camera=(self)');
     expect(policy).toContain('microphone=()');
     expect(policy).toContain('geolocation=()');
   });
