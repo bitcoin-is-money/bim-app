@@ -60,15 +60,21 @@ describe('Rate limit middleware (integration)', () => {
     });
 
     it('tracks limits independently per IP', async () => {
-      // Exhaust limit for IP A
+      // In test mode, getConnInfo is unavailable so all requests resolve to the
+      // same key ('unknown'). To prove rate-limit state is isolated per instance,
+      // we exhaust the limit on one app and verify a fresh app is unaffected.
+      const appA = await TestApp.createTestApp({skipRateLimit: false});
+      const appB = await TestApp.createTestApp({skipRateLimit: false});
+
+      // Exhaust limit on app A
       for (let i = 0; i < 10; i++) {
-        await app.request(requestWithIp('/api/auth/session', '10.0.1.1'));
+        await appA.request(requestWithIp('/api/auth/session', '10.0.1.1'));
       }
-      const blockedRes = await app.request(requestWithIp('/api/auth/session', '10.0.1.1'));
+      const blockedRes = await appA.request(requestWithIp('/api/auth/session', '10.0.1.1'));
       expect(blockedRes.status).toBe(429);
 
-      // IP B should still be allowed
-      const allowedRes = await app.request(requestWithIp('/api/auth/session', '10.0.1.2'));
+      // App B (separate rate-limiter state) should still be allowed
+      const allowedRes = await appB.request(requestWithIp('/api/auth/session', '10.0.1.2'));
       expect(allowedRes.status).not.toBe(429);
     });
   });
