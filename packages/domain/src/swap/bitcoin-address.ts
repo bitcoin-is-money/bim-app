@@ -1,4 +1,5 @@
-import {InvalidBitcoinAddressError} from './errors';
+import type {BitcoinNetwork} from '../shared';
+import {BitcoinAddressNetworkMismatchError, InvalidBitcoinAddressError} from './errors';
 
 /**
  * Bitcoin address (supports Bech32 and legacy formats).
@@ -13,10 +14,29 @@ export namespace BitcoinAddress {
   // Testnet legacy
   const TESTNET_LEGACY_REGEX = /^[mn2][a-km-zA-HJ-NP-Z1-9]{25,34}$/;
 
-  export function of(value: string): BitcoinAddress {
+  function isMainnetAddress(value: string): boolean {
+    return /^bc1/i.test(value) || /^[13]/.test(value);
+  }
+
+  function isTestnetAddress(value: string): boolean {
+    return /^tb1/i.test(value) || /^[mn2]/.test(value);
+  }
+
+  export function of(value: string, network?: BitcoinNetwork): BitcoinAddress {
     const trimmed = value.trim();
     if (!BitcoinAddress.isValid(trimmed)) {
       throw new InvalidBitcoinAddressError(value);
+    }
+    if (network) {
+      const addressIsMainnet = isMainnetAddress(trimmed);
+      const addressIsTestnet = isTestnetAddress(trimmed);
+      const actualNetwork = addressIsMainnet ? 'mainnet' : 'testnet';
+      if (network === 'mainnet' && addressIsTestnet) {
+        throw new BitcoinAddressNetworkMismatchError(trimmed, 'mainnet', 'testnet');
+      }
+      if (network === 'testnet' && addressIsMainnet) {
+        throw new BitcoinAddressNetworkMismatchError(trimmed, 'testnet', actualNetwork);
+      }
     }
     return trimmed as BitcoinAddress;
   }
@@ -30,4 +50,3 @@ export namespace BitcoinAddress {
     );
   }
 }
-

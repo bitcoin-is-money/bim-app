@@ -89,7 +89,7 @@ describe('SwapService', () => {
     repository = createMockRepository();
     gateway = createMockGateway();
     transactionRepository = createMockTransactionRepository();
-    service = new SwapService({swapRepository: repository, atomiqGateway: gateway, transactionRepository, logger: logger});
+    service = new SwapService({swapRepository: repository, atomiqGateway: gateway, transactionRepository, bitcoinNetwork: 'mainnet', logger: logger});
   });
 
   // =========================================================================

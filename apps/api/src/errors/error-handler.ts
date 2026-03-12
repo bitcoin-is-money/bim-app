@@ -45,6 +45,7 @@ import {
 
 // Domain errors - Swap
 import {
+  BitcoinAddressNetworkMismatchError,
   InvalidBitcoinAddressError,
   InvalidLightningInvoiceError,
   InvalidSwapStateError,
@@ -209,6 +210,11 @@ export function handleDomainError(ctx: Context, error: unknown, logger: Logger):
   }
   if (error instanceof LightningInvoiceExpiredError) {
     return createErrorResponse(ctx, 400, ErrorCode.LIGHTNING_INVOICE_EXPIRED, 'Lightning invoice has expired');
+  }
+  if (error instanceof BitcoinAddressNetworkMismatchError) {
+    return createErrorResponse(ctx, 400, ErrorCode.BITCOIN_ADDRESS_NETWORK_MISMATCH,
+      `Bitcoin address is for ${error.actualNetwork}, expected ${error.expectedNetwork}`,
+      {expectedNetwork: error.expectedNetwork, actualNetwork: error.actualNetwork});
   }
   if (error instanceof InvalidBitcoinAddressError) {
     return createErrorResponse(ctx, 400, ErrorCode.INVALID_BITCOIN_ADDRESS, 'Invalid Bitcoin address');

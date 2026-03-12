@@ -209,6 +209,7 @@
     "INVALID_LIGHTNING_INVOICE": "Invalid Lightning invoice.",
     "LIGHTNING_INVOICE_EXPIRED": "Lightning invoice has expired. Please generate a new one.",
     "INVALID_BITCOIN_ADDRESS": "Invalid Bitcoin address.",
+    "BITCOIN_ADDRESS_NETWORK_MISMATCH": "This Bitcoin address is for {{actualNetwork}}. Please use a {{expectedNetwork}} address.",
     "INVALID_PAYMENT_ADDRESS": "Invalid payment address.",
     "USER_SETTINGS_NOT_FOUND": "User settings not found.",
     "UNSUPPORTED_CURRENCY": "Unsupported currency.",

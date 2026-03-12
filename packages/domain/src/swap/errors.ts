@@ -1,9 +1,19 @@
-import {type Amount, DomainError} from '../shared';
+import {type Amount, type BitcoinNetwork, DomainError} from '../shared';
 import type {SwapId, SwapStatus} from './types';
 
 export class InvalidBitcoinAddressError extends DomainError {
   constructor(readonly value: string) {
     super(`Invalid Bitcoin address format: ${value}`);
+  }
+}
+
+export class BitcoinAddressNetworkMismatchError extends DomainError {
+  constructor(
+    readonly address: string,
+    readonly expectedNetwork: BitcoinNetwork,
+    readonly actualNetwork: BitcoinNetwork,
+  ) {
+    super(`Bitcoin address ${address} is for ${actualNetwork}, expected ${expectedNetwork}`);
   }
 }
 

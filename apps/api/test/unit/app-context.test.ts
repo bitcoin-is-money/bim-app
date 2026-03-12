@@ -1,3 +1,4 @@
+import {StarknetAddress} from '@bim/domain/account';
 import type {AccountRepository, PaymasterGateway,} from '@bim/domain/ports';
 import {createLogger} from '@bim/lib/logger';
 import {describe, expect, it, vi} from 'vitest';
@@ -33,17 +34,20 @@ function createMockConfig(): AppConfig.Config {
   return {
     appVersion: '0.0.0',
     nodeEnv: 'test',
-    starknetNetwork: 'testnet',
     port: 8080,
+    starknet: {
+      network: 'testnet',
+      bitcoinNetwork: 'testnet',
+      rpcUrl: 'http://localhost:5050',
+      accountClassHash: '0x123',
+      wbtcTokenAddress: StarknetAddress.of('0x0000000000000000000000000000000000000000000000000000000000000456'),
+      strkTokenAddress: StarknetAddress.of('0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d'),
+      feeTreasuryAddress: StarknetAddress.of('0x027367ddd36d7efc4694e1af5742f8d26626369c07abf15d136ff422b9a40fa0'),
+    },
     database: {url: 'postgres://test'},
     webauthn: {rpId: 'localhost', rpName: 'Test App', origin: 'http://localhost:8080'},
-    starknetRpcUrl: 'http://localhost:5050',
-    accountClassHash: '0x123',
-    wbtcTokenAddress: '0x456',
-    strkTokenAddress: '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d',
     avnuPaymaster: {apiUrl: 'http://localhost:9090', apiKey: 'test-key'},
     avnuSwap: {baseUrl: 'https://sepolia.api.avnu.fi', knownTokenAddresses: ['0x456', '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d']},
-    feeTreasuryAddress: '0x027367ddd36d7efc4694e1af5742f8d26626369c07abf15d136ff422b9a40fa0',
     atomiq: {network: 'testnet', starknetRpcUrl: 'http://localhost:5050', storagePath: '/tmp/bim/atomiq', autoCreateStorage: true, swapToken: 'WBTC', knownTokenAddresses: ['0x456', '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d']},
     logLevel: 'silent',
   };

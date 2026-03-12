@@ -1,4 +1,4 @@
-import {AccountService, StarknetAddress} from "@bim/domain/account";
+import {AccountService} from "@bim/domain/account";
 import {AuthService, SessionService} from "@bim/domain/auth";
 import {Erc20CallFactory, FeeConfig, ParseService, PayService, ReceiveService,} from "@bim/domain/payment";
 import {CurrencyService} from "@bim/domain/currency";
@@ -125,11 +125,11 @@ export namespace AppContext {
       webAuthn: new SimpleWebAuthnGateway(config.webauthn, rootLogger),
       starknet: new StarknetRpcGateway(
         {
-          rpcUrl: config.starknetRpcUrl,
-          accountClassHash: config.accountClassHash,
+          rpcUrl: config.starknet.rpcUrl,
+          accountClassHash: config.starknet.accountClassHash,
           tokenAddresses: {
-            WBTC: config.wbtcTokenAddress,
-            STRK: config.strkTokenAddress,
+            WBTC: config.starknet.wbtcTokenAddress,
+            STRK: config.starknet.strkTokenAddress,
           },
           webauthnOrigin: config.webauthn.origin,
           webauthnRpId: config.webauthn.rpId,
@@ -183,6 +183,7 @@ export namespace AppContext {
       swapRepository: repositories.swap,
       atomiqGateway: gateways.atomiq,
       transactionRepository: repositories.transaction,
+      bitcoinNetwork: config.starknet.bitcoinNetwork,
       logger: rootLogger,
     });
 
@@ -194,14 +195,11 @@ export namespace AppContext {
       transactionRepository: repositories.transaction,
     });
 
-    const starknetConfig: StarknetConfig = {
-      wbtcTokenAddress: StarknetAddress.of(config.wbtcTokenAddress),
-      strkTokenAddress: StarknetAddress.of(config.strkTokenAddress),
-    };
+    const {starknet: starknetConfig} = config;
 
     const feeConfig = FeeConfig.create({
       percentage: FeeConfig.DEFAULT_PERCENTAGE,
-      recipientAddress: StarknetAddress.of(config.feeTreasuryAddress),
+      recipientAddress: starknetConfig.feeTreasuryAddress,
     });
 
     const erc20CallFactory = new Erc20CallFactory(feeConfig);

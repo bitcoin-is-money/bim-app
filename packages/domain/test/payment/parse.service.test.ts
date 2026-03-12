@@ -7,8 +7,8 @@ import {
   UnsupportedTokenError
 } from '@bim/domain/payment';
 import type {LightningDecoder} from '@bim/domain/ports';
-import {ValidationError} from '@bim/domain/shared';
-import {InvalidBitcoinAddressError, LightningInvoice} from '@bim/domain/swap';
+import {type StarknetConfig, ValidationError} from '@bim/domain/shared';
+import {BitcoinAddressNetworkMismatchError, InvalidBitcoinAddressError, LightningInvoice} from '@bim/domain/swap';
 import {createLogger} from '@bim/lib/logger';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
@@ -19,11 +19,25 @@ const logger = createLogger(LOG_LEVEL);
 // Constants
 // =============================================================================
 
-const WBTC_TOKEN_ADDRESS = '0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac';
-const STARKNET_ADDR = '0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7';
+const WBTC_TOKEN_ADDRESS = StarknetAddress.of('0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac');
+const STRK_TOKEN_ADDRESS = StarknetAddress.of('0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7');
 const RECIPIENT_ADDRESS = StarknetAddress.of('0x07edcba9876543210fedcba9876543210fedcba9876543210fedcba987654321');
+const FEE_TREASURY_ADDRESS = StarknetAddress.of('0x027367ddd36d7efc4694e1af5742f8d26626369c07abf15d136ff422b9a40fa0');
 const BTC_BECH32 = 'bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4';
 const VALID_LIGHTNING_INVOICE = 'lntb1000n1pjtest0pp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypq';
+
+function testStarknetConfig(overrides?: Partial<StarknetConfig>): StarknetConfig {
+  return {
+    network: 'mainnet',
+    bitcoinNetwork: 'mainnet',
+    rpcUrl: 'http://localhost:5050',
+    accountClassHash: '0x123',
+    wbtcTokenAddress: WBTC_TOKEN_ADDRESS,
+    strkTokenAddress: STRK_TOKEN_ADDRESS,
+    feeTreasuryAddress: FEE_TREASURY_ADDRESS,
+    ...overrides,
+  };
+}
 
 // =============================================================================
 // Helpers
@@ -57,7 +71,7 @@ describe('ParseService', () => {
       mockDecoder = createMockDecoder();
       service = new ParseService({
         lightningDecoder: mockDecoder,
-        starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS, strkTokenAddress: STARKNET_ADDR},
+        starknetConfig: testStarknetConfig(),
         logger,
       });
     });
@@ -75,7 +89,7 @@ describe('ParseService', () => {
     });
 
     it('routes starknet: URI to starknet parser', () => {
-      const uri = `starknet:${STARKNET_ADDR}?amount=1000&token=${WBTC_TOKEN_ADDRESS}`;
+      const uri = `starknet:${STRK_TOKEN_ADDRESS}?amount=1000&token=${WBTC_TOKEN_ADDRESS}`;
       const result = service.parse(uri);
       expect(result.network).toBe('starknet');
     });
@@ -96,8 +110,13 @@ describe('ParseService', () => {
     });
 
     it('routes bare testnet Bitcoin address (tb1) to bitcoin parser', () => {
+      const testnetService = new ParseService({
+        lightningDecoder: mockDecoder,
+        starknetConfig: testStarknetConfig({network: 'testnet', bitcoinNetwork: 'testnet'}),
+        logger,
+      });
       const testnetAddress = 'tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx';
-      const result = service.parse(testnetAddress);
+      const result = testnetService.parse(testnetAddress);
       expect(result.network).toBe('bitcoin');
       if (result.network === 'bitcoin') {
         expect(result.address).toBe(testnetAddress);
@@ -121,7 +140,7 @@ describe('ParseService', () => {
 
       const failingService = new ParseService({
         lightningDecoder: failingDecoder,
-        starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS, strkTokenAddress: STARKNET_ADDR},
+        starknetConfig: testStarknetConfig(),
         logger,
       });
 
@@ -139,7 +158,7 @@ describe('ParseService', () => {
     beforeEach(() => {
       service = new ParseService({
         lightningDecoder: createMockDecoder(),
-        starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS, strkTokenAddress: STARKNET_ADDR},
+        starknetConfig: testStarknetConfig(),
         logger,
       });
     });
@@ -170,51 +189,51 @@ describe('ParseService', () => {
     });
 
     it('uses summary as description (ERC-1138)', () => {
-      const uri = `starknet:${STARKNET_ADDR}?amount=1000&token=${WBTC_TOKEN_ADDRESS}&summary=nftPurchase`;
+      const uri = `starknet:${STRK_TOKEN_ADDRESS}?amount=1000&token=${WBTC_TOKEN_ADDRESS}&summary=nftPurchase`;
       const result = service.parse(uri);
       expect(result.description).toBe('nftPurchase');
     });
 
     it('falls back to description param when summary is absent', () => {
-      const uri = `starknet:${STARKNET_ADDR}?amount=1000&token=${WBTC_TOKEN_ADDRESS}&description=tokenTransfer`;
+      const uri = `starknet:${STRK_TOKEN_ADDRESS}?amount=1000&token=${WBTC_TOKEN_ADDRESS}&description=tokenTransfer`;
       const result = service.parse(uri);
       expect(result.description).toBe('tokenTransfer');
     });
 
     it('falls back to context when summary and description are absent', () => {
-      const uri = `starknet:${STARKNET_ADDR}?amount=1000&token=${WBTC_TOKEN_ADDRESS}&context=dappInteraction`;
+      const uri = `starknet:${STRK_TOKEN_ADDRESS}?amount=1000&token=${WBTC_TOKEN_ADDRESS}&context=dappInteraction`;
       const result = service.parse(uri);
       expect(result.description).toBe('dappInteraction');
     });
 
     it('prefers summary over description and context', () => {
-      const uri = `starknet:${STARKNET_ADDR}?amount=1000&token=${WBTC_TOKEN_ADDRESS}&summary=topPriority&description=mid&context=low`;
+      const uri = `starknet:${STRK_TOKEN_ADDRESS}?amount=1000&token=${WBTC_TOKEN_ADDRESS}&summary=topPriority&description=mid&context=low`;
       const result = service.parse(uri);
       expect(result.description).toBe('topPriority');
     });
 
     it('parses starknet: URI with zero amount', () => {
-      const uri = `starknet:${STARKNET_ADDR}?amount=0&token=${WBTC_TOKEN_ADDRESS}`;
+      const uri = `starknet:${STRK_TOKEN_ADDRESS}?amount=0&token=${WBTC_TOKEN_ADDRESS}`;
       const result = service.parse(uri);
       expect(result.amount.isZero()).toBe(true);
     });
 
     it('throws MissingPaymentAmountError for starknet: URI without amount', () => {
-      expect(() => service.parse(`starknet:${STARKNET_ADDR}`)).toThrow(MissingPaymentAmountError);
+      expect(() => service.parse(`starknet:${STRK_TOKEN_ADDRESS}`)).toThrow(MissingPaymentAmountError);
     });
 
     it('throws UnsupportedTokenError when token is absent', () => {
-      expect(() => service.parse(`starknet:${STARKNET_ADDR}?amount=1000`)).toThrow(UnsupportedTokenError);
+      expect(() => service.parse(`starknet:${STRK_TOKEN_ADDRESS}?amount=1000`)).toThrow(UnsupportedTokenError);
     });
 
     it('throws UnsupportedTokenError for unsupported token', () => {
       const unknownToken = '0x0000000000000000000000000000000000000000000000000000000000abcdef';
-      const uri = `starknet:${STARKNET_ADDR}?amount=1000&token=${unknownToken}`;
+      const uri = `starknet:${STRK_TOKEN_ADDRESS}?amount=1000&token=${unknownToken}`;
       expect(() => service.parse(uri)).toThrow(UnsupportedTokenError);
     });
 
     it('throws ValidationError when starknet amount is negative', () => {
-      const uri = `starknet:${STARKNET_ADDR}?amount=-100&token=${WBTC_TOKEN_ADDRESS}`;
+      const uri = `starknet:${STRK_TOKEN_ADDRESS}?amount=-100&token=${WBTC_TOKEN_ADDRESS}`;
       expect(() => service.parse(uri)).toThrow(ValidationError);
     });
 
@@ -231,7 +250,7 @@ describe('ParseService', () => {
     it('detects a Lightning invoice and returns decoded data', () => {
       const service = new ParseService({
         lightningDecoder: createMockDecoder(),
-        starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS, strkTokenAddress: STARKNET_ADDR},
+        starknetConfig: testStarknetConfig(),
         logger,
       });
 
@@ -249,7 +268,7 @@ describe('ParseService', () => {
     it('throws MissingPaymentAmountError when invoice has no amount', () => {
       const service = new ParseService({
         lightningDecoder: {decode: vi.fn().mockReturnValue({description: 'test'})},
-        starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS, strkTokenAddress: STARKNET_ADDR},
+        starknetConfig: testStarknetConfig(),
         logger,
       });
 
@@ -259,7 +278,7 @@ describe('ParseService', () => {
     it('throws ValidationError when invoice has negative amount', () => {
       const service = new ParseService({
         lightningDecoder: createMockDecoder({amountMSat: BigInt(-1)}),
-        starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS, strkTokenAddress: STARKNET_ADDR},
+        starknetConfig: testStarknetConfig(),
         logger,
       });
 
@@ -277,7 +296,7 @@ describe('ParseService', () => {
     beforeEach(() => {
       service = new ParseService({
         lightningDecoder: createMockDecoder(),
-        starknetConfig: {wbtcTokenAddress: WBTC_TOKEN_ADDRESS, strkTokenAddress: STARKNET_ADDR},
+        starknetConfig: testStarknetConfig(),
         logger,
       });
     });
@@ -336,6 +355,42 @@ describe('ParseService', () => {
 
     it('throws InvalidBitcoinAddressError for invalid address', () => {
       expect(() => service.parse('bitcoin:not-a-valid-address')).toThrow(InvalidBitcoinAddressError);
+    });
+  });
+
+  // ===========================================================================
+  // Bitcoin address network mismatch
+  // ===========================================================================
+
+  describe('bitcoin address network mismatch', () => {
+    it('throws BitcoinAddressNetworkMismatchError for testnet address on mainnet', () => {
+      const mainnetService = new ParseService({
+        lightningDecoder: createMockDecoder(),
+        starknetConfig: testStarknetConfig(),
+        logger,
+      });
+      expect(() => mainnetService.parse('bitcoin:tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx?amount=0.001'))
+        .toThrow(BitcoinAddressNetworkMismatchError);
+    });
+
+    it('throws BitcoinAddressNetworkMismatchError for mainnet address on testnet', () => {
+      const testnetService = new ParseService({
+        lightningDecoder: createMockDecoder(),
+        starknetConfig: testStarknetConfig({network: 'testnet', bitcoinNetwork: 'testnet'}),
+        logger,
+      });
+      expect(() => testnetService.parse(`bitcoin:${BTC_BECH32}?amount=0.001`))
+        .toThrow(BitcoinAddressNetworkMismatchError);
+    });
+
+    it('accepts testnet address on testnet config', () => {
+      const testnetService = new ParseService({
+        lightningDecoder: createMockDecoder(),
+        starknetConfig: testStarknetConfig({network: 'testnet', bitcoinNetwork: 'testnet'}),
+        logger,
+      });
+      const result = testnetService.parse('bitcoin:tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx?amount=0.001');
+      expect(result.network).toBe('bitcoin');
     });
   });
 });
