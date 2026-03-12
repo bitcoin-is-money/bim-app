@@ -649,16 +649,13 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       };
       this.log.debug({...result}, 'getSwapStatus result');
       return result;
-    } catch {
-      return {
-        state: -1,
-        isPaid: false,
-        isCompleted: false,
-        isFailed: false,
-        isExpired: true,
-        isRefunded: false,
-        error: `Swap ${swapId} not found in SDK storage`,
-      };
+    } catch (err) {
+      // Do NOT swallow errors into a fake "expired" response — transient failures
+      // (network timeout, 500, etc.) would permanently kill active swaps with
+      // funds in escrow. Let the error propagate; syncWithAtomiq has its own
+      // try/catch that logs a warning and preserves the swap's current state.
+      this.log.warn({swapId, error: String(err)}, 'getSwapStatus failed');
+      throw err;
     }
   }
 
