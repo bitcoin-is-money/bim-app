@@ -15,6 +15,13 @@
       "when": 1773180950789,
       "tag": "0001_add_challenge_account_id",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1773319337392,
+      "tag": "0002_yellow_electro",
+      "breakpoints": true
     }
   ]
 }
