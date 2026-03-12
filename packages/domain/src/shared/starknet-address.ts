@@ -1,4 +1,4 @@
-import {InvalidStarknetAddressError} from './errors';
+import {InvalidStarknetAddressError} from '../account/errors';
 
 /**
  * Starknet contract address.
@@ -44,4 +44,3 @@ export namespace StarknetAddress {
     return value > 0n && value < FELT_PRIME;
   }
 }
-

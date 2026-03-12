@@ -1,5 +1,5 @@
-import type {StarknetAddress} from '../account';
-import type {BitcoinAddress, LightningInvoice, SwapId} from '../swap';
+import type {BitcoinAddress, StarknetAddress} from '../shared';
+import type {LightningInvoice, SwapId} from '../swap';
 import type {SwapDirection, SwapLimits} from '../swap';
 import type {StarknetCall} from './starknet.gateway';
 

@@ -1,4 +1,4 @@
-import type {StarknetAddress} from '../account';
+import type {StarknetAddress} from '../shared';
 import type {DeployTransaction, StarknetCall, StarknetTransaction} from './starknet.gateway';
 
 /**

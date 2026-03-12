@@ -1,4 +1,4 @@
-import type {StarknetAddress} from '../account';
+import type {StarknetAddress} from './starknet-address';
 import type {BitcoinNetwork, StarknetNetwork} from './network';
 
 /**

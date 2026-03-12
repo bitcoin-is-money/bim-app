@@ -1,11 +1,10 @@
 
 import type {Logger} from 'pino';
-import {AccountId, StarknetAddress} from '../account';
+import {AccountId} from '../account';
 import type {AtomiqGateway, StarknetCall, SwapRepository, TransactionRepository} from '../ports';
-import {Amount, type BitcoinNetwork} from '../shared';
+import {Amount, BitcoinAddress, type BitcoinNetwork, StarknetAddress} from '../shared';
 import {TransactionHash} from '../user/types';
 import {Swap} from './swap';
-import {BitcoinAddress} from './bitcoin-address';
 import {SwapAmountError, SwapCreationError, SwapNotFoundError, SwapOwnershipError} from './errors';
 import {LightningInvoice} from './lightning-invoice';
 import {type SwapDirection, SwapId, type SwapLimits, type SwapStatus} from './types';

@@ -1,7 +1,7 @@
 import type {Logger} from 'pino';
-import {AccountId, StarknetAddress} from '../account';
+import {AccountId} from '../account';
 import type {StarknetGateway, TransactionRepository} from '../ports';
-import {Amount, type StarknetConfig} from '../shared';
+import {Amount, StarknetAddress, type StarknetConfig} from '../shared';
 import type {SwapService} from '../swap';
 import {TransactionHash} from '../user/types';
 import type {Erc20CallFactory} from './erc20-call.factory';

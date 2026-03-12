@@ -1,7 +1,5 @@
-import type {StarknetAddress} from '../account';
-import type {Amount} from '../shared';
+import type {Amount, BitcoinAddress, StarknetAddress} from '../shared';
 import {ValidationError} from '../shared';
-import type {BitcoinAddress} from './bitcoin-address';
 import type {LightningInvoice} from './lightning-invoice';
 
 // =============================================================================
