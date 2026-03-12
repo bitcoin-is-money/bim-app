@@ -2,7 +2,7 @@
 import type {Logger} from 'pino';
 import {AccountId, StarknetAddress} from '../account';
 import type {AtomiqGateway, StarknetCall, SwapRepository, TransactionRepository} from '../ports';
-import {Amount} from '../shared';
+import {Amount, type BitcoinNetwork} from '../shared';
 import {TransactionHash} from '../user/types';
 import {Swap} from './swap';
 import {BitcoinAddress} from './bitcoin-address';
@@ -18,6 +18,7 @@ export interface SwapServiceDeps {
   swapRepository: SwapRepository;
   atomiqGateway: AtomiqGateway;
   transactionRepository: TransactionRepository;
+  bitcoinNetwork: BitcoinNetwork;
   logger: Logger;
 }
 
@@ -345,7 +346,7 @@ export class SwapService {
     input: CreateStarknetToBitcoinInput,
   ): Promise<CreateStarknetToBitcoinOutput> {
     this.log.debug({input}, 'Creating Starknet-to-Bitcoin swap');
-    const destinationAddress = BitcoinAddress.of(input.destinationAddress);
+    const destinationAddress = BitcoinAddress.of(input.destinationAddress, this.deps.bitcoinNetwork);
     const sourceAddress = StarknetAddress.of(input.sourceAddress);
 
     // Validate amount against limits

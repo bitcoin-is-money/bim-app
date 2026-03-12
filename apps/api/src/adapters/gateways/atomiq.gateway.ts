@@ -12,7 +12,7 @@ import type {
   BitcoinSwapQuote,
   StarknetCall,
 } from '@bim/domain/ports';
-import {ExternalServiceError, validateExternalCalls} from "@bim/domain/shared";
+import {ExternalServiceError, type BitcoinNetwork as DomainBitcoinNetwork, validateExternalCalls} from "@bim/domain/shared";
 import type {SwapDirection, SwapLimits} from "@bim/domain/swap";
 import {LightningInvoiceExpiredError} from "@bim/domain/swap";
 import type {BitcoinAddress, LightningInvoice, SwapId} from '@bim/domain/swap';
@@ -37,7 +37,7 @@ import type {Logger} from "pino";
  */
 export interface AtomiqGatewayConfig {
   /** Starknet network to connect to */
-  network: 'mainnet' | 'testnet';
+  network: DomainBitcoinNetwork;
   /** Starknet JSON-RPC endpoint URL */
   starknetRpcUrl: string;
   /** Custom Atomiq intermediary URL; uses the default public intermediary if omitted */

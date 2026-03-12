@@ -1,5 +1,8 @@
 import {accessSync, constants, mkdirSync} from 'node:fs';
 import * as schema from '@bim/db';
+import {StarknetAddress} from '@bim/domain/account';
+import {type StarknetConfig} from '@bim/domain/shared';
+import {StarknetNetwork} from '@bim/domain/shared';
 import {redactUrl} from '@bim/lib/url';
 import type {DatabaseConfig} from '@bim/db/database';
 import {getTableName} from 'drizzle-orm';
@@ -14,13 +17,8 @@ export namespace AppConfig {
     appVersion: string;
     port: number;
     nodeEnv: string;
-    starknetNetwork: 'mainnet' | 'testnet' | 'devnet';
+    starknet: StarknetConfig;
     database: Partial<DatabaseConfig>;
-    starknetRpcUrl: string;
-    accountClassHash: string;
-    wbtcTokenAddress: string;
-    strkTokenAddress: string;
-    feeTreasuryAddress: string;
     avnuPaymaster: AvnuPaymasterConfig;
     avnuSwap: AvnuSwapConfig;
     atomiq: AtomiqGatewayConfig;
@@ -46,7 +44,7 @@ export namespace AppConfig {
       return process.env[name] || defaultValue;
     };
 
-    const starknetNetwork = optional('STARKNET_NETWORK', 'testnet') as 'mainnet' | 'testnet' | 'devnet';
+    const starknetNetwork = optional('STARKNET_NETWORK', 'testnet') as StarknetNetwork;
     if (!['mainnet', 'testnet', 'devnet'].includes(starknetNetwork)) {
       throw new Error(`Invalid STARKNET_NETWORK: ${starknetNetwork}. Must be 'mainnet', 'testnet', or 'devnet'.`);
     }
@@ -56,20 +54,25 @@ export namespace AppConfig {
     const knownTokenAddresses = [wbtcTokenAddress, STRK_TOKEN_ADDRESS];
     const authenticatorAttachment = parseAuthenticatorAttachment(process.env.WEBAUTHN_AUTHENTICATOR_ATTACHMENT);
 
+    const starknet: StarknetConfig = {
+      network: starknetNetwork,
+      bitcoinNetwork: StarknetNetwork.toBitcoinNetwork(starknetNetwork),
+      rpcUrl: starknetRpcUrl,
+      accountClassHash: required('ACCOUNT_CLASS_HASH'),
+      wbtcTokenAddress: StarknetAddress.of(wbtcTokenAddress),
+      strkTokenAddress: StarknetAddress.of(STRK_TOKEN_ADDRESS),
+      feeTreasuryAddress: StarknetAddress.of(required('FEE_TREASURY_ADDRESS')),
+    };
+
     return {
       appVersion: optional('APP_VERSION', 'dev'),
       port: Number.parseInt(optional('PORT', '8080'), 10),
       nodeEnv: optional('NODE_ENV', 'development'),
-      starknetNetwork: starknetNetwork,
+      starknet,
       database: {
         url: required('DATABASE_URL'),
         startupRequiredTable: schema.accounts,
       },
-      starknetRpcUrl,
-      accountClassHash: required('ACCOUNT_CLASS_HASH'),
-      wbtcTokenAddress,
-      strkTokenAddress: STRK_TOKEN_ADDRESS,
-      feeTreasuryAddress: required('FEE_TREASURY_ADDRESS'),
       avnuPaymaster: {
         apiUrl: optional('AVNU_API_URL', 'https://starknet.paymaster.avnu.fi'),
         apiKey: optional('AVNU_API_KEY', ''),
@@ -95,7 +98,7 @@ export namespace AppConfig {
   function loadAtomiqConfig(
     required: (name: string) => string,
     optional: (name: string, defaultValue: string) => string,
-    starknetNetwork: 'mainnet' | 'testnet' | 'devnet',
+    starknetNetwork: StarknetNetwork,
     starknetRpcUrl: string,
     knownTokenAddresses: readonly string[],
   ): AtomiqGatewayConfig {
@@ -153,6 +156,10 @@ export namespace AppConfig {
   export function redact(config: Config): Record<string, unknown> {
     return {
       ...config,
+      starknet: {
+        ...config.starknet,
+        rpcUrl: redactUrl(config.starknet.rpcUrl),
+      },
       database: {
         ...config.database,
         url: redactUrl(config.database.url),
@@ -160,7 +167,6 @@ export namespace AppConfig {
           startupRequiredTable: getTableName(config.database.startupRequiredTable)
         })
       },
-      starknetRpcUrl: redactUrl(config.starknetRpcUrl),
       avnuPaymaster: {
         ...config.avnuPaymaster,
         apiKey: config.avnuPaymaster.apiKey ? '***' : '',

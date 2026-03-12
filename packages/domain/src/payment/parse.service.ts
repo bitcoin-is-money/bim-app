@@ -110,7 +110,7 @@ export class ParseService {
    */
   private parseBitcoinUri(uri: string): ParsedPaymentData & {network: 'bitcoin'} {
     const url = new URL(uri);
-    const address = BitcoinAddress.of(url.pathname);
+    const address = BitcoinAddress.of(url.pathname, this.deps.starknetConfig.bitcoinNetwork);
 
     const amountParam = url.searchParams.get('amount');
     let amount: Amount;

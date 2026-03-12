@@ -169,7 +169,7 @@ export class ReceiveService {
     return {
       network: 'bitcoin',
       swapId: result.swap.id,
-      depositAddress: BitcoinAddress.of(result.depositAddress),
+      depositAddress: BitcoinAddress.of(result.depositAddress, this.deps.starknetConfig.bitcoinNetwork),
       bip21Uri,
       amount: params.amount,
       expiresAt: result.swap.expiresAt,
