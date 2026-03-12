@@ -3,6 +3,7 @@ import {
   Erc20CallFactory,
   FeeConfig,
   InvalidPaymentAmountError,
+  type ParsedPaymentData,
   type ParseService,
   PayService,
   SameAddressPaymentError
@@ -100,16 +101,16 @@ describe('PayService', () => {
   describe('prepareCalls — starknet', () => {
     let service: PayService;
 
+    const starknetParsed: ParsedPaymentData = {
+      network: 'starknet',
+      address: RECIPIENT_ADDRESS,
+      amount: Amount.ofSatoshi(100_000_000n),
+      tokenAddress: ETH_TOKEN_ADDRESS,
+      description: '',
+    };
+
     beforeEach(() => {
       vi.resetAllMocks();
-
-      vi.mocked(mockParseService.parse).mockReturnValue({
-        network: 'starknet',
-        address: RECIPIENT_ADDRESS,
-        amount: Amount.ofSatoshi(100_000_000n),
-        tokenAddress: ETH_TOKEN_ADDRESS,
-        description: '',
-      });
 
       service = new PayService({
         parseService: mockParseService,
@@ -124,7 +125,7 @@ describe('PayService', () => {
     });
 
     it('returns starknet calls with transfer + fee', async () => {
-      const result = await service.prepareCalls('starknet:...', SENDER_ADDRESS, ACCOUNT_ID, 'Sent');
+      const result = await service.prepareCalls(starknetParsed, SENDER_ADDRESS, ACCOUNT_ID, 'Sent');
 
       expect(result.network).toBe('starknet');
       if (result.network !== 'starknet') return;
@@ -143,15 +144,15 @@ describe('PayService', () => {
     });
 
     it('returns single transfer call when fee rounds to zero', async () => {
-      vi.mocked(mockParseService.parse).mockReturnValue({
+      const smallParsed: ParsedPaymentData = {
         network: 'starknet',
         address: RECIPIENT_ADDRESS,
         amount: Amount.ofMilliSatoshi(999n),
         tokenAddress: ETH_TOKEN_ADDRESS,
         description: '',
-      });
+      };
 
-      const result = await service.prepareCalls('starknet:...', SENDER_ADDRESS, ACCOUNT_ID, 'Sent');
+      const result = await service.prepareCalls(smallParsed, SENDER_ADDRESS, ACCOUNT_ID, 'Sent');
 
       if (result.network !== 'starknet') return;
       expect(result.feeAmount.isZero()).toBe(true);
@@ -159,30 +160,30 @@ describe('PayService', () => {
     });
 
     it('throws InvalidPaymentAmountError when parsed amount is 0', async () => {
-      vi.mocked(mockParseService.parse).mockReturnValue({
+      const zeroParsed: ParsedPaymentData = {
         network: 'starknet',
         address: RECIPIENT_ADDRESS,
         amount: Amount.zero(),
         tokenAddress: ETH_TOKEN_ADDRESS,
         description: '',
-      });
+      };
 
       await expect(
-        service.prepareCalls('starknet:...', SENDER_ADDRESS, ACCOUNT_ID, 'Sent'),
+        service.prepareCalls(zeroParsed, SENDER_ADDRESS, ACCOUNT_ID, 'Sent'),
       ).rejects.toThrow(InvalidPaymentAmountError);
     });
 
     it('throws SameAddressPaymentError when sender equals recipient', async () => {
-      vi.mocked(mockParseService.parse).mockReturnValue({
+      const selfParsed: ParsedPaymentData = {
         network: 'starknet',
         address: SENDER_ADDRESS,
         amount: Amount.ofSatoshi(1_000n),
         tokenAddress: ETH_TOKEN_ADDRESS,
         description: '',
-      });
+      };
 
       await expect(
-        service.prepareCalls('starknet:...', SENDER_ADDRESS, ACCOUNT_ID, 'Sent'),
+        service.prepareCalls(selfParsed, SENDER_ADDRESS, ACCOUNT_ID, 'Sent'),
       ).rejects.toThrow(SameAddressPaymentError);
     });
   });
@@ -194,6 +195,13 @@ describe('PayService', () => {
   describe('prepareCalls — lightning', () => {
     let service: PayService;
     let mockSwapService: SwapService;
+
+    const lightningParsed: ParsedPaymentData = {
+      network: 'lightning',
+      invoice: LightningInvoice.of(VALID_INVOICE),
+      amount: Amount.ofSatoshi(50_000n),
+      description: 'test',
+    };
 
     beforeEach(() => {
       vi.resetAllMocks();
@@ -209,13 +217,6 @@ describe('PayService', () => {
         }),
       } as unknown as SwapService;
 
-      vi.mocked(mockParseService.parse).mockReturnValue({
-        network: 'lightning',
-        invoice: LightningInvoice.of(VALID_INVOICE),
-        amount: Amount.ofSatoshi(50_000n),
-        description: 'test',
-      });
-
       service = new PayService({
         parseService: mockParseService,
         erc20CallFactory: new Erc20CallFactory(feeConfig),
@@ -229,7 +230,7 @@ describe('PayService', () => {
     });
 
     it('creates swap and returns SDK commit calls with BIM fee call', async () => {
-      const result = await service.prepareCalls(VALID_INVOICE, SENDER_ADDRESS, ACCOUNT_ID, 'Sent');
+      const result = await service.prepareCalls(lightningParsed, SENDER_ADDRESS, ACCOUNT_ID, 'Sent');
 
       expect(mockSwapService.createStarknetToLightning).toHaveBeenCalledWith({
         invoice: LightningInvoice.of(VALID_INVOICE),
@@ -276,7 +277,7 @@ describe('PayService', () => {
       );
 
       await expect(
-        service.prepareCalls(VALID_INVOICE, SENDER_ADDRESS, ACCOUNT_ID, 'Sent'),
+        service.prepareCalls(lightningParsed, SENDER_ADDRESS, ACCOUNT_ID, 'Sent'),
       ).rejects.toThrow(SwapAmountError);
     });
 
@@ -286,7 +287,7 @@ describe('PayService', () => {
       );
 
       await expect(
-        service.prepareCalls(VALID_INVOICE, SENDER_ADDRESS, ACCOUNT_ID, 'Sent'),
+        service.prepareCalls(lightningParsed, SENDER_ADDRESS, ACCOUNT_ID, 'Sent'),
       ).rejects.toThrow(SwapCreationError);
     });
   });
@@ -298,6 +299,13 @@ describe('PayService', () => {
   describe('prepareCalls — bitcoin', () => {
     let service: PayService;
     let mockSwapService: SwapService;
+
+    const bitcoinParsed: ParsedPaymentData = {
+      network: 'bitcoin',
+      address: BitcoinAddress.of(BTC_BECH32),
+      amount: Amount.ofSatoshi(100_000n),
+      description: '',
+    };
 
     beforeEach(() => {
       vi.resetAllMocks();
@@ -312,13 +320,6 @@ describe('PayService', () => {
         }),
       } as unknown as SwapService;
 
-      vi.mocked(mockParseService.parse).mockReturnValue({
-        network: 'bitcoin',
-        address: BitcoinAddress.of(BTC_BECH32),
-        amount: Amount.ofSatoshi(100_000n),
-        description: '',
-      });
-
       service = new PayService({
         parseService: mockParseService,
         erc20CallFactory: new Erc20CallFactory(feeConfig),
@@ -332,7 +333,7 @@ describe('PayService', () => {
     });
 
     it('creates swap and returns SDK commit calls with BIM fee call', async () => {
-      const result = await service.prepareCalls(`bitcoin:${BTC_BECH32}?amount=0.001`, SENDER_ADDRESS, ACCOUNT_ID, 'Sent');
+      const result = await service.prepareCalls(bitcoinParsed, SENDER_ADDRESS, ACCOUNT_ID, 'Sent');
 
       expect(mockSwapService.createStarknetToBitcoin).toHaveBeenCalledWith({
         amount: Amount.ofSatoshi(100_000n),
@@ -371,15 +372,15 @@ describe('PayService', () => {
     });
 
     it('throws InvalidPaymentAmountError when amount is 0', async () => {
-      vi.mocked(mockParseService.parse).mockReturnValue({
+      const zeroParsed: ParsedPaymentData = {
         network: 'bitcoin',
         address: BitcoinAddress.of(BTC_BECH32),
         amount: Amount.zero(),
         description: '',
-      });
+      };
 
       await expect(
-        service.prepareCalls(`bitcoin:${BTC_BECH32}?amount=0`, SENDER_ADDRESS, ACCOUNT_ID, 'Sent'),
+        service.prepareCalls(zeroParsed, SENDER_ADDRESS, ACCOUNT_ID, 'Sent'),
       ).rejects.toThrow(InvalidPaymentAmountError);
     });
 
@@ -393,7 +394,7 @@ describe('PayService', () => {
       );
 
       await expect(
-        service.prepareCalls(`bitcoin:${BTC_BECH32}?amount=0.001`, SENDER_ADDRESS, ACCOUNT_ID, 'Sent'),
+        service.prepareCalls(bitcoinParsed, SENDER_ADDRESS, ACCOUNT_ID, 'Sent'),
       ).rejects.toThrow(SwapAmountError);
     });
 
@@ -403,7 +404,7 @@ describe('PayService', () => {
       );
 
       await expect(
-        service.prepareCalls(`bitcoin:${BTC_BECH32}?amount=0.001`, SENDER_ADDRESS, ACCOUNT_ID, 'Sent'),
+        service.prepareCalls(bitcoinParsed, SENDER_ADDRESS, ACCOUNT_ID, 'Sent'),
       ).rejects.toThrow(SwapCreationError);
     });
   });

@@ -40,7 +40,7 @@ export type PreparedCalls =
 // Prepared Payment (parsed data + calculated fee)
 // =============================================================================
 
-export type PreparedPayment = ParsedPaymentData & { fee: Amount };
+export type PreparedPaymentData = ParsedPaymentData & { fee: Amount };
 
 // =============================================================================
 // PAY Results

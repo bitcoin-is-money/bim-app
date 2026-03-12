@@ -8,7 +8,7 @@ import type {Erc20CallFactory} from './erc20-call.factory';
 import {FeeCalculator, type FeeConfig} from './fee';
 import type {ParseService} from './parse.service';
 import {InvalidPaymentAmountError, SameAddressPaymentError} from './errors';
-import type {PreparedCalls, PreparedPayment} from './pay.types';
+import type {PreparedCalls, PreparedPaymentData} from './pay.types';
 import type {ParsedPaymentData} from './types';
 
 // =============================================================================
@@ -55,8 +55,8 @@ export class PayService {
    * - Starknet direct transfers: BIM fee (configured percentage).
    * - Lightning/Bitcoin swaps: estimated fee from Atomiq intermediary rates.
    */
-  async prepare(paymentPayload: string): Promise<PreparedPayment> {
-    const parsed = this.deps.parseService.parse(paymentPayload);
+  async prepare(input: string | ParsedPaymentData): Promise<PreparedPaymentData> {
+    const parsed = typeof input === 'string' ? this.deps.parseService.parse(input) : input;
 
     let fee: Amount;
     switch (parsed.network) {
@@ -92,9 +92,8 @@ export class PayService {
    *
    * Returns the calls + metadata needed for the execute step.
    */
-  async prepareCalls(paymentPayload: string, senderAddress: StarknetAddress, accountId: string, description: string): Promise<PreparedCalls> {
-    this.log.info({paymentPayload, senderAddress: senderAddress.toString()}, 'Preparing payment calls');
-    const parsed = this.deps.parseService.parse(paymentPayload);
+  async prepareCalls(parsed: ParsedPaymentData, senderAddress: StarknetAddress, accountId: string, description: string): Promise<PreparedCalls> {
+    this.log.info({network: parsed.network, senderAddress: senderAddress.toString()}, 'Preparing payment calls');
 
     switch (parsed.network) {
       case 'starknet':
