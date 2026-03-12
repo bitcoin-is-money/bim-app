@@ -3,7 +3,7 @@ import type {Database} from '@bim/db/database';
 import {AccountId} from "@bim/domain/account";
 import {Session, SessionId} from "@bim/domain/auth";
 import type {SessionRepository} from "@bim/domain/ports";
-import {eq, lt} from 'drizzle-orm';
+import {eq} from 'drizzle-orm';
 import {AbstractDrizzleRepository} from './abstract-drizzle.repository';
 
 /**
@@ -59,14 +59,6 @@ export class DrizzleSessionRepository extends AbstractDrizzleRepository implemen
     await this.resolveDb()
       .delete(schema.sessions)
       .where(eq(schema.sessions.accountId, accountId));
-  }
-
-  async deleteExpired(): Promise<number> {
-    const result = await this.resolveDb()
-      .delete(schema.sessions)
-      .where(lt(schema.sessions.expiresAt, new Date()));
-
-    return result.rowCount ?? 0;
   }
 
   private toSession(record: schema.SessionRecord): Session {

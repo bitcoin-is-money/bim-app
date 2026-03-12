@@ -2,7 +2,7 @@ import * as schema from '@bim/db';
 import type {Database} from '@bim/db/database';
 import {Challenge, ChallengeId, type ChallengePurpose} from "@bim/domain/auth";
 import type {ChallengeRepository} from "@bim/domain/ports";
-import {and, eq, gt, lt} from 'drizzle-orm';
+import {and, eq, gt} from 'drizzle-orm';
 import {AbstractDrizzleRepository} from './abstract-drizzle.repository';
 
 /**
@@ -84,14 +84,6 @@ export class DrizzleChallengeRepository extends AbstractDrizzleRepository implem
     await this.resolveDb()
       .delete(schema.challenges)
       .where(eq(schema.challenges.id, id));
-  }
-
-  async deleteExpired(): Promise<number> {
-    const result = await this.resolveDb()
-      .delete(schema.challenges)
-      .where(lt(schema.challenges.expiresAt, new Date()));
-
-    return result.rowCount ?? 0;
   }
 
   private toChallenge(record: schema.ChallengeRecord): Challenge {

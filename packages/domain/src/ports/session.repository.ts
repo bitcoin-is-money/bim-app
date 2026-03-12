@@ -29,9 +29,4 @@ export interface SessionRepository {
    * Deletes all sessions for an account.
    */
   deleteByAccountId(accountId: AccountId): Promise<void>;
-
-  /**
-   * Deletes all expired sessions.
-   */
-  deleteExpired(): Promise<number>;
 }
