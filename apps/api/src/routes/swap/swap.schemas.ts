@@ -10,3 +10,5 @@ export const SwapDirectionSchema = z.enum([
   'starknet_to_lightning',
   'starknet_to_bitcoin',
 ]);
+
+export const SwapIdParamSchema = z.string().min(1).max(200).regex(/^[\w-]+$/);

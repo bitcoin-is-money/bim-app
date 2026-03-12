@@ -7,7 +7,7 @@ import type {AppContext} from '../../app-context';
 import {type ApiErrorResponse, handleDomainError} from '../../errors';
 import {createAuthMiddleware} from '../../middleware/auth.middleware';
 import type {AuthenticatedHono} from '../../types.js';
-import {SwapDirectionSchema} from './swap.schemas';
+import {SwapDirectionSchema, SwapIdParamSchema} from './swap.schemas';
 import type {SwapLimitsResponse, SwapStatusResponse} from './swap.types';
 
 // =============================================================================
@@ -50,7 +50,7 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
   app.get('/status/:swapId', async (honoCtx): Promise<TypedResponse<SwapStatusResponse | ApiErrorResponse>> => {
     try {
       const account: Account = honoCtx.get('account');
-      const swapId = honoCtx.req.param('swapId');
+      const swapId = SwapIdParamSchema.parse(honoCtx.req.param('swapId'));
 
       const result = await swapService.fetchStatus({swapId, accountId: account.id});
 
