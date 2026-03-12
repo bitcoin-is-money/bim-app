@@ -2,7 +2,7 @@ import * as schema from '@bim/db';
 import type {Database} from '@bim/db/database';
 import {Account, AccountId, type AccountStatus, CredentialId, StarknetAddress,} from '@bim/domain/account';
 import type {AccountRepository} from '@bim/domain/ports';
-import {and, eq} from 'drizzle-orm';
+import {and, eq, or} from 'drizzle-orm';
 import {AbstractDrizzleRepository} from './abstract-drizzle.repository';
 
 /**
@@ -121,7 +121,10 @@ export class DrizzleAccountRepository extends AbstractDrizzleRepository implemen
       .where(
         and(
           eq(schema.accounts.id, accountId),
-          eq(schema.accounts.status, 'pending'),
+          or(
+            eq(schema.accounts.status, 'pending'),
+            eq(schema.accounts.status, 'failed'),
+          ),
         ),
       );
     return (result.rowCount ?? 0) > 0;

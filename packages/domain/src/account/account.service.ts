@@ -104,6 +104,12 @@ export class AccountService {
       throw new AccountNotFoundError(input.accountId);
     }
 
+    // If the account is stuck in 'deploying' (e.g. server crashed before confirmation),
+    // try to resolve the pending deployment by checking the tx on-chain.
+    if (account.getStatus() === 'deploying') {
+      return this.recoverStuckDeployment(account);
+    }
+
     if (!account.canDeploy()) {
       throw new InvalidAccountStateError(
         account.getStatus(),
@@ -210,6 +216,49 @@ export class AccountService {
   // ===========================================================================
   // Private Helpers
   // ===========================================================================
+
+  /**
+   * Recovers an account stuck in 'deploying' state (e.g. after a server crash).
+   * Checks the pending tx on-chain: if confirmed → deployed, if rejected → failed.
+   *
+   * Typical scenario: user registers → calls deploy → server crashes mid-deploy
+   * → server restarts → user still has the same session and accountId
+   * → frontend retries POST /api/account/deploy → this recovery kicks in.
+   *
+   * If the session expired during downtime, the user re-authenticates (login, not
+   * register) and retrieves the same account, so recovery still works.
+   */
+  private async recoverStuckDeployment(account: Account): Promise<DeployAccountOutput> {
+    const txHash = account.getDeploymentTxHash();
+    if (!txHash) {
+      // No tx was ever submitted — mark as failed so canDeploy() allows retry
+      account.markAsFailed();
+      await this.deps.accountRepository.save(account);
+      this.log.warn({accountId: account.id}, 'Stuck deploying account with no txHash, marked as failed');
+      throw new InvalidAccountStateError(account.getStatus(), 'deploy', 'deployment had no transaction, please retry');
+    }
+
+    this.log.info({accountId: account.id, txHash}, 'Recovering stuck deployment, checking tx on-chain');
+    try {
+      await this.deps.starknetGateway.waitForTransaction(txHash);
+
+      const address = account.getStarknetAddress();
+      if (address && await this.deps.starknetGateway.isDeployed(address)) {
+        account.markAsDeployed();
+        await this.deps.accountRepository.save(account);
+        this.log.info({accountId: account.id, txHash}, 'Stuck deployment recovered: confirmed on-chain');
+        return {account, txHash};
+      }
+    } catch {
+      // tx rejected or not found on-chain
+    }
+
+    // Deployment failed on-chain — mark as failed so canDeploy() allows retry
+    account.markAsFailed();
+    await this.deps.accountRepository.save(account);
+    this.log.warn({accountId: account.id, txHash}, 'Stuck deployment tx failed on-chain, marked as failed');
+    throw new InvalidAccountStateError(account.getStatus(), 'deploy', 'previous deployment failed on-chain, please retry');
+  }
 
   /**
    * Waits for on-chain confirmation and updates account status accordingly.

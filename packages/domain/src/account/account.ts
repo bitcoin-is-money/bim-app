@@ -111,10 +111,10 @@ export class Account {
 
   /**
    * Marks the account as deploying with the computed address and transaction hash.
-   * Can only be called when the account is in pending status.
+   * Can be called from 'pending' or 'failed' status (retry after failure).
    */
   markAsDeploying(starknetAddress: StarknetAddress, txHash: string): void {
-    if (this.status !== 'pending') {
+    if (this.status !== 'pending' && this.status !== 'failed') {
       throw new InvalidStateTransitionError(this.status, 'deploying');
     }
     this.status = 'deploying';
@@ -172,7 +172,7 @@ export class Account {
    * Checks if the account can be deployed.
    */
   canDeploy(): boolean {
-    return this.status === 'pending';
+    return this.status === 'pending' || this.status === 'failed';
   }
 
 }
