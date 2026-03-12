@@ -251,6 +251,21 @@ describe('SwapService', () => {
       expect(gateway.getSwapStatus).not.toHaveBeenCalled();
     });
 
+    // A transient gateway error (network timeout, 500, etc.) must NOT cause
+    // the swap to be marked as expired or lost — doing so would permanently
+    // kill an active swap that still has funds in escrow.
+    it('does not mark swap as expired or lost on transient gateway error', async () => {
+      const swap = createPendingLightningSwap();
+      vi.mocked(repository.findById).mockResolvedValue(swap);
+      vi.mocked(gateway.getSwapStatus).mockRejectedValue(new Error('ETIMEDOUT'));
+
+      const result = await service.fetchStatus({swapId: swap.id, accountId: ACCOUNT_ID});
+
+      // The swap must remain pending — not lost or expired
+      expect(result.status).toBe('pending');
+      expect(repository.save).not.toHaveBeenCalled();
+    });
+
     it('ignores sync errors and returns local state', async () => {
       const swap = createPendingLightningSwap();
       vi.mocked(repository.findById).mockResolvedValue(swap);
