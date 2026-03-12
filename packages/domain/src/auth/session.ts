@@ -1,6 +1,33 @@
 import type {AccountId} from '../account';
-import {SessionExpiredError} from './errors';
-import {SessionId} from './types';
+import {InvalidSessionIdError, SessionExpiredError} from './errors';
+
+// =============================================================================
+// Branded Type
+// =============================================================================
+
+/**
+ * Unique identifier for a Session.
+ */
+export type SessionId = string & { readonly __brand: 'SessionId' };
+
+export namespace SessionId {
+  const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+  export function of(value: string): SessionId {
+    if (!UUID_REGEX.test(value)) {
+      throw new InvalidSessionIdError(value);
+    }
+    return value as SessionId;
+  }
+
+  export function generate(): SessionId {
+    return crypto.randomUUID() as SessionId;
+  }
+}
+
+// =============================================================================
+// Entity
+// =============================================================================
 
 /**
  * Session entity representing an authenticated user session.

@@ -1,5 +1,6 @@
 import {DomainError} from '../shared';
-import type {ChallengeId, SessionId} from './types';
+import type {ChallengeId} from './challenge';
+import type {SessionId} from './session';
 
 export class InvalidSessionIdError extends DomainError {
   constructor(readonly value: string) {

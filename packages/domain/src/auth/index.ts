@@ -1,4 +1,3 @@
-export * from './types';
 export * from './errors';
 export * from './webauthn.types';
 export * from './challenge';

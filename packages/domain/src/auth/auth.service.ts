@@ -13,7 +13,7 @@ import {
   InvalidChallengeError,
   RegistrationFailedError,
 } from './errors';
-import {ChallengeId} from './types';
+import {ChallengeId} from './challenge';
 import type {WebAuthnAuthenticationOptions, WebAuthnRegistrationOptions} from './webauthn.types';
 
 // =============================================================================
