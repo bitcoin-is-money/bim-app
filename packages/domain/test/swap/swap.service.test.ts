@@ -10,7 +10,7 @@ const logger = createLogger(LOG_LEVEL);
 
 const DESTINATION_ADDRESS = StarknetAddress.of('0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef');
 const VALID_INVOICE = 'lntb1000n1pjtest0pp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypq';
-const ACCOUNT_ID = 'account-001';
+const ACCOUNT_ID = '550e8400-e29b-41d4-a716-446655440000';
 
 function createPendingLightningSwap(id = 'swap-001'): Swap {
   return Swap.createLightningToStarknet({
@@ -133,7 +133,7 @@ describe('SwapService', () => {
         isRefunded: false,
       });
 
-      const result = await service.fetchStatus({swapId: swap.id});
+      const result = await service.fetchStatus({swapId: swap.id, accountId: ACCOUNT_ID});
 
       // ...but deposit is confirmed, so it should be paid, not expired
       expect(result.status).toBe('paid');
@@ -153,7 +153,7 @@ describe('SwapService', () => {
         isRefunded: false,
       });
 
-      const result = await service.fetchStatus({swapId: swap.id});
+      const result = await service.fetchStatus({swapId: swap.id, accountId: ACCOUNT_ID});
 
       expect(result.status).toBe('expired');
       expect(repository.save).toHaveBeenCalled();
@@ -172,7 +172,7 @@ describe('SwapService', () => {
         isRefunded: false,
       });
 
-      const result = await service.fetchStatus({swapId: swap.id});
+      const result = await service.fetchStatus({swapId: swap.id, accountId: ACCOUNT_ID});
 
       expect(result.status).toBe('expired');
     });
@@ -195,7 +195,7 @@ describe('SwapService', () => {
         isRefunded: false,
       });
 
-      const result = await service.fetchStatus({swapId: swap.id});
+      const result = await service.fetchStatus({swapId: swap.id, accountId: ACCOUNT_ID});
 
       expect(result.status).toBe('paid');
       expect(result.progress).toBe(33);
@@ -215,7 +215,7 @@ describe('SwapService', () => {
         txHash: '0xabc',
       });
 
-      const result = await service.fetchStatus({swapId: swap.id});
+      const result = await service.fetchStatus({swapId: swap.id, accountId: ACCOUNT_ID});
       expect(result.status).toBe('completed');
       expect(result.progress).toBe(100);
       expect(result.txHash).toBe('0xabc');
@@ -234,7 +234,7 @@ describe('SwapService', () => {
         error: 'Network error',
       });
 
-      const result = await service.fetchStatus({swapId: swap.id});
+      const result = await service.fetchStatus({swapId: swap.id, accountId: ACCOUNT_ID});
 
       expect(result.status).toBe('failed');
     });
@@ -246,7 +246,7 @@ describe('SwapService', () => {
       swap.markAsCompleted('0x123');
       vi.mocked(repository.findById).mockResolvedValue(swap);
 
-      await service.fetchStatus({swapId: swap.id});
+      await service.fetchStatus({swapId: swap.id, accountId: ACCOUNT_ID});
 
       expect(gateway.getSwapStatus).not.toHaveBeenCalled();
     });
@@ -256,7 +256,7 @@ describe('SwapService', () => {
       vi.mocked(repository.findById).mockResolvedValue(swap);
       vi.mocked(gateway.getSwapStatus).mockRejectedValue(new Error('Network error'));
 
-      const result = await service.fetchStatus({swapId: swap.id});
+      const result = await service.fetchStatus({swapId: swap.id, accountId: ACCOUNT_ID});
 
       expect(result.status).toBe('pending');
     });

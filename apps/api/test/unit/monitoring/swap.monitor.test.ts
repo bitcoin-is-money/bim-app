@@ -54,7 +54,7 @@ describe('SwapMonitor', () => {
       await monitor.runIteration();
 
       expect(swapService.getActiveSwaps).toHaveBeenCalledOnce();
-      expect(swapService.fetchStatus).toHaveBeenCalledWith({swapId: 's1'});
+      expect(swapService.fetchStatus).toHaveBeenCalledWith({swapId: 's1', accountId: 'account-001'});
     });
 
     it('continues processing other swaps when one fails', async () => {
