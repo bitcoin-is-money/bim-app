@@ -40,6 +40,45 @@ describe('Amount', () => {
       });
     });
 
+    describe('fromBtcString', () => {
+      it('parses whole BTC amount', () => {
+        const amount = Amount.fromBtcString('1');
+        expect(amount.getSat()).toBe(100_000_000n);
+      });
+
+      it('parses fractional BTC amount', () => {
+        const amount = Amount.fromBtcString('0.001');
+        expect(amount.getSat()).toBe(100_000n);
+      });
+
+      it('parses 1 satoshi', () => {
+        const amount = Amount.fromBtcString('0.00000001');
+        expect(amount.getSat()).toBe(1n);
+      });
+
+      it('parses BTC amount with full 8 decimal places', () => {
+        const amount = Amount.fromBtcString('1.23456789');
+        expect(amount.getSat()).toBe(123_456_789n);
+      });
+
+      it('handles trailing zeros correctly', () => {
+        const amount = Amount.fromBtcString('0.10000000');
+        expect(amount.getSat()).toBe(10_000_000n);
+      });
+
+      it('throws for more than 8 decimal places', () => {
+        expect(() => Amount.fromBtcString('0.123456789')).toThrow(ValidationError);
+      });
+
+      it('throws for negative amount', () => {
+        expect(() => Amount.fromBtcString('-0.001')).toThrow(ValidationError);
+      });
+
+      it('throws for non-numeric string', () => {
+        expect(() => Amount.fromBtcString('abc')).toThrow(ValidationError);
+      });
+    });
+
     describe('zero', () => {
       it('creates a zero amount', () => {
         const amount = Amount.zero();
