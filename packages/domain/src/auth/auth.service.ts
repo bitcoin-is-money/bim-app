@@ -214,8 +214,10 @@ export class AuthService {
     const session = Session.create(account.id);
 
     // Persist atomically (challenge already consumed atomically above)
+    // Delete any prior sessions so only the latest login is valid (single-session).
     await this.deps.transactionManager.execute(async () => {
       await this.deps.accountRepository.save(account);
+      await this.deps.sessionRepository.deleteByAccountId(account.id);
       await this.deps.sessionRepository.save(session);
     });
 
@@ -319,8 +321,10 @@ export class AuthService {
     const session = Session.create(account.id);
 
     // Persist atomically (challenge already consumed atomically above)
+    // Delete any prior sessions so only the latest login is valid (single-session).
     await this.deps.transactionManager.execute(async () => {
       await this.deps.accountRepository.save(account);
+      await this.deps.sessionRepository.deleteByAccountId(account.id);
       await this.deps.sessionRepository.save(session);
     });
 
