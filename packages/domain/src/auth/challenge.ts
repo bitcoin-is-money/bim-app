@@ -1,5 +1,41 @@
+import {ValidationError} from '../shared';
 import {ChallengeAlreadyUsedError, ChallengeExpiredError} from './errors';
-import {CHALLENGE_DURATION_MS, ChallengeId, type ChallengePurpose} from './types';
+
+// =============================================================================
+// Branded Type
+// =============================================================================
+
+/**
+ * Unique identifier for a WebAuthn Challenge.
+ */
+export type ChallengeId = string & { readonly __brand: 'ChallengeId' };
+
+export namespace ChallengeId {
+  const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+  export function of(value: string): ChallengeId {
+    if (!UUID_REGEX.test(value)) {
+      throw new ValidationError('challengeId', 'invalid UUID format');
+    }
+    return value as ChallengeId;
+  }
+
+  export function generate(): ChallengeId {
+    return crypto.randomUUID() as ChallengeId;
+  }
+}
+
+// =============================================================================
+// Challenge Types & Constants
+// =============================================================================
+
+export type ChallengePurpose = 'registration' | 'authentication';
+
+export const CHALLENGE_DURATION_MS = 60 * 1000; // 60 seconds
+
+// =============================================================================
+// Entity
+// =============================================================================
 
 /**
  * Challenge entity representing a WebAuthn challenge for registration or authentication.

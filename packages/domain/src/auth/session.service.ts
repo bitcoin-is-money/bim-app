@@ -2,10 +2,9 @@
 import type {Logger} from 'pino';
 import type {Account} from '../account';
 import type {AccountRepository, SessionRepository} from '../ports';
-import type {Session} from './session';
+import {type Session, SessionId} from './session';
 import type {SessionConfig} from './session.config';
 import {SessionNotFoundError} from './errors';
-import {SessionId} from './types';
 
 // =============================================================================
 // Dependencies
