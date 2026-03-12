@@ -1,4 +1,5 @@
 import {StarknetAddress} from '@bim/domain/account';
+import {SessionConfig} from '@bim/domain/auth';
 import type {AccountRepository, PaymasterGateway,} from '@bim/domain/ports';
 import {createLogger} from '@bim/lib/logger';
 import {describe, expect, it, vi} from 'vitest';
@@ -49,6 +50,7 @@ function createMockConfig(): AppConfig.Config {
     avnuPaymaster: {apiUrl: 'http://localhost:9090', apiKey: 'test-key'},
     avnuSwap: {baseUrl: 'https://sepolia.api.avnu.fi', knownTokenAddresses: ['0x456', '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d']},
     atomiq: {network: 'testnet', starknetRpcUrl: 'http://localhost:5050', storagePath: '/tmp/bim/atomiq', autoCreateStorage: true, swapToken: 'WBTC', knownTokenAddresses: ['0x456', '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d']},
+    session: SessionConfig.create({durationMs: SessionConfig.DEFAULT_DURATION_MS}),
     logLevel: 'silent',
   };
 }

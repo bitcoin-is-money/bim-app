@@ -1,6 +1,6 @@
 import type {AccountId} from '../account';
 import {SessionExpiredError} from './errors';
-import {SESSION_DURATION_MS, SessionId} from './types';
+import {SessionId} from './types';
 
 /**
  * Session entity representing an authenticated user session.
@@ -16,13 +16,26 @@ export class Session {
   /**
    * Creates a new session for the given account.
    */
-  static create(accountId: AccountId): Session {
+  static create(accountId: AccountId, durationMs: number): Session {
     const now = new Date();
     return new Session(
       SessionId.generate(),
       accountId,
-      new Date(now.getTime() + SESSION_DURATION_MS),
+      new Date(now.getTime() + durationMs),
       now,
+    );
+  }
+
+  /**
+   * Returns a renewed session with expiration extended from now.
+   * Used for sliding session: each authenticated request resets the inactivity timer.
+   */
+  renew(durationMs: number): Session {
+    return new Session(
+      this.id,
+      this.accountId,
+      new Date(Date.now() + durationMs),
+      this.createdAt,
     );
   }
 
@@ -50,5 +63,4 @@ export class Session {
     const remaining = this.expiresAt.getTime() - Date.now();
     return Math.max(0, remaining);
   }
-
 }

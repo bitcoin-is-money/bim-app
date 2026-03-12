@@ -1,5 +1,5 @@
 import {AccountService} from "@bim/domain/account";
-import {AuthService, SessionService} from "@bim/domain/auth";
+import {AuthService, type SessionConfig, SessionService} from "@bim/domain/auth";
 import {Erc20CallFactory, FeeConfig, ParseService, PayService, ReceiveService,} from "@bim/domain/payment";
 import {CurrencyService} from "@bim/domain/currency";
 import type {
@@ -73,6 +73,7 @@ export interface AppContext {
     receive: ReceiveService;
     currency: CurrencyService;
   };
+  sessionConfig: SessionConfig;
   starknetConfig: StarknetConfig;
   webauthn: {
     rpId: string;
@@ -168,6 +169,7 @@ export namespace AppContext {
         sessionRepository: repositories.session,
         transactionManager: new DrizzleTransactionManager(db),
         webAuthnGateway: gateways.webAuthn,
+        sessionConfig: config.session,
         logger: rootLogger,
       },
       webauthn,
@@ -176,6 +178,7 @@ export namespace AppContext {
     const sessionService = new SessionService({
       sessionRepository: repositories.session,
       accountRepository: repositories.account,
+      sessionConfig: config.session,
       logger: rootLogger,
     });
 
@@ -247,6 +250,7 @@ export namespace AppContext {
         receive: receiveService,
         currency: currencyService,
       },
+      sessionConfig: config.session,
       starknetConfig,
       webauthn,
       logger: rootLogger,

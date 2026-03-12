@@ -3,6 +3,7 @@ import type {Logger} from 'pino';
 import type {Account} from '../account';
 import type {AccountRepository, SessionRepository} from '../ports';
 import type {Session} from './session';
+import type {SessionConfig} from './session.config';
 import {SessionNotFoundError} from './errors';
 import {SessionId} from './types';
 
@@ -13,6 +14,7 @@ import {SessionId} from './types';
 export interface SessionServiceDeps {
   sessionRepository: SessionRepository;
   accountRepository: AccountRepository;
+  sessionConfig: SessionConfig;
   logger: Logger;
 }
 
@@ -73,8 +75,12 @@ export class SessionService {
       throw new SessionNotFoundError(sessionId);
     }
 
-    this.log.debug({accountId: account.id}, 'Session validated');
-    return {session, account};
+    // Sliding session: extend expiry on each authenticated request
+    const renewed = session.renew(this.deps.sessionConfig.durationMs);
+    await this.deps.sessionRepository.save(renewed);
+
+    this.log.debug({accountId: account.id}, 'Session validated and renewed');
+    return {session: renewed, account};
   }
 
   /**

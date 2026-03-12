@@ -3,6 +3,7 @@ import type {Context, Next} from 'hono';
 import type {AppContext} from '../app-context';
 import {type ApiErrorResponse, ErrorCode} from '../errors';
 import type {AuthenticatedContext} from '../types';
+import {setSessionCookie} from './session-cookie';
 
 /**
  * Extracts session ID from the Cookie header.
@@ -20,9 +21,11 @@ export function getSessionId(
 /**
  * Creates an authentication middleware that validates the session
  * and sets the account/session in context.
+ * Also refreshes the session cookie on each request (sliding session).
  */
 export function createAuthMiddleware(appContext: AppContext) {
   const {session: sessionService} = appContext.services;
+  const maxAgeSec = Math.floor(appContext.sessionConfig.durationMs / 1000);
 
   return async (
     ctx: Context<{Variables: AuthenticatedContext}>,
@@ -37,6 +40,10 @@ export function createAuthMiddleware(appContext: AppContext) {
       const result = await sessionService.validate({sessionId});
       ctx.set('account', result.account);
       ctx.set('session', result.session);
+
+      // Sliding session: refresh cookie expiry on each authenticated request
+      setSessionCookie(ctx, result.session.id, maxAgeSec);
+
       await next();
     } catch (error) {
       if (error instanceof SessionExpiredError) {
