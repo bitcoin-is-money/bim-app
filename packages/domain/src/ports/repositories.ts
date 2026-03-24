@@ -4,10 +4,6 @@ import type {StarknetAddress} from '../shared';
 import type {Swap, SwapDirection, SwapId, SwapStatus} from '../swap';
 import type {Transaction, TransactionHash, TransactionId, UserSettings} from '../user';
 
-// =============================================================================
-// Account Repository
-// =============================================================================
-
 /**
  * Repository interface for Account persistence.
  */
@@ -45,10 +41,6 @@ export interface AccountRepository {
   delete(id: AccountId): Promise<void>;
 }
 
-// =============================================================================
-// Challenge Repository
-// =============================================================================
-
 /**
  * Repository interface for WebAuthn Challenge persistence.
  */
@@ -73,10 +65,6 @@ export interface ChallengeRepository {
   delete(id: ChallengeId): Promise<void>;
 }
 
-// =============================================================================
-// Session Repository
-// =============================================================================
-
 /**
  * Repository interface for Session persistence.
  */
@@ -96,10 +84,6 @@ export interface SessionRepository {
   /** Deletes all sessions for an account. */
   deleteByAccountId(accountId: AccountId): Promise<void>;
 }
-
-// =============================================================================
-// Swap Repository
-// =============================================================================
 
 /**
  * Repository interface for Swap persistence.
@@ -130,10 +114,6 @@ export interface SwapRepository {
   /** Deletes all expired swaps older than a given date. */
   deleteExpiredBefore(date: Date): Promise<number>;
 }
-
-// =============================================================================
-// Transaction Repository
-// =============================================================================
 
 /**
  * Pagination options for transaction queries.
@@ -177,10 +157,6 @@ export interface TransactionRepository {
   /** Deletes the description for a transaction. */
   deleteDescription(transactionHash: TransactionHash, accountId: AccountId): Promise<void>;
 }
-
-// =============================================================================
-// User Settings Repository
-// =============================================================================
 
 /**
  * Repository interface for UserSettings persistence.

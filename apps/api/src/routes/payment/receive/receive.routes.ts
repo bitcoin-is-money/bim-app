@@ -12,8 +12,8 @@ import type {AppContext} from '../../../app-context';
 import {type ApiErrorResponse, createErrorResponse, ErrorCode, handleDomainError} from '../../../errors';
 import type {AuthenticatedHono} from '../../../types';
 import {ReceiveBuildCache} from './receive-build.cache';
-import {ReceiveCommitSchema, ReceiveSchema} from './receive.schemas';
-import type {BitcoinReceiveCommitResponse, BitcoinReceivePendingCommitResponse, ReceiveResponse} from './receive.types';
+import {ReceiveCommitSchema, ReceiveSchema} from './receive.types';
+import type {BitcoinReceiveCommitResponse, BitcoinReceivePendingCommitResponse, ReceiveBody, ReceiveCommitBody, ReceiveResponse} from './receive.types';
 
 // =============================================================================
 // Routes
@@ -38,7 +38,7 @@ export function createReceiveRoutes(appContext: AppContext): AuthenticatedHono {
 
   app.post('/', async (honoCtx): Promise<TypedResponse<ReceiveResponse | ApiErrorResponse>> => {
     try {
-      const input = ReceiveSchema.parse(await honoCtx.req.json());
+      const input: ReceiveBody = ReceiveSchema.parse(await honoCtx.req.json());
 
       const account = honoCtx.get('account');
       const starknetAddress = account.getStarknetAddress();
@@ -178,7 +178,7 @@ export function createReceiveRoutes(appContext: AppContext): AuthenticatedHono {
 
   app.post('/commit', async (honoCtx): Promise<TypedResponse<BitcoinReceiveCommitResponse | ApiErrorResponse>> => {
     try {
-      const input = ReceiveCommitSchema.parse(await honoCtx.req.json());
+      const input: ReceiveCommitBody = ReceiveCommitSchema.parse(await honoCtx.req.json());
 
       const account = honoCtx.get('account');
 
