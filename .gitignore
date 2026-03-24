@@ -45,7 +45,7 @@ testem.log
 /typings
 
 # Scripts secrets (deployer private keys)
-scripts/.deployer-account.json
+.deployer-account.json
 
 # Environment secrets (per-network)
 *.secret
