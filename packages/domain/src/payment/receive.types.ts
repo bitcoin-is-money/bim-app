@@ -1,4 +1,4 @@
-import type {StarknetCall} from '../ports/starknet.gateway';
+import type {StarknetCall} from '../ports';
 import type {Amount, BitcoinAddress, StarknetAddress} from '../shared';
 import type {LightningInvoice, SwapId} from '../swap';
 import type {PaymentNetwork} from './types';

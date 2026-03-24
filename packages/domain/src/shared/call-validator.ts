@@ -1,4 +1,4 @@
-import type {StarknetCall} from '../ports/starknet.gateway';
+import type {StarknetCall} from '../ports';
 import {UnsafeExternalCallError} from './errors';
 
 /**
