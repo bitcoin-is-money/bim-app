@@ -5,8 +5,8 @@ import {Hono} from 'hono';
 import type {AppContext} from '../../../app-context';
 import {type ApiErrorResponse, handleDomainError} from '../../../errors';
 import type {AuthenticatedHono} from '../../../types.js';
-import {GetTransactionsQuerySchema, SetDescriptionSchema} from './transaction.schemas';
-import type {DeleteDescriptionResponse, GetTransactionsResponse, SetDescriptionResponse} from './transaction.types';
+import {GetTransactionsQuerySchema, SetDescriptionSchema} from './transaction.types';
+import type {DeleteDescriptionResponse, GetTransactionsQuery, GetTransactionsResponse, SetDescriptionBody, SetDescriptionResponse} from './transaction.types';
 
 // =============================================================================
 // Routes
@@ -27,7 +27,7 @@ export function createTransactionRoutes(appContext: AppContext): AuthenticatedHo
     try {
       const account: Account = honoCtx.get('account');
 
-      const {limit, offset} = GetTransactionsQuerySchema.parse({
+      const {limit, offset}: GetTransactionsQuery = GetTransactionsQuerySchema.parse({
         limit: honoCtx.req.query('limit'),
         offset: honoCtx.req.query('offset'),
       });
@@ -69,7 +69,7 @@ export function createTransactionRoutes(appContext: AppContext): AuthenticatedHo
     try {
       const account: Account = honoCtx.get('account');
       const transactionHash = honoCtx.req.param('transactionHash');
-      const {description} = SetDescriptionSchema.parse(await honoCtx.req.json());
+      const {description}: SetDescriptionBody = SetDescriptionSchema.parse(await honoCtx.req.json());
 
       await transactionService.setDescription({
         accountId: account.id,

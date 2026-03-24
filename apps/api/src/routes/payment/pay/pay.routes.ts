@@ -8,8 +8,16 @@ import type {AppContext} from '../../../app-context';
 import {type ApiErrorResponse, createErrorResponse, ErrorCode, handleDomainError} from '../../../errors';
 import type {AuthenticatedHono} from '../../../types';
 import {PaymentBuildCache} from './payment-build.cache';
-import {BuildPaymentSchema, ExecuteSignedPaymentSchema, ParsePaymentSchema} from './pay.schemas';
-import type {AmountResponse, BuildPaymentResponse, PaymentResultResponse, PreparedPaymentResponse} from './pay.types';
+import {BuildPaymentSchema, ExecuteSignedPaymentSchema, ParsePaymentSchema} from './pay.types';
+import type {
+  AmountResponse,
+  BuildPaymentBody,
+  BuildPaymentResponse,
+  ExecuteSignedPaymentBody,
+  ParsePaymentBody,
+  PaymentResultResponse,
+  PreparedPaymentResponse,
+} from './pay.types';
 
 // =============================================================================
 // Routes
@@ -31,7 +39,7 @@ export function createPayRoutes(appContext: AppContext): AuthenticatedHono {
 
   app.post('/parse', async (honoCtx): Promise<TypedResponse<PreparedPaymentResponse | ApiErrorResponse>> => {
     try {
-      const {paymentPayload} = ParsePaymentSchema.parse(await honoCtx.req.json());
+      const {paymentPayload}: ParsePaymentBody = ParsePaymentSchema.parse(await honoCtx.req.json());
 
       const prepared = await payService.prepare(paymentPayload);
 
@@ -48,7 +56,7 @@ export function createPayRoutes(appContext: AppContext): AuthenticatedHono {
 
   app.post('/build', async (honoCtx): Promise<TypedResponse<BuildPaymentResponse | ApiErrorResponse>> => {
     try {
-      const input = BuildPaymentSchema.parse(await honoCtx.req.json());
+      const input: BuildPaymentBody = BuildPaymentSchema.parse(await honoCtx.req.json());
 
       const account = honoCtx.get('account');
       const senderAddress = account.getStarknetAddress();
@@ -107,7 +115,7 @@ export function createPayRoutes(appContext: AppContext): AuthenticatedHono {
 
   app.post('/execute', async (honoCtx): Promise<TypedResponse<PaymentResultResponse | ApiErrorResponse>> => {
     try {
-      const input = ExecuteSignedPaymentSchema.parse(await honoCtx.req.json());
+      const input: ExecuteSignedPaymentBody = ExecuteSignedPaymentSchema.parse(await honoCtx.req.json());
 
       const account = honoCtx.get('account');
 

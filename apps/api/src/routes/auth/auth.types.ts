@@ -1,7 +1,55 @@
+import {Username} from '@bim/domain/account';
+import {z} from 'zod';
 
-/**
- * API response type from /api/auth/register/begin
- */
+export const usernameSchema = z
+  .string()
+  .regex(
+    Username.PATTERN,
+    'Username must be 3-20 characters, alphanumeric and underscores only',
+  );
+
+export const BeginRegistrationSchema = z.object({
+  username: usernameSchema,
+});
+
+export const CompleteRegistrationSchema = z.object({
+  challengeId: z.uuid(),
+  accountId: z.uuid(),
+  username: usernameSchema,
+  credential: z.object({
+    id: z.string(),
+    rawId: z.string(),
+    response: z.object({
+      clientDataJSON: z.string(),
+      attestationObject: z.string(),
+    }),
+    type: z.literal('public-key'),
+  }),
+});
+
+export const CompleteAuthenticationSchema = z.object({
+  challengeId: z.uuid(),
+  credential: z.object({
+    id: z.string(),
+    rawId: z.string(),
+    response: z.object({
+      clientDataJSON: z.string(),
+      authenticatorData: z.string(),
+      signature: z.string(),
+      userHandle: z.string().optional(),
+    }),
+    type: z.literal('public-key'),
+  }),
+});
+
+/** Validated body for POST /api/auth/register/begin */
+export type BeginRegistrationBody = z.infer<typeof BeginRegistrationSchema>;
+/** Validated body for POST /api/auth/register/complete */
+export type CompleteRegistrationBody = z.infer<typeof CompleteRegistrationSchema>;
+/** Validated body for POST /api/auth/login/complete */
+export type CompleteAuthenticationBody = z.infer<typeof CompleteAuthenticationSchema>;
+
+/** API response from POST /api/auth/register/begin */
 export interface BeginRegistrationResponse {
   options: {
     challenge: string;
@@ -12,12 +60,10 @@ export interface BeginRegistrationResponse {
     timeoutMs: number;
   };
   challengeId: string;
-  accountId: string; // Pre-generated account ID - must be passed to completeRegistration
+  accountId: string;
 }
 
-/**
- * API response type from /api/auth/register/complete
- */
+/** API response from POST /api/auth/register/complete */
 export interface CompleteRegistrationResponse {
   account: {
     id: string;
@@ -27,9 +73,7 @@ export interface CompleteRegistrationResponse {
   };
 }
 
-/**
- * API response type from /api/auth/login/begin
- */
+/** API response from POST /api/auth/login/begin */
 export interface BeginAuthenticationResponse {
   options: {
     challenge: string;
@@ -44,15 +88,10 @@ export interface BeginAuthenticationResponse {
   challengeId: string;
 }
 
-/**
- * API response type from /api/auth/login/complete
- * (same as registration)
- */
+/** API response from POST /api/auth/login/complete (same as registration) */
 export type CompleteAuthenticationResponse = CompleteRegistrationResponse;
 
-/**
- * API response type from GET /api/auth/session (authenticated)
- */
+/** API response from GET /api/auth/session (authenticated) */
 export interface SessionAuthenticatedResponse {
   authenticated: true;
   account: {
@@ -63,18 +102,15 @@ export interface SessionAuthenticatedResponse {
   };
 }
 
-/**
- * API response type from GET /api/auth/session (not authenticated)
- */
+/** API response from GET /api/auth/session (not authenticated) */
 export interface SessionUnauthenticatedResponse {
   authenticated: false;
 }
 
+/** API response from GET /api/auth/session */
 export type SessionResponse = SessionAuthenticatedResponse | SessionUnauthenticatedResponse;
 
-/**
- * API response type from POST /api/auth/logout
- */
+/** API response from POST /api/auth/logout */
 export interface LogoutResponse {
   success: true;
 }

@@ -5,11 +5,18 @@ import {Hono} from 'hono';
 import type {AppContext} from '../../app-context';
 import {type ApiErrorResponse, handleDomainError} from '../../errors';
 import {clearSessionCookie, setSessionCookie} from '../../middleware/session-cookie';
-import {BeginRegistrationSchema, CompleteAuthenticationSchema, CompleteRegistrationSchema} from './auth.schemas';
+import {
+  BeginRegistrationSchema,
+  CompleteAuthenticationSchema,
+  CompleteRegistrationSchema,
+} from './auth.types';
 import type {
   BeginAuthenticationResponse,
+  BeginRegistrationBody,
   BeginRegistrationResponse,
+  CompleteAuthenticationBody,
   CompleteAuthenticationResponse,
+  CompleteRegistrationBody,
   CompleteRegistrationResponse,
   LogoutResponse,
   SessionResponse,
@@ -33,7 +40,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
 
   app.post('/register/begin', async (honoCtx): Promise<TypedResponse<BeginRegistrationResponse | ApiErrorResponse>> => {
     try {
-      const input = BeginRegistrationSchema.parse(await honoCtx.req.json());
+      const input: BeginRegistrationBody = BeginRegistrationSchema.parse(await honoCtx.req.json());
 
       const result = await authService.beginRegistration({
         username: input.username,
@@ -51,7 +58,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
 
   app.post('/register/complete', async (honoCtx): Promise<TypedResponse<CompleteRegistrationResponse | ApiErrorResponse>> => {
     try {
-      const input = CompleteRegistrationSchema.parse(await honoCtx.req.json());
+      const input: CompleteRegistrationBody = CompleteRegistrationSchema.parse(await honoCtx.req.json());
 
       const result = await authService.completeRegistration({
         challengeId: input.challengeId,
@@ -96,7 +103,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
 
   app.post('/login/complete', async (honoCtx): Promise<TypedResponse<CompleteAuthenticationResponse | ApiErrorResponse>> => {
     try {
-      const input = CompleteAuthenticationSchema.parse(await honoCtx.req.json());
+      const input: CompleteAuthenticationBody = CompleteAuthenticationSchema.parse(await honoCtx.req.json());
 
       const {userHandle, ...response} = input.credential.response;
       const result = await authService.completeAuthentication({

@@ -1,7 +1,3 @@
-// =============================================================================
-// Lightning Decoder
-// =============================================================================
-
 /**
  * Port for decoding BOLT11 Lightning invoices.
  *
@@ -22,10 +18,6 @@ export interface DecodedLightningInvoice {
   /** Expiration date of the invoice, if applicable. */
   expiresAt?: Date;
 }
-
-// =============================================================================
-// Transaction Manager
-// =============================================================================
 
 /**
  * Infrastructure port for executing operations within a database transaction.

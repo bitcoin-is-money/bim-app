@@ -2,10 +2,6 @@ import type {FiatCurrency} from '../currency';
 import type {BitcoinAddress, StarknetAddress} from '../shared';
 import type {LightningInvoice, SwapDirection, SwapId, SwapLimits} from '../swap';
 
-// =============================================================================
-// Starknet Gateway
-// =============================================================================
-
 /**
  * Gateway interface for Starknet blockchain interactions.
  */
@@ -59,10 +55,6 @@ export interface StarknetGateway {
   }): Promise<{txHash: string}>;
 }
 
-// =============================================================================
-// Starknet Types
-// =============================================================================
-
 /**
  * Generic Starknet contract call.
  * Compatible with ERC-20 transfer calls and any other entrypoint.
@@ -98,10 +90,6 @@ export interface TransactionReceipt {
   blockNumber?: number;
   blockHash?: string;
 }
-
-// =============================================================================
-// Paymaster Gateway
-// =============================================================================
 
 /**
  * Gateway interface for AVNU Paymaster interactions (gasless transactions).
@@ -164,16 +152,10 @@ export interface PaymasterTransaction {
   gasToken?: string;
 }
 
-// =============================================================================
-// Atomiq Gateway
-// =============================================================================
-
 /**
  * Gateway interface for Atomiq SDK interactions (cross-chain swaps).
  */
 export interface AtomiqGateway {
-  // ---- Swap Creation ----
-
   /** Creates a Lightning -> Starknet swap. */
   createLightningToStarknetSwap(params: {
     amountSats: bigint;
@@ -211,8 +193,6 @@ export interface AtomiqGateway {
     sourceAddress: StarknetAddress;
   }): Promise<AtomiqReverseSwapResult>;
 
-  // ---- Swap Limits ----
-
   /** Gets limits for Lightning -> Starknet swaps. */
   getLightningToStarknetLimits(): Promise<SwapLimits>;
 
@@ -224,8 +204,6 @@ export interface AtomiqGateway {
 
   /** Gets limits for Starknet -> Bitcoin swaps. */
   getStarknetToBitcoinLimits(): Promise<SwapLimits>;
-
-  // ---- Swap Monitoring ----
 
   /**
    * Gets the current status of a swap from Atomiq.
@@ -283,10 +261,6 @@ export interface BitcoinSwapCommitResult {
   bip21Uri: string;
 }
 
-// =============================================================================
-// Swap Gateway
-// =============================================================================
-
 /**
  * Gateway for token swap operations (e.g., AVNU DEX aggregator).
  */
@@ -312,10 +286,6 @@ export interface SwapGateway {
   }>;
 }
 
-// =============================================================================
-// Price Gateway
-// =============================================================================
-
 /**
  * Gateway interface for fetching cryptocurrency prices.
  */
@@ -323,10 +293,6 @@ export interface PriceGateway {
   /** Fetches BTC price in the given fiat currencies. Returns a map of currency -> price. */
   getBtcPrices(currencies: FiatCurrency[]): Promise<Map<FiatCurrency, number>>;
 }
-
-// =============================================================================
-// WebAuthn Gateway
-// =============================================================================
 
 /**
  * Gateway interface for WebAuthn verification operations.

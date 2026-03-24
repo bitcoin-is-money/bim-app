@@ -1,8 +1,4 @@
-
-// =============================================================================
-// GET /api/health
-// =============================================================================
-
+/** API response from GET /api/health */
 export interface HealthCheckResponse {
   status: 'healthy' | 'degraded';
   timestamp: string;
@@ -11,18 +7,12 @@ export interface HealthCheckResponse {
   };
 }
 
-// =============================================================================
-// GET /api/health/ready
-// =============================================================================
-
+/** API response from GET /api/health/ready */
 export interface ReadyResponse {
   ready: boolean;
 }
 
-// =============================================================================
-// GET /api/health/live
-// =============================================================================
-
+/** API response from GET /api/health/live */
 export interface LiveResponse {
   live: boolean;
 }

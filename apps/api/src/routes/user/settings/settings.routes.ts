@@ -7,8 +7,8 @@ import {Hono} from 'hono';
 import type {AppContext} from '../../../app-context';
 import {type ApiErrorResponse, handleDomainError} from '../../../errors';
 import type {AuthenticatedHono} from '../../../types.js';
-import {UpdateSettingsSchema} from './settings.schemas';
-import type {GetSettingsResponse, UpdateSettingsResponse} from './settings.types';
+import {UpdateSettingsSchema} from './settings.types';
+import type {GetSettingsResponse, UpdateSettingsBody, UpdateSettingsResponse} from './settings.types';
 
 // =============================================================================
 // Routes
@@ -48,7 +48,7 @@ export function createSettingsRoutes(appContext: AppContext): AuthenticatedHono 
   app.put('/', async (honoCtx): Promise<TypedResponse<UpdateSettingsResponse | ApiErrorResponse>> => {
     try {
       const account: Account = honoCtx.get('account');
-      const body = UpdateSettingsSchema.parse(await honoCtx.req.json());
+      const body: UpdateSettingsBody = UpdateSettingsSchema.parse(await honoCtx.req.json());
 
       const result = await userSettingsService.update({
         accountId: account.id,
