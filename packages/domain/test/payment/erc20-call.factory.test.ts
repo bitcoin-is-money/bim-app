@@ -1,6 +1,5 @@
 import {StarknetAddress} from '@bim/domain/account';
-import type {FeeConfig} from '@bim/domain/payment';
-import {Erc20CallFactory} from '@bim/domain/payment';
+import {Erc20CallFactory, FeeConfig} from '@bim/domain/payment';
 import {Amount} from '@bim/domain/shared';
 import {describe, expect, it} from 'vitest';
 
@@ -8,10 +7,10 @@ const ETH_TOKEN_ADDRESS = '0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b156
 const RECIPIENT_ADDRESS = '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
 const TREASURY_ADDRESS = StarknetAddress.of('0x027367ddd36d7efc4694e1af5742f8d26626369c07abf15d136ff422b9a40fa0');
 
-const feeConfig: FeeConfig = {
+const feeConfig = FeeConfig.create({
   percentage: 0.001, // 0.1%
   recipientAddress: TREASURY_ADDRESS,
-};
+});
 
 describe('Erc20CallFactory', () => {
   const factory = new Erc20CallFactory(feeConfig);

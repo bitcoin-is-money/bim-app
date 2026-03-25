@@ -1,6 +1,5 @@
 import {Amount, type StarknetAddress} from '../shared';
-import type {FeeConfig} from './fee';
-import {FeeCalculator} from './fee';
+import {FeeCalculator, FeeConfig} from './fee';
 
 /**
  * Represents a Starknet ERC-20 transfer call.

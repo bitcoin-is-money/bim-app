@@ -84,10 +84,10 @@ function createMockBitcoinPaySwap(): Swap {
 // Shared Setup
 // =============================================================================
 
-const feeConfig: FeeConfig = {
+const feeConfig = FeeConfig.create({
   percentage: FeeConfig.DEFAULT_PERCENTAGE,
   recipientAddress: TREASURY_ADDRESS,
-};
+});
 
 const mockParseService = {
   parse: vi.fn(),
