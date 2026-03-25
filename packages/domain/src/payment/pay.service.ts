@@ -157,9 +157,9 @@ export class PayService {
       calls: [...swapResult.commitCalls, ...feeCalls],
       amount: swapResult.amount,
       feeAmount,
-      swapId: swapResult.swap.id,
+      swapId: swapResult.swap.data.id,
       invoice: parsed.invoice,
-      expiresAt: swapResult.swap.expiresAt,
+      expiresAt: swapResult.swap.data.expiresAt,
     };
   }
 
@@ -192,9 +192,9 @@ export class PayService {
       calls: [...swapResult.commitCalls, ...feeCalls],
       amount: parsed.amount,
       feeAmount,
-      swapId: swapResult.swap.id,
+      swapId: swapResult.swap.data.id,
       destinationAddress: parsed.address,
-      expiresAt: swapResult.swap.expiresAt,
+      expiresAt: swapResult.swap.data.expiresAt,
     };
   }
 

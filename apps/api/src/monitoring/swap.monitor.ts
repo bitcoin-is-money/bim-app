@@ -83,8 +83,8 @@ export class SwapMonitor {
           // pending → paid → completed, or expired/failed.
           // For forward swaps, the LP/watchtower claims cooperatively —
           // no active claiming needed from BIM (no Starknet signer).
-          const {status} = await this.swapService.fetchStatus({swapId: swap.id, accountId: swap.accountId});
-          this.log.debug({swapId: swap.id, status}, `Swap status`);
+          const {status} = await this.swapService.fetchStatus({swapId: swap.data.id, accountId: swap.data.accountId});
+          this.log.debug({swapId: swap.data.id, status}, `Swap status`);
         } catch (err) {
           // Individual swap errors are non-fatal — continue with the next swap
           this.log.warn({

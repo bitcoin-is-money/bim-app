@@ -2,10 +2,6 @@ import type {Amount, BitcoinAddress, StarknetAddress} from '../shared';
 import {ValidationError} from '../shared';
 import type {LightningInvoice} from './lightning-invoice';
 
-// =============================================================================
-// Branded Types
-// =============================================================================
-
 /**
  * Unique identifier for a Swap.
  */
@@ -24,10 +20,7 @@ export namespace SwapId {
   }
 }
 
-// =============================================================================
-// Swap Direction
-// =============================================================================
-
+/** All supported swap directions. */
 export type SwapDirection =
   | 'lightning_to_starknet'
   | 'bitcoin_to_starknet'
@@ -42,24 +35,18 @@ export function isReverseSwap(direction: SwapDirection): boolean {
   return direction === 'starknet_to_lightning' || direction === 'starknet_to_bitcoin';
 }
 
-// =============================================================================
-// Swap Status
-// =============================================================================
-
+/** Lifecycle status of a swap. */
 export type SwapStatus =
-  | 'pending'         // Swap created, waiting for payment
-  | 'paid'            // Payment received (forward) or deposit detected (reverse)
-  | 'confirming'      // Transaction submitted, waiting for confirmation
-  | 'completed'       // Swap successfully completed
-  | 'expired'         // Swap expired without completion
-  | 'refunded'        // Security deposit automatically refunded after expiry
-  | 'failed'          // Swap failed due to an error
-  | 'lost';           // Swap lost from SDK storage (e.g. after container restart)
+  | 'pending'
+  | 'paid'
+  | 'confirming'
+  | 'completed'
+  | 'expired'
+  | 'refunded'
+  | 'failed'
+  | 'lost';
 
-// =============================================================================
-// Swap State (Discriminated Union)
-// =============================================================================
-
+/** Discriminated union encoding the full swap state (status + associated data). */
 export type SwapState =
   | { status: 'pending' }
   | { status: 'paid'; paidAt: Date }
@@ -70,56 +57,48 @@ export type SwapState =
   | { status: 'failed'; error: string; failedAt: Date }
   | { status: 'lost'; lostAt: Date };
 
-// =============================================================================
-// Swap Creation Params
-// =============================================================================
-
-export interface CreateLightningToStarknetParams {
-  id: SwapId;
-  amount: Amount;
-  destinationAddress: StarknetAddress;
-  invoice: string;
-  expiresAt: Date;
-  description: string;
-  accountId: string;
+/** Fields common to all swap directions. */
+export interface SwapBase {
+  readonly id: SwapId;
+  readonly amount: Amount;
+  readonly expiresAt: Date;
+  readonly createdAt: Date;
+  readonly description: string;
+  readonly accountId: string;
 }
 
-export interface CreateBitcoinToStarknetParams {
-  id: SwapId;
-  amount: Amount;
-  destinationAddress: StarknetAddress;
-  depositAddress: string;
-  expiresAt: Date;
-  description: string;
-  accountId: string;
-}
+/**
+ * Discriminated union of swap data per direction.
+ * Each variant carries only the fields relevant to its direction,
+ * ensuring compile-time safety (no `string | undefined` ambiguity).
+ */
+export type SwapData = SwapBase & (
+  | {
+      readonly direction: 'lightning_to_starknet';
+      readonly destinationAddress: StarknetAddress;
+      readonly invoice: string;
+    }
+  | {
+      readonly direction: 'bitcoin_to_starknet';
+      readonly destinationAddress: StarknetAddress;
+      readonly depositAddress: string;
+    }
+  | {
+      readonly direction: 'starknet_to_lightning';
+      readonly sourceAddress: StarknetAddress;
+      readonly destinationAddress: string;
+      readonly invoice: LightningInvoice;
+      readonly depositAddress: string;
+    }
+  | {
+      readonly direction: 'starknet_to_bitcoin';
+      readonly sourceAddress: StarknetAddress;
+      readonly destinationAddress: BitcoinAddress;
+      readonly depositAddress: string;
+    }
+);
 
-export interface CreateStarknetToLightningParams {
-  id: SwapId;
-  amount: Amount;
-  sourceAddress: StarknetAddress;
-  invoice: LightningInvoice;
-  depositAddress: string;
-  expiresAt: Date;
-  description: string;
-  accountId: string;
-}
-
-export interface CreateStarknetToBitcoinParams {
-  id: SwapId;
-  amount: Amount;
-  sourceAddress: StarknetAddress;
-  destinationAddress: BitcoinAddress;
-  depositAddress: string;
-  expiresAt: Date;
-  description: string;
-  accountId: string;
-}
-
-// =============================================================================
-// Swap Limits
-// =============================================================================
-
+/** Swap limits returned by the Atomiq gateway. */
 export interface SwapLimits {
   minSats: bigint;
   maxSats: bigint;

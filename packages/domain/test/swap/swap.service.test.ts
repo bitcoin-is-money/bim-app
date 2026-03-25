@@ -133,7 +133,7 @@ describe('SwapService', () => {
         isRefunded: false,
       });
 
-      const result = await service.fetchStatus({swapId: swap.id, accountId: ACCOUNT_ID});
+      const result = await service.fetchStatus({swapId: swap.data.id, accountId: ACCOUNT_ID});
 
       // ...but deposit is confirmed, so it should be paid, not expired
       expect(result.status).toBe('paid');
@@ -153,7 +153,7 @@ describe('SwapService', () => {
         isRefunded: false,
       });
 
-      const result = await service.fetchStatus({swapId: swap.id, accountId: ACCOUNT_ID});
+      const result = await service.fetchStatus({swapId: swap.data.id, accountId: ACCOUNT_ID});
 
       expect(result.status).toBe('expired');
       expect(repository.save).toHaveBeenCalled();
@@ -172,7 +172,7 @@ describe('SwapService', () => {
         isRefunded: false,
       });
 
-      const result = await service.fetchStatus({swapId: swap.id, accountId: ACCOUNT_ID});
+      const result = await service.fetchStatus({swapId: swap.data.id, accountId: ACCOUNT_ID});
 
       expect(result.status).toBe('expired');
     });
@@ -195,7 +195,7 @@ describe('SwapService', () => {
         isRefunded: false,
       });
 
-      const result = await service.fetchStatus({swapId: swap.id, accountId: ACCOUNT_ID});
+      const result = await service.fetchStatus({swapId: swap.data.id, accountId: ACCOUNT_ID});
 
       expect(result.status).toBe('paid');
       expect(result.progress).toBe(33);
@@ -215,7 +215,7 @@ describe('SwapService', () => {
         txHash: '0xabc',
       });
 
-      const result = await service.fetchStatus({swapId: swap.id, accountId: ACCOUNT_ID});
+      const result = await service.fetchStatus({swapId: swap.data.id, accountId: ACCOUNT_ID});
       expect(result.status).toBe('completed');
       expect(result.progress).toBe(100);
       expect(result.txHash).toBe('0xabc');
@@ -234,7 +234,7 @@ describe('SwapService', () => {
         error: 'Network error',
       });
 
-      const result = await service.fetchStatus({swapId: swap.id, accountId: ACCOUNT_ID});
+      const result = await service.fetchStatus({swapId: swap.data.id, accountId: ACCOUNT_ID});
 
       expect(result.status).toBe('failed');
     });
@@ -246,7 +246,7 @@ describe('SwapService', () => {
       swap.markAsCompleted('0x123');
       vi.mocked(repository.findById).mockResolvedValue(swap);
 
-      await service.fetchStatus({swapId: swap.id, accountId: ACCOUNT_ID});
+      await service.fetchStatus({swapId: swap.data.id, accountId: ACCOUNT_ID});
 
       expect(gateway.getSwapStatus).not.toHaveBeenCalled();
     });
@@ -259,7 +259,7 @@ describe('SwapService', () => {
       vi.mocked(repository.findById).mockResolvedValue(swap);
       vi.mocked(gateway.getSwapStatus).mockRejectedValue(new Error('ETIMEDOUT'));
 
-      const result = await service.fetchStatus({swapId: swap.id, accountId: ACCOUNT_ID});
+      const result = await service.fetchStatus({swapId: swap.data.id, accountId: ACCOUNT_ID});
 
       // The swap must remain pending — not lost or expired
       expect(result.status).toBe('pending');
@@ -271,7 +271,7 @@ describe('SwapService', () => {
       vi.mocked(repository.findById).mockResolvedValue(swap);
       vi.mocked(gateway.getSwapStatus).mockRejectedValue(new Error('Network error'));
 
-      const result = await service.fetchStatus({swapId: swap.id, accountId: ACCOUNT_ID});
+      const result = await service.fetchStatus({swapId: swap.data.id, accountId: ACCOUNT_ID});
 
       expect(result.status).toBe('pending');
     });

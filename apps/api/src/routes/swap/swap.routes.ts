@@ -55,14 +55,14 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
       const result = await swapService.fetchStatus({swapId, accountId: account.id});
 
       return honoCtx.json<SwapStatusResponse>({
-        swapId: result.swap.id,
-        direction: result.swap.direction,
+        swapId: result.swap.data.id,
+        direction: result.swap.data.direction,
         status: result.status,
         progress: result.progress,
         txHash: result.txHash,
-        amountSats: result.swap.amount.toSatString(),
-        destinationAddress: result.swap.destinationAddress,
-        expiresAt: result.swap.expiresAt.toISOString(),
+        amountSats: result.swap.data.amount.toSatString(),
+        destinationAddress: result.swap.data.destinationAddress,
+        expiresAt: result.swap.data.expiresAt.toISOString(),
       });
     } catch (error) {
       return handleDomainError(honoCtx, error, log);
