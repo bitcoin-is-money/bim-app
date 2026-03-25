@@ -217,6 +217,23 @@ export interface AtomiqGateway {
 
   /** Checks if a swap payment has been received. */
   isSwapPaid(swapId: SwapId): Promise<boolean>;
+
+  /**
+   * Claims a forward swap (Bitcoin/Lightning → Starknet) using a backend signer,
+   * then refunds the claimer bounty (STRK) to the user's account.
+   *
+   * The claim tx sends WBTC to the user and the bounty to the backend.
+   * The refund tx transfers the bounty from the backend back to the user.
+   */
+  claimForwardSwap(swapId: SwapId): Promise<ForwardSwapClaimResult>;
+}
+
+/** Result of claiming a forward swap and refunding the bounty. */
+export interface ForwardSwapClaimResult {
+  claimTxHash: string;
+  refundTxHash: string | undefined;
+  bountyAmount: bigint;
+  userAddress: string;
 }
 
 /** Result of creating a forward swap (Lightning/Bitcoin -> Starknet). */

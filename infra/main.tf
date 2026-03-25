@@ -103,8 +103,10 @@ resource "scaleway_container" "api" {
   )
 
   secret_environment_variables = {
-    DATABASE_URL = local.database_url
-    AVNU_API_KEY = var.avnu_api_key
+    DATABASE_URL         = local.database_url
+    AVNU_API_KEY         = var.avnu_api_key
+    CLAIMER_PRIVATE_KEY  = var.claimer_private_key
+    CLAIMER_ADDRESS      = var.claimer_address
   }
 
   timeouts {

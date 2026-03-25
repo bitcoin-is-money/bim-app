@@ -4,6 +4,7 @@ import {StarknetAddress} from '@bim/domain/account';
 import {SessionConfig} from '@bim/domain/auth';
 import {type StarknetConfig} from '@bim/domain/shared';
 import {StarknetNetwork} from '@bim/domain/shared';
+import type {ClaimerConfig} from '@bim/domain/swap';
 import {redactUrl} from '@bim/lib/url';
 import type {DatabaseConfig} from '@bim/db/database';
 import {getTableName} from 'drizzle-orm';
@@ -69,6 +70,11 @@ export namespace AppConfig {
       feeTreasuryAddress: StarknetAddress.of(required('FEE_TREASURY_ADDRESS')),
     };
 
+    const claimer: ClaimerConfig = {
+      privateKey: required('CLAIMER_PRIVATE_KEY'),
+      address: StarknetAddress.of(required('CLAIMER_ADDRESS')),
+    };
+
     return {
       appVersion: optional('APP_VERSION', 'dev'),
       port: Number.parseInt(optional('PORT', '8080'), 10),
@@ -92,7 +98,7 @@ export namespace AppConfig {
             : 'https://sepolia.api.avnu.fi'),
         knownTokenAddresses,
       },
-      atomiq: loadAtomiqConfig(required, optional, starknetNetwork, starknetRpcUrl, knownTokenAddresses),
+      atomiq: loadAtomiqConfig(required, optional, starknetNetwork, starknetRpcUrl, knownTokenAddresses, claimer),
       webauthn: {
         rpId: optional('WEBAUTHN_RP_ID', 'localhost'),
         rpName: optional('WEBAUTHN_RP_NAME', 'BIM'),
@@ -109,6 +115,7 @@ export namespace AppConfig {
     starknetNetwork: StarknetNetwork,
     starknetRpcUrl: string,
     knownTokenAddresses: readonly StarknetAddress[],
+    claimer: ClaimerConfig,
   ): AtomiqGatewayConfig {
     const storagePath = required('ATOMIQ_STORAGE_PATH');
     const autoCreateStorage = optional('ATOMIQ_AUTO_CREATE_STORAGE', 'false') === 'true';
@@ -145,6 +152,8 @@ export namespace AppConfig {
       swapToken,
       knownTokenAddresses,
       autoCreateStorage,
+      claimer,
+      strkTokenAddress: STRK_TOKEN_ADDRESS,
       ...(intermediaryUrl !== undefined && {intermediaryUrl}),
     };
   }
@@ -174,6 +183,10 @@ export namespace AppConfig {
         ...(config.database.startupRequiredTable !== undefined && {
           startupRequiredTable: getTableName(config.database.startupRequiredTable)
         })
+      },
+      atomiq: {
+        ...config.atomiq,
+        claimer: {...config.atomiq.claimer, privateKey: '***'},
       },
       avnuPaymaster: {
         ...config.avnuPaymaster,

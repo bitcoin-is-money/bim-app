@@ -35,8 +35,8 @@ describe('rate-limit middleware', () => {
       const res = await app.request(requestWithIp('/test', '1.2.3.4'));
 
       expect(res.status).toBe(200);
-      expect(res.headers.get('RateLimit-Limit')).toBe('100');
-      expect(res.headers.get('RateLimit-Remaining')).toBe('99');
+      expect(res.headers.get('RateLimit-Limit')).toBe('1000');
+      expect(res.headers.get('RateLimit-Remaining')).toBe('999');
     });
 
     it('returns 429 with error body when limit is exceeded', async () => {

@@ -10,15 +10,17 @@ import type {
   AtomiqSwapStatus,
   BitcoinSwapCommitResult,
   BitcoinSwapQuote,
+  ForwardSwapClaimResult,
   StarknetCall,
 } from '@bim/domain/ports';
 import {ExternalServiceError, type BitcoinNetwork as DomainBitcoinNetwork, validateExternalCalls} from "@bim/domain/shared";
-import type {SwapDirection, SwapLimits} from "@bim/domain/swap";
+import type {SwapDirection, SwapLimits, BitcoinAddress, LightningInvoice, SwapId,
+  ClaimerConfig
+} from "@bim/domain/swap";
 import {LightningInvoiceExpiredError} from "@bim/domain/swap";
-import type {BitcoinAddress, LightningInvoice, SwapId} from '@bim/domain/swap';
 import {existsSync, mkdirSync} from 'node:fs';
-
 import type {Logger} from "pino";
+import {Account as StarknetAccount, RpcProvider, Signer as StarknetSigner} from 'starknet';
 
 /* eslint-disable
    @typescript-eslint/no-unsafe-assignment,
@@ -50,6 +52,10 @@ export interface AtomiqGatewayConfig {
   swapToken: string;
   /** Token contract addresses known to the system, used to validate external calls */
   knownTokenAddresses: readonly StarknetAddress[];
+  /** Backend account for auto-claiming forward swaps */
+  claimer: ClaimerConfig;
+  /** STRK token address for bounty refund transfers */
+  strkTokenAddress: string;
 }
 
 type StarknetChainInitializers = readonly [StarknetInitializerType];
@@ -65,12 +71,18 @@ export class AtomiqSdkGateway implements AtomiqGateway {
   private swapper: TypedSwapper<StarknetChainInitializers> | null = null;
   private isInitialized = false;
   private readonly log: Logger;
+  private readonly claimerAccount: StarknetAccount;
 
   constructor(
     private readonly config: AtomiqGatewayConfig,
     rootLogger: Logger,
   ) {
     this.log = rootLogger.child({name: 'atomiq.gateway.ts'});
+    this.claimerAccount = new StarknetAccount({
+      provider: new RpcProvider({nodeUrl: this.config.starknetRpcUrl}),
+      address: this.config.claimer.address,
+      signer: new StarknetSigner(this.config.claimer.privateKey),
+    });
   }
 
   // ===========================================================================
@@ -721,6 +733,83 @@ export class AtomiqSdkGateway implements AtomiqGateway {
   async isSwapPaid(swapId: SwapId): Promise<boolean> {
     const status = await this.getSwapStatus(swapId);
     return status.isPaid;
+  }
+
+  // ===========================================================================
+  // Forward Swap Claiming
+  // ===========================================================================
+
+  async claimForwardSwap(swapId: SwapId): Promise<ForwardSwapClaimResult> {
+    this.log.info({swapId}, 'Claiming forward swap with backend account');
+    await this.ensureInitialized();
+
+    const swap = await this.getSwapObject(swapId);
+    const bountyAmount: bigint = swap._data.getClaimerBounty();
+    const userAddress: string = swap._data.getClaimer();
+
+    // 1. Claim — sends WBTC to user, bounty to backend
+    let claimTxHash: string;
+    try {
+      claimTxHash = await swap.claim(this.claimerAccount);
+      this.log.info({swapId, claimTxHash}, 'Forward swap claimed successfully');
+    } catch (error) {
+      // If the swap was already claimed (by watchtower), the SDK detects it
+      const state: number = swap.getState();
+      if (state >= 3) {
+        claimTxHash = swap.getOutputTxId() ?? 'unknown';
+        this.log.info({swapId, claimTxHash, state}, 'Swap already claimed (watchtower won the race)');
+        return {claimTxHash, refundTxHash: undefined, bountyAmount: 0n, userAddress};
+      }
+      throw new ExternalServiceError(
+        'Atomiq',
+        `Failed to claim forward swap ${swapId}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+
+    // 2. Refund bounty — transfer STRK from backend to user
+    if (bountyAmount === 0n) {
+      this.log.info({swapId}, 'No bounty to refund (amount is 0)');
+      return {claimTxHash, refundTxHash: undefined, bountyAmount, userAddress};
+    }
+
+    const refundTxHash = await this.refundBounty(swapId, userAddress, bountyAmount);
+    return {claimTxHash, refundTxHash, bountyAmount, userAddress};
+  }
+
+  private async refundBounty(
+    swapId: SwapId,
+    userAddress: string,
+    bountyAmount: bigint,
+  ): Promise<string | undefined> {
+    const low = `0x${(bountyAmount & ((1n << 128n) - 1n)).toString(16)}`;
+    const high = `0x${(bountyAmount >> 128n).toString(16)}`;
+
+    this.log.info({
+      swapId,
+      userAddress,
+      bountyAmount: bountyAmount.toString(),
+    }, 'Refunding claimer bounty to user');
+
+    try {
+      const {transaction_hash} = await this.claimerAccount.execute({
+        contractAddress: this.config.strkTokenAddress,
+        entrypoint: 'transfer',
+        calldata: [userAddress, low, high],
+      });
+
+      this.log.info({swapId, txHash: transaction_hash, bountyAmount: bountyAmount.toString()}, 'Bounty refunded to user');
+      return transaction_hash;
+    } catch (error) {
+      // TODO: send urgent email/Slack notification to BIM ops team to manually
+      // refund the user, either via BIM admin tools or an external monitoring app.
+      this.log.error({
+        swapId,
+        userAddress,
+        bountyAmount: bountyAmount.toString(),
+        cause: error instanceof Error ? error.message : String(error),
+      }, 'CRITICAL: Failed to refund bounty to user — manual refund required');
+      return undefined;
+    }
   }
 
   // ===========================================================================
