@@ -1,5 +1,6 @@
 import type {StarknetCall} from '../ports';
 import {UnsafeExternalCallError} from './errors';
+import type {StarknetAddress} from './starknet-address';
 
 /**
  * Entrypoints that can directly move tokens out of the user's account.
@@ -16,6 +17,14 @@ const FORBIDDEN_ENTRYPOINTS = new Set([
 ]);
 
 /**
+ * Normalizes a raw hex address to the same format as StarknetAddress (lowercase 0x + 64 hex chars).
+ * Needed because external services (AVNU, Atomiq) may return addresses without leading zeros.
+ */
+function normalizeAddress(addr: string): string {
+  return '0x' + addr.slice(2).padStart(64, '0').toLowerCase();
+}
+
+/**
  * Validates that calls from an external service do not contain dangerous operations.
  *
  * Two checks:
@@ -30,12 +39,12 @@ const FORBIDDEN_ENTRYPOINTS = new Set([
  */
 export function validateExternalCalls(
   calls: readonly StarknetCall[],
-  knownTokenAddresses: readonly string[],
+  knownTokenAddresses: readonly StarknetAddress[],
   serviceName: string,
 ): void {
-  const normalizedTokens = new Set(
-    knownTokenAddresses.map(addr => addr.toLowerCase()),
-  );
+  // StarknetAddress is already normalized (lowercase, 0x + 64 hex),
+  // so we can use it directly as a Set for O(1) lookup.
+  const knownTokens = new Set<string>(knownTokenAddresses);
 
   for (const call of calls) {
     const entrypoint = call.entrypoint.toLowerCase();
@@ -49,8 +58,10 @@ export function validateExternalCalls(
     }
 
     // 2. Approve calls must target a known token contract
+    // External services may return addresses with different zero-padding,
+    // so we normalize the call address before comparing.
     if (entrypoint === 'approve') {
-      if (!normalizedTokens.has(call.contractAddress.toLowerCase())) {
+      if (!knownTokens.has(normalizeAddress(call.contractAddress))) {
         throw new UnsafeExternalCallError(
           serviceName,
           `Approve call targets unknown contract ${call.contractAddress}`,

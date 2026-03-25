@@ -49,7 +49,7 @@ export interface AtomiqGatewayConfig {
   /** Token symbol used for swaps (e.g. 'WBTC') */
   swapToken: string;
   /** Token contract addresses known to the system, used to validate external calls */
-  knownTokenAddresses: readonly string[];
+  knownTokenAddresses: readonly StarknetAddress[];
 }
 
 type StarknetChainInitializers = readonly [StarknetInitializerType];

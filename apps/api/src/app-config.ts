@@ -53,7 +53,10 @@ export namespace AppConfig {
 
     const starknetRpcUrl = required('STARKNET_RPC_URL');
     const wbtcTokenAddress = required('WBTC_TOKEN_ADDRESS');
-    const knownTokenAddresses = [wbtcTokenAddress, STRK_TOKEN_ADDRESS];
+    const knownTokenAddresses = [
+      StarknetAddress.of(wbtcTokenAddress),
+      StarknetAddress.of(STRK_TOKEN_ADDRESS)
+    ];
     const authenticatorAttachment = parseAuthenticatorAttachment(process.env.WEBAUTHN_AUTHENTICATOR_ATTACHMENT);
 
     const starknet: StarknetConfig = {
@@ -105,7 +108,7 @@ export namespace AppConfig {
     optional: (name: string, defaultValue: string) => string,
     starknetNetwork: StarknetNetwork,
     starknetRpcUrl: string,
-    knownTokenAddresses: readonly string[],
+    knownTokenAddresses: readonly StarknetAddress[],
   ): AtomiqGatewayConfig {
     const storagePath = required('ATOMIQ_STORAGE_PATH');
     const autoCreateStorage = optional('ATOMIQ_AUTO_CREATE_STORAGE', 'false') === 'true';
