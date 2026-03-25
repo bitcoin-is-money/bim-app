@@ -22,11 +22,11 @@ function rateLimitedResponse(c: Context, message: string) {
   return c.json({error: {code: ErrorCode.RATE_LIMITED, message}} satisfies ApiErrorResponse, 429);
 }
 
-/** 100 requests per 15 minutes per IP — applied to all /api/* routes. */
+/** 1000 requests per 15 minutes per IP — applied to all /api/* routes. */
 export function createGlobalRateLimit() {
   return rateLimiter({
     windowMs: 15 * 60 * 1000,
-    limit: 100,
+    limit: 1000,
     keyGenerator: getClientIp,
     handler: (c) => rateLimitedResponse(c, 'Too many requests. Please try again later.'),
   });
