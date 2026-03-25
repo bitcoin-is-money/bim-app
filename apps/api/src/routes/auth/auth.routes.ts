@@ -4,6 +4,7 @@ import {Hono} from 'hono';
 
 import type {AppContext} from '../../app-context';
 import {type ApiErrorResponse, handleDomainError} from '../../errors';
+import {getSessionId} from '../../middleware/auth.middleware';
 import {clearSessionCookie, setSessionCookie} from '../../middleware/session-cookie';
 import {
   BeginRegistrationSchema,
@@ -187,15 +188,4 @@ export function createAuthRoutes(appContext: AppContext): Hono {
   return app;
 }
 
-// =============================================================================
-// Helpers
-// =============================================================================
-
-function getSessionId(honoCtx: {req: {header: (name: string) => string | undefined}}): string | undefined {
-  const cookie = honoCtx.req.header('Cookie');
-  if (!cookie) return undefined;
-
-  const match = /session=([^;]+)/.exec(cookie);
-  return match?.[1];
-}
 
