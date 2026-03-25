@@ -52,12 +52,31 @@ namespace AccountId {
 | Rule | Limit |
 |------|-------|
 | Function length | Max 50 lines |
-| File length | Max 200 lines |
+| File length | Max 200 lines (no limit for interface-grouping files like domain ports) |
 | Nesting depth | Max 3 levels, early returns preferred |
 | Parameters | >2 → each on own line |
 | File scope | One concern per file |
 | Generic code | Domain-agnostic → `packages/lib`, test utils → `@bim/test-toolkit` |
 | Deps interfaces | `Pick<Deps, ...>` when including fewer, `Omit<Deps, ...>` when excluding fewer. Never `& { ... }` to extend |
+
+## Comments
+
+Only two forms of comments are allowed:
+
+Single-line:
+```typescript
+/** Calculates the progress percentage (0-100). */
+```
+
+Multi-line:
+```typescript
+/**
+ * Explains something that needs
+ * more than one line.
+ */
+```
+
+No other comment styles (`//`, `/* */`, bare multi-line without `*` prefix).
 
 ## Field Access
 
