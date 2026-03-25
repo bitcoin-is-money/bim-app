@@ -63,12 +63,7 @@ namespace AccountId {
 
 Only two forms of comments are allowed:
 
-Single-line:
-```typescript
-/** Calculates the progress percentage (0-100). */
-```
-
-Multi-line:
+Single or multi-line JSDoc above classes/interfaces:
 ```typescript
 /**
  * Explains something that needs
@@ -76,7 +71,15 @@ Multi-line:
  */
 ```
 
-No other comment styles (`//`, `/* */`, bare multi-line without `*` prefix).
+Inline `//` inside a function body for complex context:
+```typescript
+function claim(swap: Swap): void {
+  // Atomiq requires the preimage before the timeout, otherwise funds are lost
+  sendPreimage(swap.preimage);
+}
+```
+
+No other comment styles (`/* */`, single-line `/** */`, bare multi-line without `*` prefix).
 
 ## Field Access
 
