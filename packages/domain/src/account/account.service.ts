@@ -1,7 +1,7 @@
 import type {Logger} from 'pino';
 import type {AccountRepository, PaymasterGateway, StarknetGateway} from '../ports';
 import {Account} from './account';
-import {STRKToken, STRKTokenBalance, WBTCToken, WBTCTokenBalance} from './balance';
+import {type STRKTokenBalance, STRKToken, type WBTCTokenBalance, WBTCToken, Token} from './balance';
 import {AccountAlreadyExistsError, AccountNotFoundError, InvalidAccountStateError} from './errors';
 import {AccountId, CredentialId} from './types';
 
@@ -104,7 +104,7 @@ export class AccountService {
       throw new AccountNotFoundError(input.accountId);
     }
 
-    // If the account is stuck in 'deploying' (e.g. server crashed before confirmation),
+    // If the account is stuck in 'deploying' (e.g., server crashed before confirmation),
     // try to resolve the pending deployment by checking the tx on-chain.
     if (account.getStatus() === 'deploying') {
       return this.recoverStuckDeployment(account);
@@ -175,8 +175,8 @@ export class AccountService {
 
     if (!account.isDeployed()) {
       return {
-        wbtcBalance: WBTCTokenBalance.zero(),
-        strkBalance: STRKTokenBalance.zero()
+        wbtcBalance: Token.zeroBalance(WBTCToken),
+        strkBalance: Token.zeroBalance(STRKToken)
       };
     }
 
@@ -218,7 +218,7 @@ export class AccountService {
   // ===========================================================================
 
   /**
-   * Recovers an account stuck in 'deploying' state (e.g. after a server crash).
+   * Recovers an account stuck in 'deploying' state (e.g., after a server crash).
    * Checks the pending tx on-chain: if confirmed → deployed, if rejected → failed.
    *
    * Typical scenario: user registers → calls deploy → server crashes mid-deploy

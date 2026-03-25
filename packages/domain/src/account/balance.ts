@@ -4,42 +4,25 @@ export const WBTCToken = {
   decimals: 8,
 } as const;
 
-export interface WBTCTokenBalance {
-  symbol: typeof WBTCToken['symbol'];
-  amount: string;
-  decimals: typeof WBTCToken['decimals'];
-}
-
-export namespace WBTCTokenBalance {
-
-  export function zero(): WBTCTokenBalance {
-    return {
-      symbol: WBTCToken.symbol,
-      amount: '0',
-      decimals: WBTCToken.decimals,
-    };
-  }
-}
-
 export const STRKToken = {
   symbol: 'STRK',
   decimals: 18,
 } as const;
 
-export interface STRKTokenBalance {
-  symbol: typeof STRKToken['symbol'];
+type Token = typeof WBTCToken | typeof STRKToken;
+
+export interface TokenBalance<T extends Token = Token> {
+  symbol: T['symbol'];
   amount: string;
-  decimals: typeof STRKToken['decimals'];
+  decimals: T['decimals'];
 }
 
-export namespace STRKTokenBalance {
+export type WBTCTokenBalance = TokenBalance<typeof WBTCToken>;
+export type STRKTokenBalance = TokenBalance<typeof STRKToken>;
 
-  export function zero(): STRKTokenBalance {
-    return {
-      symbol: STRKToken.symbol,
-      amount: '0',
-      decimals: STRKToken.decimals,
-    };
+export namespace Token {
+
+  export function zeroBalance<T extends Token>(token: T): TokenBalance<T> {
+    return {symbol: token.symbol, amount: '0', decimals: token.decimals};
   }
 }
-
