@@ -11,6 +11,7 @@ import {provideHotToastConfig} from '@ngxpert/hot-toast';
 import {environment} from '../environments/environment';
 import {registerIcons} from "../icons";
 import {routes} from './app.routes';
+import {authInterceptor} from './interceptor/auth.interceptor';
 import {httpNotificationInterceptor} from "./interceptor/http-notification.interceptor";
 import {backendInterceptor} from './mocks/backend.interceptor';
 import {AuthService} from './services/auth.service';
@@ -18,8 +19,8 @@ import {AuthService} from './services/auth.service';
 // Interceptors run in order: first intercepts request first, but catches errors last
 // So: httpNotificationInterceptor catches errors from backendInterceptor
 const httpProviders = environment.useMockBackend
-  ? provideHttpClient(withInterceptors([httpNotificationInterceptor, backendInterceptor]))
-  : provideHttpClient(withInterceptors([httpNotificationInterceptor]));
+  ? provideHttpClient(withInterceptors([authInterceptor, httpNotificationInterceptor, backendInterceptor]))
+  : provideHttpClient(withInterceptors([authInterceptor, httpNotificationInterceptor]));
 
 registerLocaleData(localeFr);
 
