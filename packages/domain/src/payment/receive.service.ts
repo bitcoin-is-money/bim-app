@@ -108,10 +108,10 @@ export class ReceiveService {
     });
 
     return {
-      swapId: result.swap.id,
+      swapId: result.swap.data.id,
       invoice: LightningInvoice.of(result.invoice),
       amount,
-      expiresAt: result.swap.expiresAt,
+      expiresAt: result.swap.data.expiresAt,
     };
   }
 
@@ -166,11 +166,11 @@ export class ReceiveService {
 
     return {
       network: 'bitcoin',
-      swapId: result.swap.id,
+      swapId: result.swap.data.id,
       depositAddress: BitcoinAddress.of(result.depositAddress, this.deps.starknetConfig.bitcoinNetwork),
       bip21Uri,
       amount: params.amount,
-      expiresAt: result.swap.expiresAt,
+      expiresAt: result.swap.data.expiresAt,
     };
   }
 }

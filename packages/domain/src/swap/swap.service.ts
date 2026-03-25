@@ -405,7 +405,7 @@ export class SwapService {
       throw new SwapNotFoundError(swapId);
     }
 
-    if (swap.accountId !== accountId) {
+    if (swap.data.accountId !== accountId) {
       throw new SwapOwnershipError(swapId);
     }
 
@@ -475,11 +475,11 @@ export class SwapService {
       try {
         await this.deps.transactionRepository.saveDescription(
           TransactionHash.of(txHash),
-          AccountId.of(swap.accountId),
-          swap.description,
+          AccountId.of(swap.data.accountId),
+          swap.data.description,
         );
       } catch {
-        this.log.warn({swapId: swap.id}, 'Failed to persist description for swap');
+        this.log.warn({swapId: swap.data.id}, 'Failed to persist description for swap');
       }
     }
   }
@@ -504,8 +504,8 @@ export class SwapService {
    */
   private async syncWithAtomiq(swap: Swap): Promise<void> {
     try {
-      const atomiqStatus = await this.deps.atomiqGateway.getSwapStatus(swap.id, swap.direction);
-      this.log.debug({atomiqStatus, direction: swap.direction}, 'Sync swap with Atomiq');
+      const atomiqStatus = await this.deps.atomiqGateway.getSwapStatus(swap.data.id, swap.data.direction);
+      this.log.debug({atomiqStatus, direction: swap.data.direction}, 'Sync swap with Atomiq');
 
       if (atomiqStatus.isCompleted) {
         // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- empty txHash should fallback
@@ -535,7 +535,7 @@ export class SwapService {
       }
     } catch (error) {
       this.log.warn({
-        swapId: swap.id,
+        swapId: swap.data.id,
         cause: error,
       }, 'Failed to sync swap with Atomiq');
     }

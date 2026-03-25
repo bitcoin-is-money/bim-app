@@ -1,8 +1,9 @@
 import * as schema from '@bim/db';
 import type {Database} from '@bim/db/database';
 import type {SwapRepository} from '@bim/domain/ports';
-import {Amount} from '@bim/domain/shared';
-import {Swap, type SwapDirection, SwapId, type SwapState, type SwapStatus} from '@bim/domain/swap';
+import {Amount, type BitcoinAddress, type StarknetAddress} from '@bim/domain/shared';
+import type {LightningInvoice} from '@bim/domain/swap';
+import {Swap, type SwapBase, type SwapData, type SwapDirection, SwapId, type SwapState, type SwapStatus} from '@bim/domain/swap';
 import {and, eq, lt, notInArray, or} from 'drizzle-orm';
 import {AbstractDrizzleRepository} from './abstract-drizzle.repository';
 
@@ -20,21 +21,22 @@ export class DrizzleSwapRepository extends AbstractDrizzleRepository implements 
 
   async save(swap: Swap): Promise<void> {
     const stateColumns = this.stateToColumns(swap.getState());
+    const d = swap.data;
 
     await this.resolveDb()
       .insert(schema.swaps)
       .values({
-        id: swap.id,
-        direction: swap.direction,
-        amountSats: swap.amount.getSat().toString(),
-        destinationAddress: swap.destinationAddress,
-        sourceAddress: swap.sourceAddress ?? null,
-        invoice: swap.invoice ?? null,
-        depositAddress: swap.depositAddress ?? null,
-        description: swap.description,
-        accountId: swap.accountId,
-        expiresAt: swap.expiresAt,
-        createdAt: swap.createdAt,
+        id: d.id,
+        direction: d.direction,
+        amountSats: d.amount.getSat().toString(),
+        destinationAddress: d.destinationAddress,
+        sourceAddress: 'sourceAddress' in d ? d.sourceAddress : null,
+        invoice: 'invoice' in d ? d.invoice : null,
+        depositAddress: 'depositAddress' in d ? d.depositAddress : null,
+        description: d.description,
+        accountId: d.accountId,
+        expiresAt: d.expiresAt,
+        createdAt: d.createdAt,
         ...stateColumns,
       })
       .onConflictDoUpdate({
@@ -176,19 +178,59 @@ export class DrizzleSwapRepository extends AbstractDrizzleRepository implements 
   /* eslint-enable @typescript-eslint/no-non-null-assertion */
 
   private toSwap(record: schema.SwapRecord): Swap {
-    return new Swap(
-      SwapId.of(record.id),
-      record.direction as SwapDirection,
-      Amount.ofSatoshi(BigInt(record.amountSats)),
-      record.destinationAddress,
-      record.sourceAddress ?? undefined,
-      record.invoice ?? undefined,
-      record.depositAddress ?? undefined,
-      record.expiresAt,
-      record.createdAt,
-      this.columnsToState(record),
-      record.description,
-      record.accountId,
-    );
+    const base = {
+      id: SwapId.of(record.id),
+      amount: Amount.ofSatoshi(BigInt(record.amountSats)),
+      expiresAt: record.expiresAt,
+      createdAt: record.createdAt,
+      description: record.description,
+      accountId: record.accountId,
+    };
+
+    const data = this.buildSwapData(record, base);
+    return new Swap(data, this.columnsToState(record));
   }
+
+  /* eslint-disable @typescript-eslint/no-non-null-assertion -- DB invariant: direction-specific columns are guaranteed non-null */
+  private buildSwapData(
+    record: schema.SwapRecord,
+    base: SwapBase,
+  ): SwapData {
+    switch (record.direction) {
+      case 'lightning_to_starknet':
+        return {
+          ...base,
+          direction: 'lightning_to_starknet',
+          destinationAddress: record.destinationAddress as StarknetAddress,
+          invoice: record.invoice!,
+        };
+      case 'bitcoin_to_starknet':
+        return {
+          ...base,
+          direction: 'bitcoin_to_starknet',
+          destinationAddress: record.destinationAddress as StarknetAddress,
+          depositAddress: record.depositAddress!,
+        };
+      case 'starknet_to_lightning':
+        return {
+          ...base,
+          direction: 'starknet_to_lightning',
+          sourceAddress: record.sourceAddress! as StarknetAddress,
+          destinationAddress: record.destinationAddress,
+          invoice: record.invoice! as LightningInvoice,
+          depositAddress: record.depositAddress!,
+        };
+      case 'starknet_to_bitcoin':
+        return {
+          ...base,
+          direction: 'starknet_to_bitcoin',
+          sourceAddress: record.sourceAddress! as StarknetAddress,
+          destinationAddress: record.destinationAddress as BitcoinAddress,
+          depositAddress: record.depositAddress!,
+        };
+      default:
+        throw new Error(`Unknown swap direction: ${record.direction}`);
+    }
+  }
+  /* eslint-enable @typescript-eslint/no-non-null-assertion */
 }
