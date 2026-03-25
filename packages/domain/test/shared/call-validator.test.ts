@@ -1,8 +1,8 @@
 import {describe, expect, it} from 'vitest';
-import {UnsafeExternalCallError, validateExternalCalls} from '../../src/shared/call-validator';
+import {StarknetAddress, UnsafeExternalCallError, validateExternalCalls} from '../../src/shared';
 
-const KNOWN_WBTC = '0x00abcdef1234567890abcdef1234567890abcdef1234567890abcdef12345678';
-const KNOWN_STRK = '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d';
+const KNOWN_WBTC = StarknetAddress.of('0x00abcdef1234567890abcdef1234567890abcdef1234567890abcdef12345678');
+const KNOWN_STRK = StarknetAddress.of('0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d');
 const KNOWN_TOKENS = [KNOWN_WBTC, KNOWN_STRK];
 const UNKNOWN_CONTRACT = '0x00deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef';
 
@@ -53,6 +53,19 @@ describe('validateExternalCalls', () => {
   it('matches token addresses case-insensitively', () => {
     const calls = [{contractAddress: KNOWN_WBTC.toUpperCase(), entrypoint: 'approve', calldata: ['0xspender', '100', '0']}];
     expect(() => validateExternalCalls(calls, KNOWN_TOKENS, 'TestService')).not.toThrow();
+  });
+
+  it('matches approve when call uses short form and known list uses padded form', () => {
+    const paddedWbtc = StarknetAddress.of('0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac');
+    const unpaddedWbtc = '0x3fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac';
+    const calls = [{contractAddress: unpaddedWbtc, entrypoint: 'approve', calldata: ['0xspender', '100', '0']}];
+    expect(() => validateExternalCalls(calls, [paddedWbtc, KNOWN_STRK], 'AVNU DEX')).not.toThrow();
+  });
+
+  it('matches approve when call uses padded form and known list uses padded form', () => {
+    const paddedWbtc = StarknetAddress.of('0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac');
+    const calls = [{contractAddress: paddedWbtc, entrypoint: 'approve', calldata: ['0xspender', '100', '0']}];
+    expect(() => validateExternalCalls(calls, [paddedWbtc, KNOWN_STRK], 'AVNU DEX')).not.toThrow();
   });
 
   // =========================================================================

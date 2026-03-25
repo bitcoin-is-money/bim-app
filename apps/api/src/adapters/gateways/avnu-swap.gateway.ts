@@ -1,5 +1,5 @@
 import type {SwapGateway, StarknetCall} from '@bim/domain/ports';
-import {ExternalServiceError, validateExternalCalls} from '@bim/domain/shared';
+import {ExternalServiceError, type StarknetAddress, validateExternalCalls} from '@bim/domain/shared';
 import type {Logger} from 'pino';
 
 /**
@@ -8,7 +8,7 @@ import type {Logger} from 'pino';
 export interface AvnuSwapConfig {
   baseUrl: string;
   /** Token contract addresses known to the system, used to validate external calls */
-  knownTokenAddresses: readonly string[];
+  knownTokenAddresses: readonly StarknetAddress[];
 }
 
 /**
