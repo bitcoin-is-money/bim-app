@@ -21,6 +21,25 @@ IMPORTANT:
 
 ---
 
+# Mandatory Skills
+
+IMPORTANT:
+Before writing any code to disk (Write, Edit), you MUST read the relevant skill(s) for the context:
+
+| Context | Skill to read |
+|---------|---------------|
+| Any TypeScript code (all packages) | `ts-rules` |
+| Domain layer (`packages/domain/`) | `domain-modeling` |
+| API routes (`apps/api/src/routes/`) | `api-routing` |
+| Angular frontend (`apps/front/`) | `angular-patterns` |
+| Tests (any `test/` or `*.test.ts`) | `testing-conventions` |
+
+- Multiple skills may apply simultaneously (e.g., writing a domain test requires both `ts-rules` and `testing-conventions`).
+- `ts-rules` applies to ALL TypeScript code generation without exception.
+- Read the skill ONCE per conversation, not before every edit. But if you haven't read it yet in this conversation, read it before your first code write.
+
+---
+
 # Project Architecture
 
 ## Overview
