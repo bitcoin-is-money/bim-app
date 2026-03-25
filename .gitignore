@@ -44,8 +44,10 @@ yarn-error.log
 testem.log
 /typings
 
-# Scripts secrets (deployer private keys)
+# Scripts secrets (admin account private keys)
 .deployer-account.json
+.account.testnet.json
+.account.mainnet.json
 
 # Environment secrets (per-network)
 *.secret

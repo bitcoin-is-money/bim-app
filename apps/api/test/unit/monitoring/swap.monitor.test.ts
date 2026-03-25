@@ -1,4 +1,5 @@
 import {StarknetAddress} from '@bim/domain/account';
+import type {AtomiqGateway} from '@bim/domain/ports';
 import {Amount} from '@bim/domain/shared';
 import {Swap, SwapId, type SwapService} from '@bim/domain/swap';
 import {createLogger} from '@bim/lib/logger';
@@ -6,7 +7,7 @@ import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {SwapMonitor} from '../../../src/monitoring/swap.monitor';
 
 const DESTINATION = StarknetAddress.of('0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef');
-const INVOICE = 'lntb1000n1pjtest0pp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypq';
+const INVOICE = 'lntb1000n1pjtest0pp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypq';
 
 function createLightningSwap(id: string): Swap {
   return Swap.createLightningToStarknet({
@@ -32,13 +33,21 @@ function createMockSwapService(): SwapService {
   } as unknown as SwapService;
 }
 
+function createMockAtomiqGateway(): AtomiqGateway {
+  return {
+    claimForwardSwap: vi.fn().mockResolvedValue('0xclaim_tx'),
+  } as unknown as AtomiqGateway;
+}
+
 describe('SwapMonitor', () => {
   let monitor: SwapMonitor;
   let swapService: SwapService;
+  let atomiqGateway: AtomiqGateway;
 
   beforeEach(() => {
     swapService = createMockSwapService();
-    monitor = new SwapMonitor(swapService, createLogger(), {pollInterval: 100});
+    atomiqGateway = createMockAtomiqGateway();
+    monitor = new SwapMonitor(swapService, atomiqGateway, createLogger(), {pollInterval: 100});
   });
 
   describe('runIteration', () => {

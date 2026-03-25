@@ -52,7 +52,7 @@ function createMockConfig(): AppConfig.Config {
         StarknetAddress.of('0x456'),
         StarknetAddress.of('0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d')
       ]},
-    atomiq: {network: 'testnet', starknetRpcUrl: 'http://localhost:5050', storagePath: '/tmp/bim/atomiq', autoCreateStorage: true, swapToken: 'WBTC', knownTokenAddresses: [StarknetAddress.of('0x456'), StarknetAddress.of('0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d')]},
+    atomiq: {network: 'testnet', starknetRpcUrl: 'http://localhost:5050', storagePath: '/tmp/bim/atomiq', autoCreateStorage: true, swapToken: 'WBTC', knownTokenAddresses: [StarknetAddress.of('0x456'), StarknetAddress.of('0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d')], claimer: {privateKey: '0xdeadbeef', address: StarknetAddress.of('0x0000000000000000000000000000000000000000000000000000000000000789')}, strkTokenAddress: '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d'},
     session: SessionConfig.create({durationMs: SessionConfig.DEFAULT_DURATION_MS}),
     logLevel: 'silent',
   };

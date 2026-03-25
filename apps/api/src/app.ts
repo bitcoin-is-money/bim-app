@@ -102,6 +102,7 @@ export async function createApp(options: CreateAppOptions = {}): Promise<AppInst
   if (!options.skipMonitor) {
     monitor = new SwapMonitor(
       context.services.swap,
+      context.gateways.atomiq,
       context.logger,
     );
   }

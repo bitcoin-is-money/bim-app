@@ -182,6 +182,23 @@ export class AtomiqGatewayMock implements AtomiqGateway {
     return status.isPaid;
   }
 
+  async claimForwardSwap(swapId: SwapId): Promise<{
+    claimTxHash: string;
+    refundTxHash: string | undefined;
+    bountyAmount: bigint;
+    userAddress: string;
+  }> {
+    if (!this.knownSwapIds.has(swapId)) {
+      throw new Error(`Swap not found: ${swapId}`);
+    }
+    return {
+      claimTxHash: `0xclaim_tx_${swapId}`,
+      refundTxHash: `0xrefund_tx_${swapId}`,
+      bountyAmount: 80_000_000_000_000_000_000n,
+      userAddress: '0x0123456789abcdef',
+    };
+  }
+
   // ===========================================================================
   // Test Helpers
   // ===========================================================================

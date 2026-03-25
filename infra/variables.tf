@@ -60,3 +60,16 @@ variable "dna_token" {
   sensitive   = true
   default     = ""
 }
+
+# ---------- Claimer (backend Starknet account for auto-claiming forward swaps) ----------
+
+variable "claimer_private_key" {
+  description = "STARK private key of the backend claimer account"
+  type        = string
+  sensitive   = true
+}
+
+variable "claimer_address" {
+  description = "Starknet address of the backend claimer account"
+  type        = string
+}

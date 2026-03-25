@@ -4,3 +4,4 @@ export * from './lightning-invoice';
 export {BitcoinAddress} from '../shared/bitcoin-address';
 export * from './swap';
 export {SwapService, type SwapServiceDeps} from './swap.service';
+export type {ClaimerConfig} from './claimer-config';

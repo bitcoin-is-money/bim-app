@@ -25,6 +25,8 @@ export namespace TestApp {
     process.env.ATOMIQ_STORAGE_PATH ??= '/tmp/bim/atomiq';
     process.env.ATOMIQ_AUTO_CREATE_STORAGE ??= 'true';
     process.env.ATOMIQ_SWAP_TOKEN ??= 'WBTC';
+    process.env.CLAIMER_PRIVATE_KEY ??= '0xdeadbeef';
+    process.env.CLAIMER_ADDRESS ??= '0x0000000000000000000000000000000000000000000000000000000000000789';
     process.env.NODE_ENV ??= 'test';
     process.env.LOG_LEVEL ??= 'silent';
   }

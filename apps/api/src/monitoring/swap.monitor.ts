@@ -1,4 +1,5 @@
-import type {SwapService} from '@bim/domain/swap';
+import type {AtomiqGateway} from '@bim/domain/ports';
+import type {SwapId, SwapService} from '@bim/domain/swap';
 
 import type {Logger} from 'pino';
 
@@ -33,6 +34,7 @@ export class SwapMonitor {
 
   constructor(
     private readonly swapService: SwapService,
+    private readonly atomiqGateway: AtomiqGateway,
     rootLogger: Logger,
     config?: SwapMonitorConfig,
   ) {
@@ -79,23 +81,50 @@ export class SwapMonitor {
       const activeSwaps = await this.swapService.getActiveSwaps();
       for (const swap of activeSwaps) {
         try {
-          // syncWithAtomiq (inside fetchStatus) detects state transitions:
-          // pending → paid → completed, or expired/failed.
-          // For forward swaps, the LP/watchtower claims cooperatively —
-          // no active claiming needed from BIM (no Starknet signer).
-          const {status} = await this.swapService.fetchStatus({swapId: swap.data.id, accountId: swap.data.accountId});
-          this.log.debug({swapId: swap.data.id, status}, `Swap status`);
+          const {status} = await this.swapService.fetchStatus({
+            swapId: swap.data.id,
+            accountId: swap.data.accountId,
+          });
+          this.log.debug({swapId: swap.data.id, status}, 'Swap status');
+
+          // Auto-claim forward swaps (Bitcoin/Lightning → Starknet) when BTC is confirmed.
+          // The backend account submits the claim tx and receives the claimer bounty.
+          // Without this, the watchtower claims and the user loses the bounty.
+          if (status === 'paid' && swap.isForward()) {
+            await this.claimSwap(swap.data.id);
+          }
         } catch (err) {
           // Individual swap errors are non-fatal — continue with the next swap
           this.log.warn({
-            cause: err instanceof Error ? err.message : String(err)
-          }, "Unexpected behavior fetching swap status, skipping");
+            swapId: swap.data.id,
+            cause: err instanceof Error ? err.message : String(err),
+          }, 'Unexpected behavior processing swap, skipping');
         }
       }
     } catch (err) {
-      this.log.error({err: err}, 'SwapMonitor iteration error');
+      this.log.error({err}, 'SwapMonitor iteration error');
     } finally {
       this.iterating = false;
+    }
+  }
+
+  private async claimSwap(swapId: SwapId): Promise<void> {
+    this.log.info({swapId}, 'Auto-claiming forward swap');
+    try {
+      const result = await this.atomiqGateway.claimForwardSwap(swapId);
+      this.log.info({
+        swapId,
+        claimTxHash: result.claimTxHash,
+        refundTxHash: result.refundTxHash,
+        bountyAmount: result.bountyAmount.toString(),
+        userAddress: result.userAddress,
+        refundSuccess: result.refundTxHash !== undefined,
+      }, 'Forward swap claim completed');
+    } catch (err) {
+      this.log.error({
+        swapId,
+        cause: err instanceof Error ? err.message : String(err),
+      }, 'Failed to claim forward swap');
     }
   }
 }
