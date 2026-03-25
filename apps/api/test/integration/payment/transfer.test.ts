@@ -309,10 +309,10 @@ describe('Transfer Flow', () => {
      */
 
     const createFactory = (treasuryAddress: string) =>
-      new Erc20CallFactory({
+      new Erc20CallFactory(FeeConfig.create({
         percentage: FeeConfig.DEFAULT_PERCENTAGE,
         recipientAddress: StarknetAddress.of(treasuryAddress),
-      });
+      }));
 
     it('transfers ETH with 0.1% fee to BIM treasury', async () => {
       const amountRaw = 1_000_000_000_000_000_000n; // 1 ETH

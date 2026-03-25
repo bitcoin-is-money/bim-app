@@ -5,7 +5,7 @@ import {Amount, StarknetAddress, type StarknetConfig} from '../shared';
 import type {SwapService} from '../swap';
 import {TransactionHash} from '../user/types';
 import type {Erc20CallFactory} from './erc20-call.factory';
-import {FeeCalculator, type FeeConfig} from './fee';
+import {FeeCalculator, FeeConfig} from './fee';
 import type {ParseService} from './parse.service';
 import {InvalidPaymentAmountError, SameAddressPaymentError} from './errors';
 import type {PreparedCalls, PreparedPaymentData} from './pay.types';
