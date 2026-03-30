@@ -376,3 +376,30 @@ export interface AuthenticationVerificationResult {
   verified: boolean;
   newSignCount: number;
 }
+
+export type NotificationSeverity = 'alert' | 'error' | 'info';
+
+export interface NotificationLink {
+  readonly label: string;
+  readonly url: string;
+}
+
+/**
+ * A notification message to be sent through an external channel (Slack, email, etc.).
+ * The gateway implementation decides visual formatting (colors, icons, layout).
+ */
+export interface NotificationMessage {
+  readonly severity: NotificationSeverity;
+  readonly title: string;
+  readonly description: string;
+  readonly fields: ReadonlyMap<string, string>;
+  readonly links?: readonly NotificationLink[];
+  readonly context?: string;
+}
+
+/**
+ * Gateway interface for sending operational notifications.
+ */
+export interface NotificationGateway {
+  send(message: NotificationMessage): Promise<void>;
+}

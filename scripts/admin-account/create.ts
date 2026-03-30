@@ -13,7 +13,7 @@ const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 //   - BIM fee collection (future)
 //   - Admin operations (contract declarations, etc.)
 //
-// The output is saved to scripts/admin-account/.account.<network>.json
+// The output is saved to scripts/admin-account/.treasury.<network>.secret.json
 // (gitignored — contains the private key).
 //
 // After creation:
@@ -35,7 +35,7 @@ function parseNetwork(): Network {
 }
 
 function getAccountPath(network: Network): string {
-  return join(SCRIPT_DIR, `.account.${network}.json`);
+  return join(SCRIPT_DIR, `.treasury.${network}.secret.json`);
 }
 
 function main(): void {

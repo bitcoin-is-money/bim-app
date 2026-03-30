@@ -1,5 +1,5 @@
 export * from './simplewebauthn.gateway';
-export * from './starknet.gateway';
+export {StarknetRpcGateway, type StarknetGatewayConfig} from '@bim/starknet';
 export * from './avnu-paymaster.gateway';
 export * from './avnu-swap.gateway';
 export * from './atomiq.gateway';

@@ -52,7 +52,7 @@ describe('Bitcoin Receive Swap Lifecycle', () => {
         gateways: {atomiq: atomiqMock, starknet: starknetMock},
       },
     });
-    monitor = appInstance.monitor!;
+    monitor = appInstance.swapMonitor!;
   });
 
   beforeEach(async () => {

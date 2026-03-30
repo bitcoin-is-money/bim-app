@@ -39,6 +39,10 @@
     "./user": {
       "types": "./dist/user/index.d.ts",
       "import": "./dist/user/index.js"
+    },
+    "./notifications": {
+      "types": "./dist/notifications/index.d.ts",
+      "import": "./dist/notifications/index.js"
     }
   },
   "scripts": {

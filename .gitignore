@@ -44,13 +44,11 @@ yarn-error.log
 testem.log
 /typings
 
-# Scripts secrets (admin account private keys)
-.deployer-account.json
-.account.testnet.json
-.account.mainnet.json
-
-# Environment secrets (per-network)
+# Secrets (env files, account keys, API credentials)
+# Covers *.secret, *.secret.json, .env.*.secret, etc.
 *.secret
+*.secret.json
+.deployer-account.json
 
 # Local database volumes (Docker)
 data/

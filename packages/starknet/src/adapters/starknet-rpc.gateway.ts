@@ -38,7 +38,7 @@ export class StarknetRpcGateway implements StarknetGateway {
     rootLogger: Logger,
   ) {
     this.provider = new RpcProvider({nodeUrl: config.rpcUrl});
-    this.log = rootLogger.child({name: 'starknet.gateway.ts'});
+    this.log = rootLogger.child({name: 'starknet-rpc.gateway.ts'});
   }
 
   calculateAccountAddress(params: {

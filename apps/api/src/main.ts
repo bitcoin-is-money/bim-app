@@ -10,7 +10,7 @@ loadEnv();
 // Server Startup
 // =============================================================================
 
-const {app, monitor, rootLogger} = await createApp();
+const {app, swapMonitor, rootLogger} = await createApp();
 const logger = rootLogger.child({name: 'main.ts'});
 const port = Number(process.env.PORT) || 8080;
 
@@ -21,16 +21,15 @@ const server = serve({
   port,
 });
 
-// Start swap monitor
-if (monitor) {
-  monitor.start();
+// Start monitors
+if (swapMonitor) {
+  swapMonitor.start();
 }
-
 // Graceful shutdown
 async function shutdown(signal: string): Promise<void> {
   logger.info({signal}, 'Shutting down');
-  if (monitor) {
-    await monitor.stop();
+  if (swapMonitor) {
+    await swapMonitor.stop();
   }
   server.close();
   await Database.get().close();
