@@ -91,21 +91,25 @@ describe('FeeCalculator', () => {
 });
 
 describe('FeeConfig', () => {
+  const treasuryAddress = StarknetAddress.of('0x027367ddd36d7efc4694e1af5742f8d26626369c07abf15d136ff422b9a40fa0');
+
   describe('create', () => {
-    it('creates config with valid percentage', () => {
+    it('creates config with valid per-network percentages', () => {
       const config = FeeConfig.create({
-        percentage: 0.001,
-        recipientAddress: StarknetAddress.of('0x027367ddd36d7efc4694e1af5742f8d26626369c07abf15d136ff422b9a40fa0'),
+        percentages: {starknet: 0.001, lightning: 0.002, bitcoin: 0.003},
+        recipientAddress: treasuryAddress,
       });
 
-      expect(config.percentage).toBe(0.001);
+      expect(config.percentageFor('starknet')).toBe(0.001);
+      expect(config.percentageFor('lightning')).toBe(0.002);
+      expect(config.percentageFor('bitcoin')).toBe(0.003);
     });
 
     it('throws for percentage > 1', () => {
       expect(() =>
         FeeConfig.create({
-          percentage: 1.5,
-          recipientAddress: StarknetAddress.of('0x027367ddd36d7efc4694e1af5742f8d26626369c07abf15d136ff422b9a40fa0'),
+          percentages: {starknet: 1.5, lightning: 0.002, bitcoin: 0.003},
+          recipientAddress: treasuryAddress,
         })
       ).toThrow('Invalid fee percentage');
     });
@@ -113,32 +117,36 @@ describe('FeeConfig', () => {
     it('throws for negative percentage', () => {
       expect(() =>
         FeeConfig.create({
-          percentage: -0.01,
-          recipientAddress: StarknetAddress.of('0x027367ddd36d7efc4694e1af5742f8d26626369c07abf15d136ff422b9a40fa0'),
+          percentages: {starknet: 0.001, lightning: -0.01, bitcoin: 0.003},
+          recipientAddress: treasuryAddress,
         })
       ).toThrow('Invalid fee percentage');
     });
 
     it('allows 0% fee', () => {
       const config = FeeConfig.create({
-        percentage: 0,
-        recipientAddress: StarknetAddress.of('0x027367ddd36d7efc4694e1af5742f8d26626369c07abf15d136ff422b9a40fa0'),
+        percentages: {starknet: 0, lightning: 0, bitcoin: 0},
+        recipientAddress: treasuryAddress,
       });
 
-      expect(config.percentage).toBe(0);
+      expect(config.percentageFor('starknet')).toBe(0);
     });
 
     it('allows 100% fee', () => {
       const config = FeeConfig.create({
-        percentage: 1,
-        recipientAddress: StarknetAddress.of('0x027367ddd36d7efc4694e1af5742f8d26626369c07abf15d136ff422b9a40fa0'),
+        percentages: {starknet: 1, lightning: 1, bitcoin: 1},
+        recipientAddress: treasuryAddress,
       });
 
-      expect(config.percentage).toBe(1);
+      expect(config.percentageFor('starknet')).toBe(1);
     });
   });
 
-  it('exposes DEFAULT_PERCENTAGE constant', () => {
-    expect(FeeConfig.DEFAULT_PERCENTAGE).toBe(0.001);
+  it('exposes DEFAULT_PERCENTAGES constant', () => {
+    expect(FeeConfig.DEFAULT_PERCENTAGES).toEqual({
+      starknet: 0.001,
+      lightning: 0.002,
+      bitcoin: 0.003,
+    });
   });
 });

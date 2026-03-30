@@ -8,7 +8,7 @@ const RECIPIENT_ADDRESS = '0x0123456789abcdef0123456789abcdef0123456789abcdef012
 const TREASURY_ADDRESS = StarknetAddress.of('0x027367ddd36d7efc4694e1af5742f8d26626369c07abf15d136ff422b9a40fa0');
 
 const feeConfig = FeeConfig.create({
-  percentage: 0.001, // 0.1%
+  percentages: {starknet: 0.001, lightning: 0.002, bitcoin: 0.003},
   recipientAddress: TREASURY_ADDRESS,
 });
 
@@ -22,6 +22,7 @@ describe('Erc20CallFactory', () => {
         recipientAddress: RECIPIENT_ADDRESS,
         amount: Amount.ofSatoshi(100_000_000n),
         applyFee: false,
+        network: 'starknet',
       });
 
       expect(calls).toHaveLength(1);
@@ -36,6 +37,7 @@ describe('Erc20CallFactory', () => {
         recipientAddress: RECIPIENT_ADDRESS,
         amount: Amount.ofSatoshi(1000n),
         applyFee: false,
+        network: 'starknet',
       });
 
       expect(calls[0]!.calldata[0]).toBe(RECIPIENT_ADDRESS);
@@ -47,6 +49,7 @@ describe('Erc20CallFactory', () => {
         recipientAddress: RECIPIENT_ADDRESS,
         amount: Amount.ofSatoshi(123_456_789n),
         applyFee: false,
+        network: 'starknet',
       });
 
       expect(calls[0]!.calldata[1]).toBe('123456789'); // low part as decimal string (sats)
@@ -59,6 +62,7 @@ describe('Erc20CallFactory', () => {
         recipientAddress: RECIPIENT_ADDRESS,
         amount: Amount.zero(),
         applyFee: false,
+        network: 'starknet',
       });
 
       expect(calls[0]!.calldata[1]).toBe('0');
@@ -71,6 +75,7 @@ describe('Erc20CallFactory', () => {
         recipientAddress: RECIPIENT_ADDRESS,
         amount: Amount.ofSatoshi(100_000_000n),
         applyFee: false,
+        network: 'starknet',
       });
 
       expect(feeAmount.isZero()).toBe(true);
@@ -86,6 +91,7 @@ describe('Erc20CallFactory', () => {
         recipientAddress: RECIPIENT_ADDRESS,
         amount,
         applyFee: true,
+        network: 'starknet',
       });
 
       expect(calls).toHaveLength(2);
@@ -98,6 +104,7 @@ describe('Erc20CallFactory', () => {
         recipientAddress: RECIPIENT_ADDRESS,
         amount: Amount.ofSatoshi(100_000_000n),
         applyFee: true,
+        network: 'starknet',
       });
 
       expect(calls[0]!.calldata[0]).toBe(RECIPIENT_ADDRESS);
@@ -110,6 +117,7 @@ describe('Erc20CallFactory', () => {
         recipientAddress: RECIPIENT_ADDRESS,
         amount: Amount.ofSatoshi(100_000_000n),
         applyFee: true,
+        network: 'starknet',
       });
 
       expect(calls[1]!.calldata[0]).toBe(TREASURY_ADDRESS.toString());
@@ -123,6 +131,7 @@ describe('Erc20CallFactory', () => {
         recipientAddress: RECIPIENT_ADDRESS,
         amount: Amount.ofMilliSatoshi(999n),
         applyFee: true,
+        network: 'starknet',
       });
 
       expect(feeAmount.isZero()).toBe(true);
@@ -137,6 +146,7 @@ describe('Erc20CallFactory', () => {
         recipientAddress: RECIPIENT_ADDRESS,
         amount: Amount.ofSatoshi(100_000_000n),
         applyFee: true,
+        network: 'starknet',
       });
 
       expect(calls[0]!.contractAddress).toBe(customToken);
@@ -156,6 +166,7 @@ describe('Erc20CallFactory', () => {
           recipientAddress: RECIPIENT_ADDRESS,
           amount,
           applyFee: true,
+          network: 'starknet',
         });
 
         expect(feeAmount.getSat()).toBe(expectedFeeSats);
@@ -166,18 +177,19 @@ describe('Erc20CallFactory', () => {
   describe('createFeeCall', () => {
     const WBTC_TOKEN_ADDRESS = '0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac';
 
-    it('creates a fee-only call to treasury', () => {
+    it('creates a fee-only call to treasury with lightning rate', () => {
       const {calls, feeAmount} = factory.createFeeCall(
         WBTC_TOKEN_ADDRESS,
         Amount.ofSatoshi(100_000_000n),
+        'lightning',
       );
 
       expect(calls).toHaveLength(1);
-      expect(feeAmount.getSat()).toBe(100_000n); // 0.1% of 100M sats
+      expect(feeAmount.getSat()).toBe(200_000n); // 0.2% of 100M sats
       expect(calls[0]!.contractAddress).toBe(WBTC_TOKEN_ADDRESS);
       expect(calls[0]!.entrypoint).toBe('transfer');
       expect(calls[0]!.calldata[0]).toBe(TREASURY_ADDRESS.toString());
-      expect(calls[0]!.calldata[1]).toBe('100000');
+      expect(calls[0]!.calldata[1]).toBe('200000');
       expect(calls[0]!.calldata[2]).toBe('0');
     });
 
@@ -185,6 +197,7 @@ describe('Erc20CallFactory', () => {
       const {calls, feeAmount} = factory.createFeeCall(
         WBTC_TOKEN_ADDRESS,
         Amount.ofMilliSatoshi(999n),
+        'lightning',
       );
 
       expect(calls).toHaveLength(0);
@@ -192,14 +205,15 @@ describe('Erc20CallFactory', () => {
     });
 
     it('returns empty calls with zero-fee config', () => {
-      const zeroFactory = new Erc20CallFactory({
-        percentage: 0,
+      const zeroFactory = new Erc20CallFactory(FeeConfig.create({
+        percentages: {starknet: 0, lightning: 0, bitcoin: 0},
         recipientAddress: TREASURY_ADDRESS,
-      });
+      }));
 
       const {calls, feeAmount} = zeroFactory.createFeeCall(
         WBTC_TOKEN_ADDRESS,
         Amount.ofSatoshi(100_000_000n),
+        'lightning',
       );
 
       expect(calls).toHaveLength(0);
@@ -208,10 +222,10 @@ describe('Erc20CallFactory', () => {
   });
 
   describe('with zero-fee config', () => {
-    const zeroFeeFactory = new Erc20CallFactory({
-      percentage: 0,
+    const zeroFeeFactory = new Erc20CallFactory(FeeConfig.create({
+      percentages: {starknet: 0, lightning: 0, bitcoin: 0},
       recipientAddress: TREASURY_ADDRESS,
-    });
+    }));
 
     it('returns only transfer call even with applyFee: true', () => {
       const {calls, feeAmount} = zeroFeeFactory.createTransfer({
@@ -219,6 +233,7 @@ describe('Erc20CallFactory', () => {
         recipientAddress: RECIPIENT_ADDRESS,
         amount: Amount.ofSatoshi(100_000_000n),
         applyFee: true,
+        network: 'starknet',
       });
 
       expect(feeAmount.isZero()).toBe(true);
