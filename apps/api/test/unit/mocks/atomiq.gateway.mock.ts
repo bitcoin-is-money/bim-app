@@ -81,7 +81,7 @@ export class AtomiqGatewayMock implements AtomiqGateway {
         {contractAddress: '0x0123456789abcdef', entrypoint: 'approve', calldata: ['0x1', '0x2']},
         {contractAddress: '0x0123456789abcdef', entrypoint: 'initiate', calldata: ['0x3', '0x4']},
       ],
-      amountSats: params.amountSats,
+      amountSats: this.reverseSwapAmountSats ?? params.amountSats,
       expiresAt,
     };
   }
