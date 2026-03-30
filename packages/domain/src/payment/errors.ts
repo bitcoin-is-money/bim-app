@@ -23,8 +23,14 @@ export class SameAddressPaymentError extends DomainError {
 }
 
 export class UnsupportedNetworkError extends DomainError {
-  constructor(readonly data: string) {
-    super(`Unsupported network: cannot identify "${data.substring(0, 50)}"`);
+  constructor(
+    readonly data: string,
+    readonly detectedNetwork?: string,
+  ) {
+    const base = detectedNetwork
+      ? `Unsupported network or format: ${detectedNetwork}`
+      : `Unsupported network or format: cannot identify "${data.substring(0, 50)}"`;
+    super(base);
   }
 }
 
