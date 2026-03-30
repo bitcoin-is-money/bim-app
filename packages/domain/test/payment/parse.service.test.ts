@@ -132,6 +132,100 @@ describe('ParseService', () => {
       expect(() => service.parse('0x1234')).toThrow(UnsupportedNetworkError);
     });
 
+    // =========================================================================
+    // Unsupported network detection
+    // =========================================================================
+
+    it('extracts network name from unsupported URI scheme', () => {
+      try {
+        service.parse('solana:7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU');
+        expect.fail('should have thrown');
+      } catch (err: unknown) {
+        expect(err).toBeInstanceOf(UnsupportedNetworkError);
+        expect((err as UnsupportedNetworkError).detectedNetwork).toBe('solana');
+      }
+    });
+
+    it('detects Ethereum address (0x + 40 hex)', () => {
+      try {
+        service.parse('0xdAC17F958D2ee523a2206206994597C13D831ec7');
+        expect.fail('should have thrown');
+      } catch (err: unknown) {
+        expect(err).toBeInstanceOf(UnsupportedNetworkError);
+        expect((err as UnsupportedNetworkError).detectedNetwork).toBe('ethereum');
+      }
+    });
+
+    it('detects Toncoin user-friendly address', () => {
+      try {
+        service.parse('EQBynBO23ywHy_CgarY9NK9FTz0yDsG82PtcbSTQgGoXwiuA');
+        expect.fail('should have thrown');
+      } catch (err: unknown) {
+        expect(err).toBeInstanceOf(UnsupportedNetworkError);
+        expect((err as UnsupportedNetworkError).detectedNetwork).toBe('toncoin');
+      }
+    });
+
+    it('detects Cosmos address', () => {
+      try {
+        service.parse('cosmos1hjct6yse4r6jmculwzafqnp9lun8hzym04g7rv');
+        expect.fail('should have thrown');
+      } catch (err: unknown) {
+        expect(err).toBeInstanceOf(UnsupportedNetworkError);
+        expect((err as UnsupportedNetworkError).detectedNetwork).toBe('cosmos');
+      }
+    });
+
+    it('detects Litecoin bech32 address', () => {
+      try {
+        service.parse('ltc1qg42tkwuuxefual00qe4lrqm3csd0dgfls7nz4y');
+        expect.fail('should have thrown');
+      } catch (err: unknown) {
+        expect(err).toBeInstanceOf(UnsupportedNetworkError);
+        expect((err as UnsupportedNetworkError).detectedNetwork).toBe('litecoin');
+      }
+    });
+
+    it('detects Cardano address', () => {
+      try {
+        service.parse('addr1qx2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer3jcu5d8ps7zex2k2xt3uqxgjqnnj83ws8lhrn648jjxtwq2ytjqp');
+        expect.fail('should have thrown');
+      } catch (err: unknown) {
+        expect(err).toBeInstanceOf(UnsupportedNetworkError);
+        expect((err as UnsupportedNetworkError).detectedNetwork).toBe('cardano');
+      }
+    });
+
+    it('detects Ripple (XRP) address', () => {
+      try {
+        service.parse('rN7gj1DjMYi6TC1SwHKbrGBw4fSdPrdeCz');
+        expect.fail('should have thrown');
+      } catch (err: unknown) {
+        expect(err).toBeInstanceOf(UnsupportedNetworkError);
+        expect((err as UnsupportedNetworkError).detectedNetwork).toBe('ripple');
+      }
+    });
+
+    it('detects Tron address', () => {
+      try {
+        service.parse('TJRabPrwbZy45sbavfcjinPJC18kjpRTv8');
+        expect.fail('should have thrown');
+      } catch (err: unknown) {
+        expect(err).toBeInstanceOf(UnsupportedNetworkError);
+        expect((err as UnsupportedNetworkError).detectedNetwork).toBe('tron');
+      }
+    });
+
+    it('has no detectedNetwork for unrecognized data', () => {
+      try {
+        service.parse('not-a-valid-address');
+        expect.fail('should have thrown');
+      } catch (err: unknown) {
+        expect(err).toBeInstanceOf(UnsupportedNetworkError);
+        expect((err as UnsupportedNetworkError).detectedNetwork).toBeUndefined();
+      }
+    });
+
     it('wraps sub-service errors in PaymentParsingError', () => {
       const failingDecoder = createMockDecoder();
       vi.mocked(failingDecoder.decode).mockImplementation(() => {

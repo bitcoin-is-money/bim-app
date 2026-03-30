@@ -86,8 +86,18 @@ export class I18nService {
    * Translate an API error using its code and args.
    */
   translateError(error: ApiErrorBody): string {
+    const args = error.args ?? {};
+    // Try a more specific key variant when args contain contextual detail
+    // e.g. UNSUPPORTED_NETWORK with { network } → try UNSUPPORTED_NETWORK_DETECTED first
+    if (args['network'] !== undefined) {
+      const detectedKey = `errors.${error.code}_DETECTED`;
+      const detectedTranslation = String(this.translate.instant(detectedKey, args));
+      if (detectedTranslation !== detectedKey) {
+        return detectedTranslation;
+      }
+    }
     const key = `errors.${error.code}`;
-    const translated = String(this.translate.instant(key, error.args ?? {}));
+    const translated = String(this.translate.instant(key, args));
     // Fallback to backend message if key not found
     return translated === key ? error.message : translated;
   }

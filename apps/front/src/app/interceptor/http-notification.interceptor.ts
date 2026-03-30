@@ -42,6 +42,7 @@ export const httpNotificationInterceptor: HttpInterceptorFn = (
       /* eslint-enable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
 
       if (response.status >= 400 && response.status < 500) {
+        console.warn(`[API ${response.status}] ${message}`, response.error);
         notifications.error({message});
       } else if (response.status >= 500) {
         // Use translated message when available (e.g. PAYMASTER_SERVICE_ERROR),

@@ -198,7 +198,13 @@ export function handleDomainError(ctx: Context, error: unknown, logger: Logger):
     return createErrorResponse(ctx, 400, ErrorCode.SAME_ADDRESS_PAYMENT, 'Cannot send to your own address');
   }
   if (error instanceof UnsupportedNetworkError) {
-    return createErrorResponse(ctx, 400, ErrorCode.UNSUPPORTED_NETWORK, 'Unsupported network');
+    const detected = error.detectedNetwork;
+    if (detected !== undefined) {
+      return createErrorResponse(ctx, 400, ErrorCode.UNSUPPORTED_NETWORK, `Unsupported network or format: ${detected}`, {
+        network: detected,
+      });
+    }
+    return createErrorResponse(ctx, 400, ErrorCode.UNSUPPORTED_NETWORK, 'Unsupported network or format');
   }
   if (error instanceof UnsupportedTokenError) {
     return createErrorResponse(ctx, 400, ErrorCode.UNSUPPORTED_TOKEN, 'Unsupported token', {

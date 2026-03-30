@@ -63,7 +63,8 @@ export class ParseService {
       return this.wrapParsingErrors(() => this.parseBitcoinUri(`bitcoin:${trimmed}`));
     }
 
-    throw new UnsupportedNetworkError(trimmed);
+    const detectedNetwork = detectUnsupportedNetwork(trimmed);
+    throw new UnsupportedNetworkError(trimmed, detectedNetwork);
   }
 
   // ===========================================================================
@@ -199,4 +200,55 @@ export class ParseService {
       throw new PaymentParsingError(cause);
     }
   }
+}
+
+// =============================================================================
+// Unsupported network detection
+// =============================================================================
+
+// URI scheme pattern: "word:" at the start (excludes our supported schemes)
+const URI_SCHEME_REGEX = /^([a-zA-Z][a-zA-Z0-9+.-]*):/;
+const SUPPORTED_SCHEMES = new Set(['bitcoin', 'starknet']);
+
+/**
+ * Known address patterns for unsupported networks.
+ * Each entry: [regex, network name]. Order matters — first match wins.
+ */
+const UNSUPPORTED_ADDRESS_PATTERNS: ReadonlyArray<readonly [RegExp, string]> = [
+  // Ethereum: 0x + 40 hex (not Starknet, which is 64 hex)
+  [/^0x[0-9a-fA-F]{40}$/, 'ethereum'],
+  // Toncoin: EQ/UQ prefix + 46 base64url chars
+  [/^(EQ|UQ)[A-Za-z0-9_-]{46}$/, 'toncoin'],
+  // Cosmos: cosmos1 + 38 bech32 chars
+  [/^cosmos1[a-z0-9]{38}$/, 'cosmos'],
+  // Litecoin: ltc1 bech32 or legacy L/M prefix
+  [/^ltc1[a-z0-9]{39,59}$/, 'litecoin'],
+  [/^[LM][1-9A-HJ-NP-Za-km-z]{26,33}$/, 'litecoin'],
+  // Cardano: addr1 + 53+ bech32 chars
+  [/^addr1[a-z0-9]{53,}$/, 'cardano'],
+  // Ripple (XRP): r + 24-34 base58 chars
+  [/^r[1-9A-HJ-NP-Za-km-z]{24,34}$/, 'ripple'],
+  // Tron: T + 33 base58 chars
+  [/^T[1-9A-HJ-NP-Za-km-z]{33}$/, 'tron'],
+];
+
+/**
+ * Try to detect a known-but-unsupported network from the input.
+ * Returns the network name if detected, undefined otherwise.
+ */
+function detectUnsupportedNetwork(data: string): string | undefined {
+  const schemeMatch = URI_SCHEME_REGEX.exec(data);
+  const captured = schemeMatch?.[1];
+  if (captured !== undefined) {
+    const scheme = captured.toLowerCase();
+    if (!SUPPORTED_SCHEMES.has(scheme)) {
+      return scheme;
+    }
+  }
+  for (const [regex, network] of UNSUPPORTED_ADDRESS_PATTERNS) {
+    if (regex.test(data)) {
+      return network;
+    }
+  }
+  return undefined;
 }
