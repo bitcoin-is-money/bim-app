@@ -3,9 +3,11 @@ import {Router} from '@angular/router';
 import {Base64Url} from '@bim/lib/encoding';
 import {firstValueFrom, Subscription} from 'rxjs';
 import {ParsedPayment, type StoredSwap} from '../model';
+import {AccountService} from './account.service';
 import {type BuildPaymentResponse, type ExecutePaymentResponse, type PaymentNetwork, PayHttpService} from './pay.http.service';
 import {SwapPollingService} from './swap-polling.service';
 import {SwapStorageService} from './swap-storage.service';
+import {TransactionService} from './transaction.service';
 
 @Injectable({
   providedIn: 'root',
@@ -13,6 +15,8 @@ import {SwapStorageService} from './swap-storage.service';
 export class PayService {
   private readonly httpService = inject(PayHttpService);
   private readonly router = inject(Router);
+  private readonly accountService = inject(AccountService);
+  private readonly transactionService = inject(TransactionService);
   private readonly swapStorageService = inject(SwapStorageService);
   private readonly swapPollingService = inject(SwapPollingService);
 
@@ -173,9 +177,13 @@ export class PayService {
       };
       this.swapStorageService.saveSwap(swap);
       this.swapPollingService.startPolling(swap.id);
+    } else {
+      // Starknet direct transfers have no swap to track — poll for the on-chain transaction
+      this.transactionService.waitForNew();
+      this.accountService.loadBalance();
     }
 
-    // Navigate first, then clean up UI state to avoid skeleton flash on confirm page
+    // Navigate first, then clean up the UI state to avoid skeleton flash on confirm page
     void this.router.navigate(['/pay/success']).then(() => {
       this.parsedPayment.set(null);
       this.rawData = null;
