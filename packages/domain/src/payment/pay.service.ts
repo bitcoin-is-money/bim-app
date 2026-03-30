@@ -61,19 +61,19 @@ export class PayService {
     let fee: Amount;
     switch (parsed.network) {
       case 'starknet':
-        fee = FeeCalculator.calculateFee(parsed.amount, this.deps.feeConfig.percentage);
+        fee = FeeCalculator.calculateFee(parsed.amount, this.deps.feeConfig.percentageFor('starknet'));
         break;
       case 'lightning': {
         const limits = await this.deps.swapService.fetchLimits({direction: 'starknet_to_lightning'});
         const lpFeeEstimate = FeeCalculator.calculateFee(parsed.amount, limits.limits.feePercent / 100);
-        const bimFeeLn = FeeCalculator.calculateFee(parsed.amount, this.deps.feeConfig.percentage);
+        const bimFeeLn = FeeCalculator.calculateFee(parsed.amount, this.deps.feeConfig.percentageFor('lightning'));
         fee = lpFeeEstimate.add(bimFeeLn);
         break;
       }
       case 'bitcoin': {
         const limits = await this.deps.swapService.fetchLimits({direction: 'starknet_to_bitcoin'});
         const lpFeeEstimate = FeeCalculator.calculateFee(parsed.amount, limits.limits.feePercent / 100);
-        const bimFeeBtc = FeeCalculator.calculateFee(parsed.amount, this.deps.feeConfig.percentage);
+        const bimFeeBtc = FeeCalculator.calculateFee(parsed.amount, this.deps.feeConfig.percentageFor('bitcoin'));
         fee = lpFeeEstimate.add(bimFeeBtc);
         break;
       }
@@ -121,6 +121,7 @@ export class PayService {
       recipientAddress: parsed.address.toString(),
       amount: parsed.amount,
       applyFee: true,
+      network: 'starknet',
     });
 
     return {
@@ -150,6 +151,7 @@ export class PayService {
     const {calls: feeCalls, feeAmount} = this.deps.erc20CallFactory.createFeeCall(
       this.deps.starknetConfig.wbtcTokenAddress,
       parsed.amount,
+      'lightning',
     );
 
     return {
@@ -185,6 +187,7 @@ export class PayService {
     const {calls: feeCalls, feeAmount} = this.deps.erc20CallFactory.createFeeCall(
       this.deps.starknetConfig.wbtcTokenAddress,
       parsed.amount,
+      'bitcoin',
     );
 
     return {

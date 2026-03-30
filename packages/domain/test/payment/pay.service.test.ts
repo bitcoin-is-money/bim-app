@@ -85,7 +85,7 @@ function createMockBitcoinPaySwap(): Swap {
 // =============================================================================
 
 const feeConfig = FeeConfig.create({
-  percentage: FeeConfig.DEFAULT_PERCENTAGE,
+  percentages: FeeConfig.DEFAULT_PERCENTAGES,
   recipientAddress: TREASURY_ADDRESS,
 });
 
@@ -254,14 +254,14 @@ describe('PayService', () => {
         entrypoint: 'initiate',
         calldata: ['0x3', '0x4'],
       });
-      // Fee call: 0.1% of 50,000 sats = 50 sats, sent to treasury in WBTC
+      // Fee call: 0.2% of 50,000 sats = 100 sats, sent to treasury in WBTC
       expect(result.calls[2]).toEqual({
         contractAddress: WBTC_TOKEN_ADDRESS,
         entrypoint: 'transfer',
-        calldata: [TREASURY_ADDRESS.toString(), '50', '0'],
+        calldata: [TREASURY_ADDRESS.toString(), '100', '0'],
       });
       expect(result.amount.getSat()).toBe(50_000n);
-      expect(result.feeAmount.getSat()).toBe(50n);
+      expect(result.feeAmount.getSat()).toBe(100n);
       expect(result.swapId).toBe(SwapId.of('swap-123'));
       expect(result.invoice).toBe(LightningInvoice.of(VALID_INVOICE));
       expect(result.expiresAt).toBeInstanceOf(Date);
@@ -358,14 +358,14 @@ describe('PayService', () => {
         entrypoint: 'initiate',
         calldata: ['0x3', '0x4'],
       });
-      // Fee call: 0.1% of 100,000 sats = 100 sats, sent to treasury in WBTC
+      // Fee call: 0.3% of 100,000 sats = 300 sats, sent to treasury in WBTC
       expect(result.calls[2]).toEqual({
         contractAddress: WBTC_TOKEN_ADDRESS,
         entrypoint: 'transfer',
-        calldata: [TREASURY_ADDRESS.toString(), '100', '0'],
+        calldata: [TREASURY_ADDRESS.toString(), '300', '0'],
       });
       expect(result.amount.getSat()).toBe(100_000n);
-      expect(result.feeAmount.getSat()).toBe(100n);
+      expect(result.feeAmount.getSat()).toBe(300n);
       expect(result.swapId).toBe(SwapId.of('swap-btc-456'));
       expect(result.destinationAddress).toBe(BitcoinAddress.of(BTC_BECH32));
       expect(result.expiresAt).toBeInstanceOf(Date);
@@ -464,8 +464,8 @@ describe('PayService', () => {
       const result = await service.prepare(VALID_INVOICE);
 
       expect(result.network).toBe('lightning');
-      // LP fee: 50,000 * 0.3% = 150 sats + BIM fee: 50,000 * 0.1% = 50 sats = 200 sats
-      expect(result.fee.getSat()).toBe(200n);
+      // LP fee: 50,000 * 0.3% = 150 sats + BIM fee: 50,000 * 0.2% = 100 sats = 250 sats
+      expect(result.fee.getSat()).toBe(250n);
       expect(mockSwapService.fetchLimits).toHaveBeenCalledWith({direction: 'starknet_to_lightning'});
     });
 
@@ -480,8 +480,8 @@ describe('PayService', () => {
       const result = await service.prepare(`bitcoin:${BTC_BECH32}?amount=0.001`);
 
       expect(result.network).toBe('bitcoin');
-      // LP fee: 100,000 * 0.3% = 300 sats + BIM fee: 100,000 * 0.1% = 100 sats = 400 sats
-      expect(result.fee.getSat()).toBe(400n);
+      // LP fee: 100,000 * 0.3% = 300 sats + BIM fee: 100,000 * 0.3% = 300 sats = 600 sats
+      expect(result.fee.getSat()).toBe(600n);
       expect(mockSwapService.fetchLimits).toHaveBeenCalledWith({direction: 'starknet_to_bitcoin'});
     });
   });

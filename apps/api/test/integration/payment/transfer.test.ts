@@ -305,12 +305,12 @@ describe('Transfer Flow', () => {
      * demonstrating the proper separation between business logic (domain)
      * and infrastructure (StrkDevnetContext).
      *
-     * Fee configuration: 0.1% (FeeConfig.DEFAULT_PERCENTAGE)
+     * Fee configuration: per-network percentages (FeeConfig.DEFAULT_PERCENTAGES)
      */
 
     const createFactory = (treasuryAddress: string) =>
       new Erc20CallFactory(FeeConfig.create({
-        percentage: FeeConfig.DEFAULT_PERCENTAGE,
+        percentages: FeeConfig.DEFAULT_PERCENTAGES,
         recipientAddress: StarknetAddress.of(treasuryAddress),
       }));
 
@@ -324,6 +324,7 @@ describe('Transfer Flow', () => {
         recipientAddress: predeployedAddress,
         amount: Amount.ofSatoshi(amountRaw),
         applyFee: true,
+        network: 'starknet',
       });
 
       // Verify fee calculation from domain service
@@ -365,6 +366,7 @@ describe('Transfer Flow', () => {
         recipientAddress: predeployedAddress,
         amount: Amount.ofSatoshi(amountRaw),
         applyFee: true,
+        network: 'starknet',
       });
 
       // Verify fee calculation from domain service
@@ -407,6 +409,7 @@ describe('Transfer Flow', () => {
         recipientAddress: predeployedAddress,
         amount: Amount.ofSatoshi(amountRaw),
         applyFee: true,
+        network: 'starknet',
       });
 
       // Verify factory returns no fee call
@@ -450,6 +453,7 @@ describe('Transfer Flow', () => {
           recipientAddress: predeployedAddress,
           amount: Amount.ofSatoshi(amountRaw),
           applyFee: true,
+          network: 'starknet',
         });
         expectedTotalFees += feeAmount.getSat();
 

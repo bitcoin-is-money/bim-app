@@ -1,29 +1,40 @@
 import type {StarknetAddress} from '../../account';
+import type {PaymentNetwork} from '../types';
 
 /**
- * Fee configuration for BIM developer tax.
+ * Fee configuration for BIM developer tax, with per-network percentages.
  */
 export class FeeConfig {
-  static readonly DEFAULT_PERCENTAGE = 0.001;
+  static readonly DEFAULT_PERCENTAGES: Readonly<Record<PaymentNetwork, number>> = {
+    starknet: 0.001,
+    lightning: 0.002,
+    bitcoin: 0.003,
+  };
 
-  readonly percentage: number;
+  readonly percentages: Readonly<Record<PaymentNetwork, number>>;
   readonly recipientAddress: StarknetAddress;
 
   private constructor(
-    percentage: number,
-    recipientAddress: StarknetAddress
+    percentages: Record<PaymentNetwork, number>,
+    recipientAddress: StarknetAddress,
   ) {
-    this.percentage = percentage;
+    this.percentages = percentages;
     this.recipientAddress = recipientAddress;
   }
 
+  percentageFor(network: PaymentNetwork): number {
+    return this.percentages[network];
+  }
+
   static create(params: {
-    percentage: number;
+    percentages: Record<PaymentNetwork, number>;
     recipientAddress: StarknetAddress;
   }): FeeConfig {
-    if (params.percentage < 0 || params.percentage > 1) {
-      throw new Error(`Invalid fee percentage: ${params.percentage}. Must be between 0 and 1.`);
+    for (const [network, pct] of Object.entries(params.percentages)) {
+      if (pct < 0 || pct > 1) {
+        throw new Error(`Invalid fee percentage for ${network}: ${pct}. Must be between 0 and 1.`);
+      }
     }
-    return new FeeConfig(params.percentage, params.recipientAddress);
+    return new FeeConfig(params.percentages, params.recipientAddress);
   }
 }

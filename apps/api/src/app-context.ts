@@ -201,7 +201,7 @@ export namespace AppContext {
     const {starknet: starknetConfig} = config;
 
     const feeConfig = FeeConfig.create({
-      percentage: FeeConfig.DEFAULT_PERCENTAGE,
+      percentages: FeeConfig.DEFAULT_PERCENTAGES,
       recipientAddress: starknetConfig.feeTreasuryAddress,
     });
 
