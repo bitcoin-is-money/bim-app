@@ -1,6 +1,6 @@
 import {computed, inject, Injectable, signal} from '@angular/core';
-import type {Observable} from 'rxjs';
-import {map, tap} from 'rxjs';
+import type {Observable, Subscription} from 'rxjs';
+import {filter, interval, map, switchMap, take, tap} from 'rxjs';
 import {TransactionHttpService} from './transaction.http.service';
 import type {Transaction} from './transaction.http.service';
 import {CurrencyService} from './currency.service';
@@ -90,6 +90,24 @@ export class TransactionService {
       }),
       map(() => undefined),
     );
+  }
+
+  /**
+   * Polls the backend until a new transaction appears or the timeout is reached.
+   * Used after Starknet direct payments where there is no swap to track.
+   * Stops immediately when a new transaction is detected.
+   */
+  waitForNew(intervalMs = 2000, maxAttempts = 15): Subscription {
+    const currentTotal = this._transactions()?.length ?? 0;
+
+    return interval(intervalMs).pipe(
+      take(maxAttempts),
+      switchMap(() => this.httpService.getTransactions(1, 0)),
+      filter(result => result.total > currentTotal),
+      take(1),
+    ).subscribe(() => {
+      this.loadFirst();
+    });
   }
 
   loadMore(): void {
