@@ -317,6 +317,7 @@ describe('PayService', () => {
             {contractAddress: '0x0123456789abcdef', entrypoint: 'approve', calldata: ['0x1', '0x2']},
             {contractAddress: '0x0123456789abcdef', entrypoint: 'initiate', calldata: ['0x3', '0x4']},
           ],
+          amount: Amount.ofSatoshi(101_000n), // LP-quoted amount (includes LP fee)
         }),
       } as unknown as SwapService;
 
@@ -364,7 +365,7 @@ describe('PayService', () => {
         entrypoint: 'transfer',
         calldata: [TREASURY_ADDRESS.toString(), '300', '0'],
       });
-      expect(result.amount.getSat()).toBe(100_000n);
+      expect(result.amount.getSat()).toBe(101_000n); // LP-quoted amount
       expect(result.feeAmount.getSat()).toBe(300n);
       expect(result.swapId).toBe(SwapId.of('swap-btc-456'));
       expect(result.destinationAddress).toBe(BitcoinAddress.of(BTC_BECH32));

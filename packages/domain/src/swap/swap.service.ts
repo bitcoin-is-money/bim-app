@@ -101,6 +101,7 @@ export interface CreateStarknetToBitcoinInput {
 export interface CreateStarknetToBitcoinOutput {
   swap: Swap;
   commitCalls: readonly StarknetCall[];
+  amount: Amount;
 }
 
 // =============================================================================
@@ -376,13 +377,16 @@ export class SwapService {
 
     await this.deps.swapRepository.save(swap);
 
+    const swapAmount = Amount.ofSatoshi(atomiqSwap.amountSats);
+
     this.log.info({
       swapId: atomiqSwap.swapId,
-      amountSats: input.amount.toSatString()
+      amountSats: swapAmount.toSatString()
     }, 'Starknet-to-Bitcoin swap created');
     return {
       swap,
       commitCalls: atomiqSwap.commitCalls,
+      amount: swapAmount,
     };
   }
 

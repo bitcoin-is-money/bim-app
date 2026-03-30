@@ -193,7 +193,7 @@ export class PayService {
     return {
       network: 'bitcoin',
       calls: [...swapResult.commitCalls, ...feeCalls],
-      amount: parsed.amount,
+      amount: swapResult.amount,
       feeAmount,
       swapId: swapResult.swap.data.id,
       destinationAddress: parsed.address,
