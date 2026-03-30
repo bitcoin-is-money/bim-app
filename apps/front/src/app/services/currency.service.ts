@@ -57,6 +57,13 @@ export class CurrencyService implements OnDestroy {
     this.startAutoRefresh();
   }
 
+  stop(): void {
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval);
+      this.refreshInterval = null;
+    }
+  }
+
   /**
    * Change the preferred fiat currency and persist to server.
    */
@@ -96,6 +103,9 @@ export class CurrencyService implements OnDestroy {
   }
 
   private startAutoRefresh(): void {
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval);
+    }
     this.refreshInterval = setInterval(() => {
       this.fetchRates();
     }, REFRESH_INTERVAL_MS);

@@ -154,6 +154,7 @@ export class AuthService {
   async signOut(): Promise<void> {
     await firstValueFrom(this.httpService.logout());
     this.currentUser.set(null);
+    this.currency.stop();
     // Reset to browser language after logout
     await this.i18n.initFromBrowser();
     await this.router.navigate(['/auth']);
