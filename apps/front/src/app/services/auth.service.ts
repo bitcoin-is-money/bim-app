@@ -132,8 +132,12 @@ export class AuthService {
       // HTTP errors are already handled by the interceptor
       // Only handle non-HTTP errors here
       if (!(error instanceof HttpErrorResponse)) {
-        const message = error instanceof Error ? error.message : this.i18n.t('notifications.authenticationFailed');
-        this.notifications.error({ message });
+        if (error instanceof DOMException && error.name === 'NotAllowedError') {
+          this.notifications.error({ message: this.i18n.t('notifications.authenticationCancelled') });
+        } else {
+          const message = error instanceof Error ? error.message : this.i18n.t('notifications.authenticationFailed');
+          this.notifications.error({ message });
+        }
       }
     } finally {
       this.isLoading.set(false);
