@@ -67,7 +67,7 @@ export namespace AppConfig {
       accountClassHash: required('ACCOUNT_CLASS_HASH'),
       wbtcTokenAddress: StarknetAddress.of(wbtcTokenAddress),
       strkTokenAddress: StarknetAddress.of(STRK_TOKEN_ADDRESS),
-      feeTreasuryAddress: StarknetAddress.of(required('FEE_TREASURY_ADDRESS')),
+      feeTreasuryAddress: StarknetAddress.of(required('BIM_TREASURY_ADDRESS')),
     };
 
     const claimer: ClaimerConfig = {

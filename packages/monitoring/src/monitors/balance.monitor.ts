@@ -4,8 +4,17 @@ import {AvnuBalanceLow, AvnuCreditsRecharged, TreasuryBalanceLow} from '@bim/dom
 import {Cron} from 'croner';
 import type {Logger} from 'pino';
 
+export const DEFAULT_BALANCE_CRON = '0 8 * * *';
+export const DEFAULT_AVNU_THRESHOLD_STRK = 15n;
+export const DEFAULT_TREASURY_THRESHOLD_STRK = 200n;
+
+const STRK_DECIMALS = 10n ** 18n;
+
 export interface BalanceMonitorConfig {
   readonly avnuAddress: StarknetAddress;
+  readonly schedule?: string;
+  readonly avnuThresholdStrk?: bigint;
+  readonly treasuryThresholdStrk?: bigint;
 }
 
 /**
@@ -33,8 +42,7 @@ export class BalanceMonitor {
   start(): void {
     if (this.cron) return;
 
-    // All balance alerts share the same schedule
-    const schedule = AvnuBalanceLow.schedule;
+    const schedule = this.config.schedule ?? DEFAULT_BALANCE_CRON;
     this.log.info({schedule}, 'Starting BalanceMonitor');
 
     this.cron = new Cron(schedule, () => void this.runIteration());
@@ -94,7 +102,8 @@ export class BalanceMonitor {
     this.lastAvnuBalance = currentBalance;
 
     // Check threshold
-    const alertMsg = AvnuBalanceLow.evaluate({address, network, currentBalance});
+    const threshold = (this.config.avnuThresholdStrk ?? DEFAULT_AVNU_THRESHOLD_STRK) * STRK_DECIMALS;
+    const alertMsg = AvnuBalanceLow.evaluate({address, network, currentBalance, threshold});
     if (alertMsg) {
       await this.notificationGateway.send(alertMsg);
     }
@@ -105,7 +114,8 @@ export class BalanceMonitor {
     const network = this.starknetConfig.network;
     const token = this.starknetConfig.strkTokenAddress;
     const currentBalance = await this.starknetGateway.getBalance({address, token});
-    const alertMsg = TreasuryBalanceLow.evaluate({address, network, currentBalance});
+    const threshold = (this.config.treasuryThresholdStrk ?? DEFAULT_TREASURY_THRESHOLD_STRK) * STRK_DECIMALS;
+    const alertMsg = TreasuryBalanceLow.evaluate({address, network, currentBalance, threshold});
     if (alertMsg) {
       await this.notificationGateway.send(alertMsg);
     }

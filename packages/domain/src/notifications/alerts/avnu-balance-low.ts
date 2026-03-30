@@ -6,15 +6,14 @@ const AVNU_PORTAL = 'https://portal.avnu.fi';
 
 export class AvnuBalanceLow {
   static readonly name = 'avnu-balance-low';
-  static readonly threshold = 5_000_000_000_000_000_000n;
-  static readonly schedule = '0 8 * * *';
 
   static evaluate(params: {
     address: StarknetAddress;
     network: string;
     currentBalance: bigint;
+    threshold: bigint;
   }): NotificationMessage | undefined {
-    if (params.currentBalance >= AvnuBalanceLow.threshold) {
+    if (params.currentBalance >= params.threshold) {
       return undefined;
     }
 
@@ -22,7 +21,7 @@ export class AvnuBalanceLow {
       ['Account', `\`${truncateAddress(params.address)}\``],
       ['Network', params.network],
       ['Balance', `${formatStrk(params.currentBalance)} STRK`],
-      ['Threshold', `${formatStrk(AvnuBalanceLow.threshold)} STRK`],
+      ['Threshold', `${formatStrk(params.threshold)} STRK`],
     ]);
 
     return {

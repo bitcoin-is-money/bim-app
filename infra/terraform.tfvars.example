@@ -12,6 +12,11 @@ network = "testnet"
 # ---------- Database ----------
 db_password = ""
 
+# ---------- BIM addresses ----------
+bim_treasury_address     = ""
+bim_treasury_private_key = ""
+# bim_avnu_address = ""
+
 # ---------- Secrets ----------
 
 # AVNU paymaster API key — https://portal.avnu.fi
@@ -19,3 +24,16 @@ db_password = ""
 
 # Apibara DNA token — https://www.apibara.com
 # dna_token = ""
+
+# Backend claimer account (auto-claim forward swaps)
+# claimer_private_key = ""
+# claimer_address = ""
+
+# ---------- Alerting (optional) ----------
+# Set enable_alerting = true and fill in Slack credentials to enable balance alerts.
+# enable_alerting = true
+# alerting_slack_bot_token = "xoxb-..."
+# alerting_slack_channel = "#bim-alerts"
+# alerting_balance_cron = "0 8 * * *"
+# alerting_avnu_threshold_strk = 15
+# alerting_treasury_threshold_strk = 200
