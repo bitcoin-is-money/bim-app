@@ -69,9 +69,10 @@ export class SlackNotificationGateway implements NotificationGateway {
     }
 
     if (message.context) {
+      const contextLine = `:calendar: ${new Date().toISOString()} • ${message.context}`;
       blocks.push({
         type: 'context',
-        elements: [{type: 'mrkdwn', text: message.context}],
+        elements: [{type: 'mrkdwn', text: contextLine}],
       });
     }
 
