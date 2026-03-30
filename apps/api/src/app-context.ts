@@ -35,8 +35,8 @@ import {
   DrizzleSwapRepository,
   DrizzleTransactionManager,
   SimpleWebAuthnGateway,
-  StarknetRpcGateway
 } from "./adapters";
+import {StarknetRpcGateway} from "@bim/starknet";
 import {Database} from "@bim/db/database";
 import type {AppConfig} from "./app-config";
 

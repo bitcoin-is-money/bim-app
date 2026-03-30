@@ -45,7 +45,7 @@ describe('Lightning Receive Swap Lifecycle', () => {
         gateways: {atomiq: atomiqMock},
       },
     });
-    monitor = appInstance.monitor!;
+    monitor = appInstance.swapMonitor!;
   });
 
   beforeEach(async () => {

@@ -34,7 +34,7 @@ function loadAccount(network: Network): {
   address: string;
   classHash: string;
 } {
-  const filePath = join(SCRIPT_DIR, `.account.${network}.json`);
+  const filePath = join(SCRIPT_DIR, `.treasury.${network}.secret.json`);
 
   try {
     return JSON.parse(readFileSync(filePath, 'utf-8'));
@@ -94,7 +94,7 @@ async function main(): Promise<void> {
   console.log('Address:', contract_address);
   console.log('\nAdd to your .env:');
   console.log(`  CLAIMER_ADDRESS=${contract_address}`);
-  console.log('  CLAIMER_PRIVATE_KEY=<see .account.' + network + '.json>');
+  console.log('  CLAIMER_PRIVATE_KEY=<see .treasury.' + network + '.secret.json>');
 }
 
 main().catch((err: unknown) => {

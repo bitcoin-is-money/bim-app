@@ -33,7 +33,7 @@ export interface CreateAppOptions {
 
 export interface AppInstance {
   app: Hono;
-  monitor: SwapMonitor | null;
+  swapMonitor: SwapMonitor | null;
   rootLogger: Logger;
 }
 
@@ -98,14 +98,14 @@ export async function createApp(options: CreateAppOptions = {}): Promise<AppInst
   }
 
   // Swap monitor (background polling + auto-claim)
-  let monitor: SwapMonitor | null = null;
+  let swapMonitor: SwapMonitor | null = null;
   if (!options.skipMonitor) {
-    monitor = new SwapMonitor(
+    swapMonitor = new SwapMonitor(
       context.services.swap,
       context.gateways.atomiq,
       context.logger,
     );
   }
 
-  return {app, monitor, rootLogger: rootLogger};
+  return {app, swapMonitor, rootLogger: rootLogger};
 }

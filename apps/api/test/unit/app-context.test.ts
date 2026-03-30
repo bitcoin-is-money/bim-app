@@ -10,6 +10,12 @@ const logger = createLogger();
 
 // Mock adapters to avoid real implementations
 // Use class-style mocks that can be instantiated with 'new'
+vi.mock('@bim/starknet', () => {
+  return {
+    StarknetRpcGateway: class { name = 'starknet-rpc'; },
+  };
+});
+
 vi.mock('../../src/adapters/index.js', () => {
   return {
     DrizzleAccountRepository: class { name = 'drizzle-account'; },
@@ -20,7 +26,6 @@ vi.mock('../../src/adapters/index.js', () => {
     DrizzleSwapRepository: class { name = 'drizzle-swap'; },
     DrizzleTransactionManager: class { name = 'drizzle-tx-manager'; },
     SimpleWebAuthnGateway: class { name = 'simple-webauthn'; },
-    StarknetRpcGateway: class { name = 'starknet-rpc'; },
     AvnuPaymasterGateway: class { name = 'avnu-paymaster'; },
     AvnuSwapGateway: class { name = 'avnu-swap'; },
     AtomiqSdkGateway: class { name = 'atomiq-sdk'; },

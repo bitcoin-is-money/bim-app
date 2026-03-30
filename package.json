@@ -11,7 +11,7 @@
     "postinstall": "patch-package",
     "clean": "npm run clean --workspaces --if-present",
     "clean:all": "npm run clean && rm -rf node_modules packages/*/node_modules apps/*/node_modules package-lock.json",
-    "build:libs": "npm run build -w @bim/test-toolkit && npm run build -w @bim/lib && npm run build -w @bim/domain && npm run build -w @bim/db",
+    "build:libs": "npm run build -w @bim/test-toolkit && npm run build -w @bim/lib && npm run build -w @bim/domain && npm run build -w @bim/db && npm run build -w @bim/starknet && npm run build -w @bim/monitoring",
     "build:front": "npm run build -w @bim/front",
     "build:api": "npm run build:libs && npm run build -w @bim/api && npm run build:front && npm run copy:front -w @bim/api",
     "build:indexer": "npm run build:libs && npm run build -w @bim/indexer",
@@ -64,8 +64,5 @@
     "typescript-eslint": "^8.56.1",
     "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^4.0.18"
-  },
-  "overrides": {
-    "@noble/hashes": "1.8.0"
   }
 }

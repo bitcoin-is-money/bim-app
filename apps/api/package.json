@@ -25,6 +25,7 @@
     "@bim/db": "*",
     "@bim/domain": "*",
     "@bim/lib": "*",
+    "@bim/starknet": "*",
     "@hono/node-server": "^1.19.9",
     "@noble/curves": "^1.9.7",
     "@stablelib/base64": "^2.0.1",

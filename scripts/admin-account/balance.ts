@@ -16,6 +16,7 @@ const RPC_URLS: Record<Network, string> = {
 
 const STRK_TOKEN_ADDRESS = '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d';
 const STRK_DECIMALS = 18;
+const AVNU_ADDRESS = '0x02698cf1e909bc26d684182ce66222f5a60588ccc6b455ee4622e3483208435f';
 
 type Network = 'testnet' | 'mainnet';
 
@@ -29,7 +30,7 @@ function parseNetwork(): Network {
 }
 
 function loadAccount(network: Network): {address: string} {
-  const filePath = join(SCRIPT_DIR, `.account.${network}.json`);
+  const filePath = join(SCRIPT_DIR, `.treasury.${network}.secret.json`);
 
   try {
     return JSON.parse(readFileSync(filePath, 'utf-8'));
@@ -65,12 +66,18 @@ async function main(): Promise<void> {
   const {address} = loadAccount(network);
   const provider = new RpcProvider({nodeUrl: RPC_URLS[network]});
 
-  const balance = await getStrkBalance(provider, address);
+  const adminBalance = await getStrkBalance(provider, address);
+  const avnuBalance = await getStrkBalance(provider, AVNU_ADDRESS);
 
   console.log(`Network:  ${network}`);
+  console.log();
+  console.log('── Admin (Treasury) ──');
   console.log(`Address:  ${address}`);
-  console.log(`Balance:  ${formatStrk(balance)} STRK`);
-  console.log(`Raw:      ${balance.toString()} wei`);
+  console.log(`Balance:  ${formatStrk(adminBalance)} STRK`);
+  console.log();
+  console.log('── AVNU ──');
+  console.log(`Address:  ${AVNU_ADDRESS}`);
+  console.log(`Balance:  ${formatStrk(avnuBalance)} STRK`);
 }
 
 main().catch((err: unknown) => {

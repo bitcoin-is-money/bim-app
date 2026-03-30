@@ -21,7 +21,9 @@
       "@bim/test-toolkit/*": ["packages/test-toolkit/src/*"],
       "@bim/db": ["packages/db/src/index.ts"],
       "@bim/db/database": ["packages/db/src/database.ts"],
-      "@bim/domain/*": ["packages/domain/src/*"]
+      "@bim/domain/*": ["packages/domain/src/*"],
+      "@bim/monitoring": ["packages/monitoring/src/index.ts"],
+      "@bim/starknet": ["packages/starknet/src/index.ts"]
     }
   }
 }
