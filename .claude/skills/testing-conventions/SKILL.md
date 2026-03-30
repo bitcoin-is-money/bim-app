@@ -14,6 +14,7 @@ description: Guide for testing conventions in the BIM project. This skill should
 | Unit (api) | `apps/api/test/unit/` | `npm test -w @bim/api` | Mocked ports |
 | Unit (front) | `apps/front/src/**/*.test.ts` | `npm test -w @bim/front` | TestBed |
 | Integration | `apps/api/test/integration/` | `npm run test:integration` | Docker (PG + Devnet) |
+| Integration (single file) | `apps/api/test/integration/` | `npx vitest run --config apps/api/vitest.config.integration.ts <file>` | Docker (PG + Devnet) |
 | Testnet | `apps/api/test/testnet/` | `npm run test:testnet -w @bim/api` | Sepolia + `AVNU_API_KEY` |
 
 ## File Placement
@@ -108,3 +109,19 @@ describe('Feature Name', () => {
 | Angular component        | no test                                     |
 | Angular model with logic | unit test (co-located)                      |
 | Bug fix                  | Regression test reproducing the bug         |
+
+## Running Integration Tests
+
+Integration tests are slow (~3 minutes for the full suite) because they spin up Docker containers (PostgreSQL + Starknet devnet).
+
+**When iterating on a specific test file**, run only that file:
+
+```bash
+cd apps/api && npx vitest run --config vitest.config.integration.ts test/integration/payment/<file>.test.ts
+```
+
+**Run the full suite only as a final validation** before committing:
+
+```bash
+npm run test:integration
+```
