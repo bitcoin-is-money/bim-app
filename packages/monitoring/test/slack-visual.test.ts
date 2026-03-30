@@ -28,6 +28,7 @@ function buildAllAlerts(): NotificationMessage[] {
     address: FAKE_ADDRESS,
     network: NETWORK,
     currentBalance: 2_300_000_000_000_000_000n,
+    threshold: 15_000_000_000_000_000_000n,
   });
   if (avnuLow) alerts.push(avnuLow);
 
@@ -35,6 +36,7 @@ function buildAllAlerts(): NotificationMessage[] {
     address: FAKE_ADDRESS,
     network: NETWORK,
     currentBalance: 3_500_000_000_000_000_000n,
+    threshold: 200_000_000_000_000_000_000n,
   });
   if (treasuryLow) alerts.push(treasuryLow);
 

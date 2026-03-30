@@ -4,15 +4,14 @@ import {formatStrk, starkscanUrl, truncateAddress} from '../format';
 
 export class TreasuryBalanceLow {
   static readonly name = 'treasury-balance-low';
-  static readonly threshold = 10_000_000_000_000_000_000n;
-  static readonly schedule = '0 8 * * *';
 
   static evaluate(params: {
     address: StarknetAddress;
     network: string;
     currentBalance: bigint;
+    threshold: bigint;
   }): NotificationMessage | undefined {
-    if (params.currentBalance >= TreasuryBalanceLow.threshold) {
+    if (params.currentBalance >= params.threshold) {
       return undefined;
     }
 
@@ -20,7 +19,7 @@ export class TreasuryBalanceLow {
       ['Account', `\`${truncateAddress(params.address)}\``],
       ['Network', params.network],
       ['Balance', `${formatStrk(params.currentBalance)} STRK`],
-      ['Threshold', `${formatStrk(TreasuryBalanceLow.threshold)} STRK`],
+      ['Threshold', `${formatStrk(params.threshold)} STRK`],
     ]);
 
     return {

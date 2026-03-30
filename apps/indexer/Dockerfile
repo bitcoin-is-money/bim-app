@@ -22,6 +22,8 @@ COPY patches/ patches/
 COPY packages/lib/package.json packages/lib/
 COPY packages/domain/package.json packages/domain/
 COPY packages/db/package.json packages/db/
+COPY packages/starknet/package.json packages/starknet/
+COPY packages/monitoring/package.json packages/monitoring/
 COPY packages/test-toolkit/package.json packages/test-toolkit/
 COPY apps/api/package.json apps/api/
 COPY apps/front/package.json apps/front/
@@ -44,11 +46,11 @@ RUN npm init -y && npm install pg
 # Copy Apibara build output
 COPY --from=builder /app/apps/indexer/.apibara/build/ ./.apibara/build/
 
-# Copy health entrypoint
-COPY apps/indexer/src/health-entrypoint.mjs ./health-entrypoint.mjs
+# Copy bundled entrypoint (health server + balance monitor)
+COPY --from=builder /app/apps/indexer/dist/entrypoint.mjs ./entrypoint.mjs
 
 ARG APP_VERSION=dev
 ENV APP_VERSION=${APP_VERSION}
 
 EXPOSE 8080
-CMD ["node", "health-entrypoint.mjs"]
+CMD ["node", "entrypoint.mjs"]

@@ -9,10 +9,11 @@ const AVNU_ADDRESS = StarknetAddress.of('0x0000000000000000000000000000000000000
 const TREASURY_ADDRESS = StarknetAddress.of('0x0000000000000000000000000000000000000000000000000000000000000bbb');
 const STRK_TOKEN = '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d';
 
-const ABOVE_AVNU_THRESHOLD = 10_000_000_000_000_000_000n;
+// Default thresholds: 15 STRK for AVNU, 200 STRK for treasury
+const ABOVE_AVNU_THRESHOLD = 20_000_000_000_000_000_000n;
 const BELOW_AVNU_THRESHOLD = 1_000_000_000_000_000_000n;
-const ABOVE_TREASURY_THRESHOLD = 20_000_000_000_000_000_000n;
-const BELOW_TREASURY_THRESHOLD = 2_000_000_000_000_000_000n;
+const ABOVE_TREASURY_THRESHOLD = 300_000_000_000_000_000_000n;
+const BELOW_TREASURY_THRESHOLD = 50_000_000_000_000_000_000n;
 
 function createMockStarknetGateway(): StarknetGateway {
   return {
@@ -69,7 +70,9 @@ describe('BalanceMonitor', () => {
 
   describe('runIteration', () => {
     it('does not send alerts when balances are above thresholds', async () => {
-      vi.mocked(starknetGateway.getBalance).mockResolvedValue(ABOVE_AVNU_THRESHOLD);
+      vi.mocked(starknetGateway.getBalance)
+        .mockResolvedValueOnce(ABOVE_AVNU_THRESHOLD)
+        .mockResolvedValueOnce(ABOVE_TREASURY_THRESHOLD);
 
       await monitor.runIteration();
 
@@ -139,10 +142,18 @@ describe('BalanceMonitor', () => {
     });
 
     it('does not detect recharge when balance stays the same', async () => {
-      vi.mocked(starknetGateway.getBalance).mockResolvedValue(ABOVE_AVNU_THRESHOLD);
+      // First iteration
+      vi.mocked(starknetGateway.getBalance)
+        .mockResolvedValueOnce(ABOVE_AVNU_THRESHOLD)
+        .mockResolvedValueOnce(ABOVE_TREASURY_THRESHOLD);
 
       await monitor.runIteration();
       vi.mocked(notificationGateway.send).mockClear();
+
+      // Second iteration — same AVNU balance
+      vi.mocked(starknetGateway.getBalance)
+        .mockResolvedValueOnce(ABOVE_AVNU_THRESHOLD)
+        .mockResolvedValueOnce(ABOVE_TREASURY_THRESHOLD);
 
       await monitor.runIteration();
 

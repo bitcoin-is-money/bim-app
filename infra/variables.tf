@@ -33,10 +33,10 @@ variable "db_password" {
   sensitive   = true
 }
 
-# ---------- Secrets ----------
+# ---------- API secrets ----------
 
 variable "avnu_api_key" {
-  description = "AVNU paymaster API key (https://portal.avnu.fi)"
+  description = "AVNU paymaster API key — optional, empty disables sponsored mode (https://portal.avnu.fi)"
   type        = string
   sensitive   = true
   default     = ""
@@ -48,6 +48,8 @@ variable "api_log_level" {
   default     = "info"
 }
 
+# ---------- Indexer ----------
+
 variable "indexer_log_level" {
   description = "Log level for the indexer container (trace, debug, info, warn, error, fatal)"
   type        = string
@@ -58,7 +60,6 @@ variable "dna_token" {
   description = "Apibara DNA token for the indexer (https://www.apibara.com)"
   type        = string
   sensitive   = true
-  default     = ""
 }
 
 # ---------- Claimer (backend Starknet account for auto-claiming forward swaps) ----------
@@ -72,4 +73,62 @@ variable "claimer_private_key" {
 variable "claimer_address" {
   description = "Starknet address of the backend claimer account"
   type        = string
+}
+
+# ---------- BIM addresses ----------
+
+variable "bim_treasury_address" {
+  description = "Starknet address of the BIM fee treasury"
+  type        = string
+}
+
+variable "bim_treasury_private_key" {
+  description = "STARK private key of the BIM treasury account"
+  type        = string
+  sensitive   = true
+}
+
+variable "bim_avnu_address" {
+  description = "Starknet address of the AVNU paymaster account to monitor — required when alerting is enabled"
+  type        = string
+  default     = ""
+}
+
+# ---------- Alerting (Slack notifications for indexer balance monitor) ----------
+
+variable "enable_alerting" {
+  description = "Enable balance alerting in the indexer (requires slack vars and bim_avnu_address)"
+  type        = bool
+  default     = false
+}
+
+variable "alerting_slack_bot_token" {
+  description = "Slack bot token for balance alerts — required when alerting is enabled (xoxb-...)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "alerting_slack_channel" {
+  description = "Slack channel for balance alerts — required when alerting is enabled (e.g. #bim-alerts)"
+  type        = string
+  default     = ""
+}
+
+variable "alerting_balance_cron" {
+  description = "Cron schedule for balance checks (default: daily at 8 AM UTC)"
+  type        = string
+  default     = "0 8 * * *"
+}
+
+variable "alerting_avnu_threshold_strk" {
+  description = "AVNU balance alert threshold in STRK (default: 15)"
+  type        = number
+  default     = 15
+}
+
+variable "alerting_treasury_threshold_strk" {
+  description = "Treasury balance alert threshold in STRK (default: 200)"
+  type        = number
+  default     = 200
 }
