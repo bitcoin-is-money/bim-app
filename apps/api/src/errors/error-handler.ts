@@ -24,7 +24,6 @@ import {
 import {
   InvalidPaymentAddressError,
   InvalidPaymentAmountError,
-  MissingPaymentAmountError,
   PaymentParsingError,
   SameAddressPaymentError,
   UnsupportedNetworkError,
@@ -187,11 +186,6 @@ export function handleDomainError(ctx: Context, error: unknown, logger: Logger):
       network: error.network,
       amount: Number(error.amount),
       unit: 'sats',
-    });
-  }
-  if (error instanceof MissingPaymentAmountError) {
-    return createErrorResponse(ctx, 400, ErrorCode.MISSING_PAYMENT_AMOUNT, 'Amount is required', {
-      network: error.network,
     });
   }
   if (error instanceof SameAddressPaymentError) {

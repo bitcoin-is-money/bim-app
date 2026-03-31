@@ -35,7 +35,7 @@ export class ParsedPayment {
         break;
     }
 
-    const amountEditable = response.network === 'bitcoin' && response.amountEditable === true;
+    const amountEditable = response.amountEditable;
 
     return new ParsedPayment(
       response.network,

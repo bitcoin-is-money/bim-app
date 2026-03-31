@@ -1,6 +1,5 @@
 import {InvalidStarknetAddressError, StarknetAddress} from '@bim/domain/account';
 import {
-  MissingPaymentAmountError,
   ParseService,
   PaymentParsingError,
   UnsupportedNetworkError,
@@ -154,8 +153,14 @@ describe('ParseService', () => {
       }
     });
 
-    it('throws MissingPaymentAmountError for bare Starknet address without amount', () => {
-      expect(() => service.parse(RECIPIENT_ADDRESS)).toThrow(MissingPaymentAmountError);
+    it('routes bare Starknet address without amount as editable', () => {
+      const result = service.parse(RECIPIENT_ADDRESS);
+      expect(result.network).toBe('starknet');
+      if (result.network === 'starknet') {
+        expect(result.address).toBe(RECIPIENT_ADDRESS);
+        expect(result.amount.isZero()).toBe(true);
+        expect(result.amountEditable).toBe(true);
+      }
     });
 
     it('rejects Ethereum address (0x + 40 hex) as unsupported', () => {
@@ -311,6 +316,7 @@ describe('ParseService', () => {
         expect(result.amount.getSat()).toBe(1_000_000n);
         expect(result.tokenAddress).toBe(WBTC_TOKEN_ADDRESS);
         expect(result.description).toBe('');
+        expect(result.amountEditable).toBe(false);
       }
     });
 
@@ -350,14 +356,23 @@ describe('ParseService', () => {
       expect(result.description).toBe('topPriority');
     });
 
-    it('parses starknet: URI with zero amount', () => {
+    it('parses starknet: URI with zero amount as editable', () => {
       const uri = `starknet:${STRK_TOKEN_ADDRESS}?amount=0&token=${WBTC_TOKEN_ADDRESS}`;
       const result = service.parse(uri);
       expect(result.amount.isZero()).toBe(true);
+      if (result.network === 'starknet') {
+        expect(result.amountEditable).toBe(true);
+      }
     });
 
-    it('throws MissingPaymentAmountError for starknet: URI without amount', () => {
-      expect(() => service.parse(`starknet:${STRK_TOKEN_ADDRESS}`)).toThrow(MissingPaymentAmountError);
+    it('parses starknet: URI without amount as editable', () => {
+      const uri = `starknet:${STRK_TOKEN_ADDRESS}?token=${WBTC_TOKEN_ADDRESS}`;
+      const result = service.parse(uri);
+      expect(result.network).toBe('starknet');
+      if (result.network === 'starknet') {
+        expect(result.amount.isZero()).toBe(true);
+        expect(result.amountEditable).toBe(true);
+      }
     });
 
     it('throws UnsupportedTokenError when token is absent', () => {
@@ -400,17 +415,23 @@ describe('ParseService', () => {
         expect(result.amount.getSat()).toBe(50_000n);
         expect(result.description).toBe('testPayment');
         expect(result.expiresAt).toEqual(new Date('2025-06-01T00:00:00Z'));
+        expect(result.amountEditable).toBe(false);
       }
     });
 
-    it('throws MissingPaymentAmountError when invoice has no amount', () => {
+    it('returns amountEditable when invoice has no amount', () => {
       const service = new ParseService({
         lightningDecoder: {decode: vi.fn().mockReturnValue({description: 'test'})},
         starknetConfig: testStarknetConfig(),
         logger,
       });
 
-      expect(() => service.parse(VALID_LIGHTNING_INVOICE)).toThrow(MissingPaymentAmountError);
+      const result = service.parse(VALID_LIGHTNING_INVOICE);
+      expect(result.network).toBe('lightning');
+      if (result.network === 'lightning') {
+        expect(result.amount.isZero()).toBe(true);
+        expect(result.amountEditable).toBe(true);
+      }
     });
 
     it('throws ValidationError when invoice has negative amount', () => {
@@ -465,9 +486,12 @@ describe('ParseService', () => {
       expect(result.description).toBe('shopName');
     });
 
-    it('parses bitcoin: URI with zero amount', () => {
+    it('parses bitcoin: URI with zero amount as editable', () => {
       const result = service.parse(`bitcoin:${BTC_BECH32}?amount=0`);
       expect(result.amount.isZero()).toBe(true);
+      if (result.network === 'bitcoin') {
+        expect(result.amountEditable).toBe(true);
+      }
     });
 
     it('returns amountEditable when bitcoin: URI has no amount', () => {
@@ -483,7 +507,7 @@ describe('ParseService', () => {
     it('does not set amountEditable when amount is present', () => {
       const result = service.parse(`bitcoin:${BTC_BECH32}?amount=0.001`);
       if (result.network === 'bitcoin') {
-        expect(result.amountEditable).toBeUndefined();
+        expect(result.amountEditable).toBe(false);
       }
     });
 
