@@ -61,7 +61,7 @@
   },
   "accountSetup": {
     "title": "Setting up your account...",
-    "pleaseWait": "Please wait while we create your Starknet account",
+    "pleaseWait": "Please wait while we create your BIM account",
     "failed": "Account creation failed",
     "back": "Back",
     "deploymentStartFailed": "Failed to start account deployment",
