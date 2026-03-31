@@ -137,12 +137,9 @@
   },
   "transactions": {
     "empty": {
-      "title": "Commencez à utiliser BIM pour vos paiements :",
-      "topUp": "Rechargez votre portefeuille.",
-      "step1": "1. Appuyez sur 'recevoir' et créez une facture.",
-      "step2": "2. Puis payez-la depuis un autre portefeuille :",
-      "step2Example": "Ledger ou Phoenix par exemple.",
-      "step3": "3. Profitez de BIM !"
+      "title": "Alimentez votre portefeuille :",
+      "step1": "1. Appuyez sur recevoir et créez une facture.",
+      "step2": "2. Payez-la depuis un autre portefeuille : Ledger, Phoenix…"
     },
     "type": {
       "receipt": "Reçu",

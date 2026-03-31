@@ -137,12 +137,9 @@
   },
   "transactions": {
     "empty": {
-      "title": "Start using BIM for your payments:",
-      "topUp": "Top up your wallet.",
-      "step1": "1. Tap 'receive' and create invoice.",
-      "step2": "2. Then pay it from another wallet you have:",
-      "step2Example": "Ledger or Phoenix for example.",
-      "step3": "3. Enjoy BIM!"
+      "title": "Fund your wallet:",
+      "step1": "1. Tape receive and create an invoice.",
+      "step2": "2. Pay it from another wallet : Ledger, Phoenix…"
     },
     "type": {
       "receipt": "Received",
