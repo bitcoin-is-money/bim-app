@@ -124,6 +124,50 @@ describe('ParseService', () => {
       }
     });
 
+    it('routes bare Bitcoin address with query params', () => {
+      const result = service.parse(`${BTC_BECH32}?amount=0.001&label=coffeeShop`);
+      expect(result.network).toBe('bitcoin');
+      if (result.network === 'bitcoin') {
+        expect(result.address).toBe(BTC_BECH32);
+        expect(result.amount.getSat()).toBe(100_000n);
+        expect(result.description).toBe('coffeeShop');
+      }
+    });
+
+    it('routes bare Starknet address to starknet parser', () => {
+      const result = service.parse(`${RECIPIENT_ADDRESS}?amount=1000`);
+      expect(result.network).toBe('starknet');
+      if (result.network === 'starknet') {
+        expect(result.address).toBe(RECIPIENT_ADDRESS);
+        expect(result.amount.getSat()).toBe(1_000n);
+        expect(result.tokenAddress).toBe(WBTC_TOKEN_ADDRESS);
+      }
+    });
+
+    it('routes bare Starknet address with explicit token', () => {
+      const result = service.parse(`${RECIPIENT_ADDRESS}?amount=500&token=${WBTC_TOKEN_ADDRESS}`);
+      expect(result.network).toBe('starknet');
+      if (result.network === 'starknet') {
+        expect(result.address).toBe(RECIPIENT_ADDRESS);
+        expect(result.amount.getSat()).toBe(500n);
+        expect(result.tokenAddress).toBe(WBTC_TOKEN_ADDRESS);
+      }
+    });
+
+    it('throws MissingPaymentAmountError for bare Starknet address without amount', () => {
+      expect(() => service.parse(RECIPIENT_ADDRESS)).toThrow(MissingPaymentAmountError);
+    });
+
+    it('rejects Ethereum address (0x + 40 hex) as unsupported', () => {
+      try {
+        service.parse('0xdAC17F958D2ee523a2206206994597C13D831ec7');
+        expect.fail('should have thrown');
+      } catch (err: unknown) {
+        expect(err).toBeInstanceOf(UnsupportedNetworkError);
+        expect((err as UnsupportedNetworkError).detectedNetwork).toBe('ethereum');
+      }
+    });
+
     it('throws UnsupportedNetworkError for unrecognized data', () => {
       expect(() => service.parse('not-a-valid-address')).toThrow(UnsupportedNetworkError);
     });
