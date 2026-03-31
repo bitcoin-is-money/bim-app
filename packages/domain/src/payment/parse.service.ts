@@ -3,7 +3,6 @@ import type {LightningDecoder} from '../ports';
 import {Amount, BitcoinAddress, DomainError, StarknetAddress, type StarknetConfig} from '../shared';
 import {LightningInvoice} from '../swap';
 import {
-  MissingPaymentAmountError,
   PaymentParsingError,
   UnsupportedNetworkError,
   UnsupportedTokenError,
@@ -89,23 +88,20 @@ export class ParseService {
 
   /**
    * Parse a BOLT11 Lightning invoice.
-   *
-   * @throws MissingPaymentAmountError if the invoice has no amount
    */
   private parseLightningInvoice(invoice: string): ParsedPaymentData & {network: 'lightning'} {
     const lightningInvoice = LightningInvoice.of(invoice);
     const decoded = this.deps.lightningDecoder.decode(lightningInvoice);
 
-    if (decoded.amountMSat == undefined) {
-      throw new MissingPaymentAmountError('lightning');
-    }
-
-    const amount = Amount.ofMilliSatoshi(decoded.amountMSat);
+    const amount = decoded.amountMSat != undefined
+      ? Amount.ofMilliSatoshi(decoded.amountMSat)
+      : Amount.zero();
     const expiresAt = decoded.expiresAt;
     return {
       network: 'lightning',
       invoice: lightningInvoice,
       amount,
+      amountEditable: amount.isZero(),
       description: decoded.description ?? '',
       ...(expiresAt !== undefined && {expiresAt}),
     };
@@ -129,15 +125,9 @@ export class ParseService {
     const address = BitcoinAddress.of(url.pathname, this.deps.starknetConfig.bitcoinNetwork);
 
     const amountParam = url.searchParams.get('amount');
-    let amount: Amount;
-    let amountEditable: boolean | undefined;
-    if (amountParam == undefined) {
-      amount = Amount.zero();
-      amountEditable = true;
-    } else {
-      amount = Amount.fromBtcString(amountParam);
-    }
-
+    const amount = amountParam != undefined
+      ? Amount.fromBtcString(amountParam)
+      : Amount.zero();
     // BIP-21: "label" is for the recipient name, "message" is a note to the payer
     const description = url.searchParams.get('label')
       ?? url.searchParams.get('message')
@@ -147,8 +137,8 @@ export class ParseService {
       network: 'bitcoin',
       address,
       amount,
+      amountEditable: amount.isZero(),
       description,
-      ...(amountEditable && {amountEditable}),
     };
   }
 
@@ -164,7 +154,6 @@ export class ParseService {
    * @see https://eips.ethereum.org/EIPS/eip-681 (ERC-681: URL Format for Transaction Requests)
    *
    * @throws InvalidPaymentAddressError if the address format is invalid
-   * @throws MissingPaymentAmountError if the amount parameter is absent
    * @throws UnsupportedTokenError if the token is not supported
    */
   private parseStarknetUri(uri: string): ParsedPaymentData & {network: 'starknet'} {
@@ -172,12 +161,9 @@ export class ParseService {
     const address = StarknetAddress.of(url.pathname);
 
     const amountParam = url.searchParams.get('amount');
-    if (amountParam == undefined) {
-      throw new MissingPaymentAmountError('starknet');
-    }
-    const rawAmount = BigInt(amountParam);
-    const amount = Amount.ofSatoshi(rawAmount);
-
+    const amount = amountParam != undefined
+      ? Amount.ofSatoshi(BigInt(amountParam))
+      : Amount.zero();
     const tokenParam = url.searchParams.get('token');
     const wbtcAddress = this.deps.starknetConfig.wbtcTokenAddress;
     if (tokenParam == undefined || tokenParam !== wbtcAddress) {
@@ -194,6 +180,7 @@ export class ParseService {
       network: 'starknet',
       address,
       amount,
+      amountEditable: amount.isZero(),
       tokenAddress: wbtcAddress,
       description,
     };

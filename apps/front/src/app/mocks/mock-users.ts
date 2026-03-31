@@ -43,6 +43,7 @@ export const MOCK_USERS: [MockUserProfile, ...MockUserProfile[]] = [
     paymentParseResult: {
       network: 'starknet',
       amount: {value: 50_000_000, currency: 'SAT'}, // 0.5 BTC
+      amountEditable: false,
       fee: {value: 50_000, currency: 'SAT'}, // 0.1% BIM fee
       description: 'Payment to Starknet account',
       address: '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d',
@@ -67,6 +68,7 @@ export const MOCK_USERS: [MockUserProfile, ...MockUserProfile[]] = [
     paymentParseResult: {
       network: 'lightning',
       amount: {value: 500_000, currency: 'SAT'}, // 0.005 BTC
+      amountEditable: false,
       fee: {value: 3, currency: 'SAT'}, // estimated percentage fee from parse
       description: 'Lightning coffee payment',
       invoice: 'lnbc5m1pnxk7aasp5fake0invoice0for0testing0purposes0only0mock0data0qqqqqqqqqqqqqqqq',
@@ -98,6 +100,7 @@ export const MOCK_USERS: [MockUserProfile, ...MockUserProfile[]] = [
     paymentParseResult: {
       network: 'bitcoin',
       amount: {value: 10_000, currency: 'SAT'}, // 0.1 BTC
+      amountEditable: false,
       fee: {value: 5, currency: 'SAT'}, // estimated percentage fee from parse
       description: 'Bitcoin on-chain transfer',
       address: 'bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4',
@@ -121,6 +124,7 @@ export const MOCK_USERS: [MockUserProfile, ...MockUserProfile[]] = [
     paymentParseResult: {
       network: 'starknet',
       amount: {value: 1_000, currency: 'SAT'},
+      amountEditable: false,
       fee: {value: 1, currency: 'SAT'},
       description: 'Zero amount',
       address: '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d',
@@ -145,6 +149,7 @@ export const MOCK_USERS: [MockUserProfile, ...MockUserProfile[]] = [
     paymentParseResult: {
       network: 'starknet',
       amount: {value: 1_000, currency: 'SAT'},
+      amountEditable: false,
       fee: {value: 1, currency: 'SAT'},
       description: 'Zero amount',
       address: '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d',
@@ -169,6 +174,7 @@ export const MOCK_USERS: [MockUserProfile, ...MockUserProfile[]] = [
     paymentParseResult: {
       network: 'starknet',
       amount: {value: -100_000_000, currency: 'SAT'},
+      amountEditable: false,
       fee: {value: 0, currency: 'SAT'},
       description: 'Negative amount',
       address: '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d',

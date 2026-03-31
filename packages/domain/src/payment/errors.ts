@@ -34,12 +34,6 @@ export class UnsupportedNetworkError extends DomainError {
   }
 }
 
-export class MissingPaymentAmountError extends DomainError {
-  constructor(readonly network: PaymentNetwork) {
-    super(`${network} payment detected, but the amount has not been set`);
-  }
-}
-
 export class UnsupportedTokenError extends DomainError {
   constructor(readonly tokenAddress: string) {
     super(`Unsupported token: "${tokenAddress}". Only WBTC is supported.`);

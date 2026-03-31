@@ -25,6 +25,7 @@ export type ParsedPaymentData =
   | {
       network: 'lightning';
       amount: Amount;
+      amountEditable: boolean;
       description: string;
       invoice: LightningInvoice;
       expiresAt?: Date;
@@ -32,13 +33,14 @@ export type ParsedPaymentData =
   | {
       network: 'bitcoin';
       amount: Amount;
-      amountEditable?: boolean;
+      amountEditable: boolean;
       description: string;
       address: BitcoinAddress;
     }
   | {
       network: 'starknet';
       amount: Amount;
+      amountEditable: boolean;
       description: string;
       address: StarknetAddress;
       tokenAddress: StarknetAddress;

@@ -37,6 +37,7 @@ export interface AmountResponse {
 export interface LightningPreparedPaymentResponse {
   network: 'lightning';
   amount: AmountResponse;
+  amountEditable: boolean;
   fee: AmountResponse;
   description: string;
   invoice: string;
@@ -47,16 +48,17 @@ export interface LightningPreparedPaymentResponse {
 export interface BitcoinPreparedPaymentResponse {
   network: 'bitcoin';
   amount: AmountResponse;
+  amountEditable: boolean;
   fee: AmountResponse;
   description: string;
   address: string;
-  amountEditable?: boolean;
 }
 
 /** Prepared Starknet payment details returned by POST /api/pay/parse */
 export interface StarknetPreparedPaymentResponse {
   network: 'starknet';
   amount: AmountResponse;
+  amountEditable: boolean;
   fee: AmountResponse;
   description: string;
   address: string;

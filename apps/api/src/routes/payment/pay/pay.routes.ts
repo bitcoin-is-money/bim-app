@@ -220,6 +220,7 @@ function serializeAmount(amount: Amount): AmountResponse {
 function serializePreparedPayment(prepared: PreparedPaymentData): PreparedPaymentResponse {
   const base = {
     amount: serializeAmount(prepared.amount),
+    amountEditable: prepared.amountEditable,
     fee: serializeAmount(prepared.fee),
     description: prepared.description,
   };
@@ -237,7 +238,6 @@ function serializePreparedPayment(prepared: PreparedPaymentData): PreparedPaymen
     case 'bitcoin':
       return {
         network: 'bitcoin', ...base, address: prepared.address.toString(),
-        ...(prepared.amountEditable && {amountEditable: true}),
       };
     case 'starknet':
       return {
