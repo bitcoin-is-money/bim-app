@@ -58,9 +58,25 @@ export class ParseService {
       return this.wrapParsingErrors(() => this.parseStarknetUri(trimmed));
     }
 
-    if (BitcoinAddress.isValid(trimmed)) {
+    // Flexible bare address detection: extract address part from optional query params
+    // so that inputs like "0x1234...?amount=1000" or "bc1q...?amount=0.001" are handled
+    const [addressPart = '', ...rest] = trimmed.split('?');
+    const queryString = rest.length > 0 ? `?${rest.join('?')}` : '';
+
+    // Bare Starknet address (> 42 chars to exclude Ethereum 0x + 40 hexs)
+    if (addressPart.length > 42 && StarknetAddress.isValid(addressPart)) {
+      this.deps.logger.info(`Parsing bare Starknet address`);
+      const url = new URL(`starknet:${addressPart}${queryString}`);
+      if (!url.searchParams.has('token')) {
+        url.searchParams.set('token', this.deps.starknetConfig.wbtcTokenAddress);
+      }
+      return this.wrapParsingErrors(() => this.parseStarknetUri(url.toString()));
+    }
+
+    // Bare Bitcoin address
+    if (BitcoinAddress.isValid(addressPart)) {
       this.deps.logger.info(`Parsing bare Bitcoin address`);
-      return this.wrapParsingErrors(() => this.parseBitcoinUri(`bitcoin:${trimmed}`));
+      return this.wrapParsingErrors(() => this.parseBitcoinUri(`bitcoin:${addressPart}${queryString}`));
     }
 
     const detectedNetwork = detectUnsupportedNetwork(trimmed);
