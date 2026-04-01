@@ -94,8 +94,11 @@ describe('Pay Lightning — fee accuracy', () => {
     // The invoice amount should be 250,000 sats
     expect(body.payment.amount.value).toBe(INVOICE_AMOUNT_SATS);
 
-    // The fee should reflect the real LP quote (2500 sats) + BIM fee (250 sats),
+    // The fee should reflect the real LP quote (2500 sats) + BIM fee (500 sats),
     // NOT the estimated catalogue percentage (0.5% of 250000 = 1250 sats)
     expect(body.payment.fee.value).toBe(EXPECTED_FEE_SATS);
+
+    // The bimFee should be the BIM portion only (0.2% of 250000 = 500 sats)
+    expect(body.payment.bimFee.value).toBe(BIM_FEE_SATS);
   });
 });

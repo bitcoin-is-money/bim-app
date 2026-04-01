@@ -43,7 +43,8 @@ export function createPayRoutes(appContext: AppContext): AuthenticatedHono {
 
       const prepared = await payService.prepare(paymentPayload);
 
-      const response = serializePreparedPayment(prepared);
+      // At this step, prepared.fee = bimFee (before LP adjustment)
+      const response = serializePreparedPayment(prepared, prepared.fee);
       return honoCtx.json(response) as TypedResponse<PreparedPaymentResponse>;
     } catch (error) {
       return handleDomainError(honoCtx, error, log);
@@ -101,7 +102,7 @@ export function createPayRoutes(appContext: AppContext): AuthenticatedHono {
         buildId,
         messageHash,
         credentialId: account.credentialId,
-        payment: serializePreparedPayment(prepared),
+        payment: serializePreparedPayment(prepared, preparedCalls.feeAmount),
       };
       return honoCtx.json(response) as TypedResponse<BuildPaymentResponse>;
     } catch (error) {
@@ -217,11 +218,12 @@ function serializeAmount(amount: Amount): AmountResponse {
   return {value: Number(amount.getSat()), currency: 'SAT'};
 }
 
-function serializePreparedPayment(prepared: PreparedPaymentData): PreparedPaymentResponse {
+function serializePreparedPayment(prepared: PreparedPaymentData, bimFee: Amount): PreparedPaymentResponse {
   const base = {
     amount: serializeAmount(prepared.amount),
     amountEditable: prepared.amountEditable,
     fee: serializeAmount(prepared.fee),
+    bimFee: serializeAmount(bimFee),
     description: prepared.description,
   };
 
