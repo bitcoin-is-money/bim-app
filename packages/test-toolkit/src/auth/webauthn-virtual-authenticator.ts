@@ -28,6 +28,24 @@ export interface StoredCredential {
 }
 
 /**
+ * JSON-serializable credential for persistence across test runs.
+ */
+export interface SerializedCredential {
+  credentialId: string;   // base64url
+  privateKeyHex: string;  // P256 private key hex
+  rpId: string;
+  userHandle: string;     // base64url
+  signCount: number;
+}
+
+/**
+ * JSON-serializable authenticator state for persistence across test runs.
+ */
+export interface SerializedAuthenticator {
+  credentials: SerializedCredential[];
+}
+
+/**
  * Options for VirtualAuthenticator constructor.
  */
 export interface VirtualAuthenticatorOptions {
@@ -141,7 +159,7 @@ export class WebauthnVirtualAuthenticator {
     const {x, y} = credentialSigner.getPublicKey();
 
     // Encode public key in COSE format (required by WebAuthn)
-    const cosePublicKey = this.encodeCosePublicKey(x, y);
+    const cosePublicKey = WebauthnVirtualAuthenticator.encodeCosePublicKey(x, y);
 
     // Build authenticator data
     const rpIdHash = sha256(new TextEncoder().encode(options.rp.id));
@@ -303,9 +321,44 @@ export class WebauthnVirtualAuthenticator {
   }
 
   /**
+   * Serializes all stored credentials to a JSON-safe format for persistence.
+   */
+  serialize(): SerializedAuthenticator {
+    return {
+      credentials: Array.from(this.credentials.entries()).map(([id, cred]) => ({
+        credentialId: id,
+        privateKeyHex: cred.signer.getPrivateKeyHex(),
+        rpId: cred.rpId,
+        userHandle: Buffer.from(cred.userHandle).toString('base64url'),
+        signCount: cred.signCount,
+      })),
+    };
+  }
+
+  /**
+   * Restores an authenticator from a previously serialized state.
+   */
+  static deserialize(data: SerializedAuthenticator): WebauthnVirtualAuthenticator {
+    const auth = new WebauthnVirtualAuthenticator();
+    for (const cred of data.credentials) {
+      const signer = P256Signer.fromHex(cred.privateKeyHex);
+      const {x, y} = signer.getPublicKey();
+      auth.credentials.set(cred.credentialId, {
+        credentialId: isoBase64URL.toBuffer(cred.credentialId),
+        signer,
+        publicKey: WebauthnVirtualAuthenticator.encodeCosePublicKey(x, y),
+        rpId: cred.rpId,
+        userHandle: Buffer.from(cred.userHandle, 'base64url'),
+        signCount: cred.signCount,
+      });
+    }
+    return auth;
+  }
+
+  /**
    * Encodes a P-256 public key in COSE format.
    */
-  private encodeCosePublicKey(x: Uint8Array, y: Uint8Array): Uint8Array {
+  private static encodeCosePublicKey(x: Uint8Array, y: Uint8Array): Uint8Array {
     // COSE Key format for EC2 (P-256):
     // {
     //   1: 2,      // kty: EC2
