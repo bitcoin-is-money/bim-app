@@ -1,31 +1,6 @@
 import {SlackAPIClient} from 'slack-web-api-client';
 import type {AnyMessageBlock, MessageAttachment} from 'slack-web-api-client';
-import {readFileSync} from 'node:fs';
-import {dirname, join} from 'node:path';
-import {fileURLToPath} from 'node:url';
-
-const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
-
-// USAGE: npx tsx scripts/admin-account/slack-test.ts
-//
-// Sends 3 test messages (alert, error, info) to Slack using Block Kit formatting.
-// Reads credentials from scripts/admin-account/slack.secret (JSON: { "botToken": "xoxb-...", "channel": "#bim-alerts" })
-
-interface SlackSecret {
-  readonly botToken: string;
-  readonly channel: string;
-}
-
-function loadSecret(): SlackSecret {
-  const filePath = join(SCRIPT_DIR, '.slack.secret.json');
-  try {
-    return JSON.parse(readFileSync(filePath, 'utf-8')) as SlackSecret;
-  } catch {
-    console.error(`Secret file not found: ${filePath}`);
-    console.error('Create it with: { "botToken": "xoxb-...", "channel": "#bim-alerts" }');
-    process.exit(1);
-  }
-}
+import {loadSecrets, requireSlack} from '../config/secrets.js';
 
 type Severity = 'alert' | 'error' | 'info';
 
@@ -35,16 +10,10 @@ const COLORS: Record<Severity, string> = {
   info: '#2196F3',
 };
 
-const ICON_WARNING = '⚠️';
-const ICON_ERROR = '🚨';
-const ICON_INFO = 'ℹ️';
-const ICON_CALENDAR = '📅';
-const SEPARATOR = '•';
-
 const ICONS: Record<Severity, string> = {
-  alert: ICON_WARNING,
-  error: ICON_ERROR,
-  info: ICON_INFO,
+  alert: '\u26A0\uFE0F',
+  error: '\uD83D\uDEA8',
+  info: '\u2139\uFE0F',
 };
 
 interface TestMessage {
@@ -52,17 +21,13 @@ interface TestMessage {
   readonly title: string;
   readonly description: string;
   readonly fields: Record<string, string>;
-  readonly links?: { readonly label: string; readonly url: string }[];
+  readonly links?: readonly {readonly label: string; readonly url: string}[];
   readonly context: string;
 }
 
 function buildBlocks(msg: TestMessage): AnyMessageBlock[] {
-  const icon = ICONS[msg.severity];
   const blocks: AnyMessageBlock[] = [
-    {
-      type: 'section',
-      text: {type: 'mrkdwn', text: msg.description},
-    },
+    {type: 'section', text: {type: 'mrkdwn', text: msg.description}},
   ];
 
   const fieldEntries = Object.entries(msg.fields);
@@ -100,7 +65,7 @@ const TEST_MESSAGES: readonly TestMessage[] = [
   {
     severity: 'alert',
     title: 'AVNU Balance Low',
-    description: 'The AVNU paymaster account balance is below the configured threshold. Please top up credits via the AVNU portal.',
+    description: 'The AVNU paymaster account balance is below the configured threshold.',
     fields: {
       'Account': '`0x0269...435f`',
       'Network': 'mainnet',
@@ -109,38 +74,36 @@ const TEST_MESSAGES: readonly TestMessage[] = [
     },
     links: [
       {label: 'AVNU Portal', url: 'https://portal.avnu.fi'},
-      {label: 'View on Starkscan', url: 'https://starkscan.co/contract/0x02698cf1e909bc26d684182ce66222f5a60588ccc6b455ee4622e3483208435f'},
     ],
-    context: `${ICON_CALENDAR} ${new Date().toISOString()} ${SEPARATOR} bim-monitor ${SEPARATOR} mainnet`,
+    context: `\uD83D\uDCC5 ${new Date().toISOString()} \u2022 bim-monitor \u2022 mainnet`,
   },
   {
     severity: 'error',
     title: 'Swap Claim Failed',
-    description: 'A forward swap claim transaction failed. Manual intervention may be required to recover funds.',
+    description: 'A forward swap claim transaction failed. Manual intervention may be required.',
     fields: {
       'Swap ID': '`swap_abc123`',
-      'User': '`0x1234...5678`',
       'Amount': '0.001 WBTC',
       'Error': 'Transaction reverted: insufficient gas',
     },
-    context: `${ICON_CALENDAR} ${new Date().toISOString()} ${SEPARATOR} bim-monitor ${SEPARATOR} mainnet`,
+    context: `\uD83D\uDCC5 ${new Date().toISOString()} \u2022 bim-monitor \u2022 mainnet`,
   },
   {
     severity: 'info',
     title: 'AVNU Credits Recharged',
     description: 'The AVNU paymaster account has been successfully recharged.',
     fields: {
-      'Account': '`0x0269...435f`',
       'New Balance': '50.000000 STRK',
       'Added': '45.000000 STRK',
     },
-    context: `${ICON_CALENDAR} ${new Date().toISOString()} ${SEPARATOR} bim-monitor ${SEPARATOR} mainnet`,
+    context: `\uD83D\uDCC5 ${new Date().toISOString()} \u2022 bim-monitor \u2022 mainnet`,
   },
 ];
 
-async function main(): Promise<void> {
-  const {botToken, channel} = loadSecret();
-  const client = new SlackAPIClient(botToken);
+export async function run(_args: string[]): Promise<void> {
+  const secrets = loadSecrets();
+  const slack = requireSlack(secrets);
+  const client = new SlackAPIClient(slack.botToken);
 
   for (const msg of TEST_MESSAGES) {
     const icon = ICONS[msg.severity];
@@ -150,7 +113,7 @@ async function main(): Promise<void> {
     console.log(`Sending ${msg.severity}: ${msg.title}...`);
 
     await client.chat.postMessage({
-      channel,
+      channel: slack.channel,
       text: `${icon} ${msg.title}`,
       attachments: [{color, blocks} satisfies MessageAttachment],
     });
@@ -160,8 +123,3 @@ async function main(): Promise<void> {
 
   console.log('All 3 test messages sent.');
 }
-
-main().catch((err: unknown) => {
-  console.error('Failed:', err instanceof Error ? err.message : String(err));
-  process.exit(1);
-});

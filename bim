@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+exec npx tsx apps/cli/src/cli.ts "$@"

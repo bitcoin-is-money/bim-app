@@ -48,7 +48,7 @@ testem.log
 # Covers *.secret, *.secret.json, .env.*.secret, etc.
 *.secret
 *.secret.json
-.deployer-account.json
+.secrets.json
 
 # Local database volumes (Docker)
 data/
