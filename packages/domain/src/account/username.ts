@@ -3,14 +3,14 @@ import {InvalidUsernameError} from './errors';
 /**
  * Username for an Account.
  *
- * Format: 3-20 characters, alphanumeric and underscores only.
+ * Format: 3-25 characters, alphanumeric and underscores only.
  * Example: "john_doe", "alice123"
  */
 export type Username = string & {readonly __brand: 'Username'};
 
 export namespace Username {
-  /** Validation pattern: 3-20 chars, alphanumeric and underscore */
-  export const PATTERN = /^[a-zA-Z0-9_]{3,20}$/;
+  /** Validation pattern: 3-25 chars, alphanumeric and underscore */
+  export const PATTERN = /^[a-zA-Z0-9_]{3,25}$/;
 
   /**
    * Creates a Username from a string.
