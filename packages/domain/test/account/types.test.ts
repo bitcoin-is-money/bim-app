@@ -21,7 +21,7 @@ describe('Username', () => {
 
     it('rejects invalid usernames', () => {
       expect(Username.PATTERN.test('ab')).toBe(false); // too short
-      expect(Username.PATTERN.test('a'.repeat(21))).toBe(false); // too long
+      expect(Username.PATTERN.test('a'.repeat(26))).toBe(false); // too long
       expect(Username.PATTERN.test('john-doe')).toBe(false); // hyphen not allowed
       expect(Username.PATTERN.test('john doe')).toBe(false); // space not allowed
       expect(Username.PATTERN.test('john@doe')).toBe(false); // special char
@@ -42,7 +42,7 @@ describe('Username', () => {
 
     it('throws InvalidUsernameError for invalid username', () => {
       expect(() => Username.of('ab')).toThrow(InvalidUsernameError);
-      expect(() => Username.of('a'.repeat(21))).toThrow(InvalidUsernameError);
+      expect(() => Username.of('a'.repeat(26))).toThrow(InvalidUsernameError);
       expect(() => Username.of('john-doe')).toThrow(InvalidUsernameError);
     });
   });

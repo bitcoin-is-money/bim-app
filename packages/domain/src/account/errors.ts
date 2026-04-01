@@ -10,7 +10,7 @@ export class InvalidAccountIdError extends DomainError {
 export class InvalidUsernameError extends DomainError {
   constructor(readonly value: string) {
     super(
-      `Invalid username: "${value}". Must be 3-20 characters, alphanumeric and underscores only.`,
+      `Invalid username: "${value}". Must be 3-25 characters, alphanumeric and underscores only.`,
     );
   }
 }

@@ -5,7 +5,7 @@ export const usernameSchema = z
   .string()
   .regex(
     Username.PATTERN,
-    'Username must be 3-20 characters, alphanumeric and underscores only',
+    'Username must be 3-25 characters, alphanumeric and underscores only',
   );
 
 export const BeginRegistrationSchema = z.object({
