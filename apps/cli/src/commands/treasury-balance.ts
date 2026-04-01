@@ -1,7 +1,7 @@
 import {type Network, STRK_DECIMALS} from '../config/constants.js';
 import {loadSecrets, requireAvnu, requireTreasury} from '../config/secrets.js';
-import {formatStrk} from '../lib/format.js';
-import {createProvider, getStrkBalance} from '../lib/starknet.js';
+import {formatStrk, formatWbtc} from '../lib/format.js';
+import {createProvider, getStrkBalance, getWbtcBalance} from '../lib/starknet.js';
 
 const AVNU_API_URLS: Record<Network, string> = {
   testnet: 'https://sepolia.api.avnu.fi',
@@ -40,13 +40,15 @@ export async function run(args: string[]): Promise<void> {
   const treasury = requireTreasury(secrets, network);
   const provider = createProvider(network);
 
-  const adminBalance = await getStrkBalance(provider, treasury.address);
+  const strkBalance = await getStrkBalance(provider, treasury.address);
+  const wbtcBalance = await getWbtcBalance(provider, treasury.address);
 
   console.log(`Network:  ${network}`);
   console.log();
-  console.log('-- Treasury --');
+  console.log('-- BIM Treasury --');
   console.log(`Address:  ${treasury.address}`);
-  console.log(`Balance:  ${formatStrk(adminBalance)}`);
+  console.log(`STRK:     ${formatStrk(strkBalance)}`);
+  console.log(`WBTC:     ${formatWbtc(wbtcBalance)}`);
   console.log();
 
   // AVNU paymaster credits (requires API key)
@@ -62,5 +64,22 @@ export async function run(args: string[]): Promise<void> {
   } else {
     console.log('-- AVNU --');
     console.log('No AVNU config in .secrets.json — skipping credit check.');
+  }
+
+  // E2E test accounts (mainnet only)
+  if (network === 'mainnet') {
+    console.log();
+    const e2e = secrets.e2e;
+    if (!e2e) {
+      console.log('-- E2E Test Accounts --');
+      console.log('Not created yet. Run: ./bim e2e:init');
+    } else {
+      for (const [label, account] of [['Account A', e2e.accountA], ['Account B', e2e.accountB]] as const) {
+        const wbtc = await getWbtcBalance(provider, account.starknetAddress);
+        console.log(`-- E2E ${label} (${account.username}) --`);
+        console.log(`Address:  ${account.starknetAddress}`);
+        console.log(`WBTC:     ${formatWbtc(wbtc)}`);
+      }
+    }
   }
 }
