@@ -1,5 +1,5 @@
 diff --git a/node_modules/@atomiqlabs/base/src/swaps/SwapData.ts b/node_modules/@atomiqlabs/base/src/swaps/SwapData.ts
-index d5d3c45..a762494 100644
+index ddfc4b9..7ce9edb 100644
 --- a/node_modules/@atomiqlabs/base/src/swaps/SwapData.ts
 +++ b/node_modules/@atomiqlabs/base/src/swaps/SwapData.ts
 @@ -1,5 +1,5 @@
