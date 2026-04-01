@@ -94,5 +94,8 @@ describe('Pay Bitcoin — fee accuracy', () => {
     // The fee should reflect the real LP quote (1000 sats) + BIM fee (300 sats),
     // NOT the estimated catalogue percentage (0.3% of 100000 = 300 sats)
     expect(body.payment.fee.value).toBe(EXPECTED_FEE_SATS);
+
+    // The bimFee should be the BIM portion only (0.3% of 100000 = 300 sats)
+    expect(body.payment.bimFee.value).toBe(BIM_FEE_SATS);
   });
 });

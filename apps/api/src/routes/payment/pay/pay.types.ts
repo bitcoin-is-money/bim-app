@@ -39,6 +39,7 @@ export interface LightningPreparedPaymentResponse {
   amount: AmountResponse;
   amountEditable: boolean;
   fee: AmountResponse;
+  bimFee: AmountResponse;
   description: string;
   invoice: string;
   expiresAt?: string;
@@ -50,6 +51,7 @@ export interface BitcoinPreparedPaymentResponse {
   amount: AmountResponse;
   amountEditable: boolean;
   fee: AmountResponse;
+  bimFee: AmountResponse;
   description: string;
   address: string;
 }
@@ -60,6 +62,7 @@ export interface StarknetPreparedPaymentResponse {
   amount: AmountResponse;
   amountEditable: boolean;
   fee: AmountResponse;
+  bimFee: AmountResponse;
   description: string;
   address: string;
   tokenAddress: string;
