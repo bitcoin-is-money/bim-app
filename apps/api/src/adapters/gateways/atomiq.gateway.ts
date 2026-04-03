@@ -663,10 +663,11 @@ export class AtomiqSdkGateway implements AtomiqGateway {
 
       const state = swap.getState();
 
-      const {isPaid, isCompleted, isFailed, isExpired, isRefunded} = this.mapStateToStatus(state, direction);
+      const {isPaid, isClaimable, isCompleted, isFailed, isExpired, isRefunded} = this.mapStateToStatus(state, direction);
       const result: AtomiqSwapStatus = {
         state,
         isPaid,
+        isClaimable,
         isCompleted,
         isFailed,
         isExpired,
@@ -688,24 +689,33 @@ export class AtomiqSdkGateway implements AtomiqGateway {
   /**
    * Maps SDK state to status flags.
    *
-   * Atomiq SDK states:
-   * - Negative states: failures/expiration (-3 or less = failed, -2 to -1 = expired)
-   * - State 0: Created/pending
-   * - State 1+: Payment received/committed
-   * - State 3+: Completed/claimed
+   * Atomiq SDK states (direction-dependent):
    *
-   * For bitcoin_to_starknet (FromBTC) swaps, state 1 means "Starknet commit confirmed"
-   * (escrow locked), NOT "Bitcoin deposit received". The actual Bitcoin deposit
-   * is detected at state 2. Without this distinction, the frontend shows a
-   * misleading "Receive detected, confirming..." notification right after swap creation.
+   * FromBTCLN (Lightning → Starknet):
+   *   0: PR_CREATED, 1: PR_PAID, 2: CLAIM_COMMITED, 3: CLAIM_CLAIMED
+   *
+   * FromBTC (Bitcoin → Starknet):
+   *   0: PR_CREATED, 1: CLAIM_COMMITED, 2: BTC_TX_CONFIRMED, 3: CLAIM_CLAIMED
+   *
+   * ToBTCLN (Starknet → Lightning):
+   *   0: CREATED, 1: COMMITED, 2: SOFT_CLAIMED, 3: CLAIMED
+   *
+   * ToBTC (Starknet → Bitcoin):
+   *   0: CREATED, 1: COMMITED, 2: SOFT_CLAIMED, 3: CLAIMED, 4: REFUNDABLE
+   *
+   * isPaid = payment detected (user has paid, but claim may not be possible yet)
+   * isClaimable = swap is ready for on-chain claim (only relevant for forward swaps)
    */
   private mapStateToStatus(state: number, direction?: SwapDirection): {
     isPaid: boolean;
+    isClaimable: boolean;
     isCompleted: boolean;
     isFailed: boolean;
     isExpired: boolean;
     isRefunded: boolean;
   } {
+    const neutral = {isPaid: false, isClaimable: false, isCompleted: false, isFailed: false, isExpired: false, isRefunded: false};
+
     if (state < 0) {
       // QUOTE_SOFT_EXPIRED (-1): The LP authorization expired, but an on-chain
       // commit may still be pending confirmation. For reverse swaps (Starknet →
@@ -714,29 +724,35 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       // Treat -1 as "still pending" for reverse swaps to avoid premature expiration.
       const isReverseSwap = direction === 'starknet_to_lightning' || direction === 'starknet_to_bitcoin';
       if (state === -1 && isReverseSwap) {
-        return {isPaid: false, isCompleted: false, isFailed: false, isExpired: false, isRefunded: false};
+        return neutral;
       }
 
       // State -3 for bitcoin_to_starknet = REFUNDED (security deposit returned by smart contract)
       if (state === -3 && direction === 'bitcoin_to_starknet') {
-        return {isPaid: false, isCompleted: false, isFailed: false, isExpired: false, isRefunded: true};
+        return {...neutral, isRefunded: true};
       }
 
       return {
-        isPaid: false,
-        isCompleted: false,
+        ...neutral,
         isFailed: state <= -3,
         isExpired: state > -3,
-        isRefunded: false,
       };
     }
+
+    const isForward = direction === 'lightning_to_starknet' || direction === 'bitcoin_to_starknet';
 
     // For Bitcoin-to-Starknet swaps, the commit (state 1) happens before the
     // Bitcoin deposit (state 2). Only treat as "paid" once BTC is actually received.
     const paidThreshold = direction === 'bitcoin_to_starknet' ? 2 : 1;
 
+    // Claimable: the swap is ready for on-chain claim by the backend.
+    // Forward swaps: Lightning needs state >= 2 (CLAIM_COMMITED), Bitcoin needs state >= 2 (BTC_TX_CONFIRMED).
+    // Reverse swaps: never claimable (LP handles claiming).
+    const claimableThreshold = direction === 'bitcoin_to_starknet' ? 2 : 2;
+
     return {
       isPaid: state >= paidThreshold,
+      isClaimable: isForward && state >= claimableThreshold,
       isCompleted: state >= 3,
       isFailed: false,
       isExpired: false,

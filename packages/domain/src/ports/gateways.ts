@@ -257,6 +257,7 @@ export interface AtomiqReverseSwapResult {
 export interface AtomiqSwapStatus {
   state: number;
   isPaid: boolean;
+  isClaimable: boolean;
   isCompleted: boolean;
   isFailed: boolean;
   isExpired: boolean;

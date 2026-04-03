@@ -127,6 +127,7 @@ describe('SwapService', () => {
       vi.mocked(gateway.getSwapStatus).mockResolvedValue({
         state: 1,
         isPaid: true,
+        isClaimable: false,
         isCompleted: false,
         isFailed: false,
         isExpired: true, // Atomiq says expired...
@@ -147,6 +148,7 @@ describe('SwapService', () => {
       vi.mocked(gateway.getSwapStatus).mockResolvedValue({
         state: -1,
         isPaid: false,
+        isClaimable: false,
         isCompleted: false,
         isFailed: false,
         isExpired: true,
@@ -166,6 +168,7 @@ describe('SwapService', () => {
       vi.mocked(gateway.getSwapStatus).mockResolvedValue({
         state: -1,
         isPaid: false,
+        isClaimable: false,
         isCompleted: false,
         isFailed: false,
         isExpired: true,
@@ -189,6 +192,7 @@ describe('SwapService', () => {
       vi.mocked(gateway.getSwapStatus).mockResolvedValue({
         state: 1,
         isPaid: true,
+        isClaimable: false,
         isCompleted: false,
         isFailed: false,
         isExpired: false,
@@ -208,6 +212,7 @@ describe('SwapService', () => {
       vi.mocked(gateway.getSwapStatus).mockResolvedValue({
         state: 3,
         isPaid: true,
+        isClaimable: true,
         isCompleted: true,
         isFailed: false,
         isExpired: false,
@@ -227,6 +232,7 @@ describe('SwapService', () => {
       vi.mocked(gateway.getSwapStatus).mockResolvedValue({
         state: -4,
         isPaid: false,
+        isClaimable: false,
         isCompleted: false,
         isFailed: true,
         isExpired: false,
@@ -249,6 +255,44 @@ describe('SwapService', () => {
       await service.fetchStatus({swapId: swap.data.id, accountId: ACCOUNT_ID});
 
       expect(gateway.getSwapStatus).not.toHaveBeenCalled();
+    });
+
+    it('detects claimable status when Atomiq reports isClaimable', async () => {
+      const swap = createPendingLightningSwap();
+      vi.mocked(repository.findById).mockResolvedValue(swap);
+      vi.mocked(gateway.getSwapStatus).mockResolvedValue({
+        state: 2,
+        isPaid: true,
+        isClaimable: true,
+        isCompleted: false,
+        isFailed: false,
+        isExpired: false,
+        isRefunded: false,
+      });
+
+      const result = await service.fetchStatus({swapId: swap.data.id, accountId: ACCOUNT_ID});
+
+      expect(result.status).toBe('claimable');
+      expect(result.progress).toBe(50);
+    });
+
+    it('isClaimable takes priority over isPaid in syncWithAtomiq', async () => {
+      const swap = createPendingLightningSwap();
+      vi.mocked(repository.findById).mockResolvedValue(swap);
+      vi.mocked(gateway.getSwapStatus).mockResolvedValue({
+        state: 2,
+        isPaid: true,
+        isClaimable: true,
+        isCompleted: false,
+        isFailed: false,
+        isExpired: false,
+        isRefunded: false,
+      });
+
+      const result = await service.fetchStatus({swapId: swap.data.id, accountId: ACCOUNT_ID});
+
+      // isClaimable should win over isPaid
+      expect(result.status).toBe('claimable');
     });
 
     // A transient gateway error (network timeout, 500, etc.) must NOT cause
@@ -362,6 +406,32 @@ describe('SwapService', () => {
       await expect(
         service.completeBitcoinToStarknet({swapId: 'swap-btc-noaddr'}),
       ).rejects.toThrow(SwapCreationError);
+    });
+  });
+
+  // =========================================================================
+  // markSwapAsConfirming
+  // =========================================================================
+
+  describe('markSwapAsConfirming', () => {
+    it('transitions a claimable swap to confirming', async () => {
+      const swap = createPendingLightningSwap();
+      swap.markAsClaimable();
+      vi.mocked(repository.findById).mockResolvedValue(swap);
+
+      await service.markSwapAsConfirming(swap.data.id, '0xclaim_tx_hash');
+
+      expect(swap.getStatus()).toBe('confirming');
+      expect(swap.getTxHash()).toBe('0xclaim_tx_hash');
+      expect(repository.save).toHaveBeenCalledWith(swap);
+    });
+
+    it('throws SwapNotFoundError if swap does not exist', async () => {
+      vi.mocked(repository.findById).mockResolvedValue(undefined);
+
+      await expect(
+        service.markSwapAsConfirming('nonexistent', '0xhash'),
+      ).rejects.toThrow(SwapNotFoundError);
     });
   });
 });

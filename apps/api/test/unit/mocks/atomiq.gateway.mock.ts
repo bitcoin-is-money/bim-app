@@ -154,6 +154,7 @@ export class AtomiqGatewayMock implements AtomiqGateway {
     const defaults: AtomiqSwapStatus = {
       state: 0,
       isPaid: false,
+      isClaimable: false,
       isCompleted: false,
       isFailed: false,
       isExpired: false,

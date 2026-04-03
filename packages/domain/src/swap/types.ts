@@ -40,6 +40,7 @@ export type SwapStatus =
   | 'pending'
   | 'committed'
   | 'paid'
+  | 'claimable'
   | 'confirming'
   | 'completed'
   | 'expired'
@@ -52,6 +53,7 @@ export type SwapState =
   | { status: 'pending' }
   | { status: 'committed'; commitTxHash: string; committedAt: Date }
   | { status: 'paid'; paidAt: Date }
+  | { status: 'claimable'; claimableAt: Date }
   | { status: 'confirming'; txHash: string; confirmedAt: Date }
   | { status: 'completed'; txHash: string; completedAt: Date }
   | { status: 'expired'; expiredAt: Date }

@@ -127,6 +127,7 @@ export class DrizzleSwapRepository extends AbstractDrizzleRepository implements 
       txHash: null as string | null,
       errorMessage: null as string | null,
       paidAt: null as Date | null,
+      claimableAt: null as Date | null,
       confirmedAt: null as Date | null,
       completedAt: null as Date | null,
       expiredAt: null as Date | null,
@@ -142,6 +143,8 @@ export class DrizzleSwapRepository extends AbstractDrizzleRepository implements 
         return {...base, txHash: state.commitTxHash, confirmedAt: state.committedAt};
       case 'paid':
         return {...base, paidAt: state.paidAt};
+      case 'claimable':
+        return {...base, claimableAt: state.claimableAt};
       case 'confirming':
         return {...base, txHash: state.txHash, confirmedAt: state.confirmedAt};
       case 'completed':
@@ -166,6 +169,8 @@ export class DrizzleSwapRepository extends AbstractDrizzleRepository implements 
         return {status: 'committed', commitTxHash: record.txHash!, committedAt: record.confirmedAt!};
       case 'paid':
         return {status: 'paid', paidAt: record.paidAt!};
+      case 'claimable':
+        return {status: 'claimable', claimableAt: record.claimableAt!};
       case 'confirming':
         return {status: 'confirming', txHash: record.txHash!, confirmedAt: record.confirmedAt!};
       case 'completed':

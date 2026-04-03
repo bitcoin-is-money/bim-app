@@ -54,10 +54,14 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
 
       const result = await swapService.fetchStatus({swapId, accountId: account.id});
 
+      // Map internal 'claimable' to 'paid' for the frontend — the distinction
+      // is only relevant for backend orchestration (SwapMonitor claim timing).
+      const publicStatus = result.status === 'claimable' ? 'paid' : result.status;
+
       return honoCtx.json<SwapStatusResponse>({
         swapId: result.swap.data.id,
         direction: result.swap.data.direction,
-        status: result.status,
+        status: publicStatus,
         progress: result.progress,
         txHash: result.txHash,
         amountSats: result.swap.data.amount.toSatString(),
