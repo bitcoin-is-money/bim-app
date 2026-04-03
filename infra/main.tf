@@ -81,10 +81,10 @@ resource "scaleway_container" "api" {
   name           = "bim-api"
   registry_image = "${scaleway_registry_namespace.bim.endpoint}/bim-api:latest"
   port           = 8080
-  min_scale      = 1
+  min_scale      = 0
   max_scale      = 2
-  memory_limit   = 512
-  cpu_limit      = 500
+  memory_limit   = 256
+  cpu_limit      = 140
   privacy        = "public"
   http_option    = "redirected"
   deploy         = true
@@ -127,8 +127,8 @@ resource "scaleway_container" "indexer" {
   port           = 8080
   min_scale      = 1
   max_scale      = 1
-  memory_limit   = 512
-  cpu_limit      = 500
+  memory_limit   = 256
+  cpu_limit      = 140
   privacy        = "private"
   deploy         = true
   region         = var.region
