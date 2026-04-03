@@ -10,6 +10,7 @@ import {randomUUID} from 'node:crypto';
 import {WebAuthnSignatureProcessor} from '../../../adapters';
 import type {AppContext} from '../../../app-context';
 import {type ApiErrorResponse, createErrorResponse, ErrorCode, handleDomainError} from '../../../errors';
+import type {SwapMonitor} from '../../../monitoring/swap.monitor';
 import type {AuthenticatedHono} from '../../../types';
 import {ReceiveBuildCache} from './receive-build.cache';
 import {ReceiveCommitSchema, ReceiveSchema} from './receive.types';
@@ -19,7 +20,10 @@ import type {BitcoinReceiveCommitResponse, BitcoinReceivePendingCommitResponse, 
 // Routes
 // =============================================================================
 
-export function createReceiveRoutes(appContext: AppContext): AuthenticatedHono {
+export function createReceiveRoutes(
+  appContext: AppContext,
+  swapMonitor?: SwapMonitor | null,
+): AuthenticatedHono {
   const log = appContext.logger.child({name: 'receive.routes.ts'});
   const app: AuthenticatedHono = new Hono();
 
@@ -166,6 +170,7 @@ export function createReceiveRoutes(appContext: AppContext): AuthenticatedHono {
         });
       }
 
+      swapMonitor?.ensureRunning();
       return honoCtx.json<ReceiveResponse>(serializeReceiveResult(result));
     } catch (error) {
       return handleDomainError(honoCtx, error, log);
@@ -236,6 +241,7 @@ export function createReceiveRoutes(appContext: AppContext): AuthenticatedHono {
         useUriPrefix: build.useUriPrefix,
       });
 
+      swapMonitor?.ensureRunning();
       return honoCtx.json<BitcoinReceiveCommitResponse>({
         network: 'bitcoin',
         swapId: completeResult.swapId,

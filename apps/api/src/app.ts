@@ -81,23 +81,7 @@ export async function createApp(options: CreateAppOptions = {}): Promise<AppInst
     app.use('/api/payment/pay/execute', createPaymentExecuteRateLimit());
   }
 
-  // API routes
-  app.route('/api/account', createAccountRoutes(context));
-  //app.route('/api/admin', createAdminRoutes(context));
-  app.route('/api/auth', createAuthRoutes(context));
-  app.route('/api/currency', createCurrencyRoutes(context));
-  app.route('/api/health', createHealthRoutes());
-  app.route('/api/payment', createPaymentRoutes(context));
-  app.route('/api/swap', createSwapRoutes(context));
-  app.route('/api/user', createUserRoutes(context));
-
-  // Serve static files (frontend) - skip for tests
-  if (!options.skipStaticFiles) {
-    app.use('/*', serveStatic({root: './public/app'}));
-    app.get('*', serveStatic({path: './public/app/index.html'}));
-  }
-
-  // Swap monitor (background polling + auto-claim)
+  // Swap monitor (background polling + auto-claim, auto-stops when idle)
   let swapMonitor: SwapMonitor | null = null;
   if (!options.skipMonitor) {
     swapMonitor = new SwapMonitor(
@@ -105,6 +89,22 @@ export async function createApp(options: CreateAppOptions = {}): Promise<AppInst
       context.gateways.atomiq,
       context.logger,
     );
+  }
+
+  // API routes
+  app.route('/api/account', createAccountRoutes(context));
+  //app.route('/api/admin', createAdminRoutes(context));
+  app.route('/api/auth', createAuthRoutes(context));
+  app.route('/api/currency', createCurrencyRoutes(context));
+  app.route('/api/health', createHealthRoutes());
+  app.route('/api/payment', createPaymentRoutes(context, swapMonitor));
+  app.route('/api/swap', createSwapRoutes(context));
+  app.route('/api/user', createUserRoutes(context));
+
+  // Serve static files (frontend) - skip for tests
+  if (!options.skipStaticFiles) {
+    app.use('/*', serveStatic({root: './public/app'}));
+    app.get('*', serveStatic({path: './public/app/index.html'}));
   }
 
   return {app, swapMonitor, rootLogger: rootLogger};

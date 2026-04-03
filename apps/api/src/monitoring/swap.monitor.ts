@@ -9,10 +9,13 @@ import type {Logger} from 'pino';
 export interface SwapMonitorConfig {
   /** Polling interval in milliseconds (default: 5000) */
   pollInterval?: number;
+  /** Number of consecutive idle iterations before auto-stopping (default: 30, ~2.5 min) */
+  maxIdleIterations?: number;
 }
 
 const DEFAULT_CONFIG: Required<SwapMonitorConfig> = {
   pollInterval: 5000,
+  maxIdleIterations: 30,
 };
 
 /**
@@ -29,6 +32,7 @@ export class SwapMonitor {
   private timer: ReturnType<typeof setInterval> | null = null;
   private running = false;
   private iterating = false;
+  private idleIterations = 0;
   private readonly config: Required<SwapMonitorConfig>;
   private readonly log: Logger;
 
@@ -49,8 +53,16 @@ export class SwapMonitor {
     if (this.running) return;
     this.log.info('Starting SwapMonitor');
     this.running = true;
+    this.idleIterations = 0;
     this.timer = setInterval(() => void this.runIteration(), this.config.pollInterval);
-    this.log.debug('SwapMonitor started');
+  }
+
+  /**
+   * Ensures the monitor is running. Call after creating a swap.
+   * No-op if already running.
+   */
+  ensureRunning(): void {
+    this.start();
   }
 
   /**
@@ -79,6 +91,20 @@ export class SwapMonitor {
     this.log.trace('Running iteration');
     try {
       const activeSwaps = await this.swapService.getActiveSwaps();
+
+      if (activeSwaps.length === 0) {
+        this.idleIterations++;
+        if (this.idleIterations >= this.config.maxIdleIterations) {
+          this.log.info({idleIterations: this.idleIterations}, 'No active swaps, auto-stopping SwapMonitor');
+          this.iterating = false;
+          await this.stop();
+          return;
+        }
+        return;
+      }
+
+      this.idleIterations = 0;
+
       for (const swap of activeSwaps) {
         try {
           const {status} = await this.swapService.fetchStatus({
