@@ -114,6 +114,11 @@ resource "scaleway_container" "api" {
     BIM_TREASURY_ADDRESS = var.bim_treasury_address
   }
 
+  # Image version is managed by CI/CD (deploy.yml / docker.sh), not Terraform.
+  lifecycle {
+    ignore_changes = [registry_image]
+  }
+
   timeouts {
     create = "3m"
     update = "3m"
@@ -165,6 +170,11 @@ resource "scaleway_container" "indexer" {
       BIM_AVNU_ADDRESS                  = var.bim_avnu_address
     } : {}
   )
+
+  # Image version is managed by CI/CD (deploy.yml / docker.sh), not Terraform.
+  lifecycle {
+    ignore_changes = [registry_image]
+  }
 
   timeouts {
     create = "3m"
