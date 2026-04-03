@@ -55,12 +55,18 @@ export interface PrepareBitcoinToStarknetOutput {
   expiresAt: Date;
 }
 
-export interface CompleteBitcoinToStarknetInput {
+export interface SaveBitcoinCommitInput {
   swapId: string;
   destinationAddress: string;
   amount: Amount;
   description: string;
   accountId: string;
+  commitTxHash: string;
+  expiresAt: Date;
+}
+
+export interface CompleteBitcoinToStarknetInput {
+  swapId: string;
 }
 
 export interface CompleteBitcoinToStarknetOutput {
@@ -234,17 +240,50 @@ export class SwapService {
   }
 
   /**
-   * Completes a Bitcoin → Starknet swap (phase 2 of two-phase flow).
-   * Called after the commit transactions have been submitted on-chain.
-   * Waits for the SDK to detect the commit, then retrieves the Bitcoin deposit address.
+   * Saves a Bitcoin → Starknet swap to the database immediately after the
+   * on-chain commit is confirmed. This ensures the SwapMonitor can track the
+   * swap even if subsequent steps (completeBitcoinSwapCommit) fail.
    *
+   * The swap is created in 'committed' state without a deposit address.
+   */
+  async saveBitcoinCommit(input: SaveBitcoinCommitInput): Promise<Swap> {
+    this.log.debug({swapId: input.swapId, commitTxHash: input.commitTxHash}, 'Saving Bitcoin commit to DB');
+    const destinationAddress = StarknetAddress.of(input.destinationAddress);
+
+    const swap = Swap.createBitcoinToStarknetCommitted({
+      id: SwapId.of(input.swapId),
+      amount: input.amount,
+      destinationAddress,
+      commitTxHash: input.commitTxHash,
+      expiresAt: input.expiresAt,
+      description: input.description,
+      accountId: input.accountId,
+    });
+
+    await this.deps.swapRepository.save(swap);
+
+    this.log.info({swapId: input.swapId, commitTxHash: input.commitTxHash}, 'Bitcoin commit saved to DB (committed state)');
+    return swap;
+  }
+
+  /**
+   * Completes a Bitcoin → Starknet swap (phase 2 of two-phase flow).
+   * Called after the commit is saved to DB. Waits for the SDK to detect the
+   * on-chain commit, then updates the swap with the Bitcoin deposit address.
+   *
+   * @throws SwapNotFoundError if the swap doesn't exist in DB
    * @throws SwapCreationError if the commit was not detected or address retrieval fails
    */
   async completeBitcoinToStarknet(
     input: CompleteBitcoinToStarknetInput,
   ): Promise<CompleteBitcoinToStarknetOutput> {
-    this.log.debug({swapId: input.swapId}, 'Completing Bitcoin-to-Starknet swap after commit');
-    const destinationAddress = StarknetAddress.of(input.destinationAddress);
+    const swapId = SwapId.of(input.swapId);
+    this.log.debug({swapId}, 'Completing Bitcoin-to-Starknet swap after commit');
+
+    const swap = await this.deps.swapRepository.findById(swapId);
+    if (!swap) {
+      throw new SwapNotFoundError(swapId);
+    }
 
     // Wait for SDK to detect the on-chain commit and get the deposit address
     const result = await this.deps.atomiqGateway.completeBitcoinSwapCommit(input.swapId);
@@ -253,16 +292,8 @@ export class SwapService {
       throw new SwapCreationError('Failed to retrieve Bitcoin deposit address after commit');
     }
 
-    const swap = Swap.createBitcoinToStarknet({
-      id: SwapId.of(input.swapId),
-      amount: input.amount,
-      destinationAddress,
-      depositAddress: result.depositAddress,
-      expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1 hour from commit
-      description: input.description,
-      accountId: input.accountId,
-    });
-
+    swap.setDepositAddress(result.depositAddress);
+    swap.markAsPaid();
     await this.deps.swapRepository.save(swap);
 
     this.log.info({

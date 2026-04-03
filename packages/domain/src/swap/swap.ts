@@ -1,4 +1,5 @@
 import type {Amount, BitcoinAddress, StarknetAddress} from '../shared';
+import {ValidationError} from '../shared';
 import type {LightningInvoice} from './lightning-invoice';
 
 import {
@@ -49,7 +50,7 @@ export class Swap {
     }, {status: 'pending'});
   }
 
-  /** Creates a Bitcoin → Starknet swap. */
+  /** Creates a Bitcoin → Starknet swap with deposit address (full creation). */
   static createBitcoinToStarknet(params: {
     id: SwapId;
     amount: Amount;
@@ -64,6 +65,32 @@ export class Swap {
       ...params,
       createdAt: new Date(),
     }, {status: 'pending'});
+  }
+
+  /**
+   * Creates a Bitcoin → Starknet swap right after the on-chain commit is confirmed,
+   * before the deposit address is known. This ensures the swap is persisted in DB
+   * immediately so the SwapMonitor can track it even if subsequent steps fail.
+   */
+  static createBitcoinToStarknetCommitted(params: {
+    id: SwapId;
+    amount: Amount;
+    destinationAddress: StarknetAddress;
+    commitTxHash: string;
+    expiresAt: Date;
+    description: string;
+    accountId: string;
+  }): Swap {
+    return new Swap({
+      direction: 'bitcoin_to_starknet',
+      id: params.id,
+      amount: params.amount,
+      destinationAddress: params.destinationAddress,
+      expiresAt: params.expiresAt,
+      description: params.description,
+      accountId: params.accountId,
+      createdAt: new Date(),
+    }, {status: 'committed', commitTxHash: params.commitTxHash, committedAt: new Date()});
   }
 
   /** Creates a Starknet → Lightning swap. */
@@ -115,6 +142,9 @@ export class Swap {
 
   /** Returns the transaction hash if available. */
   getTxHash(): string | undefined {
+    if (this.state.status === 'committed') {
+      return this.state.commitTxHash;
+    }
     if (this.state.status === 'confirming' || this.state.status === 'completed') {
       return this.state.txHash;
     }
@@ -145,9 +175,27 @@ export class Swap {
   }
 
   /**
+   * Sets the Bitcoin deposit address once it becomes available
+   * (after completeBitcoinSwapCommit succeeds).
+   */
+  setDepositAddress(depositAddress: string): void {
+    if (!depositAddress) {
+      throw new ValidationError('depositAddress', 'cannot be empty');
+    }
+    if (this.data.direction !== 'bitcoin_to_starknet') return;
+    // SwapData is readonly, but we need to update this one field after commit.
+    // This is safe because we control the lifecycle.
+    (this.data as { depositAddress: string }).depositAddress = depositAddress;
+  }
+
+  /**
    * All mark* methods are pure state setters — Atomiq is the source of truth.
    * We transcribe states, we don't validate transition coherence.
    */
+
+  markAsCommitted(commitTxHash: string): void {
+    this.state = { status: 'committed', commitTxHash, committedAt: new Date() };
+  }
 
   markAsPaid(): void {
     this.state = { status: 'paid', paidAt: new Date() };
@@ -182,6 +230,8 @@ export class Swap {
     switch (this.state.status) {
       case 'pending':
         return 0;
+      case 'committed':
+        return 10;
       case 'paid':
         return 33;
       case 'confirming':

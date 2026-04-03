@@ -41,7 +41,10 @@ export class DrizzleSwapRepository extends AbstractDrizzleRepository implements 
       })
       .onConflictDoUpdate({
         target: schema.swaps.id,
-        set: stateColumns,
+        set: {
+          ...stateColumns,
+          depositAddress: 'depositAddress' in d ? (d.depositAddress ?? null) : null,
+        },
       });
   }
 
@@ -135,6 +138,8 @@ export class DrizzleSwapRepository extends AbstractDrizzleRepository implements 
     switch (state.status) {
       case 'pending':
         return base;
+      case 'committed':
+        return {...base, txHash: state.commitTxHash, confirmedAt: state.committedAt};
       case 'paid':
         return {...base, paidAt: state.paidAt};
       case 'confirming':
@@ -157,6 +162,8 @@ export class DrizzleSwapRepository extends AbstractDrizzleRepository implements 
     switch (record.status) {
       case 'pending':
         return {status: 'pending'};
+      case 'committed':
+        return {status: 'committed', commitTxHash: record.txHash!, committedAt: record.confirmedAt!};
       case 'paid':
         return {status: 'paid', paidAt: record.paidAt!};
       case 'confirming':
@@ -209,7 +216,7 @@ export class DrizzleSwapRepository extends AbstractDrizzleRepository implements 
           ...base,
           direction: 'bitcoin_to_starknet',
           destinationAddress: record.destinationAddress as StarknetAddress,
-          depositAddress: record.depositAddress!,
+          ...(record.depositAddress !== null && {depositAddress: record.depositAddress}),
         };
       case 'starknet_to_lightning':
         return {

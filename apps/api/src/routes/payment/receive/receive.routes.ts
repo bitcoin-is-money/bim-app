@@ -23,7 +23,7 @@ export function createReceiveRoutes(appContext: AppContext): AuthenticatedHono {
   const log = appContext.logger.child({name: 'receive.routes.ts'});
   const app: AuthenticatedHono = new Hono();
 
-  const {receive: receiveService} = appContext.services;
+  const {receive: receiveService, swap: swapService} = appContext.services;
   const buildCache = new ReceiveBuildCache();
   const signatureProcessor = new WebAuthnSignatureProcessor({
     origin: appContext.webauthn.origin,
@@ -208,7 +208,20 @@ export function createReceiveRoutes(appContext: AppContext): AuthenticatedHono {
       // 5. Wait for Starknet confirmation
       await appContext.gateways.starknet.waitForTransaction(txHash);
 
-      // 5b. Label the commit transaction as "Security deposit" (otherwise defaults to "Sent")
+      // 6. Save swap to DB immediately — ensures SwapMonitor can track it
+      //    even if subsequent steps fail (see doc/flow/bitcoin-receive-security-deposit.md)
+      const starknetAddress = account.requireStarknetAddress();
+      await swapService.saveBitcoinCommit({
+        swapId: build.swapId,
+        destinationAddress: starknetAddress,
+        amount: build.amount,
+        description: build.description || 'Received',
+        accountId: build.accountId,
+        commitTxHash: txHash,
+        expiresAt: build.expiresAt,
+      });
+
+      // 6b. Label the commit transaction as "Security deposit" (non-fatal)
       try {
         await appContext.repositories.transaction.saveDescription(
           TransactionHash.of(txHash), AccountId.of(build.accountId), 'Security deposit',
@@ -217,14 +230,9 @@ export function createReceiveRoutes(appContext: AppContext): AuthenticatedHono {
         log.warn({txHash, err: descErr}, 'Failed to save security deposit description (non-fatal)');
       }
 
-      // 6. Complete the swap (SDK detects on-chain commit, returns deposit address)
-      const starknetAddress = account.requireStarknetAddress();
+      // 7. Complete the swap (SDK detects on-chain commit, returns deposit address)
       const completeResult = await receiveService.completeBitcoinReceive({
         swapId: build.swapId,
-        destinationAddress: starknetAddress,
-        amount: build.amount,
-        description: build.description || 'Received',
-        accountId: build.accountId,
         useUriPrefix: build.useUriPrefix,
       });
 
