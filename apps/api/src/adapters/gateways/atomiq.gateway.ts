@@ -1,6 +1,7 @@
 import {type StarknetChainType, StarknetInitializer, type StarknetInitializerType} from '@atomiqlabs/chain-starknet';
 import type {FromBTCSwap, TypedSwapper, TypedSwapperOptions} from '@atomiqlabs/sdk';
 import {BitcoinNetwork, SwapperFactory, SwapType} from '@atomiqlabs/sdk';
+import {OutOfBoundsError} from '@atomiqlabs/sdk/dist/errors/RequestError';
 import {SqliteStorageManager, SqliteUnifiedStorage} from '@atomiqlabs/storage-sqlite';
 import type {StarknetAddress} from "@bim/domain/account";
 import type {
@@ -17,7 +18,8 @@ import {ExternalServiceError, type BitcoinNetwork as DomainBitcoinNetwork, valid
 import type {SwapDirection, SwapLimits, BitcoinAddress, LightningInvoice, SwapId,
   ClaimerConfig
 } from "@bim/domain/swap";
-import {LightningInvoiceExpiredError} from "@bim/domain/swap";
+import {LightningInvoiceExpiredError, SwapAmountError} from "@bim/domain/swap";
+import {Amount} from "@bim/domain/shared";
 import {existsSync, mkdirSync} from 'node:fs';
 import type {Logger} from "pino";
 import {Account as StarknetAccount, RpcProvider, Signer as StarknetSigner} from 'starknet';
@@ -239,6 +241,9 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         expiresAt: new Date(quoteExpiry),
       };
     } catch (error) {
+      if (error instanceof OutOfBoundsError) {
+        throw new SwapAmountError(Amount.ofSatoshi(params.amountSats), Amount.ofSatoshi(error.min), Amount.ofSatoshi(error.max));
+      }
       throw new ExternalServiceError(
         'Atomiq',
         `Failed to create ${direction} swap: ${error instanceof Error
@@ -298,6 +303,9 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       if (message.includes('pr - expired') || message.includes('pr -expired')) {
         throw new LightningInvoiceExpiredError();
       }
+      if (error instanceof OutOfBoundsError) {
+        throw new SwapAmountError(Amount.ofSatoshi(0n), Amount.ofSatoshi(error.min), Amount.ofSatoshi(error.max));
+      }
       throw new ExternalServiceError(
         'Atomiq',
         `Failed to create ${direction} swap: ${message}`,
@@ -354,6 +362,9 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       };
     } catch (error) {
       if (error instanceof ExternalServiceError) throw error;
+      if (error instanceof OutOfBoundsError) {
+        throw new SwapAmountError(Amount.ofSatoshi(0n), Amount.ofSatoshi(error.min), Amount.ofSatoshi(error.max));
+      }
       throw new ExternalServiceError(
         'Atomiq',
         `Failed to prepare ${direction} swap: ${error instanceof Error
@@ -450,6 +461,9 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         expiresAt: new Date(quoteExpiry),
       };
     } catch (error) {
+      if (error instanceof OutOfBoundsError) {
+        throw new SwapAmountError(Amount.ofSatoshi(params.amountSats), Amount.ofSatoshi(error.min), Amount.ofSatoshi(error.max));
+      }
       throw new ExternalServiceError(
         'Atomiq',
         `Failed to create ${direction} swap: ${error instanceof Error
