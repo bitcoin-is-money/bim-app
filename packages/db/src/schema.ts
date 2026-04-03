@@ -126,6 +126,7 @@ export const swaps = pgTable('bim_swaps', {
 
   // State transition timestamps
   paidAt: timestamp('paid_at'),
+  claimableAt: timestamp('claimable_at'),
   confirmedAt: timestamp('confirmed_at'),
   completedAt: timestamp('completed_at'),
   expiredAt: timestamp('expired_at'),

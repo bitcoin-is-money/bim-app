@@ -113,10 +113,10 @@ export class SwapMonitor {
           });
           this.log.debug({swapId: swap.data.id, status}, 'Swap status');
 
-          // Auto-claim forward swaps (Bitcoin/Lightning → Starknet) when BTC is confirmed.
+          // Auto-claim forward swaps (Bitcoin/Lightning → Starknet) when claimable.
           // The backend account submits the claim tx and receives the claimer bounty.
           // Without this, the watchtower claims and the user loses the bounty.
-          if (status === 'paid' && swap.isForward()) {
+          if (status === 'claimable' && swap.isForward()) {
             await this.claimSwap(swap.data.id);
           }
         } catch (err) {
@@ -146,6 +146,9 @@ export class SwapMonitor {
         userAddress: result.userAddress,
         refundSuccess: result.refundTxHash !== undefined,
       }, 'Forward swap claim completed');
+
+      // Transition to confirming so the monitor won't re-attempt the claim
+      await this.swapService.markSwapAsConfirming(swapId, result.claimTxHash);
     } catch (err) {
       this.log.error({
         swapId,

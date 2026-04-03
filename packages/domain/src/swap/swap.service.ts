@@ -485,11 +485,30 @@ export class SwapService {
   }
 
   // ===========================================================================
+  // Claim Lifecycle
+  // ===========================================================================
+
+  /**
+   * Marks a swap as confirming after a claim transaction has been submitted.
+   * Called by SwapMonitor after successful claimForwardSwap().
+   */
+  async markSwapAsConfirming(swapId: string, txHash: string): Promise<void> {
+    const id = SwapId.of(swapId);
+    const swap = await this.deps.swapRepository.findById(id);
+    if (!swap) {
+      throw new SwapNotFoundError(id);
+    }
+    swap.markAsConfirming(txHash);
+    await this.deps.swapRepository.save(swap);
+    await this.persistDescription(swap);
+  }
+
+  // ===========================================================================
   // Active Swaps
   // ===========================================================================
 
   /**
-   * Returns all non-terminal swaps (pending, paid, confirming).
+   * Returns all non-terminal swaps (pending, committed, paid, claimable, confirming).
    * Used by SwapMonitor to know which swaps to check.
    */
   async getActiveSwaps(): Promise<Swap[]> {
@@ -547,6 +566,9 @@ export class SwapService {
         swap.markAsCompleted(atomiqStatus.txHash || 'unknown');
         await this.deps.swapRepository.save(swap);
         await this.persistDescription(swap);
+      } else if (atomiqStatus.isClaimable) {
+        swap.markAsClaimable();
+        await this.deps.swapRepository.save(swap);
       } else if (atomiqStatus.isPaid) {
         swap.markAsPaid();
         await this.deps.swapRepository.save(swap);

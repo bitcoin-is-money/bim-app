@@ -98,10 +98,10 @@ Every POLL_INTERVAL (5 seconds):
 │   │       → updates local Swap entity state
 │   │       → saves to SwapRepository
 │   │
-│   └── 2b. If swap is now 'paid' AND direction is forward (receive):
-│           SwapService.claim(swapId)
-│           → calls AtomiqGateway.claimSwap()
-│           → transitions: paid → confirming → completed
+│   └── 2b. If swap is now 'claimable' AND direction is forward (receive):
+│           AtomiqGateway.claimForwardSwap(swapId)
+│           SwapService.markSwapAsConfirming(swapId, txHash)
+│           → transitions: claimable → confirming → completed
 │           → saves to SwapRepository
 │
 └── 3. Log iteration summary (active count, claimed count, errors)
@@ -284,18 +284,18 @@ sequenceDiagram
     Monitor->>Service: fetchStatus("swap_1")
     Service->>Gateway: getSwapStatus("swap_1")
     Gateway->>SDK: swap.getState()
-    SDK-->>Gateway: state=1 (paid)
-    Gateway-->>Service: {isPaid: true}
-    Service->>Repo: save(swap_1) [status: paid]
-    Service-->>Monitor: {status: "paid"}
+    SDK-->>Gateway: state=2 (claimable)
+    Gateway-->>Service: {isPaid: true, isClaimable: true}
+    Service->>Repo: save(swap_1) [status: claimable]
+    Service-->>Monitor: {status: "claimable"}
 
-    Note over Monitor: swap_1 is paid + forward → auto-claim
-    Monitor->>Service: claim("swap_1")
-    Service->>Gateway: claimSwap("swap_1")
+    Note over Monitor: swap_1 is claimable + forward → auto-claim
+    Monitor->>Gateway: claimForwardSwap("swap_1")
     Gateway->>SDK: swap.claim()
-    SDK-->>Gateway: {txHash: "0x..."}
+    SDK-->>Gateway: {claimTxHash: "0x..."}
+    Gateway-->>Monitor: {claimTxHash: "0x..."}
+    Monitor->>Service: markSwapAsConfirming("swap_1", "0x...")
     Service->>Repo: save(swap_1) [status: confirming]
-    Service-->>Monitor: {txHash: "0x..."}
 
     Note over SSE,Client: Meanwhile, SSE reads from repository
     Client->>SSE: GET /api/swap/events/swap_1

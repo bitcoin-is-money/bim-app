@@ -201,6 +201,10 @@ export class Swap {
     this.state = { status: 'paid', paidAt: new Date() };
   }
 
+  markAsClaimable(): void {
+    this.state = { status: 'claimable', claimableAt: new Date() };
+  }
+
   markAsConfirming(txHash: string): void {
     this.state = { status: 'confirming', txHash, confirmedAt: new Date() };
   }
@@ -234,6 +238,8 @@ export class Swap {
         return 10;
       case 'paid':
         return 33;
+      case 'claimable':
+        return 50;
       case 'confirming':
         return 66;
       case 'completed':

@@ -25,6 +25,7 @@ function createMockSwapService(): SwapService {
   return {
     getActiveSwaps: vi.fn().mockResolvedValue([]),
     fetchStatus: vi.fn(),
+    markSwapAsConfirming: vi.fn().mockResolvedValue(undefined),
     createLightningToStarknet: vi.fn(),
     createBitcoinToStarknet: vi.fn(),
     createStarknetToLightning: vi.fn(),
@@ -35,7 +36,12 @@ function createMockSwapService(): SwapService {
 
 function createMockAtomiqGateway(): AtomiqGateway {
   return {
-    claimForwardSwap: vi.fn().mockResolvedValue('0xclaim_tx'),
+    claimForwardSwap: vi.fn().mockResolvedValue({
+      claimTxHash: '0xclaim_tx',
+      refundTxHash: '0xrefund_tx',
+      bountyAmount: 80_000_000_000_000_000_000n,
+      userAddress: '0x0123456789abcdef',
+    }),
   } as unknown as AtomiqGateway;
 }
 
@@ -151,6 +157,60 @@ describe('SwapMonitor', () => {
 
       // Should have been called at least 6 times (2 idle + 1 active + 3 idle until stop)
       expect(swapService.getActiveSwaps).toHaveBeenCalledTimes(6);
+    });
+  });
+
+  describe('auto-claim', () => {
+    it('claims forward swap when status is claimable', async () => {
+      const swap = createLightningSwap('s1');
+      vi.mocked(swapService.getActiveSwaps).mockResolvedValue([swap]);
+      vi.mocked(swapService.fetchStatus).mockResolvedValue({
+        swap,
+        status: 'claimable',
+        progress: 50,
+      });
+
+      await monitor.runIteration();
+
+      expect(atomiqGateway.claimForwardSwap).toHaveBeenCalledWith('s1');
+      expect(swapService.markSwapAsConfirming).toHaveBeenCalledWith('s1', '0xclaim_tx');
+    });
+
+    it('does NOT claim forward swap when status is paid (not yet claimable)', async () => {
+      const swap = createLightningSwap('s1');
+      vi.mocked(swapService.getActiveSwaps).mockResolvedValue([swap]);
+      vi.mocked(swapService.fetchStatus).mockResolvedValue({
+        swap,
+        status: 'paid',
+        progress: 33,
+      });
+
+      await monitor.runIteration();
+
+      expect(atomiqGateway.claimForwardSwap).not.toHaveBeenCalled();
+    });
+
+    it('does NOT claim reverse swaps even when claimable', async () => {
+      const reverseSwap = Swap.createStarknetToLightning({
+        id: SwapId.of('s-reverse'),
+        amount: Amount.ofSatoshi(50_000n),
+        sourceAddress: DESTINATION,
+        invoice: INVOICE as unknown as import('@bim/domain/swap').LightningInvoice,
+        depositAddress: '0xdeposit',
+        expiresAt: new Date(Date.now() + 30 * 60 * 1000),
+        description: 'Sent',
+        accountId: 'account-001',
+      });
+      vi.mocked(swapService.getActiveSwaps).mockResolvedValue([reverseSwap]);
+      vi.mocked(swapService.fetchStatus).mockResolvedValue({
+        swap: reverseSwap,
+        status: 'claimable',
+        progress: 50,
+      });
+
+      await monitor.runIteration();
+
+      expect(atomiqGateway.claimForwardSwap).not.toHaveBeenCalled();
     });
   });
 
