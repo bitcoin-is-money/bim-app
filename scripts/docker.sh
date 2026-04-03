@@ -16,6 +16,7 @@ registry() {
   terraform -chdir="$INFRA_DIR" output -raw registry_endpoint
 }
 
+
 # ---------------------------------------------------------------------------
 # Commands
 # ---------------------------------------------------------------------------
@@ -112,7 +113,6 @@ case "${1:-}" in
     VERSION=$(app_version)
     SERVICE="${2:-all}"
     echo "Deploying version $VERSION (service: $SERVICE)"
-    set +e
     if [ "$SERVICE" = "all" ] || [ "$SERVICE" = "api" ]; then
       API_ID=$(terraform -chdir="$INFRA_DIR" output -raw api_container_id)
       CURRENT_IMG=$(scw container container get "${API_ID##*/}" region=fr-par -o json | sed -n 's/.*"registry_image":"\([^"]*\)".*/\1/p')
@@ -121,7 +121,6 @@ case "${1:-}" in
         echo "  api: already at version $VERSION, skipping"
       else
         scw container container update "${API_ID##*/}" registry-image="$TARGET_IMG" region=fr-par
-        scw container container deploy "${API_ID##*/}" region=fr-par
       fi
     fi
     if [ "$SERVICE" = "all" ] || [ "$SERVICE" = "indexer" ]; then
@@ -132,10 +131,8 @@ case "${1:-}" in
         echo "  indexer: already at version $VERSION, skipping"
       else
         scw container container update "${INDEXER_ID##*/}" registry-image="$TARGET_IMG" region=fr-par
-        scw container container deploy "${INDEXER_ID##*/}" region=fr-par
       fi
     fi
-    set -e
     echo ""
     echo "--- Deploy done for version $VERSION (service: $SERVICE) ---"
     ;;
@@ -149,7 +146,6 @@ case "${1:-}" in
   force-redeploy)
     SERVICE="${2:-all}"
     echo "Force redeploying (service: $SERVICE)..."
-    echo "This skips 'update' and sends 'deploy' directly to unstick transient states."
     if [ "$SERVICE" = "all" ] || [ "$SERVICE" = "api" ]; then
       API_ID=$(terraform -chdir="$INFRA_DIR" output -raw api_container_id)
       scw container container deploy "${API_ID##*/}" region=fr-par
