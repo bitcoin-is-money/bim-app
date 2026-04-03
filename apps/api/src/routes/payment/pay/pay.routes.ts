@@ -6,6 +6,7 @@ import {randomUUID} from 'node:crypto';
 import {WebAuthnSignatureProcessor} from '../../../adapters';
 import type {AppContext} from '../../../app-context';
 import {type ApiErrorResponse, createErrorResponse, ErrorCode, handleDomainError} from '../../../errors';
+import type {SwapMonitor} from '../../../monitoring/swap.monitor';
 import type {AuthenticatedHono} from '../../../types';
 import {PaymentBuildCache} from './payment-build.cache';
 import {BuildPaymentSchema, ExecuteSignedPaymentSchema, ParsePaymentSchema} from './pay.types';
@@ -23,7 +24,10 @@ import type {
 // Routes
 // =============================================================================
 
-export function createPayRoutes(appContext: AppContext): AuthenticatedHono {
+export function createPayRoutes(
+  appContext: AppContext,
+  swapMonitor?: SwapMonitor | null,
+): AuthenticatedHono {
   const log = appContext.logger.child({name: 'pay.routes.ts'});
   const app: AuthenticatedHono = new Hono();
   const { payService, parseService } = appContext.services;
@@ -73,6 +77,7 @@ export function createPayRoutes(appContext: AppContext): AuthenticatedHono {
       // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- empty description should fallback
       const description = input.description || parsed.description || 'Sent';
       const preparedCalls = await payService.prepareCalls(parsed, senderAddress, account.id, description);
+      swapMonitor?.ensureRunning();
 
       // 3. Build typed data via AVNU paymaster
       const {typedData, messageHash} = await appContext.gateways.starknet.buildCalls({

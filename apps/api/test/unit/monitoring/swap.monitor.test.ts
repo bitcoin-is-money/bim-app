@@ -101,4 +101,78 @@ describe('SwapMonitor', () => {
       monitor.stop();
     });
   });
+
+  describe('auto-stop', () => {
+    it('stops after maxIdleIterations with no active swaps', async () => {
+      const autoStopMonitor = new SwapMonitor(swapService, atomiqGateway, createLogger(), {
+        pollInterval: 100,
+        maxIdleIterations: 3,
+      });
+      vi.mocked(swapService.getActiveSwaps).mockResolvedValue([]);
+
+      autoStopMonitor.start();
+      // Wait for enough iterations (3 × 100ms + margin)
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Monitor should have auto-stopped — start again should work (proves it stopped)
+      vi.mocked(swapService.getActiveSwaps).mockClear();
+      autoStopMonitor.start();
+      await new Promise(resolve => setTimeout(resolve, 150));
+      await autoStopMonitor.stop();
+
+      expect(swapService.getActiveSwaps).toHaveBeenCalled();
+    });
+
+    it('resets idle counter when active swaps are found', async () => {
+      const autoStopMonitor = new SwapMonitor(swapService, atomiqGateway, createLogger(), {
+        pollInterval: 100,
+        maxIdleIterations: 3,
+      });
+      const swap = createLightningSwap('s1');
+
+      // First 2 iterations: no swaps (idle=1, idle=2)
+      vi.mocked(swapService.getActiveSwaps)
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
+        // 3rd iteration: swap found → resets idle counter
+        .mockResolvedValueOnce([swap])
+        // Next 2 iterations: no swaps again (idle=1, idle=2) — should NOT stop yet
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
+        // 6th iteration: idle=3 → auto-stop
+        .mockResolvedValue([]);
+
+      vi.mocked(swapService.fetchStatus).mockResolvedValue({swap, status: 'pending', progress: 0});
+
+      autoStopMonitor.start();
+      // Wait for all iterations
+      await new Promise(resolve => setTimeout(resolve, 800));
+      await autoStopMonitor.stop();
+
+      // Should have been called at least 6 times (2 idle + 1 active + 3 idle until stop)
+      expect(swapService.getActiveSwaps).toHaveBeenCalledTimes(6);
+    });
+  });
+
+  describe('ensureRunning', () => {
+    it('starts the monitor if not running', async () => {
+      vi.mocked(swapService.getActiveSwaps).mockResolvedValue([]);
+
+      monitor.ensureRunning();
+      await new Promise(resolve => setTimeout(resolve, 150));
+      await monitor.stop();
+
+      expect(swapService.getActiveSwaps).toHaveBeenCalled();
+    });
+
+    it('is a no-op if already running', async () => {
+      vi.mocked(swapService.getActiveSwaps).mockResolvedValue([]);
+
+      monitor.start();
+      monitor.ensureRunning(); // should not throw or restart
+
+      await new Promise(resolve => setTimeout(resolve, 150));
+      await monitor.stop();
+    });
+  });
 });
