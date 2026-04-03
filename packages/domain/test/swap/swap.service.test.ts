@@ -1,7 +1,7 @@
 import {StarknetAddress} from '@bim/domain/account';
 import type {AtomiqGateway, SwapRepository, TransactionRepository} from '@bim/domain/ports';
 import {Amount} from '@bim/domain/shared';
-import {Swap, SwapId, SwapService} from '@bim/domain/swap';
+import {Swap, SwapCreationError, SwapId, SwapNotFoundError, SwapService} from '@bim/domain/swap';
 import {createLogger} from '@bim/lib/logger';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
@@ -274,6 +274,94 @@ describe('SwapService', () => {
       const result = await service.fetchStatus({swapId: swap.data.id, accountId: ACCOUNT_ID});
 
       expect(result.status).toBe('pending');
+    });
+  });
+
+  // =========================================================================
+  // saveBitcoinCommit
+  // =========================================================================
+
+  describe('saveBitcoinCommit', () => {
+    it('creates a committed swap and saves it to the repository', async () => {
+      const result = await service.saveBitcoinCommit({
+        swapId: 'swap-btc-commit-001',
+        destinationAddress: DESTINATION_ADDRESS,
+        amount: Amount.ofSatoshi(500_000n),
+        description: 'Received',
+        accountId: ACCOUNT_ID,
+        commitTxHash: '0xcommit123',
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+      });
+
+      expect(result.getStatus()).toBe('committed');
+      expect(result.getTxHash()).toBe('0xcommit123');
+      expect(result.data.direction).toBe('bitcoin_to_starknet');
+      expect(result.data.depositAddress).toBeUndefined();
+      expect(result.isTerminal()).toBe(false);
+      expect(result.getProgress()).toBe(10);
+      expect(repository.save).toHaveBeenCalledWith(result);
+    });
+  });
+
+  // =========================================================================
+  // completeBitcoinToStarknet
+  // =========================================================================
+
+  describe('completeBitcoinToStarknet', () => {
+    it('loads existing swap, sets deposit address, and marks as paid', async () => {
+      const committedSwap = Swap.createBitcoinToStarknetCommitted({
+        id: SwapId.of('swap-btc-complete-001'),
+        amount: Amount.ofSatoshi(500_000n),
+        destinationAddress: DESTINATION_ADDRESS,
+        commitTxHash: '0xcommit456',
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+        description: 'Received',
+        accountId: ACCOUNT_ID,
+      });
+      vi.mocked(repository.findById).mockResolvedValue(committedSwap);
+      vi.mocked(gateway.completeBitcoinSwapCommit).mockResolvedValue({
+        depositAddress: 'bc1qdeposit123',
+        bip21Uri: 'bitcoin:bc1qdeposit123?amount=0.005',
+      });
+
+      const result = await service.completeBitcoinToStarknet({
+        swapId: 'swap-btc-complete-001',
+      });
+
+      expect(result.depositAddress).toBe('bc1qdeposit123');
+      expect(result.bip21Uri).toBe('bitcoin:bc1qdeposit123?amount=0.005');
+      expect(result.swap.data.depositAddress).toBe('bc1qdeposit123');
+      expect(result.swap.getStatus()).toBe('paid');
+      expect(repository.save).toHaveBeenCalledWith(committedSwap);
+    });
+
+    it('throws SwapNotFoundError if swap does not exist', async () => {
+      vi.mocked(repository.findById).mockResolvedValue(undefined);
+
+      await expect(
+        service.completeBitcoinToStarknet({swapId: 'nonexistent'}),
+      ).rejects.toThrow(SwapNotFoundError);
+    });
+
+    it('throws SwapCreationError if deposit address is missing', async () => {
+      const committedSwap = Swap.createBitcoinToStarknetCommitted({
+        id: SwapId.of('swap-btc-noaddr'),
+        amount: Amount.ofSatoshi(500_000n),
+        destinationAddress: DESTINATION_ADDRESS,
+        commitTxHash: '0xcommit789',
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+        description: 'Received',
+        accountId: ACCOUNT_ID,
+      });
+      vi.mocked(repository.findById).mockResolvedValue(committedSwap);
+      vi.mocked(gateway.completeBitcoinSwapCommit).mockResolvedValue({
+        depositAddress: '',
+        bip21Uri: '',
+      });
+
+      await expect(
+        service.completeBitcoinToStarknet({swapId: 'swap-btc-noaddr'}),
+      ).rejects.toThrow(SwapCreationError);
     });
   });
 });

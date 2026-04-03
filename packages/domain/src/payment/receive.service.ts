@@ -146,18 +146,10 @@ export class ReceiveService {
 
   async completeBitcoinReceive(params: {
     swapId: string;
-    destinationAddress: StarknetAddress;
-    amount: Amount;
-    description: string;
-    accountId: string;
     useUriPrefix: boolean;
   }): Promise<{network: 'bitcoin'} & BitcoinReceiveResult> {
     const result = await this.deps.swapService.completeBitcoinToStarknet({
       swapId: params.swapId,
-      destinationAddress: params.destinationAddress,
-      amount: params.amount,
-      description: params.description,
-      accountId: params.accountId,
     });
 
     const bip21Uri = params.useUriPrefix
@@ -169,7 +161,7 @@ export class ReceiveService {
       swapId: result.swap.data.id,
       depositAddress: BitcoinAddress.of(result.depositAddress, this.deps.starknetConfig.bitcoinNetwork),
       bip21Uri,
-      amount: params.amount,
+      amount: result.swap.data.amount,
       expiresAt: result.swap.data.expiresAt,
     };
   }

@@ -38,6 +38,7 @@ export function isReverseSwap(direction: SwapDirection): boolean {
 /** Lifecycle status of a swap. */
 export type SwapStatus =
   | 'pending'
+  | 'committed'
   | 'paid'
   | 'confirming'
   | 'completed'
@@ -49,6 +50,7 @@ export type SwapStatus =
 /** Discriminated union encoding the full swap state (status + associated data). */
 export type SwapState =
   | { status: 'pending' }
+  | { status: 'committed'; commitTxHash: string; committedAt: Date }
   | { status: 'paid'; paidAt: Date }
   | { status: 'confirming'; txHash: string; confirmedAt: Date }
   | { status: 'completed'; txHash: string; completedAt: Date }
@@ -81,7 +83,7 @@ export type SwapData = SwapBase & (
   | {
       readonly direction: 'bitcoin_to_starknet';
       readonly destinationAddress: StarknetAddress;
-      readonly depositAddress: string;
+      readonly depositAddress?: string;
     }
   | {
       readonly direction: 'starknet_to_lightning';

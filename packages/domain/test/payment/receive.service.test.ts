@@ -82,6 +82,7 @@ describe('ReceiveService', () => {
         amount: Amount.ofSatoshi(200_000n),
         expiresAt: new Date(Date.now() + 60 * 60 * 1000),
       }),
+      saveBitcoinCommit: vi.fn().mockResolvedValue(createMockBitcoinReceiveSwap()),
       completeBitcoinToStarknet: vi.fn().mockResolvedValue({
         swap: createMockBitcoinReceiveSwap(),
         depositAddress: BTC_DEPOSIT_ADDRESS,
@@ -359,19 +360,11 @@ describe('ReceiveService', () => {
     it('delegates to swapService.completeBitcoinToStarknet and returns deposit address', async () => {
       const result = await service.completeBitcoinReceive({
         swapId: 'recv-btc-002',
-        destinationAddress: DESTINATION_ADDRESS,
-        amount: Amount.ofSatoshi(200_000n),
-        description: 'Received',
-        accountId: 'account-001',
         useUriPrefix: true,
       });
 
       expect(mockSwapService.completeBitcoinToStarknet).toHaveBeenCalledWith({
         swapId: 'recv-btc-002',
-        destinationAddress: DESTINATION_ADDRESS,
-        amount: Amount.ofSatoshi(200_000n),
-        description: 'Received',
-        accountId: 'account-001',
       });
 
       expect(result.network).toBe('bitcoin');
@@ -385,10 +378,6 @@ describe('ReceiveService', () => {
     it('omits the bitcoin: prefix when useUriPrefix is false', async () => {
       const result = await service.completeBitcoinReceive({
         swapId: 'recv-btc-002',
-        destinationAddress: DESTINATION_ADDRESS,
-        amount: Amount.ofSatoshi(200_000n),
-        description: 'Received',
-        accountId: 'account-001',
         useUriPrefix: false,
       });
 
@@ -398,10 +387,6 @@ describe('ReceiveService', () => {
     it('includes the bitcoin: prefix when useUriPrefix is true', async () => {
       const result = await service.completeBitcoinReceive({
         swapId: 'recv-btc-002',
-        destinationAddress: DESTINATION_ADDRESS,
-        amount: Amount.ofSatoshi(200_000n),
-        description: 'Received',
-        accountId: 'account-001',
         useUriPrefix: true,
       });
 
@@ -416,10 +401,6 @@ describe('ReceiveService', () => {
       await expect(
         service.completeBitcoinReceive({
           swapId: 'recv-btc-002',
-          destinationAddress: DESTINATION_ADDRESS,
-          amount: Amount.ofSatoshi(200_000n),
-          description: 'Received',
-          accountId: 'account-001',
           useUriPrefix: true,
         }),
       ).rejects.toThrow(SwapCreationError);
