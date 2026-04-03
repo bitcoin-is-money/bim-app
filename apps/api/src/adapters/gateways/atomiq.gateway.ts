@@ -650,6 +650,21 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     try {
       const swap = await this.getSwapObject(swapId);
 
+      if (!swap) {
+        // Swap not found in SDK storage (e.g., after container restart).
+        // Return expired+error so syncWithAtomiq can mark it as 'lost'.
+        return {
+          state: -2,
+          isPaid: false,
+          isClaimable: false,
+          isCompleted: false,
+          isFailed: false,
+          isExpired: true,
+          isRefunded: false,
+          error: `Swap ${swapId} not found in SDK storage`,
+        };
+      }
+
       // Force the SDK to check on-chain state before reading.
       // This can recover a swap from QUOTE_SOFT_EXPIRED (-1) to COMMITED (1)
       // when the commit transaction was submitted externally (via AVNU paymaster).
