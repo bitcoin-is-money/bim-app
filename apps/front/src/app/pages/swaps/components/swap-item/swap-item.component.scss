@@ -65,8 +65,7 @@
     @apply bg-neutral-400;
   }
 
-  &.status-paid .swap-status-indicator,
-  &.status-confirming .swap-status-indicator {
+  &.status-paid .swap-status-indicator {
     @apply bg-yellow-400;
   }
 }

@@ -81,10 +81,10 @@ sequenceDiagram
     Gateway->>SDK: swap.claim()
     Note right of SDK: Atomiq transfers WBTC on Starknet
     SDK-->>Gateway: {txHash: "0x..."}
-    Service->>Service: swap.markAsConfirming(txHash)
+    Service->>Service: swap.recordClaimAttempt(txHash)
     Service->>Service: swapRepository.save(swap)
 
-    SSE-->>Front: event: status {confirming, progress: 66}
+    SSE-->>Front: event: status {claimable, progress: 50, txHash}
 
     Note over Monitor,SDK: Step 6 — Confirmation
     Monitor->>Service: fetchStatus(swapId)

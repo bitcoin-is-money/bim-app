@@ -438,7 +438,7 @@ POST /api/pay/execute {data, amount, challengeId, credential}
 
 GET /api/pay/:id (frontend polls)
   └─> Backend checks swap status
-  └─> Returns current status (pending/confirming/completed/failed)
+  └─> Returns current status (pending/paid/claimable/completed/failed)
 ```
 
 #### Auto-deployment Flow

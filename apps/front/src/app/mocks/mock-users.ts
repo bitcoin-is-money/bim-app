@@ -51,7 +51,7 @@ export const MOCK_USERS: [MockUserProfile, ...MockUserProfile[]] = [
     },
     paymentBuildFee: null, // Starknet: same fee as parse
     existingSwaps: [],
-    swapConfig: {statusProgression: ['pending', 'paid', 'confirming', 'completed']},
+    swapConfig: {statusProgression: ['pending', 'paid', 'completed']},
     language: 'en',
   },
   {
@@ -77,13 +77,12 @@ export const MOCK_USERS: [MockUserProfile, ...MockUserProfile[]] = [
     paymentBuildFee: {value: 24, currency: 'SAT'}, // real LP fee from build
     existingSwaps: [
       {id: 'swap-bob-completed', type: 'receive', direction: 'lightning_to_starknet', amountSats: 100000, createdAt: new Date(Date.now() - 86400000).toISOString(), lastKnownStatus: 'completed'},
-      {id: 'swap-bob-confirming', type: 'send', direction: 'starknet_to_lightning', amountSats: 50000, createdAt: new Date(Date.now() - 3600000).toISOString(), lastKnownStatus: 'confirming'},
       {id: 'swap-bob-paid', type: 'receive', direction: 'bitcoin_to_starknet', amountSats: 200000, createdAt: new Date(Date.now() - 1800000).toISOString(), lastKnownStatus: 'paid'},
       {id: 'swap-bob-pending', type: 'send', direction: 'starknet_to_bitcoin', amountSats: 75000, createdAt: new Date(Date.now() - 600000).toISOString(), lastKnownStatus: 'pending'},
       {id: 'swap-bob-expired', type: 'receive', direction: 'lightning_to_starknet', amountSats: 30000, createdAt: new Date(Date.now() - 172800000).toISOString(), lastKnownStatus: 'expired'},
       {id: 'swap-bob-failed', type: 'send', direction: 'starknet_to_lightning', amountSats: 15000, createdAt: new Date(Date.now() - 259200000).toISOString(), lastKnownStatus: 'failed'},
     ],
-    swapConfig: {statusProgression: ['pending', 'paid', 'confirming', 'completed']},
+    swapConfig: {statusProgression: ['pending', 'paid', 'completed']},
     language: 'en',
   },
   {
@@ -107,7 +106,7 @@ export const MOCK_USERS: [MockUserProfile, ...MockUserProfile[]] = [
     },
     paymentBuildFee: {value: 42, currency: 'SAT'}, // real LP fee from build
     existingSwaps: [],
-    swapConfig: {statusProgression: ['pending', 'paid', 'confirming', 'completed']},
+    swapConfig: {statusProgression: ['pending', 'paid', 'completed']},
     language: 'en',
   },
   {
@@ -132,7 +131,7 @@ export const MOCK_USERS: [MockUserProfile, ...MockUserProfile[]] = [
     },
     paymentBuildFee: null,
     existingSwaps: [],
-    swapConfig: {statusProgression: ['pending', 'paid', 'confirming', 'completed']},
+    swapConfig: {statusProgression: ['pending', 'paid', 'completed']},
     language: 'en',
   },
   {

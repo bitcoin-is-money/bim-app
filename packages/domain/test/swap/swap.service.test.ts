@@ -248,7 +248,6 @@ describe('SwapService', () => {
     it('does not sync terminal swaps with Atomiq', async () => {
       const swap = createPendingLightningSwap();
       swap.markAsPaid();
-      swap.markAsConfirming('0x123');
       swap.markAsCompleted('0x123');
       vi.mocked(repository.findById).mockResolvedValue(swap);
 
@@ -410,19 +409,20 @@ describe('SwapService', () => {
   });
 
   // =========================================================================
-  // markSwapAsConfirming
+  // recordClaimAttempt
   // =========================================================================
 
-  describe('markSwapAsConfirming', () => {
-    it('transitions a claimable swap to confirming', async () => {
+  describe('recordClaimAttempt', () => {
+    it('records the claim tx hash without changing the swap status', async () => {
       const swap = createPendingLightningSwap();
       swap.markAsClaimable();
       vi.mocked(repository.findById).mockResolvedValue(swap);
 
-      await service.markSwapAsConfirming(swap.data.id, '0xclaim_tx_hash');
+      await service.recordClaimAttempt(swap.data.id, '0xclaim_tx_hash');
 
-      expect(swap.getStatus()).toBe('confirming');
+      expect(swap.getStatus()).toBe('claimable');
       expect(swap.getTxHash()).toBe('0xclaim_tx_hash');
+      expect(swap.hasRecentClaimAttempt(60_000)).toBe(true);
       expect(repository.save).toHaveBeenCalledWith(swap);
     });
 
@@ -430,7 +430,7 @@ describe('SwapService', () => {
       vi.mocked(repository.findById).mockResolvedValue(undefined);
 
       await expect(
-        service.markSwapAsConfirming('nonexistent', '0xhash'),
+        service.recordClaimAttempt('nonexistent', '0xhash'),
       ).rejects.toThrow(SwapNotFoundError);
     });
   });

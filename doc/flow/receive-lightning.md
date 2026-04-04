@@ -77,10 +77,10 @@ sequenceDiagram
     Gateway->>SDK: swap.claim()
     Note right of SDK: Atomiq transfers WBTC on Starknet
     SDK-->>Gateway: {txHash: "0x..."}
-    Service->>Service: swap.markAsConfirming(txHash)
+    Service->>Service: swap.recordClaimAttempt(txHash)
     Service->>Service: swapRepository.save(swap)
 
-    SSE-->>Front: event: status {confirming, progress: 66}
+    SSE-->>Front: event: status {claimable, progress: 50, txHash}
 
     Note over Monitor,SDK: Step 6 — Confirmation
     Monitor->>Service: fetchStatus(swapId) [next iteration]
@@ -216,7 +216,8 @@ SwapMonitor tick (every 5 seconds)
             │   ├── Call swap.waitTillClaimed() (blocks until confirmed)
             │   └── Return { txHash, success: true }
             │
-            ├── Transition: swap.markAsConfirming(txHash)
+            ├── Record metadata: swap.recordClaimAttempt(txHash)
+            │   (status stays 'claimable' — Atomiq remains source of truth)
             ├── Save: swapRepository.save(swap)
             │
             ├── Async: waitForClaimConfirmation(swap, txHash)
@@ -350,6 +351,6 @@ SwapMonitor continues running independently
 
 - [ ] "Create Invoice" button handler: call `POST /api/swap/lightning-to-starknet`
 - [ ] Connect to SSE `GET /api/swap/events/:swapId` after invoice creation
-- [ ] Display status transitions: pending → paid → confirming → completed
+- [ ] Display status transitions: pending → paid → claimable → completed
 - [ ] Handle invoice expiration (show retry option)
 - [ ] Handle errors (show error message + retry)

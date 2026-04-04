@@ -7,7 +7,7 @@ export type SwapDirection =
 export type SwapStatus =
   | 'pending'
   | 'paid'
-  | 'confirming'
+  | 'claimable'
   | 'completed'
   | 'expired'
   | 'refunded'

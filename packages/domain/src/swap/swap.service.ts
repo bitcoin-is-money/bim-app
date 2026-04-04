@@ -444,10 +444,10 @@ export class SwapService {
       throw new SwapOwnershipError(swapId);
     }
 
-    // Sync with Atomiq if not in a terminal or in-flight (confirming) state.
-    // A confirming swap has already had its claim submitted — re-syncing with
-    // Atomiq could incorrectly downgrade it back to "paid".
-    if (!swap.isTerminal() && swap.getStatus() !== 'confirming') {
+    // Atomiq is the source of truth — always sync non-terminal swaps.
+    // Double-claim is prevented orthogonally by SwapMonitor via
+    // recordClaimAttempt / hasRecentClaimAttempt, not by skipping sync.
+    if (!swap.isTerminal()) {
       await this.syncWithAtomiq(swap);
     }
 
@@ -489,16 +489,18 @@ export class SwapService {
   // ===========================================================================
 
   /**
-   * Marks a swap as confirming after a claim transaction has been submitted.
-   * Called by SwapMonitor after successful claimForwardSwap().
+   * Records that the SwapMonitor submitted a claim transaction for this swap.
+   * This is metadata only — the swap status remains `claimable` until Atomiq
+   * reflects the on-chain result via syncWithAtomiq. The monitor uses
+   * `hasRecentClaimAttempt()` on the returned swap to throttle re-submissions.
    */
-  async markSwapAsConfirming(swapId: string, txHash: string): Promise<void> {
+  async recordClaimAttempt(swapId: string, txHash: string): Promise<void> {
     const id = SwapId.of(swapId);
     const swap = await this.deps.swapRepository.findById(id);
     if (!swap) {
       throw new SwapNotFoundError(id);
     }
-    swap.markAsConfirming(txHash);
+    swap.recordClaimAttempt(txHash);
     await this.deps.swapRepository.save(swap);
     await this.persistDescription(swap);
   }
@@ -508,7 +510,7 @@ export class SwapService {
   // ===========================================================================
 
   /**
-   * Returns all non-terminal swaps (pending, committed, paid, claimable, confirming).
+   * Returns all non-terminal swaps (pending, committed, paid, claimable).
    * Used by SwapMonitor to know which swaps to check.
    */
   async getActiveSwaps(): Promise<Swap[]> {
