@@ -43,7 +43,7 @@ resource "scaleway_rdb_instance" "bim" {
   engine         = "PostgreSQL-16"
   is_ha_cluster  = false
   disable_backup = false # Snapshots auto
-  user_name      = "bim"
+  user_name      = var.db_user
   password       = var.db_password
   volume_type    = "lssd" # 20 GB included with DB-DEV-S
   region         = var.region
@@ -90,16 +90,18 @@ resource "scaleway_container" "api" {
   deploy         = true
   region         = var.region
 
-  # Env vars that override defaults baked into the Docker image (.env.testnet/.env.mainnet).
-  # Only values that differ from local dev are set here.
+  # Infra-dependent env vars. Blockchain constants come from config/{network}.env
+  # baked into the Docker image. Everything else MUST be set here — the app has
+  # no dangerous defaults (WEBAUTHN_*, DATABASE_URL crash on startup if missing).
   environment_variables = merge(
     {
       NETWORK                           = var.network
-      WEBAUTHN_AUTHENTICATOR_ATTACHMENT = "cross-platform"
+      NODE_ENV                          = "production"
+      WEBAUTHN_AUTHENTICATOR_ATTACHMENT = var.webauthn_authenticator_attachment
       LOG_LEVEL                         = var.api_log_level
     },
-    # WebAuthn domain is only set once we know the container's domain (after first apply).
-    # Until then, the image defaults (localhost) apply — WebAuthn won't work until next apply.
+    # WebAuthn domain requires api_domain (set after first apply from outputs).
+    # Without it, the container will fail to start (WEBAUTHN_RP_ID is required).
     var.api_domain != "" ? {
       WEBAUTHN_RP_ID  = var.api_domain
       WEBAUTHN_ORIGIN = "https://${var.api_domain}"

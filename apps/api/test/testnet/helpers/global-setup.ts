@@ -5,7 +5,7 @@ import {TestDatabase} from '../../integration/helpers';
 /**
  * Global setup for testnet tests.
  *
- * 1. Loads configuration from .env.testnet.secret + .env.testnet
+ * 1. Loads configuration from .env.local + config/testnet.env
  * 2. Overrides test-specific values (NODE_ENV, STARKNET_NETWORK)
  * 3. Starts a PostgreSQL container (via TestContainers)
  */

@@ -59,11 +59,8 @@ COPY --from=builder /app/apps/api/dist/main.js ./dist/main.js
 # Copy frontend static files
 COPY --from=builder /app/apps/api/public/app ./public/app
 
-# Copy env defaults (secrets are injected via environment variables at runtime)
-COPY apps/api/.env.mainnet apps/api/.env.testnet ./
-
-# loadEnv() requires .secret files to exist (they can be empty — env vars take precedence)
-RUN touch .env.mainnet.secret .env.testnet.secret
+# Copy blockchain config (network constants only — no secrets, no infra values)
+COPY apps/api/config/ ./config/
 
 ARG APP_VERSION=dev
 ENV APP_VERSION=${APP_VERSION}
