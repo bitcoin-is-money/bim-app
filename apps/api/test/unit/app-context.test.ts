@@ -34,7 +34,8 @@ vi.mock('../../src/adapters/index.js', () => {
   };
 });
 
-const mockDb = {} as any;
+const mockDb = {} as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+const mockPool = {} as any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
 function createMockConfig(): AppConfig.Config {
   return {
@@ -57,7 +58,7 @@ function createMockConfig(): AppConfig.Config {
         StarknetAddress.of('0x456'),
         StarknetAddress.of('0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d')
       ]},
-    atomiq: {network: 'testnet', starknetRpcUrl: 'http://localhost:5050', storagePath: '/tmp/bim/atomiq', autoCreateStorage: true, swapToken: 'WBTC', knownTokenAddresses: [StarknetAddress.of('0x456'), StarknetAddress.of('0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d')], claimer: {privateKey: '0xdeadbeef', address: StarknetAddress.of('0x0000000000000000000000000000000000000000000000000000000000000789')}, strkTokenAddress: '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d'},
+    atomiq: {network: 'testnet', starknetRpcUrl: 'http://localhost:5050', swapToken: 'WBTC', knownTokenAddresses: [StarknetAddress.of('0x456'), StarknetAddress.of('0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d')], claimer: {privateKey: '0xdeadbeef', address: StarknetAddress.of('0x0000000000000000000000000000000000000000000000000000000000000789')}, strkTokenAddress: '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d'},
     session: SessionConfig.create({durationMs: SessionConfig.DEFAULT_DURATION_MS}),
     logLevel: 'silent',
   };
@@ -68,7 +69,7 @@ describe('AppContext', () => {
     it('creates context with default implementations when no overrides', () => {
       const config = createMockConfig();
 
-      const context = AppContext.createDefault(config, mockDb, logger);
+      const context = AppContext.createDefault(config, mockDb, mockPool, logger);
 
       expect(context.repositories).toBeDefined();
       expect(context.gateways).toBeDefined();
@@ -85,7 +86,7 @@ describe('AppContext', () => {
         },
       };
 
-      const context = AppContext.createDefault(config, mockDb, logger, overrides);
+      const context = AppContext.createDefault(config, mockDb, mockPool, logger, overrides);
 
       expect((context.gateways.paymaster as any).name).toBe('mock-paymaster');
     });
@@ -99,7 +100,7 @@ describe('AppContext', () => {
         },
       };
 
-      const context = AppContext.createDefault(config, mockDb, logger, overrides);
+      const context = AppContext.createDefault(config, mockDb, mockPool, logger, overrides);
 
       expect((context.repositories.account as any).name).toBe('mock-account');
     });
@@ -112,7 +113,7 @@ describe('AppContext', () => {
         },
       };
 
-      const context = AppContext.createDefault(config, mockDb, logger, overrides);
+      const context = AppContext.createDefault(config, mockDb, mockPool, logger, overrides);
 
       expect(context.webauthn.rpId).toBe('override-rpId');
       // Other webauthn fields should come from config
@@ -131,7 +132,7 @@ describe('AppContext', () => {
         },
       };
 
-      const context = AppContext.createDefault(config, mockDb, logger, overrides);
+      const context = AppContext.createDefault(config, mockDb, mockPool, logger, overrides);
 
       // Verify the gateway is the mocked one
       expect((context.gateways.paymaster as any).name).toBe('mock-paymaster');
@@ -152,7 +153,7 @@ describe('AppContext', () => {
         },
       };
 
-      const context = AppContext.createDefault(config, mockDb, logger, overrides);
+      const context = AppContext.createDefault(config, mockDb, mockPool, logger, overrides);
 
       expect((context.repositories.account as any).name).toBe('mock-account');
     });

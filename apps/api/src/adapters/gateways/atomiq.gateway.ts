@@ -2,7 +2,8 @@ import {type StarknetChainType, StarknetInitializer, type StarknetInitializerTyp
 import type {FromBTCSwap, TypedSwapper, TypedSwapperOptions} from '@atomiqlabs/sdk';
 import {BitcoinNetwork, SwapperFactory, SwapType} from '@atomiqlabs/sdk';
 import {OutOfBoundsError} from '@atomiqlabs/sdk/dist/errors/RequestError';
-import {SqliteStorageManager, SqliteUnifiedStorage} from '@atomiqlabs/storage-sqlite';
+import {PgStorageManager, PgUnifiedStorage} from '@bim/atomiq-storage-postgres';
+import type pg from 'pg';
 import type {StarknetAddress} from "@bim/domain/account";
 import type {
   AtomiqGateway,
@@ -20,7 +21,6 @@ import type {SwapDirection, SwapLimits, BitcoinAddress, LightningInvoice, SwapId
 } from "@bim/domain/swap";
 import {LightningInvoiceExpiredError, SwapAmountError} from "@bim/domain/swap";
 import {Amount} from "@bim/domain/shared";
-import {existsSync, mkdirSync} from 'node:fs';
 import type {Logger} from "pino";
 import {Account as StarknetAccount, RpcProvider, Signer as StarknetSigner} from 'starknet';
 
@@ -46,10 +46,8 @@ export interface AtomiqGatewayConfig {
   starknetRpcUrl: string;
   /** Custom Atomiq intermediary URL; uses the default public intermediary if omitted */
   intermediaryUrl?: string;
-  /** Local filesystem path for SQLite swap storage */
-  storagePath: string;
-  /** Create the storage directory automatically if it doesn't exist */
-  autoCreateStorage?: boolean;
+  /** PostgreSQL connection pool for swap storage */
+  pool: pg.Pool;
   /** Token symbol used for swaps (e.g. 'WBTC') */
   swapToken: string;
   /** Token contract addresses known to the system, used to validate external calls */
@@ -108,19 +106,6 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         ? BitcoinNetwork.MAINNET
         : BitcoinNetwork.TESTNET;
 
-      const {storagePath, autoCreateStorage} = this.config;
-      // eslint-disable-next-line security/detect-non-literal-fs-filename -- path from server config, not user input
-      if (!existsSync(storagePath)) {
-        if (autoCreateStorage) {
-          // eslint-disable-next-line security/detect-non-literal-fs-filename -- path from server config, not user input
-          mkdirSync(storagePath, {recursive: true});
-        } else {
-          throw new Error(
-            `Atomiq storage directory does not exist: ${storagePath}. Create it manually or mount a persistent volume.`,
-          );
-        }
-      }
-
       const swapperOptions: TypedSwapperOptions<StarknetChainInitializers> = {
         bitcoinNetwork: bitcoinNetworkEnum,
         saveUninitializedSwaps: true,
@@ -129,11 +114,11 @@ export class AtomiqSdkGateway implements AtomiqGateway {
             rpcUrl: this.config.starknetRpcUrl
           }
         },
-        swapStorage: (chainId: string) => {
-          return new SqliteUnifiedStorage(`${storagePath}/CHAIN_${chainId}.sqlite3`);
+        swapStorage: (_chainId: string) => {
+          return new PgUnifiedStorage(this.config.pool, 'atomiq_swaps');
         },
-        chainStorageCtor: (name: string) => {
-          return new SqliteStorageManager(`${storagePath}/STORE_${name}.sqlite3`);
+        chainStorageCtor: (_name: string) => {
+          return new PgStorageManager(this.config.pool, 'atomiq_store');
         }
       };
 

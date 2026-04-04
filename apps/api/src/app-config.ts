@@ -1,4 +1,3 @@
-import {accessSync, constants, mkdirSync} from 'node:fs';
 import * as schema from '@bim/db';
 import {StarknetAddress} from '@bim/domain/account';
 import {SessionConfig} from '@bim/domain/auth';
@@ -8,7 +7,8 @@ import type {ClaimerConfig} from '@bim/domain/swap';
 import {redactUrl} from '@bim/lib/url';
 import type {DatabaseConfig} from '@bim/db/database';
 import {getTableName} from 'drizzle-orm';
-import type {AtomiqGatewayConfig, AuthenticatorAttachment, AvnuPaymasterConfig, AvnuSwapConfig, WebAuthnConfig} from './adapters';
+import type {AuthenticatorAttachment, AvnuPaymasterConfig, AvnuSwapConfig, WebAuthnConfig} from './adapters';
+import type {AtomiqGatewayConfig} from './adapters';
 
 /** Well-known STRK token contract address (same on mainnet and testnet). */
 const STRK_TOKEN_ADDRESS = '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d';
@@ -24,7 +24,7 @@ export namespace AppConfig {
     database: Partial<DatabaseConfig>;
     avnuPaymaster: AvnuPaymasterConfig;
     avnuSwap: AvnuSwapConfig;
-    atomiq: AtomiqGatewayConfig;
+    atomiq: Omit<AtomiqGatewayConfig, 'pool'>;
     webauthn: WebAuthnConfig;
     logLevel: string;
   }
@@ -111,36 +111,12 @@ export namespace AppConfig {
 
   function loadAtomiqConfig(
     required: (name: string) => string,
-    optional: (name: string, defaultValue: string) => string,
+    _optional: (name: string, defaultValue: string) => string,
     starknetNetwork: StarknetNetwork,
     starknetRpcUrl: string,
     knownTokenAddresses: readonly StarknetAddress[],
     claimer: ClaimerConfig,
-  ): AtomiqGatewayConfig {
-    const storagePath = required('ATOMIQ_STORAGE_PATH');
-    const autoCreateStorage = optional('ATOMIQ_AUTO_CREATE_STORAGE', 'false') === 'true';
-
-    let exists = false;
-    try {
-      accessSync(storagePath, constants.F_OK);
-      exists = true;
-    } catch {
-      // Directory does not exist
-    }
-
-    if (!exists) {
-      if (!autoCreateStorage) {
-        throw new Error(`ATOMIQ_STORAGE_PATH does not exist: ${storagePath}. Set ATOMIQ_AUTO_CREATE_STORAGE=true to create it automatically.`);
-      }
-      mkdirSync(storagePath, {recursive: true});
-    }
-
-    try {
-      accessSync(storagePath, constants.R_OK | constants.W_OK);
-    } catch {
-      throw new Error(`ATOMIQ_STORAGE_PATH is not writable: ${storagePath}`);
-    }
-
+  ): Omit<AtomiqGatewayConfig, 'pool'> {
     // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- empty env var should be treated as absent
     const intermediaryUrl = process.env.ATOMIQ_INTERMEDIARY_URL || undefined;
     const swapToken = required('ATOMIQ_SWAP_TOKEN');
@@ -148,10 +124,8 @@ export namespace AppConfig {
     return {
       network: starknetNetwork === 'mainnet' ? 'mainnet' : 'testnet',
       starknetRpcUrl,
-      storagePath,
       swapToken,
       knownTokenAddresses,
-      autoCreateStorage,
       claimer,
       strkTokenAddress: STRK_TOKEN_ADDRESS,
       ...(intermediaryUrl !== undefined && {intermediaryUrl}),
