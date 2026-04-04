@@ -2,6 +2,7 @@ import type {AtomiqGateway} from '@bim/domain/ports';
 import type {SwapId, SwapService} from '@bim/domain/swap';
 
 import type {Logger} from 'pino';
+import {logger} from "starknet";
 
 /**
  * Configuration for the SwapMonitor.
@@ -117,6 +118,10 @@ export class SwapMonitor {
       }
 
       this.idleIterations = 0;
+      this.log.info(
+        {count: activeSwaps.length, swapIds: activeSwaps.map(s => s.data.id)},
+        'Active swaps detected',
+      );
       await this.keepaliveIfNeeded(activeSwaps.length);
 
       for (const swap of activeSwaps) {
