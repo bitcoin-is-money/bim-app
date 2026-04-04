@@ -52,7 +52,8 @@ export async function createApp(options: CreateAppOptions = {}): Promise<AppInst
   logger.info(AppConfig.redact(config), "Application configuration:");
   await Database.initialize(config.database, rootLogger);
   const db = Database.get();
-  const context = AppContext.createDefault(config, db, rootLogger, options.context);
+  const pool = db.getPool();
+  const context = AppContext.createDefault(config, db, pool, rootLogger, options.context);
   const app = new Hono();
   installGlobalErrorHandler(app);
 

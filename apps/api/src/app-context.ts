@@ -38,6 +38,7 @@ import {
 } from "./adapters";
 import {StarknetRpcGateway} from "@bim/starknet";
 import {Database} from "@bim/db/database";
+import type pg from 'pg';
 import type {AppConfig} from "./app-config";
 
 /**
@@ -103,6 +104,7 @@ export namespace AppContext {
   export function createDefault(
     config: AppConfig.Config,
     db: Database,
+    pool: pg.Pool,
     rootLogger: Logger,
     overrides?: AppContextOverrides,
   ): AppContext {
@@ -139,7 +141,7 @@ export namespace AppContext {
         rootLogger,
       ),
       paymaster: paymasterGateway,
-      atomiq: new AtomiqSdkGateway(config.atomiq, rootLogger),
+      atomiq: new AtomiqSdkGateway({...config.atomiq, pool}, rootLogger),
       dex: new AvnuSwapGateway(config.avnuSwap, rootLogger),
       lightningDecoder: new Bolt11LightningDecoder(),
       price: new CoinGeckoPriceGateway(rootLogger),

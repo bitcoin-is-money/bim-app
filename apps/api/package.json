@@ -21,7 +21,7 @@
   "dependencies": {
     "@atomiqlabs/chain-starknet": "^8.1.10",
     "@atomiqlabs/sdk": "^8.4.3",
-    "@atomiqlabs/storage-sqlite": "^5.0.0",
+    "@bim/atomiq-storage-postgres": "*",
     "@bim/db": "*",
     "@bim/domain": "*",
     "@bim/lib": "*",

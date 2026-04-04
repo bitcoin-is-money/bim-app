@@ -1,0 +1,28 @@
+{
+  "name": "@bim/atomiq-storage-postgres",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "clean": "rm -rf dist",
+    "clean:all": "npm run clean && rm -rf node_modules",
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "pg": "^8.18.0"
+  },
+  "peerDependencies": {
+    "@atomiqlabs/sdk": "^8.0.0",
+    "@atomiqlabs/base": "^13.0.0"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.16.0"
+  }
+}
