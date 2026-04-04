@@ -11,12 +11,19 @@ export interface SwapMonitorConfig {
   pollInterval?: number;
   /** Number of consecutive idle iterations before auto-stopping (default: 30, ~2.5 min) */
   maxIdleIterations?: number;
+  /**
+   * Public URL of the container.
+   * The monitor sends a keepalive request every keepaliveIntervalIterations
+   * while swaps are active, preventing serverless scale-to-zero.
+   */
+  keepaliveUrl: string;
+  /** Number of iterations between keepalive pings (default: 60, ~5 min at 5s poll) */
+  keepaliveIntervalIterations?: number;
 }
 
-const DEFAULT_CONFIG: Required<SwapMonitorConfig> = {
-  pollInterval: 5000,
-  maxIdleIterations: 30,
-};
+const DEFAULT_POLL_INTERVAL = 5000;
+const DEFAULT_MAX_IDLE_ITERATIONS = 30;
+const DEFAULT_KEEPALIVE_INTERVAL_ITERATIONS = 60;
 
 /**
  * Background monitor that polls active swaps, syncs their status
@@ -33,6 +40,7 @@ export class SwapMonitor {
   private running = false;
   private iterating = false;
   private idleIterations = 0;
+  private iterationsSinceLastKeepalive = 0;
   private readonly config: Required<SwapMonitorConfig>;
   private readonly log: Logger;
 
@@ -40,9 +48,14 @@ export class SwapMonitor {
     private readonly swapService: SwapService,
     private readonly atomiqGateway: AtomiqGateway,
     rootLogger: Logger,
-    config?: SwapMonitorConfig,
+    config: SwapMonitorConfig,
   ) {
-    this.config = {...DEFAULT_CONFIG, ...config};
+    this.config = {
+      pollInterval: config.pollInterval ?? DEFAULT_POLL_INTERVAL,
+      maxIdleIterations: config.maxIdleIterations ?? DEFAULT_MAX_IDLE_ITERATIONS,
+      keepaliveUrl: config.keepaliveUrl,
+      keepaliveIntervalIterations: config.keepaliveIntervalIterations ?? DEFAULT_KEEPALIVE_INTERVAL_ITERATIONS,
+    };
     this.log = rootLogger.child({name: 'swap.monitor.ts'});
   }
 
@@ -104,6 +117,7 @@ export class SwapMonitor {
       }
 
       this.idleIterations = 0;
+      await this.keepaliveIfNeeded(activeSwaps.length);
 
       for (const swap of activeSwaps) {
         try {
@@ -131,6 +145,33 @@ export class SwapMonitor {
       this.log.error({err}, 'SwapMonitor iteration error');
     } finally {
       this.iterating = false;
+    }
+  }
+
+  /**
+   * Sends a keepalive HTTP request to the container's own public URL
+   * to prevent serverless scale-to-zero while swaps are active.
+   * Only pings every keepaliveIntervalIterations (~5 min).
+   */
+  private async keepaliveIfNeeded(activeSwapCount: number): Promise<void> {
+    this.iterationsSinceLastKeepalive++;
+    if (this.iterationsSinceLastKeepalive < this.config.keepaliveIntervalIterations) return;
+
+    this.iterationsSinceLastKeepalive = 0;
+    const url = `${this.config.keepaliveUrl}/api/health/live`;
+
+    this.log.info(
+      {activeSwapCount, url},
+      `${activeSwapCount} active swap(s) — sending keepalive to prevent container scale-down`,
+    );
+
+    try {
+      await fetch(url, {signal: AbortSignal.timeout(5000)});
+    } catch (err) {
+      this.log.warn(
+        {url, cause: err instanceof Error ? err.message : String(err)},
+        'Keepalive request failed',
+      );
     }
   }
 
