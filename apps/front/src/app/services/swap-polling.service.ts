@@ -158,11 +158,6 @@ export class SwapPollingService implements OnDestroy {
           message: this.i18n.t('notifications.swapDetected', {type}),
         });
         break;
-      case 'confirming':
-        this.notificationService.info({
-          message: this.i18n.t('notifications.swapConfirming', {type}),
-        });
-        break;
       case 'completed':
         this.notificationService.success({
           message: this.i18n.t('notifications.swapCompleted', {type}),

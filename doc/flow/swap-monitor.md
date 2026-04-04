@@ -98,11 +98,13 @@ Every POLL_INTERVAL (5 seconds):
 │   │       → updates local Swap entity state
 │   │       → saves to SwapRepository
 │   │
-│   └── 2b. If swap is now 'claimable' AND direction is forward (receive):
+│   └── 2b. If swap is now 'claimable' AND direction is forward (receive)
+│           AND no recent claim attempt within cooldown:
 │           AtomiqGateway.claimForwardSwap(swapId)
-│           SwapService.markSwapAsConfirming(swapId, txHash)
-│           → transitions: claimable → confirming → completed
-│           → saves to SwapRepository
+│           SwapService.recordClaimAttempt(swapId, txHash)
+│           → status stays 'claimable' (Atomiq is source of truth)
+│           → lastClaimAttemptAt/lastClaimTxHash persisted
+│           → Atomiq will transition to 'completed' once tx is mined
 │
 └── 3. Log iteration summary (active count, claimed count, errors)
 ```
@@ -201,7 +203,7 @@ event: status
 data: {"swapId":"abc","status":"paid","progress":33}
 
 event: status
-data: {"swapId":"abc","status":"confirming","progress":66,"txHash":"0x..."}
+data: {"swapId":"abc","status":"claimable","progress":50,"txHash":"0x..."}
 
 event: status
 data: {"swapId":"abc","status":"completed","progress":100,"txHash":"0x..."}
@@ -294,14 +296,14 @@ sequenceDiagram
     Gateway->>SDK: swap.claim()
     SDK-->>Gateway: {claimTxHash: "0x..."}
     Gateway-->>Monitor: {claimTxHash: "0x..."}
-    Monitor->>Service: markSwapAsConfirming("swap_1", "0x...")
-    Service->>Repo: save(swap_1) [status: confirming]
+    Monitor->>Service: recordClaimAttempt("swap_1", "0x...")
+    Service->>Repo: save(swap_1) [status stays claimable, lastClaimTxHash set]
 
     Note over SSE,Client: Meanwhile, SSE reads from repository
     Client->>SSE: GET /api/swap/events/swap_1
     SSE->>Repo: findById("swap_1")
-    Repo-->>SSE: swap_1 [status: confirming]
-    SSE-->>Client: event: status {confirming, progress: 66}
+    Repo-->>SSE: swap_1 [status: claimable, txHash: 0x...]
+    SSE-->>Client: event: status {claimable, progress: 50, txHash: 0x...}
 
     Note over Monitor: Next iteration detects completion
     Monitor->>Service: fetchStatus("swap_1")

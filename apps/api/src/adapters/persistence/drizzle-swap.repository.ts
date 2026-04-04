@@ -22,6 +22,10 @@ export class DrizzleSwapRepository extends AbstractDrizzleRepository implements 
   async save(swap: Swap): Promise<void> {
     const stateColumns = this.stateToColumns(swap.getState());
     const d = swap.data;
+    const claimColumns = {
+      lastClaimAttemptAt: d.lastClaimAttemptAt ?? null,
+      lastClaimTxHash: d.lastClaimTxHash ?? null,
+    };
 
     await this.resolveDb()
       .insert(schema.swaps)
@@ -38,11 +42,13 @@ export class DrizzleSwapRepository extends AbstractDrizzleRepository implements 
         expiresAt: d.expiresAt,
         createdAt: d.createdAt,
         ...stateColumns,
+        ...claimColumns,
       })
       .onConflictDoUpdate({
         target: schema.swaps.id,
         set: {
           ...stateColumns,
+          ...claimColumns,
           depositAddress: 'depositAddress' in d ? (d.depositAddress ?? null) : null,
         },
       });
@@ -145,8 +151,6 @@ export class DrizzleSwapRepository extends AbstractDrizzleRepository implements 
         return {...base, paidAt: state.paidAt};
       case 'claimable':
         return {...base, claimableAt: state.claimableAt};
-      case 'confirming':
-        return {...base, txHash: state.txHash, confirmedAt: state.confirmedAt};
       case 'completed':
         return {...base, txHash: state.txHash, completedAt: state.completedAt};
       case 'expired':
@@ -171,8 +175,6 @@ export class DrizzleSwapRepository extends AbstractDrizzleRepository implements 
         return {status: 'paid', paidAt: record.paidAt!};
       case 'claimable':
         return {status: 'claimable', claimableAt: record.claimableAt!};
-      case 'confirming':
-        return {status: 'confirming', txHash: record.txHash!, confirmedAt: record.confirmedAt!};
       case 'completed':
         return {status: 'completed', txHash: record.txHash!, completedAt: record.completedAt!};
       case 'expired':
@@ -190,13 +192,15 @@ export class DrizzleSwapRepository extends AbstractDrizzleRepository implements 
   /* eslint-enable @typescript-eslint/no-non-null-assertion */
 
   private toSwap(record: schema.SwapRecord): Swap {
-    const base = {
+    const base: SwapBase = {
       id: SwapId.of(record.id),
       amount: Amount.ofSatoshi(BigInt(record.amountSats)),
       expiresAt: record.expiresAt,
       createdAt: record.createdAt,
       description: record.description,
       accountId: record.accountId,
+      ...(record.lastClaimAttemptAt !== null && {lastClaimAttemptAt: record.lastClaimAttemptAt}),
+      ...(record.lastClaimTxHash !== null && {lastClaimTxHash: record.lastClaimTxHash}),
     };
 
     const data = this.buildSwapData(record, base);

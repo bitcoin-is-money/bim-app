@@ -140,13 +140,22 @@ export class Swap {
     return this.state;
   }
 
-  /** Returns the transaction hash if available. */
+  /**
+   * Returns the transaction hash if available.
+   *
+   * For a `claimable` swap, a claim tx may have been submitted by the monitor
+   * but Atomiq has not yet reflected it — surface the latest claim tx hash so
+   * the frontend can link to the explorer while the claim is being mined.
+   */
   getTxHash(): string | undefined {
     if (this.state.status === 'committed') {
       return this.state.commitTxHash;
     }
-    if (this.state.status === 'confirming' || this.state.status === 'completed') {
+    if (this.state.status === 'completed') {
       return this.state.txHash;
+    }
+    if (this.state.status === 'claimable') {
+      return this.data.lastClaimTxHash;
     }
     return undefined;
   }
@@ -205,10 +214,6 @@ export class Swap {
     this.state = { status: 'claimable', claimableAt: new Date() };
   }
 
-  markAsConfirming(txHash: string): void {
-    this.state = { status: 'confirming', txHash, confirmedAt: new Date() };
-  }
-
   markAsCompleted(txHash: string): void {
     this.state = { status: 'completed', txHash, completedAt: new Date() };
   }
@@ -229,6 +234,38 @@ export class Swap {
     this.state = { status: 'lost', lostAt: new Date() };
   }
 
+  /**
+   * Records that the SwapMonitor just submitted a claim transaction for this
+   * forward swap. This is orthogonal metadata — the swap status is unchanged
+   * and Atomiq remains the source of truth for state transitions.
+   *
+   * The monitor uses `hasRecentClaimAttempt()` to avoid re-submitting while
+   * the previous claim tx is still in flight.
+   */
+  recordClaimAttempt(txHash: string): void {
+    if (!txHash) {
+      throw new ValidationError('txHash', 'cannot be empty');
+    }
+    // SwapData is readonly, but these two fields track monitor-side metadata
+    // that we must be able to update after construction. This is safe because
+    // the entity controls the lifecycle and the fields are never part of the
+    // business state machine.
+    const mutable = this.data as { lastClaimAttemptAt?: Date; lastClaimTxHash?: string };
+    mutable.lastClaimAttemptAt = new Date();
+    mutable.lastClaimTxHash = txHash;
+  }
+
+  /**
+   * Returns true if a claim tx was submitted less than `withinMs` ago.
+   * Used by the SwapMonitor to throttle claim submissions while waiting for
+   * Atomiq to reflect the on-chain result.
+   */
+  hasRecentClaimAttempt(withinMs: number): boolean {
+    const at = this.data.lastClaimAttemptAt;
+    if (!at) return false;
+    return Date.now() - at.getTime() < withinMs;
+  }
+
   /** Calculates the progress percentage (0-100). */
   getProgress(): number {
     switch (this.state.status) {
@@ -240,8 +277,6 @@ export class Swap {
         return 33;
       case 'claimable':
         return 50;
-      case 'confirming':
-        return 66;
       case 'completed':
         return 100;
       case 'expired':

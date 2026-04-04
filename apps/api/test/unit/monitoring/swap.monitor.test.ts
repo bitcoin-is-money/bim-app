@@ -25,7 +25,7 @@ function createMockSwapService(): SwapService {
   return {
     getActiveSwaps: vi.fn().mockResolvedValue([]),
     fetchStatus: vi.fn(),
-    markSwapAsConfirming: vi.fn().mockResolvedValue(undefined),
+    recordClaimAttempt: vi.fn().mockResolvedValue(undefined),
     createLightningToStarknet: vi.fn(),
     createBitcoinToStarknet: vi.fn(),
     createStarknetToLightning: vi.fn(),
@@ -175,7 +175,24 @@ describe('SwapMonitor', () => {
       await monitor.runIteration();
 
       expect(atomiqGateway.claimForwardSwap).toHaveBeenCalledWith('s1');
-      expect(swapService.markSwapAsConfirming).toHaveBeenCalledWith('s1', '0xclaim_tx');
+      expect(swapService.recordClaimAttempt).toHaveBeenCalledWith('s1', '0xclaim_tx');
+    });
+
+    it('does NOT re-claim a swap that has a recent claim attempt within cooldown', async () => {
+      const swap = createLightningSwap('s1');
+      // Simulate a claim tx submitted a few seconds ago
+      swap.recordClaimAttempt('0xprevious_claim');
+      vi.mocked(swapService.getActiveSwaps).mockResolvedValue([swap]);
+      vi.mocked(swapService.fetchStatus).mockResolvedValue({
+        swap,
+        status: 'claimable',
+        progress: 50,
+      });
+
+      await monitor.runIteration();
+
+      expect(atomiqGateway.claimForwardSwap).not.toHaveBeenCalled();
+      expect(swapService.recordClaimAttempt).not.toHaveBeenCalled();
     });
 
     it('does NOT claim forward swap when status is paid (not yet claimable)', async () => {

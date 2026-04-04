@@ -35,13 +35,18 @@ export function isReverseSwap(direction: SwapDirection): boolean {
   return direction === 'starknet_to_lightning' || direction === 'starknet_to_bitcoin';
 }
 
-/** Lifecycle status of a swap. */
+/**
+ * Lifecycle status of a swap.
+ *
+ * All statuses mirror Atomiq. BIM never invents a status: the SwapService
+ * transcribes what Atomiq reports, and the SwapMonitor uses orthogonal
+ * metadata (lastClaimAttemptAt) to avoid double-submitting claim txs.
+ */
 export type SwapStatus =
   | 'pending'
   | 'committed'
   | 'paid'
   | 'claimable'
-  | 'confirming'
   | 'completed'
   | 'expired'
   | 'refunded'
@@ -54,14 +59,21 @@ export type SwapState =
   | { status: 'committed'; commitTxHash: string; committedAt: Date }
   | { status: 'paid'; paidAt: Date }
   | { status: 'claimable'; claimableAt: Date }
-  | { status: 'confirming'; txHash: string; confirmedAt: Date }
   | { status: 'completed'; txHash: string; completedAt: Date }
   | { status: 'expired'; expiredAt: Date }
   | { status: 'refunded'; refundedAt: Date }
   | { status: 'failed'; error: string; failedAt: Date }
   | { status: 'lost'; lostAt: Date };
 
-/** Fields common to all swap directions. */
+/**
+ * Fields common to all swap directions.
+ *
+ * `lastClaimAttemptAt` / `lastClaimTxHash` are orthogonal to the state machine:
+ * they track the most recent auto-claim submission by the SwapMonitor so that
+ * consecutive iterations do not re-submit the same claim tx while Atomiq has
+ * not yet reflected the on-chain result. They are persisted but never alter
+ * the swap status.
+ */
 export interface SwapBase {
   readonly id: SwapId;
   readonly amount: Amount;
@@ -69,6 +81,8 @@ export interface SwapBase {
   readonly createdAt: Date;
   readonly description: string;
   readonly accountId: string;
+  readonly lastClaimAttemptAt?: Date;
+  readonly lastClaimTxHash?: string;
 }
 
 /**

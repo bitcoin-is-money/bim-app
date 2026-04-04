@@ -1,8 +1,7 @@
 import type {AtomiqGateway} from '@bim/domain/ports';
-import type {SwapId, SwapService} from '@bim/domain/swap';
+import type {Swap, SwapId, SwapService} from '@bim/domain/swap';
 
 import type {Logger} from 'pino';
-import {logger} from "starknet";
 
 /**
  * Configuration for the SwapMonitor.
@@ -20,11 +19,20 @@ export interface SwapMonitorConfig {
   keepaliveUrl: string;
   /** Number of iterations between keepalive pings (default: 60, ~5 min at 5s poll) */
   keepaliveIntervalIterations?: number;
+  /**
+   * Minimum delay between consecutive claim submissions for the same swap
+   * (default: 120_000, 2 min). While a claim tx is in flight, Atomiq still
+   * reports the swap as `claimable`; the cooldown prevents re-submission
+   * until either the tx is mined (Atomiq → completed) or the cooldown
+   * expires (previous tx assumed dropped, retry).
+   */
+  claimCooldownMs?: number;
 }
 
 const DEFAULT_POLL_INTERVAL = 5000;
 const DEFAULT_MAX_IDLE_ITERATIONS = 30;
 const DEFAULT_KEEPALIVE_INTERVAL_ITERATIONS = 60;
+const DEFAULT_CLAIM_COOLDOWN_MS = 2 * 60 * 1000;
 
 /**
  * Background monitor that polls active swaps, syncs their status
@@ -56,6 +64,7 @@ export class SwapMonitor {
       maxIdleIterations: config.maxIdleIterations ?? DEFAULT_MAX_IDLE_ITERATIONS,
       keepaliveUrl: config.keepaliveUrl,
       keepaliveIntervalIterations: config.keepaliveIntervalIterations ?? DEFAULT_KEEPALIVE_INTERVAL_ITERATIONS,
+      claimCooldownMs: config.claimCooldownMs ?? DEFAULT_CLAIM_COOLDOWN_MS,
     };
     this.log = rootLogger.child({name: 'swap.monitor.ts'});
   }
@@ -126,7 +135,7 @@ export class SwapMonitor {
 
       for (const swap of activeSwaps) {
         try {
-          const {status} = await this.swapService.fetchStatus({
+          const {swap: syncedSwap, status} = await this.swapService.fetchStatus({
             swapId: swap.data.id,
             accountId: swap.data.accountId,
           });
@@ -135,8 +144,8 @@ export class SwapMonitor {
           // Auto-claim forward swaps (Bitcoin/Lightning → Starknet) when claimable.
           // The backend account submits the claim tx and receives the claimer bounty.
           // Without this, the watchtower claims and the user loses the bounty.
-          if (status === 'claimable' && swap.isForward()) {
-            await this.claimSwap(swap.data.id);
+          if (status === 'claimable' && syncedSwap.isForward() && this.canClaim(syncedSwap)) {
+            await this.claimSwap(syncedSwap.data.id);
           }
         } catch (err) {
           // Individual swap errors are non-fatal — continue with the next swap
@@ -180,6 +189,22 @@ export class SwapMonitor {
     }
   }
 
+  /**
+   * Returns false if a claim tx was submitted for this swap within the
+   * configured cooldown window. Prevents double-submission while Atomiq has
+   * not yet reflected the on-chain result.
+   */
+  private canClaim(swap: Swap): boolean {
+    if (!swap.hasRecentClaimAttempt(this.config.claimCooldownMs)) {
+      return true;
+    }
+    this.log.debug(
+      {swapId: swap.data.id, cooldownMs: this.config.claimCooldownMs},
+      'Skipping claim, previous attempt still within cooldown',
+    );
+    return false;
+  }
+
   private async claimSwap(swapId: SwapId): Promise<void> {
     this.log.info({swapId}, 'Auto-claiming forward swap');
     try {
@@ -193,8 +218,10 @@ export class SwapMonitor {
         refundSuccess: result.refundTxHash !== undefined,
       }, 'Forward swap claim completed');
 
-      // Transition to confirming so the monitor won't re-attempt the claim
-      await this.swapService.markSwapAsConfirming(swapId, result.claimTxHash);
+      // Record the attempt so subsequent iterations respect the cooldown.
+      // The status stays `claimable` — Atomiq will transition it to
+      // `completed` on its own once the tx is mined.
+      await this.swapService.recordClaimAttempt(swapId, result.claimTxHash);
     } catch (err) {
       this.log.error({
         swapId,

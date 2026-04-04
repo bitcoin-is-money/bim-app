@@ -134,6 +134,12 @@ export const swaps = pgTable('bim_swaps', {
   lostAt: timestamp('lost_at'),
   failedAt: timestamp('failed_at'),
 
+  // Monitor-side metadata (orthogonal to status): latest claim tx submitted
+  // by SwapMonitor for a forward swap. Used to throttle re-submissions while
+  // Atomiq has not yet reflected the on-chain claim result.
+  lastClaimAttemptAt: timestamp('last_claim_attempt_at'),
+  lastClaimTxHash: text('last_claim_tx_hash'),
+
   // Core timestamps
   expiresAt: timestamp('expires_at').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),

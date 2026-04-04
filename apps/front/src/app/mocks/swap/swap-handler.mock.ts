@@ -6,7 +6,6 @@ import {createErrorResponse} from '../mock-error';
 /** Predefined statuses for Bob's existing swaps */
 const PREDEFINED_SWAP_STATUSES: Record<string, SwapStatus> = {
   'swap-bob-completed': 'completed',
-  'swap-bob-confirming': 'confirming',
   'swap-bob-paid': 'paid',
   'swap-bob-pending': 'pending',
   'swap-bob-expired': 'expired',
@@ -19,8 +18,8 @@ function getProgressForStatus(status: SwapStatus): number {
       return 0;
     case 'paid':
       return 33;
-    case 'confirming':
-      return 66;
+    case 'claimable':
+      return 50;
     case 'completed':
       return 100;
     case 'expired':
@@ -50,7 +49,7 @@ export class SwapHandlerMock {
         destinationAddress: '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d',
         expiresAt: new Date(Date.now() + 3_600_000).toISOString(),
       };
-      if (status === 'completed' || status === 'confirming') {
+      if (status === 'completed') {
         body.txHash = '0xmocktxhash' + swapId;
       }
       return new HttpResponse({status: 200, body});
@@ -78,7 +77,7 @@ export class SwapHandlerMock {
       destinationAddress: swap.destinationAddress,
       expiresAt: swap.expiresAt,
     };
-    if (status === 'completed' || status === 'confirming') {
+    if (status === 'completed') {
       body.txHash = '0xmocktxhash' + swapId;
     }
     return new HttpResponse({status: 200, body});

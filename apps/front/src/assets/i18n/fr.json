@@ -122,7 +122,6 @@
     "status": {
       "pending": "En attente",
       "paid": "Payé",
-      "confirming": "Confirmation",
       "completed": "Terminé",
       "expired": "Expiré",
       "refunded": "Remboursé",
@@ -156,7 +155,6 @@
     "invoiceCreationFailed": "Échec de la création de la facture",
     "paymentFailed": "Le paiement a échoué",
     "swapDetected": "{{type}} détecté, confirmation...",
-    "swapConfirming": "{{type}} en confirmation on-chain...",
     "swapCompleted": "{{type}} terminé !",
     "swapExpired": "{{type}} expiré",
     "swapFailed": "{{type}} échoué",

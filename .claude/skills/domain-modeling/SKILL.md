@@ -75,7 +75,7 @@ export namespace SwapId {
 
 ### Account: `pending -> deploying -> deployed | failed`
 
-### Swap: `pending -> paid -> confirming -> completed | expired | failed`
+### Swap: `pending -> (committed) -> paid -> claimable -> completed | expired | failed | refunded | lost`
 
 Swap `mark*` methods are pure state setters (Atomiq is source of truth).
 
