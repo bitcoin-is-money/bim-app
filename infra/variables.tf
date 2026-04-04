@@ -27,6 +27,12 @@ variable "api_domain" {
 
 # ---------- Database ----------
 
+variable "db_user" {
+  description = "PostgreSQL admin user name for the managed database"
+  type        = string
+  default     = "bim"
+}
+
 variable "db_password" {
   description = "PostgreSQL admin password for the managed database"
   type        = string
@@ -46,6 +52,17 @@ variable "api_log_level" {
   description = "Log level for the API container (trace, debug, info, warn, error, fatal)"
   type        = string
   default     = "info"
+}
+
+variable "webauthn_authenticator_attachment" {
+  description = "WebAuthn authenticator attachment mode ('platform' for built-in biometrics, 'cross-platform' for roaming keys like USB)"
+  type        = string
+  default     = "cross-platform"
+
+  validation {
+    condition     = contains(["platform", "cross-platform"], var.webauthn_authenticator_attachment)
+    error_message = "webauthn_authenticator_attachment must be 'platform' or 'cross-platform'"
+  }
 }
 
 # ---------- Indexer ----------

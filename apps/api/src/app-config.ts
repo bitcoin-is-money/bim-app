@@ -113,9 +113,9 @@ export namespace AppConfig {
       },
       atomiq: loadAtomiqConfig(required, optional, starknetNetwork, starknetRpcUrl, knownTokenAddresses, claimer),
       webauthn: {
-        rpId: optional('WEBAUTHN_RP_ID', 'localhost'),
+        rpId: required('WEBAUTHN_RP_ID'),
         rpName: optional('WEBAUTHN_RP_NAME', 'BIM'),
-        origin: optional('WEBAUTHN_ORIGIN', 'http://localhost:8080'),
+        origin: required('WEBAUTHN_ORIGIN'),
         ...(authenticatorAttachment !== undefined && {authenticatorAttachment}),
       },
       cron: loadCronConfig(optional),

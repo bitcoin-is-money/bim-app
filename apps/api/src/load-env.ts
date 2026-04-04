@@ -8,30 +8,37 @@ const dirname: string = import.meta.dirname;
 /**
  * Loads environment variables for the given network.
  *
- * Loading order (dotenv does NOT override existing vars):
- *   1. .env.{network}.secret  — secrets (git ignored)
- *   2. .env.{network}         — defaults (committed)
+ * Loading order:
+ *   1. .env.local — dev overrides and secrets (gitignored, optional)
+ *   2. config/{network}.env — blockchain constants (committed)
  *
- * @param env - Environment name (e.g. 'testnet', 'mainnet'). Falls back to NETWORK.
+ * In production (Docker/Scaleway), .env.local is absent.
+ * Terraform injects infra-dependent values (WEBAUTHN_*, DATABASE_URL, etc.)
+ * as container environment variables — they take precedence
+ * over dotenv since dotenv never overrides existing vars.
+ *
+ * @param network - Network name ('testnet' or 'mainnet'). Falls back to NETWORK env var.
  */
-export function loadEnv(env?: string): void {
-  const network = env ?? process.env.NETWORK;
-  if (!network) {
+export function loadEnv(network?: string): void {
+  const resolvedNetwork = network ?? process.env.NETWORK;
+  if (!resolvedNetwork) {
     throw new Error(
       'NETWORK is not set. Use NETWORK=testnet or NETWORK=mainnet.',
     );
   }
 
-  const base = resolve(dirname, `../.env.${network}`);
-  const secret = `${base}.secret`;
-
-  if (!existsSync(secret)) {
-    throw new Error(
-      `Missing ${secret}\nCreate it with your secrets (e.g. AVNU_API_KEY=xxx). See .env.${network} for reference.`,
-    );
+  // 1. Local dev overrides (optional — absent in Docker)
+  const localEnv = resolve(dirname, '../.env.local');
+  if (existsSync(localEnv)) {
+    expand(config({path: localEnv}));
   }
 
-  // Load .secret first (secrets), then base (defaults — won't override)
-  expand(config({path: secret}));
-  expand(config({path: base}));
+  // 2. Blockchain constants (always present — committed + copied into Docker)
+  const networkEnv = resolve(dirname, `../config/${resolvedNetwork}.env`);
+  if (!existsSync(networkEnv)) {
+    throw new Error(
+      `Network config not found: ${networkEnv}. Expected config/${resolvedNetwork}.env.`,
+    );
+  }
+  expand(config({path: networkEnv}));
 }

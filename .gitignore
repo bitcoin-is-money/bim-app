@@ -50,6 +50,9 @@ testem.log
 *.secret.json
 .secrets.json
 
+# Local dev env (secrets + dev overrides)
+*.local
+
 # Local database volumes (Docker)
 data/
 
