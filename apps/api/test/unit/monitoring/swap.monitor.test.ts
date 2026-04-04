@@ -53,7 +53,7 @@ describe('SwapMonitor', () => {
   beforeEach(() => {
     swapService = createMockSwapService();
     atomiqGateway = createMockAtomiqGateway();
-    monitor = new SwapMonitor(swapService, atomiqGateway, createLogger(), {pollInterval: 100});
+    monitor = new SwapMonitor(swapService, atomiqGateway, createLogger(), {keepaliveUrl: 'http://localhost:8080', pollInterval: 100});
   });
 
   describe('runIteration', () => {
@@ -111,6 +111,7 @@ describe('SwapMonitor', () => {
   describe('auto-stop', () => {
     it('stops after maxIdleIterations with no active swaps', async () => {
       const autoStopMonitor = new SwapMonitor(swapService, atomiqGateway, createLogger(), {
+        keepaliveUrl: 'http://localhost:8080',
         pollInterval: 100,
         maxIdleIterations: 3,
       });
@@ -131,6 +132,7 @@ describe('SwapMonitor', () => {
 
     it('resets idle counter when active swaps are found', async () => {
       const autoStopMonitor = new SwapMonitor(swapService, atomiqGateway, createLogger(), {
+        keepaliveUrl: 'http://localhost:8080',
         pollInterval: 100,
         maxIdleIterations: 3,
       });

@@ -89,6 +89,7 @@ export async function createApp(options: CreateAppOptions = {}): Promise<AppInst
       context.services.swap,
       context.gateways.atomiq,
       context.logger,
+      {keepaliveUrl: config.webauthn.origin},
     );
   }
 
