@@ -1,18 +1,15 @@
 /**
- * Indexer entrypoint — orchestrates three concerns:
+ * Indexer entrypoint — orchestrates two concerns:
  * 1. Spawns the Apibara indexer as a subprocess (IPC heartbeats)
  * 2. Serves /health for Scaleway Serverless Container health checks
- * 3. Starts the BalanceMonitor (cron-based STRK balance alerts)
  *
  * Configuration is loaded from environment variables via IndexerConfig.
- * Alerting is optional but all-or-nothing (partially configured = startup error).
  */
 
 import {spawn} from 'node:child_process';
 import {createServer, type IncomingMessage, type ServerResponse} from 'node:http';
 import {createLogger} from '@bim/lib/logger';
 import {IndexerConfig} from './indexer-config';
-import {createBalanceMonitor} from './monitoring/create-balance-monitor';
 
 const rootLogger = createLogger('info');
 const logger = rootLogger.child({name: 'entrypoint.ts'});
@@ -28,7 +25,7 @@ try {
 // If no heartbeat received within this window, /health returns 503 (stale)
 const STALE_THRESHOLD_MS = 10 * 60 * 1000;
 
-// ── Indexer subprocess ──────────────────────────────────────────────────────
+// ── Indexer subprocess ──
 
 const indexer = spawn(
   'node',
@@ -52,17 +49,7 @@ indexer.on('exit', (code) => {
   process.exit(code ?? 1);
 });
 
-// ── Balance monitor ─────────────────────────────────────────────────────────
-
-if (config.alerting) {
-  const balanceMonitor = createBalanceMonitor(config, config.alerting, rootLogger);
-  balanceMonitor.start();
-  logger.info('BalanceMonitor started');
-} else {
-  logger.info('BalanceMonitor disabled');
-}
-
-// ── Health server ───────────────────────────────────────────────────────────
+// ── Health server ──
 
 function handleHealth(_req: IncomingMessage, res: ServerResponse): void {
   const now = Date.now();
@@ -100,7 +87,7 @@ server.listen(config.port, () => {
   logger.info({port: config.port}, 'Health server listening');
 });
 
-// ── Graceful shutdown ───────────────────────────────────────────────────────
+// ── Graceful shutdown ──
 
 function shutdown(signal: NodeJS.Signals): void {
   logger.info({signal}, 'Shutting down');

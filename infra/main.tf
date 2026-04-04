@@ -106,13 +106,22 @@ resource "scaleway_container" "api" {
     } : {}
   )
 
-  secret_environment_variables = {
-    DATABASE_URL         = local.database_url
-    AVNU_API_KEY         = var.avnu_api_key
-    CLAIMER_PRIVATE_KEY  = var.claimer_private_key
-    CLAIMER_ADDRESS      = var.claimer_address
-    BIM_TREASURY_ADDRESS = var.bim_treasury_address
-  }
+  secret_environment_variables = merge(
+    {
+      DATABASE_URL         = local.database_url
+      AVNU_API_KEY         = var.avnu_api_key
+      CLAIMER_PRIVATE_KEY  = var.claimer_private_key
+      CLAIMER_ADDRESS      = var.claimer_address
+      BIM_TREASURY_ADDRESS = var.bim_treasury_address
+      CRON_SECRET          = var.cron_secret
+    },
+    var.enable_alerting ? {
+      ALERTING_SLACK_BOT_TOKEN         = var.alerting_slack_bot_token
+      ALERTING_AVNU_THRESHOLD_STRK     = tostring(var.alerting_avnu_threshold_strk)
+      ALERTING_TREASURY_THRESHOLD_STRK = tostring(var.alerting_treasury_threshold_strk)
+      BIM_AVNU_ADDRESS                 = var.bim_avnu_address
+    } : {}
+  )
 
   # Image version is managed by CI/CD (deploy.yml / docker.sh), not Terraform.
   lifecycle {
@@ -138,38 +147,23 @@ resource "scaleway_container" "indexer" {
   deploy         = true
   region         = var.region
 
-  environment_variables = merge(
-    {
-      PRESET           = var.network
-      STARKNET_NETWORK = var.network
-      LOG_LEVEL        = var.indexer_log_level
-    },
-    var.enable_alerting ? {
-      ENABLE_ALERTING = "true"
-    } : {}
-  )
+  environment_variables = {
+    PRESET           = var.network
+    STARKNET_NETWORK = var.network
+    LOG_LEVEL        = var.indexer_log_level
+  }
 
-  secret_environment_variables = merge(
-    {
-      APIBARA_RUNTIME_CONFIG = jsonencode({
-        connectionString = local.database_url
-      })
-      DNA_TOKEN            = var.dna_token
-      STARKNET_RPC_URL     = "https://api.cartridge.gg/x/starknet/${var.network}"
-      STRK_TOKEN_ADDRESS   = "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d"
-      WBTC_TOKEN_ADDRESS   = local.wbtc_token_address[var.network]
-      BIM_TREASURY_ADDRESS     = var.bim_treasury_address
-      BIM_TREASURY_PRIVATE_KEY = var.bim_treasury_private_key
-    },
-    var.enable_alerting ? {
-      ALERTING_SLACK_BOT_TOKEN          = var.alerting_slack_bot_token
-      ALERTING_SLACK_CHANNEL            = var.alerting_slack_channel
-      ALERTING_BALANCE_CRON             = var.alerting_balance_cron
-      ALERTING_AVNU_THRESHOLD_STRK      = tostring(var.alerting_avnu_threshold_strk)
-      ALERTING_TREASURY_THRESHOLD_STRK  = tostring(var.alerting_treasury_threshold_strk)
-      BIM_AVNU_ADDRESS                  = var.bim_avnu_address
-    } : {}
-  )
+  secret_environment_variables = {
+    APIBARA_RUNTIME_CONFIG = jsonencode({
+      connectionString = local.database_url
+    })
+    DNA_TOKEN                = var.dna_token
+    STARKNET_RPC_URL         = "https://api.cartridge.gg/x/starknet/${var.network}"
+    STRK_TOKEN_ADDRESS       = "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d"
+    WBTC_TOKEN_ADDRESS       = local.wbtc_token_address[var.network]
+    BIM_TREASURY_ADDRESS     = var.bim_treasury_address
+    BIM_TREASURY_PRIVATE_KEY = var.bim_treasury_private_key
+  }
 
   # Image version is managed by CI/CD (deploy.yml / docker.sh), not Terraform.
   lifecycle {
@@ -180,4 +174,18 @@ resource "scaleway_container" "indexer" {
     create = "3m"
     update = "3m"
   }
+}
+
+# ---------- Cron Jobs ----------
+
+resource "scaleway_container_cron" "balance_check" {
+  count        = var.enable_alerting ? 1 : 0
+  container_id = scaleway_container.api.id
+  schedule     = var.alerting_balance_cron
+  name         = "bim-balance-check"
+
+  args = jsonencode({
+    secret = var.cron_secret
+    type   = "balance-check"
+  })
 }

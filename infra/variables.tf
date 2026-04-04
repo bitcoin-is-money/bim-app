@@ -94,10 +94,19 @@ variable "bim_avnu_address" {
   default     = ""
 }
 
-# ---------- Alerting (Slack notifications for indexer balance monitor) ----------
+# ---------- Cron ----------
+
+variable "cron_secret" {
+  description = "Shared secret for Scaleway cron → API authentication"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+# ---------- Alerting (Slack notifications via Scaleway cron → API) ----------
 
 variable "enable_alerting" {
-  description = "Enable balance alerting in the indexer (requires slack vars and bim_avnu_address)"
+  description = "Enable balance alerting via Scaleway cron (requires cron_secret, slack vars, and bim_avnu_address)"
   type        = bool
   default     = false
 }
@@ -106,12 +115,6 @@ variable "alerting_slack_bot_token" {
   description = "Slack bot token for balance alerts — required when alerting is enabled (xoxb-...)"
   type        = string
   sensitive   = true
-  default     = ""
-}
-
-variable "alerting_slack_channel" {
-  description = "Slack channel for balance alerts — required when alerting is enabled (e.g. #bim-alerts)"
-  type        = string
   default     = ""
 }
 

@@ -23,6 +23,7 @@ export class AvnuCreditsRecharged {
     ]);
 
     return {
+      channel: '#alerting',
       severity: 'info',
       title: 'AVNU Credits Recharged',
       description: 'The AVNU paymaster account has been successfully recharged.',

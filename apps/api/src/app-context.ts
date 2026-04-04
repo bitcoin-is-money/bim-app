@@ -36,7 +36,7 @@ import {
   DrizzleTransactionManager,
   SimpleWebAuthnGateway,
 } from "./adapters";
-import {StarknetRpcGateway} from "@bim/starknet";
+import {StarknetRpcGateway} from "./adapters";
 import {Database} from "@bim/db/database";
 import type pg from 'pg';
 import type {AppConfig} from "./app-config";

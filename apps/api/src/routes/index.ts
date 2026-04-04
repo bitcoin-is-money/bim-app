@@ -1,4 +1,6 @@
 export * from './account/account.routes';
+export {createCronRoutes} from './cron/cron.routes';
+export type {CronRoutesDeps} from './cron/cron.routes';
 export * from './admin/admin.routes';
 export * from './account/account.types';
 export * from './auth/auth.routes';

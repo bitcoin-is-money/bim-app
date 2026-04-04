@@ -3,7 +3,7 @@ import {createLogger} from '@bim/lib/logger';
 import {P256Signer} from "@bim/test-toolkit/crypto";
 import type {Logger} from "pino";
 import {Account, RpcProvider, Signer} from 'starknet';
-import {StarknetRpcGateway} from '@bim/starknet';
+import {StarknetRpcGateway} from '../../../src/adapters/gateways/starknet-rpc.gateway.js';
 import {StarkSigner} from './crypto';
 import {DevnetStarknetGateway} from './devnet-starknet.gateway.js';
 import {

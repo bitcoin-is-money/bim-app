@@ -29,11 +29,13 @@ bim_treasury_private_key = ""
 # claimer_private_key = ""
 # claimer_address = ""
 
+# ---------- Cron ----------
+# cron_secret = "some-random-secret"
+
 # ---------- Alerting (optional) ----------
-# Set enable_alerting = true and fill in Slack credentials to enable balance alerts.
+# Set enable_alerting = true and fill in cron_secret + Slack credentials to enable balance alerts.
 # enable_alerting = true
 # alerting_slack_bot_token = "xoxb-..."
-# alerting_slack_channel = "#bim-alerts"
 # alerting_balance_cron = "0 8 * * *"
 # alerting_avnu_threshold_strk = 15
 # alerting_treasury_threshold_strk = 200

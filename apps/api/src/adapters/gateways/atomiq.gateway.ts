@@ -249,7 +249,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     await this.ensureInitialized();
 
     try {
-      // Create reverse swap: Starknet (WBTC) → Lightning (BTCLN)
+      // Create the reverse swap: Starknet (WBTC) → Lightning (BTCLN)
       const swapToken = this.getSwapToken();
       const swap = await this.swapper!.createToBTCLNSwap(
         'STARKNET',
@@ -410,7 +410,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     await this.ensureInitialized();
 
     try {
-      // Create reverse swap: Starknet (WBTC) → Bitcoin (BTC)
+      // Create the reverse swap: Starknet (WBTC) → Bitcoin (BTC)
       const swapToken = this.getSwapToken();
       const swap = await this.swapper!.createToBTCSwap(
         'STARKNET',
@@ -636,7 +636,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       const swap = await this.getSwapObject(swapId);
 
       if (!swap) {
-        // Swap not found in SDK storage (e.g., after container restart).
+        // The Swap is not found in SDK storage (e.g., after container restart).
         // Return expired+error so syncWithAtomiq can mark it as 'lost'.
         return {
           state: -2,
