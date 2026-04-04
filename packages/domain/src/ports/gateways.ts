@@ -390,6 +390,7 @@ export interface NotificationLink {
  * The gateway implementation decides visual formatting (colors, icons, layout).
  */
 export interface NotificationMessage {
+  readonly channel: string;
   readonly severity: NotificationSeverity;
   readonly title: string;
   readonly description: string;

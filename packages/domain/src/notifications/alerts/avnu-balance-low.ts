@@ -25,6 +25,7 @@ export class AvnuBalanceLow {
     ]);
 
     return {
+      channel: '#alerting',
       severity: 'alert',
       title: 'AVNU Balance Low',
       description: 'The AVNU paymaster account balance is below the configured threshold. Please top up credits via the AVNU portal.',

@@ -10,12 +10,6 @@ const logger = createLogger();
 
 // Mock adapters to avoid real implementations
 // Use class-style mocks that can be instantiated with 'new'
-vi.mock('@bim/starknet', () => {
-  return {
-    StarknetRpcGateway: class { name = 'starknet-rpc'; },
-  };
-});
-
 vi.mock('../../src/adapters/index.js', () => {
   return {
     DrizzleAccountRepository: class { name = 'drizzle-account'; },
@@ -26,6 +20,7 @@ vi.mock('../../src/adapters/index.js', () => {
     DrizzleSwapRepository: class { name = 'drizzle-swap'; },
     DrizzleTransactionManager: class { name = 'drizzle-tx-manager'; },
     SimpleWebAuthnGateway: class { name = 'simple-webauthn'; },
+    StarknetRpcGateway: class { name = 'starknet-rpc'; },
     AvnuPaymasterGateway: class { name = 'avnu-paymaster'; },
     AvnuSwapGateway: class { name = 'avnu-swap'; },
     AtomiqSdkGateway: class { name = 'atomiq-sdk'; },
@@ -60,6 +55,7 @@ function createMockConfig(): AppConfig.Config {
       ]},
     atomiq: {network: 'testnet', starknetRpcUrl: 'http://localhost:5050', swapToken: 'WBTC', knownTokenAddresses: [StarknetAddress.of('0x456'), StarknetAddress.of('0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d')], claimer: {privateKey: '0xdeadbeef', address: StarknetAddress.of('0x0000000000000000000000000000000000000000000000000000000000000789')}, strkTokenAddress: '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d'},
     session: SessionConfig.create({durationMs: SessionConfig.DEFAULT_DURATION_MS}),
+    cron: undefined,
     logLevel: 'silent',
   };
 }

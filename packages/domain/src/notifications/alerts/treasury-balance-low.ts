@@ -23,6 +23,7 @@ export class TreasuryBalanceLow {
     ]);
 
     return {
+      channel: '#alerting',
       severity: 'alert',
       title: 'Treasury Balance Low',
       description: 'The BIM treasury account balance is below the configured threshold. Please refund the account.',

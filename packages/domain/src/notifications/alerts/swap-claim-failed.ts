@@ -21,6 +21,7 @@ export class SwapClaimFailed {
     ]);
 
     return {
+      channel: '#alerting',
       severity: 'error',
       title: 'Swap Claim Failed',
       description: 'A forward swap claim transaction failed. Manual intervention may be required to recover funds.',

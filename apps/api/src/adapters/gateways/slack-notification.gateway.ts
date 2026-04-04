@@ -6,7 +6,6 @@ import type {Logger} from 'pino';
 
 export interface SlackNotificationConfig {
   readonly botToken: string;
-  readonly channel: string;
 }
 
 const SEVERITY_COLORS: Record<NotificationSeverity, string> = {
@@ -28,7 +27,6 @@ const SEVERITY_ICONS: Record<NotificationSeverity, string> = {
 export class SlackNotificationGateway implements NotificationGateway {
   private readonly log: Logger;
   private readonly client: SlackAPIClient;
-  private readonly channel: string;
 
   constructor(
     config: SlackNotificationConfig,
@@ -36,7 +34,6 @@ export class SlackNotificationGateway implements NotificationGateway {
   ) {
     this.log = rootLogger.child({name: 'slack-notification.gateway.ts'});
     this.client = new SlackAPIClient(config.botToken);
-    this.channel = config.channel;
   }
 
   async send(message: NotificationMessage): Promise<void> {
@@ -82,7 +79,7 @@ export class SlackNotificationGateway implements NotificationGateway {
       this.log.info({severity: message.severity, title: message.title}, 'Sending Slack notification');
 
       await this.client.chat.postMessage({
-        channel: this.channel,
+        channel: message.channel,
         text: `${icon} ${message.title}`,
         attachments: [attachment],
       });

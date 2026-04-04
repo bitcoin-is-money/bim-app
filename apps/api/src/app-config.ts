@@ -1,19 +1,31 @@
 import * as schema from '@bim/db';
+import type {DatabaseConfig} from '@bim/db/database';
 import {StarknetAddress} from '@bim/domain/account';
 import {SessionConfig} from '@bim/domain/auth';
-import {type StarknetConfig} from '@bim/domain/shared';
-import {StarknetNetwork} from '@bim/domain/shared';
+import {type StarknetConfig, StarknetNetwork} from '@bim/domain/shared';
 import type {ClaimerConfig} from '@bim/domain/swap';
 import {redactUrl} from '@bim/lib/url';
-import type {DatabaseConfig} from '@bim/db/database';
 import {getTableName} from 'drizzle-orm';
-import type {AuthenticatorAttachment, AvnuPaymasterConfig, AvnuSwapConfig, WebAuthnConfig} from './adapters';
-import type {AtomiqGatewayConfig} from './adapters';
+import type {
+  AtomiqGatewayConfig,
+  AuthenticatorAttachment,
+  AvnuPaymasterConfig,
+  AvnuSwapConfig,
+  SlackNotificationConfig,
+  WebAuthnConfig
+} from './adapters';
+import type {BalanceMonitoringConfig} from './monitoring/balance.monitoring';
 
 /** Well-known STRK token contract address (same on mainnet and testnet). */
 const STRK_TOKEN_ADDRESS = '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d';
 
 export namespace AppConfig {
+
+  export interface CronConfig {
+    secret: string;
+    slack: SlackNotificationConfig;
+    balanceMonitoring: BalanceMonitoringConfig;
+  }
 
   export interface Config {
     appVersion: string;
@@ -26,6 +38,7 @@ export namespace AppConfig {
     avnuSwap: AvnuSwapConfig;
     atomiq: Omit<AtomiqGatewayConfig, 'pool'>;
     webauthn: WebAuthnConfig;
+    cron: CronConfig | undefined;
     logLevel: string;
   }
 
@@ -105,7 +118,28 @@ export namespace AppConfig {
         origin: optional('WEBAUTHN_ORIGIN', 'http://localhost:8080'),
         ...(authenticatorAttachment !== undefined && {authenticatorAttachment}),
       },
+      cron: loadCronConfig(optional),
       logLevel: optional('LOG_LEVEL', 'debug'),
+    };
+  }
+
+  function loadCronConfig(optional: (name: string, defaultValue: string) => string): CronConfig | undefined {
+    const secret = optional('CRON_SECRET', '');
+    const slackBotToken = optional('ALERTING_SLACK_BOT_TOKEN', '');
+    const avnuAddress = optional('BIM_AVNU_ADDRESS', '');
+
+    if (!secret || !slackBotToken || !avnuAddress) {
+      return undefined;
+    }
+
+    return {
+      secret,
+      slack: {botToken: slackBotToken},
+      balanceMonitoring: {
+        avnuAddress: StarknetAddress.of(avnuAddress),
+        avnuThresholdStrk: BigInt(optional('ALERTING_AVNU_THRESHOLD_STRK', '15')),
+        treasuryThresholdStrk: BigInt(optional('ALERTING_TREASURY_THRESHOLD_STRK', '200')),
+      },
     };
   }
 
@@ -166,6 +200,13 @@ export namespace AppConfig {
         ...config.avnuPaymaster,
         apiKey: config.avnuPaymaster.apiKey ? '***' : '',
       },
+      cron: config.cron
+        ? {
+          ...config.cron,
+          secret: '***',
+          slack: {botToken: '***'},
+        }
+        : undefined,
     };
   }
 }

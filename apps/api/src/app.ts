@@ -14,14 +14,17 @@ import {
   createAccountRoutes,
   createAdminRoutes,
   createAuthRoutes,
+  createCronRoutes,
   createCurrencyRoutes,
   createHealthRoutes,
   createPaymentRoutes,
   createSwapRoutes,
   createUserRoutes,
 } from './routes';
+import {SlackNotificationGateway} from './adapters';
 import {AppConfig} from './app-config';
 import {installGlobalErrorHandler} from './middleware/global-error-handler';
+import {BalanceMonitoring} from './monitoring/balance.monitoring';
 
 export interface CreateAppOptions {
   config?: Partial<AppConfig.Config>;
@@ -102,6 +105,26 @@ export async function createApp(options: CreateAppOptions = {}): Promise<AppInst
   app.route('/api/payment', createPaymentRoutes(context, swapMonitor));
   app.route('/api/swap', createSwapRoutes(context));
   app.route('/api/user', createUserRoutes(context));
+
+  // Balance monitoring + cron route (Scaleway cron always POSTs to /)
+  if (config.cron) {
+    const notificationGateway = new SlackNotificationGateway(
+      config.cron.slack,
+      rootLogger,
+    );
+    const balanceMonitoring = new BalanceMonitoring(
+      context.gateways.starknet,
+      notificationGateway,
+      config.starknet,
+      config.cron.balanceMonitoring,
+      rootLogger,
+    );
+    createCronRoutes(app, {
+      cronSecret: config.cron.secret,
+      balanceMonitoring,
+      logger: rootLogger,
+    });
+  }
 
   // Serve static files (frontend) - skip for tests
   if (!options.skipStaticFiles) {
