@@ -1,3 +1,15 @@
+/** Per-component health entry returned by GET /api/health. */
+export interface ServiceHealthEntry {
+  name: string;
+  status: 'unknown' | 'healthy' | 'down';
+  downSince?: string;
+  lastError?: {
+    kind: string;
+    httpCode?: number;
+    summary: string;
+  };
+}
+
 /** API response from GET /api/health */
 export interface HealthCheckResponse {
   status: 'healthy' | 'degraded';
@@ -5,6 +17,7 @@ export interface HealthCheckResponse {
   checks: {
     database: 'ok' | 'error';
   };
+  services: ServiceHealthEntry[];
 }
 
 /** API response from GET /api/health/ready */

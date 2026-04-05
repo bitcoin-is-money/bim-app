@@ -6,6 +6,7 @@ import type {
   AccountRepository,
   AtomiqGateway,
   ChallengeRepository,
+  NotificationGateway,
   SwapGateway,
   LightningDecoder,
   PaymasterGateway,
@@ -17,6 +18,8 @@ import type {
   UserSettingsRepository,
   WebAuthnGateway,
 } from "@bim/domain/ports";
+import {HealthRegistry, type ComponentName, type HealthTransitionEvent} from "@bim/domain/health";
+import {ServiceHealthChange} from "@bim/domain/notifications";
 import type {StarknetConfig} from "@bim/domain/shared";
 import {SwapService,} from "@bim/domain/swap";
 import {TransactionService, UserSettingsService} from "@bim/domain/user";
@@ -34,7 +37,9 @@ import {
   DrizzleUserSettingsRepository,
   DrizzleSwapRepository,
   DrizzleTransactionManager,
+  NoopNotificationGateway,
   SimpleWebAuthnGateway,
+  SlackNotificationGateway,
 } from "./adapters";
 import {StarknetRpcGateway} from "./adapters";
 import {Database} from "@bim/db/database";
@@ -61,7 +66,9 @@ export interface AppContext {
     dex: SwapGateway;
     lightningDecoder: LightningDecoder;
     price: PriceGateway;
+    notification: NotificationGateway;
   };
+  healthRegistry: HealthRegistry;
   services: {
     account: AccountService;
     auth: AuthService;
@@ -123,6 +130,30 @@ export namespace AppContext {
     // Initialize paymaster first (needed by starknet gateway for executeCalls)
     const paymasterGateway = new AvnuPaymasterGateway(config.avnuPaymaster, rootLogger);
 
+    // Notification gateway: Slack when a bot token is configured, otherwise a
+    // no-op that just logs. Available app-wide via context.gateways.notification.
+    const notificationGateway: NotificationGateway = config.alerting.slack
+      ? new SlackNotificationGateway(config.alerting.slack, rootLogger)
+      : new NoopNotificationGateway(rootLogger);
+
+    // Health registry: tracks the health of critical components. On any
+    // transition, forwards a structured event to Slack via ServiceHealthChange.
+    const trackedComponents: readonly ComponentName[] = ['atomiq', 'database'];
+    const healthRegistryLog = rootLogger.child({name: 'app-context.ts'});
+    const healthRegistry = new HealthRegistry(
+      trackedComponents,
+      (event: HealthTransitionEvent) => {
+        const message = ServiceHealthChange.fromEvent(event);
+        notificationGateway.send(message).catch((err: unknown) => {
+          healthRegistryLog.warn(
+            {component: event.component, cause: err instanceof Error ? err.message : String(err)},
+            'Failed to send health change notification',
+          );
+        });
+      },
+      rootLogger,
+    );
+
     // Initialize gateways (with optional overrides)
     const gateways: AppContext['gateways'] = {
       webAuthn: new SimpleWebAuthnGateway(config.webauthn, rootLogger),
@@ -141,10 +172,11 @@ export namespace AppContext {
         rootLogger,
       ),
       paymaster: paymasterGateway,
-      atomiq: new AtomiqSdkGateway({...config.atomiq, pool}, rootLogger),
+      atomiq: new AtomiqSdkGateway({...config.atomiq, pool}, rootLogger, healthRegistry),
       dex: new AvnuSwapGateway(config.avnuSwap, rootLogger),
       lightningDecoder: new Bolt11LightningDecoder(),
       price: new CoinGeckoPriceGateway(rootLogger),
+      notification: notificationGateway,
       ...overrides?.gateways,
     };
 
@@ -255,6 +287,7 @@ export namespace AppContext {
       sessionConfig: config.session,
       starknetConfig,
       webauthn,
+      healthRegistry,
       logger: rootLogger,
     };
   }
