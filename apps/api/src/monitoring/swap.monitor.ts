@@ -156,7 +156,10 @@ export class SwapMonitor {
         }
       }
     } catch (err) {
-      this.log.error({err}, 'SwapMonitor iteration error');
+      this.log.error(
+        {cause: err instanceof Error ? err.message : String(err)},
+        'SwapMonitor iteration error',
+      );
     } finally {
       this.iterating = false;
     }

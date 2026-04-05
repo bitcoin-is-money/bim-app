@@ -23,8 +23,11 @@ export namespace AppConfig {
 
   export interface CronConfig {
     secret: string;
-    slack: SlackNotificationConfig;
     balanceMonitoring: BalanceMonitoringConfig;
+  }
+
+  export interface AlertingConfig {
+    slack: SlackNotificationConfig | undefined;
   }
 
   export interface Config {
@@ -38,6 +41,7 @@ export namespace AppConfig {
     avnuSwap: AvnuSwapConfig;
     atomiq: Omit<AtomiqGatewayConfig, 'pool'>;
     webauthn: WebAuthnConfig;
+    alerting: AlertingConfig;
     cron: CronConfig | undefined;
     logLevel: string;
   }
@@ -118,23 +122,29 @@ export namespace AppConfig {
         origin: required('WEBAUTHN_ORIGIN'),
         ...(authenticatorAttachment !== undefined && {authenticatorAttachment}),
       },
+      alerting: loadAlertingConfig(optional),
       cron: loadCronConfig(optional),
       logLevel: optional('LOG_LEVEL', 'debug'),
     };
   }
 
+  function loadAlertingConfig(optional: (name: string, defaultValue: string) => string): AlertingConfig {
+    const slackBotToken = optional('ALERTING_SLACK_BOT_TOKEN', '');
+    return {
+      slack: slackBotToken ? {botToken: slackBotToken} : undefined,
+    };
+  }
+
   function loadCronConfig(optional: (name: string, defaultValue: string) => string): CronConfig | undefined {
     const secret = optional('CRON_SECRET', '');
-    const slackBotToken = optional('ALERTING_SLACK_BOT_TOKEN', '');
     const avnuAddress = optional('BIM_AVNU_ADDRESS', '');
 
-    if (!secret || !slackBotToken || !avnuAddress) {
+    if (!secret || !avnuAddress) {
       return undefined;
     }
 
     return {
       secret,
-      slack: {botToken: slackBotToken},
       balanceMonitoring: {
         avnuAddress: StarknetAddress.of(avnuAddress),
         avnuThresholdStrk: BigInt(optional('ALERTING_AVNU_THRESHOLD_STRK', '15')),
@@ -200,11 +210,13 @@ export namespace AppConfig {
         ...config.avnuPaymaster,
         apiKey: config.avnuPaymaster.apiKey ? '***' : '',
       },
+      alerting: {
+        slack: config.alerting.slack ? {botToken: '***'} : undefined,
+      },
       cron: config.cron
         ? {
           ...config.cron,
           secret: '***',
-          slack: {botToken: '***'},
         }
         : undefined,
     };

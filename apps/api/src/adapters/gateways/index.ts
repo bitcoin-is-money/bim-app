@@ -7,3 +7,4 @@ export * from './bolt11-lightning.decoder';
 export * from './webauthn-signature.processor';
 export * from './coingecko-price.gateway';
 export * from './slack-notification.gateway';
+export * from './noop-notification.gateway';

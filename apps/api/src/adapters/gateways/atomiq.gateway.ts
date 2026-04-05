@@ -15,7 +15,8 @@ import type {
   ForwardSwapClaimResult,
   StarknetCall,
 } from '@bim/domain/ports';
-import {ExternalServiceError, type BitcoinNetwork as DomainBitcoinNetwork, validateExternalCalls} from "@bim/domain/shared";
+import {ExternalServiceError, type BitcoinNetwork as DomainBitcoinNetwork, type SanitizedError, validateExternalCalls} from "@bim/domain/shared";
+import type {HealthRegistry} from "@bim/domain/health";
 import type {SwapDirection, SwapLimits, BitcoinAddress, LightningInvoice, SwapId,
   ClaimerConfig
 } from "@bim/domain/swap";
@@ -23,6 +24,7 @@ import {LightningInvoiceExpiredError, SwapAmountError} from "@bim/domain/swap";
 import {Amount} from "@bim/domain/shared";
 import type {Logger} from "pino";
 import {Account as StarknetAccount, RpcProvider, Signer as StarknetSigner} from 'starknet';
+import {isInfraFailure, sanitizeAtomiqError} from './atomiq-error';
 
 /* eslint-disable
    @typescript-eslint/no-unsafe-assignment,
@@ -76,6 +78,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
   constructor(
     private readonly config: AtomiqGatewayConfig,
     rootLogger: Logger,
+    private readonly healthRegistry: HealthRegistry,
   ) {
     this.log = rootLogger.child({name: 'atomiq.gateway.ts'});
     this.claimerAccount = new StarknetAccount({
@@ -83,6 +86,24 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       address: this.config.claimer.address,
       signer: new StarknetSigner(this.config.claimer.privateKey),
     });
+  }
+
+  private handleAtomiqFailure(err: unknown, context: string): SanitizedError {
+    const sanitized = sanitizeAtomiqError(err);
+    // Only confirmed infrastructure-level failure kinds (the ones we have
+    // actually observed in prod) flip the health flag. An `unknown` error is
+    // more likely a functional/SDK bug than an Atomiq outage, so we keep the
+    // component's current health state to avoid false `BIM: atomiq is down`
+    // alerts on Slack.
+    if (isInfraFailure(sanitized)) {
+      this.healthRegistry.reportDown('atomiq', sanitized);
+    }
+    this.log.error({atomiqError: sanitized, context}, 'Atomiq call failed');
+    return sanitized;
+  }
+
+  private markAtomiqHealthy(): void {
+    this.healthRegistry.reportHealthy('atomiq');
   }
 
   // ===========================================================================
@@ -132,11 +153,10 @@ export class AtomiqSdkGateway implements AtomiqGateway {
 
       this.isInitialized = true;
       this.log.info('Atomiq SDK initialized');
+      this.markAtomiqHealthy();
     } catch (error) {
-      throw new ExternalServiceError(
-        'Atomiq',
-        `Failed to initialize SDK: ${error instanceof Error ? error.message : String(error)}`,
-      );
+      const sanitized = this.handleAtomiqFailure(error, 'initialize');
+      throw new ExternalServiceError('Atomiq', `Failed to initialize SDK: ${sanitized.summary}`);
     }
   }
 
@@ -220,6 +240,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         swapId,
         amountSats: params.amountSats.toString()
       }, `${direction} swap created`);
+      this.markAtomiqHealthy();
       return {
         swapId,
         invoice,
@@ -227,14 +248,11 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       };
     } catch (error) {
       if (error instanceof OutOfBoundsError) {
+        this.markAtomiqHealthy();
         throw new SwapAmountError(Amount.ofSatoshi(params.amountSats), Amount.ofSatoshi(error.min), Amount.ofSatoshi(error.max));
       }
-      throw new ExternalServiceError(
-        'Atomiq',
-        `Failed to create ${direction} swap: ${error instanceof Error
-          ? error.message
-          : String(error)}`,
-      );
+      const sanitized = this.handleAtomiqFailure(error, `createLightningToStarknetSwap`);
+      throw new ExternalServiceError('Atomiq', `Failed to create ${direction} swap: ${sanitized.summary}`);
     }
   }
 
@@ -277,6 +295,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         amountSats: amountSats.toString(),
         commitCallsCount: commitCalls.length,
       }, `${direction} swap created`);
+      this.markAtomiqHealthy();
       return {
         swapId,
         commitCalls,
@@ -286,15 +305,15 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       if (message.includes('pr - expired') || message.includes('pr -expired')) {
+        this.markAtomiqHealthy();
         throw new LightningInvoiceExpiredError();
       }
       if (error instanceof OutOfBoundsError) {
+        this.markAtomiqHealthy();
         throw new SwapAmountError(Amount.ofSatoshi(0n), Amount.ofSatoshi(error.min), Amount.ofSatoshi(error.max));
       }
-      throw new ExternalServiceError(
-        'Atomiq',
-        `Failed to create ${direction} swap: ${message}`,
-      );
+      const sanitized = this.handleAtomiqFailure(error, 'createStarknetToLightningSwap');
+      throw new ExternalServiceError('Atomiq', `Failed to create ${direction} swap: ${sanitized.summary}`);
     }
   }
 
@@ -339,6 +358,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         commitCallsCount: commitCalls.length,
         amountSats: params.amountSats.toString()
       }, `${direction} swap prepared (pending commit)`);
+      this.markAtomiqHealthy();
 
       return {
         swapId,
@@ -348,14 +368,11 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     } catch (error) {
       if (error instanceof ExternalServiceError) throw error;
       if (error instanceof OutOfBoundsError) {
+        this.markAtomiqHealthy();
         throw new SwapAmountError(Amount.ofSatoshi(0n), Amount.ofSatoshi(error.min), Amount.ofSatoshi(error.max));
       }
-      throw new ExternalServiceError(
-        'Atomiq',
-        `Failed to prepare ${direction} swap: ${error instanceof Error
-          ? error.message
-          : String(error)}`,
-      );
+      const sanitized = this.handleAtomiqFailure(error, 'prepareBitcoinToStarknetSwap');
+      throw new ExternalServiceError('Atomiq', `Failed to prepare ${direction} swap: ${sanitized.summary}`);
     }
   }
 
@@ -383,16 +400,13 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       const bip21Uri = `bitcoin:${depositAddress}?amount=${Number(amount) / 100000000}`;
 
       this.log.info({swapId, depositAddress}, 'Bitcoin swap commit completed');
+      this.markAtomiqHealthy();
 
       return {depositAddress, bip21Uri};
     } catch (error) {
       if (error instanceof ExternalServiceError) throw error;
-      throw new ExternalServiceError(
-        'Atomiq',
-        `Failed to complete Bitcoin swap commit: ${error instanceof Error
-          ? error.message
-          : String(error)}`,
-      );
+      const sanitized = this.handleAtomiqFailure(error, 'completeBitcoinSwapCommit');
+      throw new ExternalServiceError('Atomiq', `Failed to complete Bitcoin swap commit: ${sanitized.summary}`);
     }
   }
 
@@ -439,6 +453,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         amountSats: params.amountSats,
         commitCallsCount: commitCalls.length,
       }, `${direction} swap created`);
+      this.markAtomiqHealthy();
       return {
         swapId,
         commitCalls,
@@ -447,14 +462,11 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       };
     } catch (error) {
       if (error instanceof OutOfBoundsError) {
+        this.markAtomiqHealthy();
         throw new SwapAmountError(Amount.ofSatoshi(params.amountSats), Amount.ofSatoshi(error.min), Amount.ofSatoshi(error.max));
       }
-      throw new ExternalServiceError(
-        'Atomiq',
-        `Failed to create ${direction} swap: ${error instanceof Error
-          ? error.message
-          : String(error)}`,
-      );
+      const sanitized = this.handleAtomiqFailure(error, 'createStarknetToBitcoinSwap');
+      throw new ExternalServiceError('Atomiq', `Failed to create ${direction} swap: ${sanitized.summary}`);
     }
   }
 
@@ -675,13 +687,15 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         txHash: swap.getOutputTxId() ?? swap.getInputTxId() ?? undefined,
       };
       this.log.debug({...result}, 'getSwapStatus result');
+      this.markAtomiqHealthy();
       return result;
     } catch (err) {
       // Do NOT swallow errors into a fake "expired" response — transient failures
       // (network timeout, 500, etc.) would permanently kill active swaps with
       // funds in escrow. Let the error propagate; syncWithAtomiq has its own
       // try/catch that logs a warning and preserves the swap's current state.
-      this.log.warn({swapId, error: String(err)}, 'getSwapStatus failed');
+      const sanitized = this.handleAtomiqFailure(err, 'getSwapStatus');
+      this.log.warn({swapId, atomiqError: sanitized}, 'getSwapStatus failed');
       throw err;
     }
   }
@@ -782,18 +796,18 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     try {
       claimTxHash = await swap.claim(this.claimerAccount);
       this.log.info({swapId, claimTxHash}, 'Forward swap claimed successfully');
+      this.markAtomiqHealthy();
     } catch (error) {
       // If the swap was already claimed (by watchtower), the SDK detects it
       const state: number = swap.getState();
       if (state >= 3) {
         claimTxHash = swap.getOutputTxId() ?? 'unknown';
         this.log.info({swapId, claimTxHash, state}, 'Swap already claimed (watchtower won the race)');
+        this.markAtomiqHealthy();
         return {claimTxHash, refundTxHash: undefined, bountyAmount: 0n, userAddress};
       }
-      throw new ExternalServiceError(
-        'Atomiq',
-        `Failed to claim forward swap ${swapId}: ${error instanceof Error ? error.message : String(error)}`,
-      );
+      const sanitized = this.handleAtomiqFailure(error, 'claimForwardSwap');
+      throw new ExternalServiceError('Atomiq', `Failed to claim forward swap ${swapId}: ${sanitized.summary}`);
     }
 
     // 2. Refund bounty — transfer STRK from backend to user
