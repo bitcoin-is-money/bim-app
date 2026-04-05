@@ -109,6 +109,7 @@ export async function createApp(options: CreateAppOptions = {}): Promise<AppInst
   if (config.cron) {
     const balanceMonitoring = new BalanceMonitoring(
       context.gateways.starknet,
+      context.gateways.paymaster,
       context.gateways.notification,
       config.starknet,
       config.cron.balanceMonitoring,

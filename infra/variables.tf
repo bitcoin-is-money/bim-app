@@ -105,10 +105,9 @@ variable "bim_treasury_private_key" {
   sensitive   = true
 }
 
-variable "bim_avnu_address" {
-  description = "Starknet address of the AVNU paymaster account to monitor — required when alerting is enabled"
+variable "avnu_sponsor_activity_url" {
+  description = "Full AVNU sponsor-activity endpoint URL used to fetch remaining sponsor credits — required (e.g. https://sepolia.api.avnu.fi/paymaster/v1/sponsor-activity on testnet, https://starknet.api.avnu.fi/paymaster/v1/sponsor-activity on mainnet)"
   type        = string
-  default     = ""
 }
 
 # ---------- Cron ----------
@@ -123,7 +122,7 @@ variable "cron_secret" {
 # ---------- Alerting (Slack notifications via Scaleway cron → API) ----------
 
 variable "enable_alerting" {
-  description = "Enable balance alerting via Scaleway cron (requires cron_secret, slack vars, and bim_avnu_address)"
+  description = "Enable balance alerting via Scaleway cron (requires cron_secret and slack vars)"
   type        = bool
   default     = false
 }

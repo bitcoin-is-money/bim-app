@@ -134,6 +134,15 @@ export interface PaymasterGateway {
 
   /** Gets the sponsored gas limit for the current period. */
   getSponsoredGasLimit(): Promise<bigint>;
+
+  /**
+   * Gets the remaining STRK sponsor credits associated with the configured
+   * AVNU API key. Returns the balance in wei (18 decimals).
+   *
+   * This is the actual quantity that gets consumed when the paymaster
+   * sponsors user transactions — not the on-chain balance of any account.
+   */
+  getRemainingCredits(): Promise<bigint>;
 }
 
 /** Result of a paymaster-sponsored transaction execution. */

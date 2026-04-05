@@ -99,6 +99,7 @@ resource "scaleway_container" "api" {
       NODE_ENV                          = "production"
       WEBAUTHN_AUTHENTICATOR_ATTACHMENT = var.webauthn_authenticator_attachment
       LOG_LEVEL                         = var.api_log_level
+      AVNU_SPONSOR_ACTIVITY_URL         = var.avnu_sponsor_activity_url
     },
     # WebAuthn domain requires api_domain (set after first apply from outputs).
     # Without it, the container will fail to start (WEBAUTHN_RP_ID is required).
@@ -121,7 +122,6 @@ resource "scaleway_container" "api" {
       ALERTING_SLACK_BOT_TOKEN         = var.alerting_slack_bot_token
       ALERTING_AVNU_THRESHOLD_STRK     = tostring(var.alerting_avnu_threshold_strk)
       ALERTING_TREASURY_THRESHOLD_STRK = tostring(var.alerting_treasury_threshold_strk)
-      BIM_AVNU_ADDRESS                 = var.bim_avnu_address
     } : {}
   )
 

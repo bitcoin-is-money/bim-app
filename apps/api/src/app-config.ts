@@ -107,6 +107,7 @@ export namespace AppConfig {
       avnuPaymaster: {
         apiUrl: optional('AVNU_API_URL', 'https://starknet.paymaster.avnu.fi'),
         apiKey: optional('AVNU_API_KEY', ''),
+        sponsorActivityUrl: required('AVNU_SPONSOR_ACTIVITY_URL'),
       },
       avnuSwap: {
         baseUrl: optional('AVNU_SWAP_API_URL',
@@ -137,16 +138,14 @@ export namespace AppConfig {
 
   function loadCronConfig(optional: (name: string, defaultValue: string) => string): CronConfig | undefined {
     const secret = optional('CRON_SECRET', '');
-    const avnuAddress = optional('BIM_AVNU_ADDRESS', '');
 
-    if (!secret || !avnuAddress) {
+    if (!secret) {
       return undefined;
     }
 
     return {
       secret,
       balanceMonitoring: {
-        avnuAddress: StarknetAddress.of(avnuAddress),
         avnuThresholdStrk: BigInt(optional('ALERTING_AVNU_THRESHOLD_STRK', '15')),
         treasuryThresholdStrk: BigInt(optional('ALERTING_TREASURY_THRESHOLD_STRK', '200')),
       },
