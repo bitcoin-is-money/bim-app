@@ -50,6 +50,7 @@ export class SwapMonitor {
   private iterating = false;
   private idleIterations = 0;
   private iterationsSinceLastKeepalive = 0;
+  private readonly knownActiveSwapIds: Set<SwapId> = new Set();
   private readonly config: Required<SwapMonitorConfig>;
   private readonly log: Logger;
 
@@ -116,6 +117,7 @@ export class SwapMonitor {
       const activeSwaps = await this.swapService.getActiveSwaps();
 
       if (activeSwaps.length === 0) {
+        this.knownActiveSwapIds.clear();
         this.idleIterations++;
         if (this.idleIterations >= this.config.maxIdleIterations) {
           this.log.info({idleIterations: this.idleIterations}, 'No active swaps, auto-stopping SwapMonitor');
@@ -127,10 +129,22 @@ export class SwapMonitor {
       }
 
       this.idleIterations = 0;
-      this.log.info(
-        {count: activeSwaps.length, swapIds: activeSwaps.map(s => s.data.id)},
-        'Active swaps detected',
-      );
+      const currentIds: Set<SwapId> = new Set(activeSwaps.map(s => s.data.id));
+      const newIds = [...currentIds].filter(id => !this.knownActiveSwapIds.has(id));
+      if (newIds.length > 0) {
+        this.log.info(
+          {count: activeSwaps.length, newSwapIds: newIds},
+          'New active swap(s) detected',
+        );
+      }
+      for (const id of this.knownActiveSwapIds) {
+        if (!currentIds.has(id)) {
+          this.knownActiveSwapIds.delete(id);
+        }
+      }
+      for (const id of newIds) {
+        this.knownActiveSwapIds.add(id);
+      }
       await this.keepaliveIfNeeded(activeSwaps.length);
 
       for (const swap of activeSwaps) {
