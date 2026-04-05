@@ -355,10 +355,16 @@ export class SwapService {
 
     await this.deps.swapRepository.save(swap);
 
-    this.log.info({
-      swapId: atomiqSwap.swapId,
-      amountSats: swapAmount.toSatString()
-    }, 'Starknet-to-Lightning swap created');
+    const logMsg = 'Starknet-to-Lightning swap created';
+    if (this.log.isLevelEnabled("debug")) {
+      this.log.debug({
+        swapId: atomiqSwap.swapId,
+        amountSats: swapAmount.toSatString()
+      }, logMsg);
+    } else {
+      this.log.info(logMsg);
+    }
+
     return {
       swap,
       commitCalls: atomiqSwap.commitCalls,
