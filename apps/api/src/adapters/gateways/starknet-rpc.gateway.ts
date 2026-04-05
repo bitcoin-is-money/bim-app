@@ -214,10 +214,12 @@ export class StarknetRpcGateway implements StarknetGateway {
     calls: readonly StarknetCall[];
   }): Promise<{typedData: unknown; messageHash: string}> {
     try {
-      this.log.info(
-        {senderAddress: params.senderAddress.toString(), callCount: params.calls.length},
-        'Building calls via paymaster',
-      );
+      const logMsg = 'Building calls via paymaster';
+      if (this.log.isLevelEnabled("debug")) {
+        this.log.debug({senderAddress: params.senderAddress.toString(), callCount: params.calls.length}, logMsg);
+      } else {
+        this.log.info(logMsg);
+      }
 
       const {typedData} = await this.paymasterGateway.buildInvokeTransaction({
         calls: params.calls,
@@ -252,11 +254,12 @@ export class StarknetRpcGateway implements StarknetGateway {
     signature: string[];
   }): Promise<{txHash: string}> {
     try {
-      this.log.info(
-        {senderAddress: params.senderAddress.toString(), signatureLength: params.signature.length},
-        'Executing signed calls via paymaster',
-      );
-
+      const execLogMsg = 'Executing signed calls via paymaster';
+      if (this.log.isLevelEnabled("debug")) {
+        this.log.debug({senderAddress: params.senderAddress.toString(), signatureLength: params.signature.length}, execLogMsg);
+      } else {
+        this.log.info(execLogMsg);
+      }
       const result = await this.paymasterGateway.executeInvokeTransaction({
         typedData: params.typedData,
         signature: params.signature,
@@ -266,8 +269,12 @@ export class StarknetRpcGateway implements StarknetGateway {
       if (!result.success) {
         throw new Error('Transaction execution failed');
       }
-
-      this.log.info({txHash: result.txHash}, 'Signed calls transaction submitted');
+      const submittedLogMsg = 'Signed calls transaction submitted';
+      if (this.log.isLevelEnabled("debug")) {
+        this.log.debug({txHash: result.txHash}, submittedLogMsg);
+      } else {
+        this.log.info(submittedLogMsg);
+      }
       return {txHash: result.txHash};
     } catch (error) {
       if (error instanceof DomainError) throw error;

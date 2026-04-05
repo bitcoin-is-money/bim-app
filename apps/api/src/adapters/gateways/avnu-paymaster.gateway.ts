@@ -178,11 +178,12 @@ export class AvnuPaymasterGateway implements PaymasterGateway {
     accountAddress: StarknetAddress;
   }): Promise<PaymasterResult> {
     const accountAddress = params.accountAddress.toString();
-    this.log.info(
-      {accountAddress, signatureLength: params.signature.length},
-      'Executing signed invoke via SNIP-29',
-    );
-
+    const logMsg = 'Executing signed invoke via SNIP-29';
+    if (this.log.isLevelEnabled("debug")) {
+      this.log.debug({accountAddress, signatureLength: params.signature.length}, logMsg);
+    } else {
+      this.log.info(logMsg);
+    }
     try {
       const payload: ExecutableUserTransaction = {
         type: 'invoke' as const,
@@ -199,12 +200,12 @@ export class AvnuPaymasterGateway implements PaymasterGateway {
       };
 
       const response = await this.paymasterRpc.executeTransaction(payload, parameters);
-
-      this.log.info(
-        {txHash: response.transaction_hash},
-        'SNIP-29 invoke transaction submitted',
-      );
-
+      const logMsg = 'SNIP-29 invoke transaction submitted';
+      if (this.log.isLevelEnabled("debug")) {
+        this.log.debug({txHash: response.transaction_hash}, logMsg);
+      } else {
+        this.log.info(logMsg);
+      }
       return {
         txHash: response.transaction_hash,
         success: true,

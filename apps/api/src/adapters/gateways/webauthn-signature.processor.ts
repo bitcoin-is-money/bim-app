@@ -76,9 +76,12 @@ export class WebAuthnSignatureProcessor {
 
     // 6. Build compact_no_legacy format
     const signature = this.buildCompactNoLegacy(publicKeyHex, outro, flags, signCount, sig.r, sig.s, yParity);
-
-    this.log.info({signature, authDataLen: authenticatorData.length}, 'Built compact_no_legacy signature');
-
+    const logMsg = 'Built compact_no_legacy signature';
+    if (this.log.isLevelEnabled("debug")) {
+      this.log.debug({signature, authDataLen: authenticatorData.length}, logMsg);
+    } else {
+      this.log.info(logMsg);
+    }
     return signature;
   }
 
