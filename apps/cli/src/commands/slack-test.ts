@@ -64,12 +64,11 @@ function buildBlocks(msg: TestMessage): AnyMessageBlock[] {
 const TEST_MESSAGES: readonly TestMessage[] = [
   {
     severity: 'alert',
-    title: 'AVNU Balance Low',
-    description: 'The AVNU paymaster account balance is below the configured threshold.',
+    title: 'AVNU Credits Low',
+    description: 'The AVNU paymaster sponsor credits are below the configured threshold.',
     fields: {
-      'Account': '`0x0269...435f`',
       'Network': 'mainnet',
-      'Balance': '2.300000 STRK',
+      'Remaining credits': '2.300000 STRK',
       'Threshold': '5.000000 STRK',
     },
     links: [

@@ -1,5 +1,5 @@
-import type {NotificationGateway, StarknetGateway} from '@bim/domain/ports';
-import type {StarknetAddress, StarknetConfig} from '@bim/domain/shared';
+import type {NotificationGateway, PaymasterGateway, StarknetGateway} from '@bim/domain/ports';
+import type {StarknetConfig} from '@bim/domain/shared';
 import {AvnuBalanceLow, TreasuryBalanceLow} from '@bim/domain/notifications';
 import type {Logger} from 'pino';
 
@@ -9,7 +9,6 @@ export const DEFAULT_TREASURY_THRESHOLD_STRK = 200n;
 const STRK_DECIMALS = 10n ** 18n;
 
 export interface BalanceMonitoringConfig {
-  readonly avnuAddress: StarknetAddress;
   readonly avnuThresholdStrk?: bigint;
   readonly treasuryThresholdStrk?: bigint;
 }
@@ -19,6 +18,7 @@ export class BalanceMonitoring {
 
   constructor(
     private readonly starknetGateway: StarknetGateway,
+    private readonly paymasterGateway: PaymasterGateway,
     private readonly notificationGateway: NotificationGateway,
     private readonly starknetConfig: StarknetConfig,
     private readonly config: BalanceMonitoringConfig,
@@ -31,9 +31,9 @@ export class BalanceMonitoring {
     this.log.info('Running balance check');
 
     try {
-      await this.checkAvnuBalance();
+      await this.checkAvnuCredits();
     } catch (err: unknown) {
-      this.log.error({cause: err instanceof Error ? err.message : String(err)}, 'AVNU balance check failed');
+      this.log.error({cause: err instanceof Error ? err.message : String(err)}, 'AVNU credits check failed');
     }
 
     try {
@@ -43,16 +43,13 @@ export class BalanceMonitoring {
     }
   }
 
-  private async checkAvnuBalance(): Promise<void> {
-    const address = this.config.avnuAddress;
-    const token = 'STRK';
-    const currentBalance = await this.starknetGateway.getBalance({address, token});
+  private async checkAvnuCredits(): Promise<void> {
+    const currentBalance = await this.paymasterGateway.getRemainingCredits();
     const threshold = (this.config.avnuThresholdStrk ?? DEFAULT_AVNU_THRESHOLD_STRK) * STRK_DECIMALS;
 
-    this.log.info({address: address.toString(), balance: currentBalance.toString(), threshold: threshold.toString()}, 'AVNU balance check');
+    this.log.info({credits: currentBalance.toString(), threshold: threshold.toString()}, 'AVNU credits check');
 
     const alertMsg = AvnuBalanceLow.evaluate({
-      address,
       network: this.starknetConfig.network,
       currentBalance,
       threshold,

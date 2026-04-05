@@ -37,10 +37,13 @@ claimer_private_key = ""
 claimer_address     = ""
 
 # ------------------------------------------------------------------------------
-# AVNU API key — https://portal.avnu.fi
+# AVNU — API key (https://portal.avnu.fi) and full sponsor-activity URL used
+# to monitor remaining sponsor credits.
+# Testnet: https://sepolia.api.avnu.fi/paymaster/v1/sponsor-activity
+# Mainnet: https://starknet.api.avnu.fi/paymaster/v1/sponsor-activity
 # ------------------------------------------------------------------------------
-avnu_api_key = ""
-bim_avnu_address = ""
+avnu_api_key              = ""
+avnu_sponsor_activity_url = "https://starknet.api.avnu.fi/paymaster/v1/sponsor-activity"
 
 # ------------------------------------------------------------------------------
 # Apibara DNA token — https://www.apibara.com

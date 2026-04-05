@@ -19,6 +19,22 @@ import {type ExecutableUserTransaction, type ExecutionParameters, PaymasterRpc, 
 export interface AvnuPaymasterConfig {
   apiUrl: string;
   apiKey: string;
+  /**
+   * Full URL of the AVNU sponsor-activity endpoint (remaining sponsor credits).
+   * Different from `apiUrl` which points to the SNIP-29 JSON-RPC paymaster endpoint.
+   * Examples:
+   *   https://sepolia.api.avnu.fi/paymaster/v1/sponsor-activity
+   *   https://starknet.api.avnu.fi/paymaster/v1/sponsor-activity
+   */
+  sponsorActivityUrl: string;
+}
+
+/**
+ * Response shape from GET /paymaster/v1/sponsor-activity.
+ * `remainingStrkCredits` is a hex-encoded uint (wei, 18 decimals).
+ */
+interface SponsorActivityResponse {
+  remainingStrkCredits?: string;
 }
 
 /**
@@ -394,6 +410,51 @@ export class AvnuPaymasterGateway implements PaymasterGateway {
     }
     this.log.debug({available}, 'Paymaster availability result');
     return available;
+  }
+
+  async getRemainingCredits(): Promise<bigint> {
+    this.log.debug('Fetching AVNU remaining sponsor credits');
+    if (!this.config.apiKey) {
+      throw new ExternalServiceError(
+        'AVNU Paymaster',
+        'Cannot fetch remaining credits: AVNU_API_KEY is not configured',
+      );
+    }
+
+    try {
+      const response = await fetch(this.config.sponsorActivityUrl, {
+        headers: {'api-key': this.config.apiKey},
+        signal: AbortSignal.timeout(10_000),
+      });
+
+      if (!response.ok) {
+        const body = await response.text();
+        throw new ExternalServiceError(
+          'AVNU Paymaster',
+          `sponsor-activity failed (HTTP ${response.status}): ${body}`,
+        );
+      }
+
+      const body = await response.json() as SponsorActivityResponse;
+      if (body.remainingStrkCredits === undefined) {
+        throw new ExternalServiceError(
+          'AVNU Paymaster',
+          'sponsor-activity response missing remainingStrkCredits',
+        );
+      }
+
+      const credits = BigInt(body.remainingStrkCredits);
+      this.log.debug({credits: credits.toString()}, 'AVNU remaining sponsor credits fetched');
+      return credits;
+    } catch (err: unknown) {
+      if (err instanceof ExternalServiceError) {
+        throw err;
+      }
+      throw new ExternalServiceError(
+        'AVNU Paymaster',
+        `sponsor-activity failed: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
   }
 
   async getSponsoredGasLimit(): Promise<bigint> {
