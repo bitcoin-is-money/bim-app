@@ -1,4 +1,4 @@
-import type {NotificationGateway, NotificationMessage} from '@bim/domain/ports';
+import type {NotificationGateway, NotificationMessage} from '../ports/index.js';
 import type {Logger} from 'pino';
 
 /**

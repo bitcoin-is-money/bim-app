@@ -438,6 +438,11 @@ export class DevnetPaymasterGateway implements PaymasterGateway {
     return BigInt('10000000000000000000'); // 10 ETH
   }
 
+  async getRemainingCredits(): Promise<bigint> {
+    // Devnet has unlimited credits
+    return BigInt('1000000000000000000000'); // 1000 STRK
+  }
+
   /**
    * Helper: Fund an address with ETH using devnet's mint endpoint.
    * Supports both old HTTP endpoint and new RPC method.

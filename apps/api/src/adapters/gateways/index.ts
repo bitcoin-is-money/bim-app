@@ -1,10 +1,13 @@
-export * from './simplewebauthn.gateway';
-export {StarknetRpcGateway, type StarknetGatewayConfig} from './starknet-rpc.gateway';
-export * from './avnu-paymaster.gateway';
-export * from './avnu-swap.gateway';
-export * from './atomiq.gateway';
-export * from './bolt11-lightning.decoder';
-export * from './webauthn-signature.processor';
-export * from './coingecko-price.gateway';
-export * from './slack-notification.gateway';
-export * from './noop-notification.gateway';
+// Re-exported from extracted packages
+export {StarknetRpcGateway, type StarknetGatewayConfig} from '@bim/starknet';
+export {AvnuPaymasterGateway, type AvnuPaymasterConfig} from '@bim/starknet';
+export {AvnuSwapGateway, type AvnuSwapConfig} from '@bim/starknet';
+export {WebAuthnSignatureProcessor, type WebAuthnSignatureConfig} from '@bim/starknet';
+export {AtomiqSdkGateway, type AtomiqGatewayConfig} from '@bim/atomiq';
+export {SlackNotificationGateway, type SlackNotificationConfig} from '@bim/slack';
+export {NoopNotificationGateway} from '@bim/domain/notifications';
+
+// Still local
+export * from './simplewebauthn.gateway.js';
+export * from './bolt11-lightning.decoder.js';
+export * from './coingecko-price.gateway.js';
