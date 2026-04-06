@@ -23,7 +23,6 @@
   "peerDependencies": {
     "@noble/curves": "^1.9.0",
     "@noble/hashes": "^1.8.0",
-    "@starknet-io/starknet-types-010": "^0.0.9",
     "starknet": "^9.0.0"
   }
 }

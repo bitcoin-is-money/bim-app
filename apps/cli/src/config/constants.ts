@@ -16,4 +16,14 @@ export const COMPILED_CLASS_HASH = '0xc12444dab1aaa9d1c7fc5d2ca7f51660a1607fb011
 export const STRK_DECIMALS = 18;
 export const WBTC_DECIMALS = 8;
 
+export const AVNU_PAYMASTER_URLS: Record<Network, string> = {
+  testnet: 'https://sepolia.paymaster.avnu.fi',
+  mainnet: 'https://starknet.paymaster.avnu.fi',
+};
+
+export const AVNU_SPONSOR_ACTIVITY_URLS: Record<Network, string> = {
+  testnet: 'https://sepolia.api.avnu.fi/paymaster/v1/sponsor-activity',
+  mainnet: 'https://starknet.api.avnu.fi/paymaster/v1/sponsor-activity',
+};
+
 export const STARKNET_FAUCET_URL = 'https://starknet-faucet.vercel.app/';

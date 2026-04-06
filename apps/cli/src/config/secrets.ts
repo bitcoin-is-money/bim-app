@@ -34,7 +34,6 @@ export interface AvnuSecrets {
 
 export interface SlackSecrets {
   readonly botToken: string;
-  readonly channel: string;
 }
 
 export interface E2eAccountSecrets {

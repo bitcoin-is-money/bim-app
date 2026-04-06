@@ -1,10 +1,23 @@
+import {StarknetAddress} from '@bim/domain/account';
 import {createInterface} from 'node:readline';
-import {WBTC_TOKEN_ADDRESS} from '../config/constants.js';
+import {RPC_URLS} from '../config/constants.js';
 import {loadSecrets, requireE2e, requireTreasury} from '../config/secrets.js';
+import {createCliGateways, Treasury} from '../core';
 import {formatWbtc} from '../lib/format.js';
-import {createAccount, createProvider, getWbtcBalance} from '../lib/starknet.js';
 
 const DEFAULT_AMOUNT_SATS = 10_000n;
+
+type AccountTarget = 'a' | 'b';
+
+function parseArgs(args: string[]): {target: AccountTarget; amount: bigint} {
+  const rawTarget = args[0]?.toLowerCase();
+  if (rawTarget !== 'a' && rawTarget !== 'b') {
+    console.error('Usage: ./bim e2e:fund <a|b> [amount_sats]');
+    process.exit(1);
+  }
+  const amount = args[1] ? BigInt(args[1]) : DEFAULT_AMOUNT_SATS;
+  return {target: rawTarget, amount};
+}
 
 async function confirm(message: string): Promise<boolean> {
   const rl = createInterface({input: process.stdin, output: process.stdout});
@@ -17,66 +30,50 @@ async function confirm(message: string): Promise<boolean> {
 }
 
 export async function run(args: string[]): Promise<void> {
-  const amountPerAccount = args[0] ? BigInt(args[0]) : DEFAULT_AMOUNT_SATS;
-
-  if (args[0]) {
-    console.log(`Crediting each E2E account with ${formatWbtc(amountPerAccount)}`);
-  } else {
-    console.log(`Crediting each E2E account with ${formatWbtc(amountPerAccount)} (default)`);
-  }
+  const {target, amount} = parseArgs(args);
 
   const secrets = loadSecrets();
-  const treasury = requireTreasury(secrets, 'mainnet');
+  const treasurySecrets = requireTreasury(secrets, 'mainnet');
   const e2e = requireE2e(secrets);
+  const {starknet} = createCliGateways('mainnet', secrets.avnu?.apiKey ?? '');
 
-  const provider = createProvider('mainnet');
+  const treasury = new Treasury(starknet, RPC_URLS.mainnet, treasurySecrets.address, treasurySecrets.privateKey);
+  const targetAccount = target === 'a' ? e2e.accountA : e2e.accountB;
+  const targetLabel = target === 'a' ? 'Account A' : 'Account B';
 
-  const treasuryBalance = await getWbtcBalance(provider, treasury.address);
-  const balanceA = await getWbtcBalance(provider, e2e.accountA.starknetAddress);
-  const balanceB = await getWbtcBalance(provider, e2e.accountB.starknetAddress);
+  if (args[1]) {
+    console.log(`Crediting ${targetLabel} with ${formatWbtc(amount)}`);
+  } else {
+    console.log(`Crediting ${targetLabel} with ${formatWbtc(amount)} (default)`);
+  }
 
-  console.log(`\nTreasury:  ${formatWbtc(treasuryBalance)}`);
-  console.log(`Account A: ${formatWbtc(balanceA)} (${e2e.accountA.username})`);
-  console.log(`Account B: ${formatWbtc(balanceB)} (${e2e.accountB.username})`);
+  const balance = await treasury.getBalance();
+  const targetAddr = StarknetAddress.of(targetAccount.starknetAddress);
+  const targetBalance = await starknet.getBalance({address: targetAddr, token: 'WBTC'});
 
-  const totalNeeded = amountPerAccount * 2n;
-  if (treasuryBalance < totalNeeded) {
+  console.log(`\nTreasury:    ${formatWbtc(balance.wbtc)}`);
+  console.log(`${targetLabel}: ${formatWbtc(targetBalance)} (${targetAccount.username})`);
+
+  if (balance.wbtc < amount) {
     throw new Error(
-      `Insufficient treasury balance. Need ${formatWbtc(totalNeeded)}, have ${formatWbtc(treasuryBalance)}.`,
+      `Insufficient treasury balance. Need ${formatWbtc(amount)}, have ${formatWbtc(balance.wbtc)}.`,
     );
   }
 
-  const confirmed = await confirm(`\nSend ${formatWbtc(amountPerAccount)} to each E2E account?`);
+  const confirmed = await confirm(`\nSend ${formatWbtc(amount)} to ${targetLabel}?`);
   if (!confirmed) {
     console.log('Aborted.');
     return;
   }
 
-  const account = createAccount(provider, treasury);
+  console.log(`\nTransferring ${formatWbtc(amount)}...`);
+  const txHash = await treasury.fund(targetAddr, amount);
+  console.log(`Tx hash: ${txHash}`);
 
-  const targets = [
-    {name: 'Account A', address: e2e.accountA.starknetAddress},
-    {name: 'Account B', address: e2e.accountB.starknetAddress},
-  ];
+  const balanceAfter = await starknet.getBalance({address: targetAddr, token: 'WBTC'});
+  console.log(`${targetLabel} balance after: ${formatWbtc(balanceAfter)}`);
 
-  for (const target of targets) {
-    console.log(`\n${target.name}: transferring ${formatWbtc(amountPerAccount)}...`);
-
-    const {transaction_hash: txHash} = await account.execute({
-      contractAddress: WBTC_TOKEN_ADDRESS,
-      entrypoint: 'transfer',
-      calldata: [target.address, amountPerAccount.toString(), '0'],
-    });
-    console.log(`  Tx hash: ${txHash}`);
-    console.log(`  Waiting for confirmation...`);
-
-    await provider.waitForTransaction(txHash);
-
-    const balanceAfter = await getWbtcBalance(provider, target.address);
-    console.log(`  Balance after: ${formatWbtc(balanceAfter)}`);
-  }
-
-  const treasuryAfter = await getWbtcBalance(provider, treasury.address);
-  console.log(`\nTreasury balance after: ${formatWbtc(treasuryAfter)}`);
+  const treasuryAfter = await treasury.getBalance();
+  console.log(`Treasury balance after: ${formatWbtc(treasuryAfter.wbtc)}`);
   console.log('Done.');
 }

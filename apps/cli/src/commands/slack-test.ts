@@ -1,124 +1,111 @@
-import {SlackAPIClient} from 'slack-web-api-client';
-import type {AnyMessageBlock, MessageAttachment} from 'slack-web-api-client';
+import {StarknetAddress} from '@bim/domain/account';
+import type {HealthTransitionEvent} from '@bim/domain/health';
+import {createLogger} from '@bim/lib/logger';
+import type {NotificationGateway, NotificationMessage} from '@bim/domain/ports';
+import {
+  AvnuBalanceLow,
+  AvnuCreditsRecharged,
+  ServiceHealthChange,
+  SwapClaimFailed,
+  TreasuryBalanceLow,
+} from '@bim/domain/notifications';
+import type {SwapId} from '@bim/domain/swap';
+import {SlackNotificationGateway} from '@bim/slack';
 import {loadSecrets, requireSlack} from '../config/secrets.js';
 
-type Severity = 'alert' | 'error' | 'info';
+function buildTestMessages(): NotificationMessage[] {
+  const fakeAddress = StarknetAddress.of('0x0035b338c3fc75337e2e68a6f386ad95ad6edd1348b670dd9e8deb9f7a973fcb');
 
-const COLORS: Record<Severity, string> = {
-  alert: '#FFA500',
-  error: '#DC3545',
-  info: '#2196F3',
-};
+  const messages: NotificationMessage[] = [];
 
-const ICONS: Record<Severity, string> = {
-  alert: '\u26A0\uFE0F',
-  error: '\uD83D\uDEA8',
-  info: '\u2139\uFE0F',
-};
-
-interface TestMessage {
-  readonly severity: Severity;
-  readonly title: string;
-  readonly description: string;
-  readonly fields: Record<string, string>;
-  readonly links?: readonly {readonly label: string; readonly url: string}[];
-  readonly context: string;
-}
-
-function buildBlocks(msg: TestMessage): AnyMessageBlock[] {
-  const blocks: AnyMessageBlock[] = [
-    {type: 'section', text: {type: 'mrkdwn', text: msg.description}},
-  ];
-
-  const fieldEntries = Object.entries(msg.fields);
-  if (fieldEntries.length > 0) {
-    blocks.push({
-      type: 'section',
-      fields: fieldEntries.map(([key, value]): {type: 'mrkdwn'; text: string} => ({
-        type: 'mrkdwn',
-        text: `*${key}*\n${value}`,
-      })),
-    });
-  }
-
-  if (msg.links && msg.links.length > 0) {
-    blocks.push({
-      type: 'actions',
-      elements: msg.links.map(link => ({
-        type: 'button',
-        text: {type: 'plain_text', text: link.label},
-        url: link.url,
-        action_id: `link-${link.label.toLowerCase().replaceAll(' ', '-')}`,
-      })),
-    });
-  }
-
-  blocks.push({
-    type: 'context',
-    elements: [{type: 'mrkdwn', text: msg.context}],
+  // AvnuBalanceLow — force trigger by setting balance below threshold
+  const avnuLow = AvnuBalanceLow.evaluate({
+    network: 'mainnet',
+    currentBalance: 2_300_000_000_000_000_000n,
+    threshold: 5_000_000_000_000_000_000n,
   });
+  if (avnuLow) messages.push(avnuLow);
 
-  return blocks;
+  // TreasuryBalanceLow — force trigger
+  const treasuryLow = TreasuryBalanceLow.evaluate({
+    address: fakeAddress,
+    network: 'mainnet',
+    currentBalance: 500_000_000_000_000_000n,
+    threshold: 2_000_000_000_000_000_000n,
+  });
+  if (treasuryLow) messages.push(treasuryLow);
+
+  // AvnuCreditsRecharged — force trigger with increased balance
+  const recharged = AvnuCreditsRecharged.evaluate({
+    address: fakeAddress,
+    network: 'mainnet',
+    previousBalance: 2_300_000_000_000_000_000n,
+    currentBalance: 50_000_000_000_000_000_000n,
+  });
+  if (recharged) messages.push(recharged);
+
+  // SwapClaimFailed — always produces a message
+  messages.push(SwapClaimFailed.build({
+    swapId: 'swap_test_123' as SwapId,
+    userAddress: fakeAddress,
+    network: 'mainnet',
+    amount: '0.001 WBTC',
+    error: 'Transaction reverted: insufficient gas',
+  }));
+
+  // ServiceHealthChange — component down
+  const now = new Date();
+  const downEvent: HealthTransitionEvent = {
+    component: 'atomiq',
+    from: 'healthy',
+    to: 'down',
+    error: {kind: 'network', summary: 'Connection refused (ECONNREFUSED)'},
+    downtimeMs: undefined,
+    snapshot: {
+      overall: 'degraded',
+      components: [
+        {name: 'atomiq', status: 'down', lastError: {kind: 'network', summary: 'ECONNREFUSED'}, lastHealthyAt: now, downSince: now, lastCheckAt: now},
+        {name: 'database', status: 'healthy', lastError: undefined, lastHealthyAt: now, downSince: undefined, lastCheckAt: now},
+      ],
+      updatedAt: now,
+    },
+  };
+  messages.push(ServiceHealthChange.fromEvent(downEvent));
+
+  // ServiceHealthChange — component recovered
+  const recoveredEvent: HealthTransitionEvent = {
+    component: 'atomiq',
+    from: 'down',
+    to: 'healthy',
+    error: undefined,
+    downtimeMs: 342_000,
+    snapshot: {
+      overall: 'healthy',
+      components: [
+        {name: 'atomiq', status: 'healthy', lastError: undefined, lastHealthyAt: now, downSince: undefined, lastCheckAt: now},
+        {name: 'database', status: 'healthy', lastError: undefined, lastHealthyAt: now, downSince: undefined, lastCheckAt: now},
+      ],
+      updatedAt: now,
+    },
+  };
+  messages.push(ServiceHealthChange.fromEvent(recoveredEvent));
+
+  return messages;
 }
-
-const TEST_MESSAGES: readonly TestMessage[] = [
-  {
-    severity: 'alert',
-    title: 'AVNU Credits Low',
-    description: 'The AVNU paymaster sponsor credits are below the configured threshold.',
-    fields: {
-      'Network': 'mainnet',
-      'Remaining credits': '2.300000 STRK',
-      'Threshold': '5.000000 STRK',
-    },
-    links: [
-      {label: 'AVNU Portal', url: 'https://portal.avnu.fi'},
-    ],
-    context: `\uD83D\uDCC5 ${new Date().toISOString()} \u2022 bim-monitor \u2022 mainnet`,
-  },
-  {
-    severity: 'error',
-    title: 'Swap Claim Failed',
-    description: 'A forward swap claim transaction failed. Manual intervention may be required.',
-    fields: {
-      'Swap ID': '`swap_abc123`',
-      'Amount': '0.001 WBTC',
-      'Error': 'Transaction reverted: insufficient gas',
-    },
-    context: `\uD83D\uDCC5 ${new Date().toISOString()} \u2022 bim-monitor \u2022 mainnet`,
-  },
-  {
-    severity: 'info',
-    title: 'AVNU Credits Recharged',
-    description: 'The AVNU paymaster account has been successfully recharged.',
-    fields: {
-      'New Balance': '50.000000 STRK',
-      'Added': '45.000000 STRK',
-    },
-    context: `\uD83D\uDCC5 ${new Date().toISOString()} \u2022 bim-monitor \u2022 mainnet`,
-  },
-];
 
 export async function run(_args: string[]): Promise<void> {
   const secrets = loadSecrets();
   const slack = requireSlack(secrets);
-  const client = new SlackAPIClient(slack.botToken);
+  const logger = createLogger('silent');
+  const gateway: NotificationGateway = new SlackNotificationGateway(slack, logger);
 
-  for (const msg of TEST_MESSAGES) {
-    const icon = ICONS[msg.severity];
-    const color = COLORS[msg.severity];
-    const blocks = buildBlocks(msg);
+  const messages = buildTestMessages().map(msg => ({...msg, channel: '#tmp'}));
 
+  for (const msg of messages) {
     console.log(`Sending ${msg.severity}: ${msg.title}...`);
-
-    await client.chat.postMessage({
-      channel: slack.channel,
-      text: `${icon} ${msg.title}`,
-      attachments: [{color, blocks} satisfies MessageAttachment],
-    });
-
-    console.log(`  Sent.`);
+    await gateway.send(msg);
+    console.log('  Sent.');
   }
 
-  console.log('All 3 test messages sent.');
+  console.log(`\nAll ${messages.length} test messages sent.`);
 }

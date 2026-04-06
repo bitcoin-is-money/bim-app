@@ -2,5 +2,20 @@
   "name": "@bim/cli",
   "version": "0.0.1",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "exports": {
+    "./core": "./src/core/index.ts",
+    "./core/*": "./src/core/*.ts",
+    "./config/*": "./src/config/*.ts"
+  },
+  "dependencies": {
+    "@bim/domain": "*",
+    "@bim/lib": "*",
+    "@bim/starknet": "*",
+    "@bim/test-toolkit": "*"
+  },
+  "peerDependencies": {
+    "pino": "^10.0.0",
+    "starknet": "^9.0.0"
+  }
 }
