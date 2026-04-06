@@ -27,6 +27,7 @@ export namespace TestApp {
     process.env.CLAIMER_ADDRESS ??= '0x0000000000000000000000000000000000000000000000000000000000000789';
     process.env.NODE_ENV ??= 'test';
     process.env.LOG_LEVEL ??= 'silent';
+    process.env.AVNU_SPONSOR_ACTIVITY_URL ??= 'https://sepolia.api.avnu.fi/paymaster/v1/sponsor-activity';
   }
 
   /**

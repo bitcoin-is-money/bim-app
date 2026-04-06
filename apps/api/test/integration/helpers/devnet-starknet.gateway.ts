@@ -2,7 +2,7 @@ import {StarknetAddress} from '@bim/domain/account';
 import type {PaymasterGateway} from '@bim/domain/ports';
 import type {Logger} from 'pino';
 import {CallData, hash} from 'starknet';
-import {StarknetRpcGateway, type StarknetGatewayConfig} from '../../../src/adapters/gateways/starknet-rpc.gateway.js';
+import {StarknetRpcGateway, type StarknetGatewayConfig} from '@bim/starknet';
 
 /**
  * Devnet-specific Starknet gateway that overrides address calculation.

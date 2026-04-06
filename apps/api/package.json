@@ -21,10 +21,13 @@
   "dependencies": {
     "@atomiqlabs/chain-starknet": "^8.1.10",
     "@atomiqlabs/sdk": "^8.4.3",
+    "@bim/atomiq": "*",
     "@bim/atomiq-storage-postgres": "*",
     "@bim/db": "*",
     "@bim/domain": "*",
     "@bim/lib": "*",
+    "@bim/slack": "*",
+    "@bim/starknet": "*",
     "@hono/node-server": "^1.19.9",
     "@noble/curves": "^1.9.7",
     "@noble/hashes": "^1.8.0",

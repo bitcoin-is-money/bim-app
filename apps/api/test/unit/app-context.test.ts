@@ -50,7 +50,7 @@ function createMockConfig(): AppConfig.Config {
     },
     database: {url: 'postgres://test'},
     webauthn: {rpId: 'localhost', rpName: 'Test App', origin: 'http://localhost:8080'},
-    avnuPaymaster: {apiUrl: 'http://localhost:9090', apiKey: 'test-key'},
+    avnuPaymaster: {apiUrl: 'http://localhost:9090', apiKey: 'test-key', sponsorActivityUrl: 'http://localhost:9090/sponsor-activity'},
     avnuSwap: {baseUrl: 'https://sepolia.api.avnu.fi', knownTokenAddresses: [
         StarknetAddress.of('0x456'),
         StarknetAddress.of('0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d')
