@@ -1,6 +1,6 @@
 import {run as treasuryCreate} from './commands/treasury-create.js';
 import {run as treasuryDeploy} from './commands/treasury-deploy.js';
-import {run as treasuryBalance} from './commands/treasury-balance.js';
+import accountBalance from './commands/account-balance.js';
 import {run as avnuRefund} from './commands/avnu-refund.js';
 import {run as e2eInit} from './commands/e2e-init.js';
 import {run as e2eFund} from './commands/e2e-fund.js';
@@ -9,6 +9,7 @@ import {run as deployerCreate} from './commands/deployer-create.js';
 import {run as deployerDeploy} from './commands/deployer-deploy.js';
 import {run as contractCheck} from './commands/contract-check.js';
 import {run as contractDeclare} from './commands/contract-declare.js';
+import {run as apiHealth} from './commands/api-health.js';
 
 // =============================================================================
 // Command registry
@@ -20,17 +21,18 @@ interface Command {
 }
 
 const COMMANDS: Record<string, Command> = {
-  'treasury:create':  {run: treasuryCreate,  help: 'Create treasury account          <network>'},
-  'treasury:deploy':  {run: treasuryDeploy,  help: 'Deploy treasury account          <network>'},
-  'treasury:balance': {run: treasuryBalance, help: 'Show treasury & AVNU balance     <network>'},
-  'avnu:refund':      {run: avnuRefund,      help: 'Refund AVNU paymaster credits    [amount_strk]'},
-  'e2e:init':         {run: e2eInit,         help: 'Create E2E test accounts (once)'},
-  'e2e:fund':         {run: e2eFund,         help: 'Fund E2E accounts with WBTC      [amount_sats]'},
-  'slack:test':       {run: slackTest,       help: 'Send test Slack messages'},
-  'deployer:create':  {run: deployerCreate,  help: 'Create deployer account (Sepolia)'},
-  'deployer:deploy':  {run: deployerDeploy,  help: 'Deploy deployer account (Sepolia)'},
-  'contract:check':   {run: contractCheck,   help: 'Check BIM Argent contract declaration status'},
-  'contract:declare': {run: contractDeclare, help: 'Declare BIM Argent contract (Sepolia)'},
+  'treasury:create':   {run: treasuryCreate,  help: 'Create treasury account            <network>'},
+  'treasury:deploy':   {run: treasuryDeploy,  help: 'Deploy treasury account            <network>'},
+  'account:balance':   {run: accountBalance,  help: 'Show all account balances          [network=mainnet] [--json]'},
+  'avnu:refund':       {run: avnuRefund,      help: 'Refund AVNU paymaster credits      [amount_strk]'},
+  'e2e:init':          {run: e2eInit,         help: 'Create E2E test accounts (once)'},
+  'e2e:fund':          {run: e2eFund,         help: 'Fund E2E account with WBTC          <a|b> [amount_sats]'},
+  'slack:test':        {run: slackTest,       help: 'Send test Slack messages'},
+  'deployer:create':   {run: deployerCreate,  help: 'Create deployer account (Sepolia)'},
+  'deployer:deploy':   {run: deployerDeploy,  help: 'Deploy deployer account (Sepolia)'},
+  'contract:check':    {run: contractCheck,   help: 'Check BIM Argent contract declaration status'},
+  'contract:declare':  {run: contractDeclare, help: 'Declare BIM Argent contract (Sepolia)'},
+  'api:health':        {run: apiHealth,       help: 'Check API server health             [url] [--json]'},
 };
 
 // =============================================================================

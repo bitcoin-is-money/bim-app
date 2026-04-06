@@ -16,6 +16,11 @@
     "test:integration": "vitest run --config vitest.config.integration.ts",
     "test:testnet": "vitest run --config vitest.config.testnet.ts",
     "test:all": "npm run test && npm run test:integration",
+    "test:e2e": "vitest run --config vitest.config.e2e-api-prod.ts",
+    "test:e2e:deploy": "vitest run --config vitest.config.e2e-api-prod.ts 01-create-account",
+    "test:e2e:starknet": "vitest run --config vitest.config.e2e-api-prod.ts 02-transfer-starknet",
+    "test:e2e:lightning": "vitest run --config vitest.config.e2e-api-prod.ts 03-transfer-lightning",
+    "test:e2e:bitcoin": "vitest run --config vitest.config.e2e-api-prod.ts 04-transfer-bitcoin",
     "copy:front": "rm -rf public/app && cp -r ../front/dist/frontend/browser/browser public/app"
   },
   "dependencies": {

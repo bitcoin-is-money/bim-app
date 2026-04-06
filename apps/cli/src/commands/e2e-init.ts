@@ -181,8 +181,9 @@ export async function run(_args: string[]): Promise<void> {
   console.log(`RP ID:  ${config.rpId}\n`);
 
   // Health check
-  const healthRes = await fetch(`${config.baseUrl}/api/health`, {signal: AbortSignal.timeout(10_000)});
-  if (healthRes.status !== 200) throw new Error(`Server unhealthy at ${config.baseUrl}`);
+  const {checkApiHealth} = await import('../core');
+  const health = await checkApiHealth(config.baseUrl);
+  if (!health.healthy) throw new Error(`Server unhealthy at ${config.baseUrl}`);
   console.log('Server is healthy.\n');
 
   const timestamp = Date.now();

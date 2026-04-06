@@ -1,49 +1,68 @@
-import {CallData} from 'starknet';
-import {STRK_DECIMALS, STRK_TOKEN_ADDRESS} from '../config/constants.js';
+import {StarknetAddress} from '@bim/domain/account';
+import {createInterface} from 'node:readline';
+import {RPC_URLS, STRK_DECIMALS} from '../config/constants.js';
 import {loadSecrets, requireAvnu, requireTreasury} from '../config/secrets.js';
-import {formatStrk} from '../lib/format.js';
-import {createAccount, createProvider} from '../lib/starknet.js';
+import {AvnuPaymaster, createCliGateways, Treasury} from '../core';
+import {formatStrk, formatWbtc} from '../lib/format.js';
+
+const DEFAULT_AMOUNT_STRK = 10n;
+
+async function confirm(message: string): Promise<boolean> {
+  const rl = createInterface({input: process.stdin, output: process.stdout});
+  return new Promise(resolve => {
+    rl.question(`${message} (y/N) `, answer => {
+      rl.close();
+      resolve(answer.trim().toLowerCase() === 'y');
+    });
+  });
+}
 
 export async function run(args: string[]): Promise<void> {
-  const amountStrk = BigInt(args[0] ?? '10');
+  const amountStrk = args[0] ? BigInt(args[0]) : DEFAULT_AMOUNT_STRK;
   const amountWei = amountStrk * 10n ** BigInt(STRK_DECIMALS);
 
   const secrets = loadSecrets();
-  const treasury = requireTreasury(secrets, 'mainnet');
-  const avnu = requireAvnu(secrets);
+  const treasurySecrets = requireTreasury(secrets, 'mainnet');
+  const avnuSecrets = requireAvnu(secrets);
+  const {starknet, paymaster} = createCliGateways('mainnet', avnuSecrets.apiKey);
 
-  const provider = createProvider('mainnet');
-  const account = createAccount(provider, treasury);
+  const treasury = new Treasury(starknet, RPC_URLS.mainnet, treasurySecrets.address, treasurySecrets.privateKey);
+  const avnu = new AvnuPaymaster(paymaster);
 
-  console.log(`From:       ${treasury.address}`);
-  console.log(`Paymaster:  ${avnu.contractEntryPoint}`);
-  console.log(`API Key:    ${avnu.publicIdHash}`);
-  console.log(`Amount:     ${formatStrk(amountWei)}`);
+  const balance = await treasury.getBalance();
+
+  if (args[0]) {
+    console.log(`Refunding AVNU paymaster with ${formatStrk(amountWei)}`);
+  } else {
+    console.log(`Refunding AVNU paymaster with ${formatStrk(amountWei)} (default)`);
+  }
+
   console.log();
+  console.log('-- BIM Treasury --');
+  console.log(`Address:  ${balance.address}`);
+  console.log(`STRK:     ${formatStrk(balance.strk)}`);
+  console.log(`WBTC:     ${formatWbtc(balance.wbtc)}`);
 
-  const approveCall = {
-    contractAddress: STRK_TOKEN_ADDRESS,
-    entrypoint: 'approve',
-    calldata: CallData.compile({
-      spender: avnu.contractEntryPoint,
-      amount: {low: amountWei, high: 0n},
-    }),
-  };
+  if (balance.strk < amountWei) {
+    throw new Error(
+      `Insufficient STRK balance. Need ${formatStrk(amountWei)}, have ${formatStrk(balance.strk)}.`,
+    );
+  }
 
-  const fundingCall = {
-    contractAddress: avnu.contractEntryPoint,
-    entrypoint: 'funding',
-    calldata: CallData.compile({
-      amount: {low: amountWei, high: 0n},
-      api_key_hash: avnu.publicIdHash,
-    }),
-  };
+  const confirmed = await confirm(`\nSend ${formatStrk(amountWei)} to AVNU paymaster?`);
+  if (!confirmed) {
+    console.log('Aborted.');
+    return;
+  }
 
-  console.log('Sending transaction (approve + funding)...');
-  const {transaction_hash: txHash} = await account.execute([approveCall, fundingCall]);
-  console.log(`Tx hash:  ${txHash}`);
-
-  console.log('Waiting for confirmation...');
-  await provider.waitForTransaction(txHash);
+  console.log('\nSending transaction (approve + funding)...');
+  const txHash = await avnu.refund(
+    RPC_URLS.mainnet,
+    StarknetAddress.of(treasurySecrets.address),
+    treasurySecrets.privateKey,
+    amountWei,
+    avnuSecrets,
+  );
+  console.log(`Tx hash: ${txHash}`);
   console.log(`Done. ${formatStrk(amountWei)} credited to AVNU paymaster.`);
 }

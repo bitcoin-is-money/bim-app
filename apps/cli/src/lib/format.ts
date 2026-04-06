@@ -20,3 +20,12 @@ export function formatStrk(wei: bigint): string {
 export function formatWbtc(sats: bigint): string {
   return `${sats} sats (${formatToken(sats, WBTC_DECIMALS, 'WBTC')})`;
 }
+
+export function formatAvnuCredits(wei: bigint | undefined): string {
+  if (wei === undefined) return 'N/A';
+  return (Number(wei) / 1e18).toFixed(6);
+}
+
+export function bigintReplacer(_key: string, value: unknown): unknown {
+  return typeof value === 'bigint' ? value.toString() : value;
+}
