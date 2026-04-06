@@ -84,6 +84,10 @@ export async function createApp(options: CreateAppOptions = {}): Promise<AppInst
     app.use('/api/payment/pay/execute', createPaymentExecuteRateLimit());
   }
 
+  // Startup health checks: optimistic init (healthy), verify immediately.
+  // Fire-and-forget — failures flip the registry and trigger Slack alerts.
+  void runStartupHealthChecks(context, rootLogger);
+
   // Swap monitor (background polling + auto-claim, auto-stops when idle)
   let swapMonitor: SwapMonitor | null = null;
   if (!options.skipMonitor) {
@@ -129,4 +133,42 @@ export async function createApp(options: CreateAppOptions = {}): Promise<AppInst
   }
 
   return {app, swapMonitor, rootLogger: rootLogger};
+}
+
+/**
+ * Runs health checks for all tracked components immediately after startup.
+ * Components start as healthy (optimistic). If a check fails, the registry
+ * transitions to down and sends a Slack alert right away.
+ */
+async function runStartupHealthChecks(
+  context: AppContext,
+  rootLogger: Logger,
+): Promise<void> {
+  const log = rootLogger.child({name: 'app.ts'});
+  const results = await Promise.allSettled([
+    pingDatabaseAtStartup(context),
+    context.gateways.atomiq.checkHealth(),
+  ]);
+  for (const result of results) {
+    if (result.status === 'rejected') {
+      log.warn({cause: result.reason instanceof Error ? result.reason.message : String(result.reason)},
+        'Startup health check threw unexpectedly');
+    }
+  }
+}
+
+async function pingDatabaseAtStartup(context: AppContext): Promise<void> {
+  try {
+    const ok = await Database.get().testConnection();
+    if (ok) {
+      context.healthRegistry.reportHealthy('database');
+    } else {
+      context.healthRegistry.reportDown('database', {kind: 'unknown', summary: 'Database connection test failed at startup'});
+    }
+  } catch (err: unknown) {
+    context.healthRegistry.reportDown('database', {
+      kind: 'unknown',
+      summary: err instanceof Error ? err.message : 'Database connection test failed at startup',
+    });
+  }
 }

@@ -17,10 +17,7 @@ export class ServiceHealthChange {
     if (event.to === 'down') {
       return this.buildDownMessage(event);
     }
-    if (event.to === 'healthy' && event.from !== 'unknown') {
-      return this.buildRecoveredMessage(event);
-    }
-    return this.buildInfoMessage(event);
+    return this.buildRecoveredMessage(event);
   }
 
   private static buildDownMessage(event: HealthTransitionEvent): NotificationMessage {
@@ -74,23 +71,6 @@ export class ServiceHealthChange {
     };
   }
 
-  private static buildInfoMessage(event: HealthTransitionEvent): NotificationMessage {
-    const fields: Map<string, string> = new Map([
-      ['Component', `\`${event.component}\``],
-      ['Transition', `${event.from} → ${event.to}`],
-      ['Overall', event.snapshot.overall],
-      ['All components', formatComponentsLine(event.snapshot.components)],
-    ]);
-
-    return {
-      channel: ALERT_CHANNEL,
-      severity: 'info',
-      title: `BIM: ${event.component} status changed`,
-      description: `Component *${event.component}* transitioned to *${event.to}*.`,
-      fields,
-      context: 'bim-health',
-    };
-  }
 }
 
 function formatComponentsLine(components: readonly ComponentHealth[]): string {
@@ -101,8 +81,7 @@ function formatComponentsLine(components: readonly ComponentHealth[]): string {
 
 function iconFor(status: ComponentHealth['status']): string {
   if (status === 'healthy') return ':large_green_circle:';
-  if (status === 'down') return ':red_circle:';
-  return ':white_circle:';
+  return ':red_circle:';
 }
 
 function formatDuration(ms: number): string {
