@@ -107,6 +107,38 @@ export class AtomiqSdkGateway implements AtomiqGateway {
   }
 
   // ===========================================================================
+  // Health check
+  // ===========================================================================
+
+  /**
+   * Pings the Atomiq intermediary with a lightweight HTTP GET.
+   * Any HTTP response (even 404) means the server is reachable.
+   * A network error, timeout, or Cloudflare 530 means it is down.
+   */
+  async checkHealth(): Promise<void> {
+    const url = this.config.intermediaryUrl;
+    if (url === undefined) {
+      this.markAtomiqHealthy();
+      return;
+    }
+    try {
+      const response = await fetch(url, {signal: AbortSignal.timeout(5_000)});
+      // Cloudflare Tunnel error pages return 530 with an HTML body
+      if (response.status === 530) {
+        const body = await response.text();
+        this.handleAtomiqFailure(
+          Object.assign(new Error(body), {httpCode: 530}),
+          'checkHealth',
+        );
+        return;
+      }
+      this.markAtomiqHealthy();
+    } catch (err: unknown) {
+      this.handleAtomiqFailure(err, 'checkHealth');
+    }
+  }
+
+  // ===========================================================================
   // Initialization
   // ===========================================================================
 

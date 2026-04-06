@@ -21,36 +21,29 @@ describe('HealthRegistry', () => {
     registry = new HealthRegistry(['atomiq', 'database'], listener, silentLogger);
   });
 
-  it('starts every component in unknown state', () => {
+  it('starts every component in healthy state (optimistic)', () => {
     const snapshot = registry.getState();
     expect(snapshot.overall).toBe('healthy');
     expect(snapshot.components).toHaveLength(2);
     for (const comp of snapshot.components) {
-      expect(comp.status).toBe('unknown');
+      expect(comp.status).toBe('healthy');
+      expect(comp.lastHealthyAt).toBeInstanceOf(Date);
       expect(comp.lastError).toBeUndefined();
     }
   });
 
-  it('fires a transition when a component goes from unknown to healthy', () => {
+  it('does not fire a transition when reporting healthy on a fresh registry', () => {
     registry.reportHealthy('atomiq');
-    expect(listener).toHaveBeenCalledTimes(1);
-    const event = vi.mocked(listener).mock.calls[0]?.[0];
-    expect(event?.component).toBe('atomiq');
-    expect(event?.from).toBe('unknown');
-    expect(event?.to).toBe('healthy');
-    expect(event?.downtimeMs).toBeUndefined();
+    expect(listener).not.toHaveBeenCalled();
   });
 
   it('does not re-fire when reporting the same healthy state twice', () => {
     registry.reportHealthy('atomiq');
     registry.reportHealthy('atomiq');
-    expect(listener).toHaveBeenCalledTimes(1);
+    expect(listener).not.toHaveBeenCalled();
   });
 
   it('fires a transition when a component goes down', () => {
-    registry.reportHealthy('atomiq');
-    vi.mocked(listener).mockClear();
-
     registry.reportDown('atomiq', sampleError);
     expect(listener).toHaveBeenCalledTimes(1);
     const event = vi.mocked(listener).mock.calls[0]?.[0];
@@ -81,8 +74,6 @@ describe('HealthRegistry', () => {
   });
 
   it('marks overall as degraded when any component is down', () => {
-    registry.reportHealthy('atomiq');
-    registry.reportHealthy('database');
     expect(registry.getState().overall).toBe('healthy');
 
     registry.reportDown('atomiq', sampleError);

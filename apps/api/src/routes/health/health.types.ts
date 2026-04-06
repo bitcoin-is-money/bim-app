@@ -1,7 +1,7 @@
 /** Per-component health entry returned by GET /api/health. */
 export interface ServiceHealthEntry {
   name: string;
-  status: 'unknown' | 'healthy' | 'down';
+  status: 'healthy' | 'down';
   downSince?: string;
   lastError?: {
     kind: string;

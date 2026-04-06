@@ -165,6 +165,9 @@ export interface PaymasterTransaction {
  * Gateway interface for Atomiq SDK interactions (cross-chain swaps).
  */
 export interface AtomiqGateway {
+  /** Pings the Atomiq intermediary and reports health to the registry. */
+  checkHealth(): Promise<void>;
+
   /** Creates a Lightning -> Starknet swap. */
   createLightningToStarknetSwap(params: {
     amountSats: bigint;

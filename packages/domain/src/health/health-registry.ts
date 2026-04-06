@@ -11,7 +11,7 @@ export type ComponentName =
   | 'starknet-rpc'
   | 'avnu-paymaster';
 
-export type ComponentStatus = 'unknown' | 'healthy' | 'down';
+export type ComponentStatus = 'healthy' | 'down';
 
 export type OverallStatus = 'healthy' | 'degraded';
 
@@ -72,12 +72,13 @@ export class HealthRegistry {
     logger: Logger,
   ) {
     this.log = logger.child({name: 'health-registry.ts'});
+    const now = new Date();
     for (const name of components) {
       this.components.set(name, {
         name,
-        status: 'unknown',
+        status: 'healthy',
         lastError: undefined,
-        lastHealthyAt: undefined,
+        lastHealthyAt: now,
         downSince: undefined,
         lastCheckAt: undefined,
       });

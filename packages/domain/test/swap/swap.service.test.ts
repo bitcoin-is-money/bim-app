@@ -51,6 +51,7 @@ function createMockRepository(): SwapRepository {
 
 function createMockGateway(): AtomiqGateway {
   return {
+    checkHealth: vi.fn(),
     createLightningToStarknetSwap: vi.fn(),
     prepareBitcoinToStarknetSwap: vi.fn(),
     completeBitcoinSwapCommit: vi.fn(),

@@ -26,6 +26,10 @@ export class AtomiqGatewayMock implements AtomiqGateway {
   private reverseSwapAmountSats: bigint | null = null;
   private bitcoinCommitCallsOverride: {contractAddress: string; entrypoint: string; calldata: string[]}[] | null = null;
 
+  async checkHealth(): Promise<void> {
+    // No-op in mock
+  }
+
   // ===========================================================================
   // Swap Creation
   // ===========================================================================
