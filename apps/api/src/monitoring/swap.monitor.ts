@@ -229,6 +229,7 @@ export class SwapMonitor {
       this.log.info({
         swapId,
         claimTxHash: result.claimTxHash,
+        claimedByBackend: result.claimedByBackend,
         refundTxHash: result.refundTxHash,
         bountyAmount: result.bountyAmount.toString(),
         userAddress: result.userAddress,

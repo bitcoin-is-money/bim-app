@@ -190,6 +190,7 @@ export class AtomiqGatewayMock implements AtomiqGateway {
 
   async claimForwardSwap(swapId: SwapId): Promise<{
     claimTxHash: string;
+    claimedByBackend: boolean;
     refundTxHash: string | undefined;
     bountyAmount: bigint;
     userAddress: string;
@@ -199,6 +200,7 @@ export class AtomiqGatewayMock implements AtomiqGateway {
     }
     return {
       claimTxHash: `0xclaim_tx_${swapId}`,
+      claimedByBackend: true,
       refundTxHash: `0xrefund_tx_${swapId}`,
       bountyAmount: 80_000_000_000_000_000_000n,
       userAddress: '0x0123456789abcdef',

@@ -834,11 +834,11 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     const bountyAmount: bigint = swap._data.getClaimerBounty();
     const userAddress: string = swap._data.getClaimer();
 
-    // 1. Claim — sends WBTC to user, bounty to backend
+    // 1. Claim — sends WBTC to user, bounty to whoever submitted the claim tx
     let claimTxHash: string;
     try {
       claimTxHash = await swap.claim(this.claimerAccount);
-      this.log.info({swapId, claimTxHash}, 'Forward swap claimed successfully');
+      this.log.info({swapId, claimTxHash}, 'Forward swap claim returned successfully');
       this.markAtomiqHealthy();
     } catch (error) {
       // If the swap was already claimed (by watchtower), the SDK detects it
@@ -847,20 +847,61 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         claimTxHash = swap.getOutputTxId() ?? 'unknown';
         this.log.info({swapId, claimTxHash, state}, 'Swap already claimed (watchtower won the race)');
         this.markAtomiqHealthy();
-        return {claimTxHash, refundTxHash: undefined, bountyAmount: 0n, userAddress};
+        return {claimTxHash, claimedByBackend: false, refundTxHash: undefined, bountyAmount: 0n, userAddress};
       }
       const sanitized = this.handleAtomiqFailure(error, 'claimForwardSwap');
       throw new ExternalServiceError('Atomiq', `Failed to claim forward swap ${swapId}: ${sanitized.summary}`);
     }
 
-    // 2. Refund bounty — transfer STRK from backend to user
+    // 2. The SDK returns a tx hash on success, but it may be the watchtower's tx
+    //    (the SDK silently falls back to the watchtower's tx in its catch block).
+    //    Verify the on-chain sender to know if WE actually claimed.
+    const claimedByBackend = await this.isClaimTxFromBackend(claimTxHash);
+    if (!claimedByBackend) {
+      this.log.warn(
+        {swapId, claimTxHash, bountyAmount: bountyAmount.toString()},
+        'Claim tx was submitted by watchtower, not by backend — bounty not received, skipping refund',
+      );
+      return {claimTxHash, claimedByBackend: false, refundTxHash: undefined, bountyAmount: 0n, userAddress};
+    }
+
+    this.log.info({swapId, claimTxHash}, 'Claim tx confirmed from backend account');
+
+    // 3. Refund bounty — transfer STRK from backend to user
     if (bountyAmount === 0n) {
       this.log.info({swapId}, 'No bounty to refund (amount is 0)');
-      return {claimTxHash, refundTxHash: undefined, bountyAmount, userAddress};
+      return {claimTxHash, claimedByBackend: true, refundTxHash: undefined, bountyAmount, userAddress};
     }
 
     const refundTxHash = await this.refundBounty(swapId, userAddress, bountyAmount);
-    return {claimTxHash, refundTxHash, bountyAmount, userAddress};
+    return {claimTxHash, claimedByBackend: true, refundTxHash, bountyAmount, userAddress};
+  }
+
+  /**
+   * Checks whether a claim transaction was submitted by our backend account
+   * by fetching the on-chain tx and comparing the sender address.
+   * The Atomiq SDK silently returns the watchtower's tx hash when our claim
+   * fails but the watchtower already claimed — this method detects that case.
+   */
+  private async isClaimTxFromBackend(claimTxHash: string): Promise<boolean> {
+    try {
+      // Account extends RpcProvider, so getTransaction is available directly
+      const tx = await this.claimerAccount.getTransaction(claimTxHash);
+      const senderAddress: string | undefined = (tx as {sender_address?: string}).sender_address;
+      if (senderAddress === undefined) {
+        this.log.warn({claimTxHash}, 'Could not determine claim tx sender, assuming backend');
+        return true;
+      }
+      const normalizedSender = senderAddress.toLowerCase().replace(/^0x0*/, '0x');
+      const normalizedBackend = this.config.claimer.address.toLowerCase().replace(/^0x0*/, '0x');
+      return normalizedSender === normalizedBackend;
+    } catch (error) {
+      this.log.warn(
+        {claimTxHash, cause: error instanceof Error ? error.message : String(error)},
+        'Failed to verify claim tx sender, assuming backend',
+      );
+      return true;
+    }
   }
 
   private async refundBounty(
@@ -878,17 +919,20 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     }, 'Refunding claimer bounty to user');
 
     try {
-      const {transaction_hash} = await this.claimerAccount.execute({
-        contractAddress: this.config.strkTokenAddress,
-        entrypoint: 'transfer',
-        calldata: [userAddress, low, high],
-      });
+      // Fetch a fresh nonce to avoid stale-nonce errors after the claim tx
+      const nonce = await this.claimerAccount.getNonce('pending');
+      const {transaction_hash} = await this.claimerAccount.execute(
+        {
+          contractAddress: this.config.strkTokenAddress,
+          entrypoint: 'transfer',
+          calldata: [userAddress, low, high],
+        },
+        {nonce},
+      );
 
       this.log.info({swapId, txHash: transaction_hash, bountyAmount: bountyAmount.toString()}, 'Bounty refunded to user');
       return transaction_hash;
     } catch (error) {
-      // TODO: send urgent email/Slack notification to BIM ops team to manually
-      // refund the user, either via BIM admin tools or an external monitoring app.
       this.log.error({
         swapId,
         userAddress,

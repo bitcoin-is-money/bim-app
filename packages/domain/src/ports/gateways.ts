@@ -243,6 +243,8 @@ export interface AtomiqGateway {
 /** Result of claiming a forward swap and refunding the bounty. */
 export interface ForwardSwapClaimResult {
   claimTxHash: string;
+  /** Whether the claim was submitted by our backend (true) or the watchtower (false). */
+  claimedByBackend: boolean;
   refundTxHash: string | undefined;
   bountyAmount: bigint;
   userAddress: string;
