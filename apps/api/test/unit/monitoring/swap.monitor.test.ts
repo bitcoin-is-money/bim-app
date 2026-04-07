@@ -38,6 +38,7 @@ function createMockAtomiqGateway(): AtomiqGateway {
   return {
     claimForwardSwap: vi.fn().mockResolvedValue({
       claimTxHash: '0xclaim_tx',
+      claimedByBackend: true,
       refundTxHash: '0xrefund_tx',
       bountyAmount: 80_000_000_000_000_000_000n,
       userAddress: '0x0123456789abcdef',
