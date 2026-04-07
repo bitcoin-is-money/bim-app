@@ -1,7 +1,7 @@
 import {StarknetAddress} from '@bim/domain/account';
 import type {AtomiqGateway, SwapRepository, TransactionRepository} from '@bim/domain/ports';
 import {Amount} from '@bim/domain/shared';
-import {Swap, SwapCreationError, SwapId, SwapNotFoundError, SwapService} from '@bim/domain/swap';
+import {BitcoinAddress, type LightningInvoice, Swap, SwapCreationError, SwapId, SwapNotFoundError, SwapService} from '@bim/domain/swap';
 import {createLogger} from '@bim/lib/logger';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
@@ -32,6 +32,19 @@ function createPendingBitcoinSwap(id = 'swap-btc-001'): Swap {
     depositAddress: 'bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4',
     expiresAt: new Date(Date.now() + 3 * 60 * 60 * 1000),
     description: 'Received',
+    accountId: ACCOUNT_ID,
+  });
+}
+
+function createPendingStarknetToBitcoinSwap(id = 'swap-rev-001'): Swap {
+  return Swap.createStarknetToBitcoin({
+    id: SwapId.of(id),
+    amount: Amount.ofSatoshi(50_000n),
+    sourceAddress: DESTINATION_ADDRESS,
+    destinationAddress: BitcoinAddress.of('bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4', 'mainnet'),
+    depositAddress: '0xdeposit',
+    expiresAt: new Date(Date.now() + 30 * 60 * 1000),
+    description: 'Sent',
     accountId: ACCOUNT_ID,
   });
 }
@@ -133,6 +146,7 @@ describe('SwapService', () => {
         isFailed: false,
         isExpired: true, // Atomiq says expired...
         isRefunded: false,
+        isRefundable: false,
       });
 
       const result = await service.fetchStatus({swapId: swap.data.id, accountId: ACCOUNT_ID});
@@ -154,6 +168,7 @@ describe('SwapService', () => {
         isFailed: false,
         isExpired: true,
         isRefunded: false,
+        isRefundable: false,
       });
 
       const result = await service.fetchStatus({swapId: swap.data.id, accountId: ACCOUNT_ID});
@@ -174,6 +189,7 @@ describe('SwapService', () => {
         isFailed: false,
         isExpired: true,
         isRefunded: false,
+        isRefundable: false,
       });
 
       const result = await service.fetchStatus({swapId: swap.data.id, accountId: ACCOUNT_ID});
@@ -198,6 +214,7 @@ describe('SwapService', () => {
         isFailed: false,
         isExpired: false,
         isRefunded: false,
+        isRefundable: false,
       });
 
       const result = await service.fetchStatus({swapId: swap.data.id, accountId: ACCOUNT_ID});
@@ -268,6 +285,7 @@ describe('SwapService', () => {
         isFailed: false,
         isExpired: false,
         isRefunded: false,
+        isRefundable: false,
       });
 
       const result = await service.fetchStatus({swapId: swap.data.id, accountId: ACCOUNT_ID});
@@ -287,6 +305,7 @@ describe('SwapService', () => {
         isFailed: false,
         isExpired: false,
         isRefunded: false,
+        isRefundable: false,
       });
 
       const result = await service.fetchStatus({swapId: swap.data.id, accountId: ACCOUNT_ID});
@@ -318,6 +337,47 @@ describe('SwapService', () => {
       const result = await service.fetchStatus({swapId: swap.data.id, accountId: ACCOUNT_ID});
 
       expect(result.status).toBe('pending');
+    });
+
+    it('detects refundable status for reverse swap when Atomiq reports isRefundable', async () => {
+      const swap = createPendingStarknetToBitcoinSwap();
+      vi.mocked(repository.findById).mockResolvedValue(swap);
+      vi.mocked(gateway.getSwapStatus).mockResolvedValue({
+        state: 4,
+        isPaid: false,
+        isClaimable: false,
+        isCompleted: false,
+        isFailed: false,
+        isExpired: false,
+        isRefunded: false,
+        isRefundable: true,
+      });
+
+      const result = await service.fetchStatus({swapId: swap.data.id, accountId: ACCOUNT_ID});
+
+      expect(result.status).toBe('refundable');
+      expect(result.progress).toBe(0);
+      expect(repository.save).toHaveBeenCalled();
+    });
+
+    it('does not mark refundable swap as completed', async () => {
+      const swap = createPendingStarknetToBitcoinSwap();
+      vi.mocked(repository.findById).mockResolvedValue(swap);
+      vi.mocked(gateway.getSwapStatus).mockResolvedValue({
+        state: 4,
+        isPaid: false,
+        isClaimable: false,
+        isCompleted: false,
+        isFailed: false,
+        isExpired: false,
+        isRefunded: false,
+        isRefundable: true,
+      });
+
+      const result = await service.fetchStatus({swapId: swap.data.id, accountId: ACCOUNT_ID});
+
+      expect(result.status).not.toBe('completed');
+      expect(result.status).toBe('refundable');
     });
   });
 

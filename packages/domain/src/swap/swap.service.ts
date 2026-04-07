@@ -580,6 +580,9 @@ export class SwapService {
       } else if (atomiqStatus.isPaid) {
         swap.markAsPaid();
         await this.deps.swapRepository.save(swap);
+      } else if (atomiqStatus.isRefundable) {
+        swap.markAsRefundable();
+        await this.deps.swapRepository.save(swap);
       } else if (atomiqStatus.isRefunded) {
         swap.markAsRefunded();
         await this.deps.swapRepository.save(swap);

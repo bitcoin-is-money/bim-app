@@ -23,6 +23,7 @@ function getProgressForStatus(status: SwapStatus): number {
     case 'completed':
       return 100;
     case 'expired':
+    case 'refundable':
     case 'failed':
     case 'refunded':
     case 'lost':

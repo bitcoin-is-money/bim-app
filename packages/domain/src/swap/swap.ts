@@ -183,6 +183,11 @@ export class Swap {
     return ['completed', 'expired', 'failed', 'refunded', 'lost'].includes(this.state.status);
   }
 
+  /** Checks if the swap is refundable (LP failed, user must sign a refund tx). */
+  isRefundable(): boolean {
+    return this.state.status === 'refundable';
+  }
+
   /**
    * Sets the Bitcoin deposit address once it becomes available
    * (after completeBitcoinSwapCommit succeeds).
@@ -220,6 +225,10 @@ export class Swap {
 
   markAsExpired(): void {
     this.state = { status: 'expired', expiredAt: new Date() };
+  }
+
+  markAsRefundable(): void {
+    this.state = { status: 'refundable', refundableAt: new Date() };
   }
 
   markAsRefunded(): void {
@@ -280,6 +289,7 @@ export class Swap {
       case 'completed':
         return 100;
       case 'expired':
+      case 'refundable':
       case 'refunded':
       case 'failed':
       case 'lost':

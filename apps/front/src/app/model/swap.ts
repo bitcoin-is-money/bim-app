@@ -10,6 +10,7 @@ export type SwapStatus =
   | 'claimable'
   | 'completed'
   | 'expired'
+  | 'refundable'
   | 'refunded'
   | 'failed'
   | 'lost';
