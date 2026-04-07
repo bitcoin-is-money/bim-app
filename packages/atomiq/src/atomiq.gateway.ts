@@ -690,6 +690,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
           isFailed: false,
           isExpired: true,
           isRefunded: false,
+          isRefundable: false,
           error: `Swap ${swapId} not found in SDK storage`,
         };
       }
@@ -707,7 +708,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
 
       const state = swap.getState();
 
-      const {isPaid, isClaimable, isCompleted, isFailed, isExpired, isRefunded} = this.mapStateToStatus(state, direction);
+      const {isPaid, isClaimable, isCompleted, isFailed, isExpired, isRefunded, isRefundable} = this.mapStateToStatus(state, direction);
       const result: AtomiqSwapStatus = {
         state,
         isPaid,
@@ -716,6 +717,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         isFailed,
         isExpired,
         isRefunded,
+        isRefundable,
         txHash: swap.getOutputTxId() ?? swap.getInputTxId() ?? undefined,
       };
       this.log.debug({...result}, 'getSwapStatus result');
@@ -759,8 +761,9 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     isFailed: boolean;
     isExpired: boolean;
     isRefunded: boolean;
+    isRefundable: boolean;
   } {
-    const neutral = {isPaid: false, isClaimable: false, isCompleted: false, isFailed: false, isExpired: false, isRefunded: false};
+    const neutral = {isPaid: false, isClaimable: false, isCompleted: false, isFailed: false, isExpired: false, isRefunded: false, isRefundable: false};
 
     if (state < 0) {
       // QUOTE_SOFT_EXPIRED (-1): The LP authorization expired, but an on-chain
@@ -773,8 +776,8 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         return neutral;
       }
 
-      // State -3 for bitcoin_to_starknet = REFUNDED (security deposit returned by smart contract)
-      if (state === -3 && direction === 'bitcoin_to_starknet') {
+      // State -3 for reverse swaps (ToBTC/ToBTCLN) = REFUNDED (LP refunded escrow on source chain)
+      if (state === -3 && isReverseSwap) {
         return {...neutral, isRefunded: true};
       }
 
@@ -786,6 +789,13 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     }
 
     const isForward = direction === 'lightning_to_starknet' || direction === 'bitcoin_to_starknet';
+    const isReverseSwap = direction === 'starknet_to_lightning' || direction === 'starknet_to_bitcoin';
+
+    // State 4 (REFUNDABLE) only exists for ToBTC/ToBTCLN: the LP failed to process
+    // the swap and the escrow is refundable by the user on the source chain.
+    if (state === 4 && isReverseSwap) {
+      return {...neutral, isRefundable: true};
+    }
 
     // For Bitcoin-to-Starknet swaps, the commit (state 1) happens before the
     // Bitcoin deposit (state 2). Only treat as "paid" once BTC is actually received.
@@ -794,15 +804,16 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     // Claimable: the swap is ready for on-chain claim by the backend.
     // Forward swaps: Lightning needs state >= 2 (CLAIM_COMMITED), Bitcoin needs state >= 2 (BTC_TX_CONFIRMED).
     // Reverse swaps: never claimable (LP handles claiming).
-    const claimableThreshold = direction === 'bitcoin_to_starknet' ? 2 : 2;
+    const claimableThreshold = 2;
 
     return {
       isPaid: state >= paidThreshold,
       isClaimable: isForward && state >= claimableThreshold,
-      isCompleted: state >= 3,
+      isCompleted: state === 3,
       isFailed: false,
       isExpired: false,
       isRefunded: false,
+      isRefundable: false,
     };
   }
 

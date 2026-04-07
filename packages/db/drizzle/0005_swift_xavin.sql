@@ -1,0 +1,1 @@
+ALTER TABLE "bim_swaps" ADD COLUMN "refundable_at" timestamp;

@@ -49,6 +49,7 @@ export type SwapStatus =
   | 'claimable'
   | 'completed'
   | 'expired'
+  | 'refundable'
   | 'refunded'
   | 'failed'
   | 'lost';
@@ -61,6 +62,7 @@ export type SwapState =
   | { status: 'claimable'; claimableAt: Date }
   | { status: 'completed'; txHash: string; completedAt: Date }
   | { status: 'expired'; expiredAt: Date }
+  | { status: 'refundable'; refundableAt: Date }
   | { status: 'refunded'; refundedAt: Date }
   | { status: 'failed'; error: string; failedAt: Date }
   | { status: 'lost'; lostAt: Date };

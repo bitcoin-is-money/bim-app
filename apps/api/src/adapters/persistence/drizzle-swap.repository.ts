@@ -137,6 +137,7 @@ export class DrizzleSwapRepository extends AbstractDrizzleRepository implements 
       confirmedAt: null as Date | null,
       completedAt: null as Date | null,
       expiredAt: null as Date | null,
+      refundableAt: null as Date | null,
       refundedAt: null as Date | null,
       lostAt: null as Date | null,
       failedAt: null as Date | null,
@@ -155,6 +156,8 @@ export class DrizzleSwapRepository extends AbstractDrizzleRepository implements 
         return {...base, txHash: state.txHash, completedAt: state.completedAt};
       case 'expired':
         return {...base, expiredAt: state.expiredAt};
+      case 'refundable':
+        return {...base, refundableAt: state.refundableAt};
       case 'refunded':
         return {...base, refundedAt: state.refundedAt};
       case 'failed':
@@ -179,6 +182,8 @@ export class DrizzleSwapRepository extends AbstractDrizzleRepository implements 
         return {status: 'completed', txHash: record.txHash!, completedAt: record.completedAt!};
       case 'expired':
         return {status: 'expired', expiredAt: record.expiredAt!};
+      case 'refundable':
+        return {status: 'refundable', refundableAt: record.refundableAt!};
       case 'refunded':
         return {status: 'refunded', refundedAt: record.refundedAt!};
       case 'failed':
