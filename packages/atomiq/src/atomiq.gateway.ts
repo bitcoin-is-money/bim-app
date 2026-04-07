@@ -23,7 +23,7 @@ import type {SwapDirection, SwapLimits, BitcoinAddress, LightningInvoice, SwapId
 import {LightningInvoiceExpiredError, SwapAmountError} from "@bim/domain/swap";
 import {Amount} from "@bim/domain/shared";
 import type {Logger} from "pino";
-import {Account as StarknetAccount, RpcProvider, Signer as StarknetSigner} from 'starknet';
+import {Account as StarknetAccount, BlockTag, RpcProvider, Signer as StarknetSigner} from 'starknet';
 import {isInfraFailure, sanitizeAtomiqError} from './atomiq-error';
 
 /* eslint-disable
@@ -370,6 +370,8 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         swapToken.address,
         params.amountSats,
         exactOut,
+        undefined,
+        {unsafeZeroWatchtowerFee: true},
       );
 
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive: SDK may return null at runtime
@@ -836,8 +838,12 @@ export class AtomiqSdkGateway implements AtomiqGateway {
 
     // 1. Claim — sends WBTC to user, bounty to whoever submitted the claim tx
     let claimTxHash: string;
+    let submittedTxHash: string | undefined;
     try {
-      claimTxHash = await swap.claim(this.claimerAccount);
+      claimTxHash = await swap.claim(this.claimerAccount, undefined, (txHash: string) => {
+        submittedTxHash = txHash;
+        this.log.info({swapId, txHash}, 'Claim tx submitted to Starknet, waiting for confirmation');
+      });
       this.log.info({swapId, claimTxHash}, 'Forward swap claim returned successfully');
       this.markAtomiqHealthy();
     } catch (error) {
@@ -847,7 +853,12 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         claimTxHash = swap.getOutputTxId() ?? 'unknown';
         this.log.info({swapId, claimTxHash, state}, 'Swap already claimed (watchtower won the race)');
         this.markAtomiqHealthy();
+        await this.diagnoseClaimFailure(swap, swapId);
         return {claimTxHash, claimedByBackend: false, refundTxHash: undefined, bountyAmount: 0n, userAddress};
+      }
+      // Log the reverted tx hash so we can inspect it on-chain
+      if (submittedTxHash !== undefined) {
+        this.log.error({swapId, submittedTxHash}, 'Claim tx was submitted but reverted — inspect this tx hash on Starkscan');
       }
       const sanitized = this.handleAtomiqFailure(error, 'claimForwardSwap');
       throw new ExternalServiceError('Atomiq', `Failed to claim forward swap ${swapId}: ${sanitized.summary}`);
@@ -862,6 +873,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         {swapId, claimTxHash, bountyAmount: bountyAmount.toString()},
         'Claim tx was submitted by watchtower, not by backend — bounty not received, skipping refund',
       );
+      await this.diagnoseClaimFailure(swap, swapId);
       return {claimTxHash, claimedByBackend: false, refundTxHash: undefined, bountyAmount: 0n, userAddress};
     }
 
@@ -904,6 +916,29 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     }
   }
 
+  /**
+   * Diagnostic: when the watchtower claimed instead of our backend, try to
+   * build claim txs with our account to surface the exact error that prevented
+   * our claim from succeeding. This is non-fatal — errors are logged only.
+   */
+  private async diagnoseClaimFailure(swap: any, swapId: SwapId): Promise<void> {
+    try {
+      const nonce = await this.claimerAccount.getNonce(BlockTag.PRE_CONFIRMED);
+      this.log.info(
+        {swapId, claimerAddress: this.config.claimer.address, nonce},
+        'Diagnosing claim failure — backend account state',
+      );
+      // Attempt to build claim txs; this validates BTC confirmations and swap state
+      await swap.txsClaim(this.claimerAccount);
+      this.log.warn({swapId}, 'Diagnostic: txsClaim succeeded — the claim tx was likely submitted but lost the race to the watchtower');
+    } catch (error) {
+      this.log.error(
+        {swapId, cause: error instanceof Error ? error.message : String(error)},
+        'Diagnostic: txsClaim failed — this is likely why our backend cannot claim',
+      );
+    }
+  }
+
   private async refundBounty(
     swapId: SwapId,
     userAddress: string,
@@ -920,7 +955,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
 
     try {
       // Fetch a fresh nonce to avoid stale-nonce errors after the claim tx
-      const nonce = await this.claimerAccount.getNonce('pending');
+      const nonce = await this.claimerAccount.getNonce(BlockTag.PRE_CONFIRMED);
       const {transaction_hash} = await this.claimerAccount.execute(
         {
           contractAddress: this.config.strkTokenAddress,
