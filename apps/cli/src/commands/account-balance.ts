@@ -4,7 +4,7 @@ import {type Network, RPC_URLS} from '../config/constants.js';
 import type {E2eAccountSecrets} from '../config/secrets.js';
 import {loadSecrets, requireTreasury} from '../config/secrets.js';
 import {AvnuPaymaster, createCliGateways, Treasury} from '../core';
-import {bigintReplacer, formatStrk, formatWbtc} from '../lib/format.js';
+import {bigintReplacer, formatStrk, formatUsd, formatWbtc} from '../lib/format.js';
 
 interface AccountBalanceInfo {
   readonly label: string;
@@ -12,6 +12,38 @@ interface AccountBalanceInfo {
   readonly address: string;
   readonly wbtc: bigint;
   readonly strk: bigint;
+}
+
+interface Prices {
+  readonly btcUsd: number;
+  readonly strkUsd: number;
+}
+
+const COINGECKO_PRICE_URL = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,starknet&vs_currencies=usd';
+
+async function fetchPrices(): Promise<Prices | undefined> {
+  try {
+    const response = await fetch(COINGECKO_PRICE_URL);
+    if (!response.ok) return undefined;
+    const data = (await response.json()) as {
+      bitcoin?: { usd?: number };
+      starknet?: { usd?: number };
+    };
+    const btcUsd = data.bitcoin?.usd;
+    const strkUsd = data.starknet?.usd;
+    if (btcUsd === undefined || strkUsd === undefined || btcUsd <= 0 || strkUsd <= 0) return undefined;
+    return {btcUsd, strkUsd};
+  } catch {
+    return undefined;
+  }
+}
+
+function wbtcToUsd(sats: bigint, btcUsd: number): number {
+  return Number(sats) / 1e8 * btcUsd;
+}
+
+function strkToUsd(wei: bigint, strkUsd: number): number {
+  return Number(wei) / 1e18 * strkUsd;
 }
 
 function parseNetwork(args: string[]): Network {
@@ -46,19 +78,37 @@ async function fetchE2eBalances(
   return result;
 }
 
+function formatStrkWithUsd(wei: bigint, prices: Prices | undefined): string {
+  const base = formatStrk(wei);
+  if (!prices) return base;
+  return `${base} (${formatUsd(strkToUsd(wei, prices.strkUsd))})`;
+}
+
+function formatWbtcWithUsd(sats: bigint, prices: Prices | undefined): string {
+  const base = formatWbtc(sats);
+  if (!prices) return base;
+  return `${base} (${formatUsd(wbtcToUsd(sats, prices.btcUsd))})`;
+}
+
 function printHuman(
   network: Network,
   balance: {address: string; strk: bigint; wbtc: bigint},
   avnu: AvnuPaymaster | undefined,
   credits: bigint | undefined,
   e2eAccounts: AccountBalanceInfo[] | undefined,
+  prices: Prices | undefined,
 ): void {
   console.log(`Network:  ${network}`);
+  if (prices) {
+    console.log(`BTC/USD:  ${formatUsd(prices.btcUsd)}  |  STRK/USD:  ${formatUsd(prices.strkUsd)}`);
+  } else {
+    console.log('Prices:   (unable to fetch from CoinGecko)');
+  }
   console.log();
   console.log('-- BIM Treasury --');
   console.log(`Address:  ${balance.address}`);
-  console.log(`STRK:     ${formatStrk(balance.strk)}`);
-  console.log(`WBTC:     ${formatWbtc(balance.wbtc)}`);
+  console.log(`STRK:     ${formatStrkWithUsd(balance.strk, prices)}`);
+  console.log(`WBTC:     ${formatWbtcWithUsd(balance.wbtc, prices)}`);
   console.log();
 
   if (avnu) {
@@ -81,8 +131,8 @@ function printHuman(
   for (const acc of e2eAccounts) {
     console.log(`-- E2E ${acc.label} (${acc.username}) --`);
     console.log(`Address:  ${acc.address}`);
-    console.log(`WBTC:     ${formatWbtc(acc.wbtc)}`);
-    console.log(`STRK:     ${formatStrk(acc.strk)}`);
+    console.log(`WBTC:     ${formatWbtcWithUsd(acc.wbtc, prices)}`);
+    console.log(`STRK:     ${formatStrkWithUsd(acc.strk, prices)}`);
   }
 }
 
@@ -95,21 +145,26 @@ async function run(args: string[]): Promise<void> {
   const {starknet, paymaster} = createCliGateways(network, secrets.avnu?.apiKey ?? '');
 
   const treasury = new Treasury(starknet, RPC_URLS[network], treasurySecrets.address, treasurySecrets.privateKey);
-  const balance = await treasury.getBalance();
 
   const avnu = secrets.avnu ? new AvnuPaymaster(paymaster) : undefined;
-  const credits = await fetchAvnuCredits(avnu);
+
+  // Fetch balance, credits, and prices in parallel
+  const [balance, credits, prices] = await Promise.all([
+    treasury.getBalance(),
+    fetchAvnuCredits(avnu),
+    fetchPrices(),
+  ]);
 
   const e2eAccounts = network === 'mainnet' && secrets.e2e
     ? await fetchE2eBalances(starknet, [['Account A', secrets.e2e.accountA], ['Account B', secrets.e2e.accountB]])
     : undefined;
 
   if (jsonMode) {
-    console.log(JSON.stringify({network, balance, credits, e2eAccounts}, bigintReplacer, 2));
+    console.log(JSON.stringify({network, balance, credits, prices, e2eAccounts}, bigintReplacer, 2));
     return;
   }
 
-  printHuman(network, balance, avnu, credits, e2eAccounts);
+  printHuman(network, balance, avnu, credits, e2eAccounts, prices);
 }
 
 export default run;
