@@ -18,6 +18,7 @@
   "dependencies": {
     "@bim/domain": "*",
     "@bim/lib": "*",
+    "p-timeout": "^7.0.1",
     "pino": "^10.3.1"
   },
   "peerDependencies": {

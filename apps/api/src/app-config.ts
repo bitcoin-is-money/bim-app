@@ -30,6 +30,11 @@ export namespace AppConfig {
     slack: SlackNotificationConfig | undefined;
   }
 
+  export interface HealthCheckConfig {
+    /** Global timeout for all parallel external service checks at startup. */
+    startupTimeoutMs: number;
+  }
+
   export interface Config {
     appVersion: string;
     port: number;
@@ -43,6 +48,7 @@ export namespace AppConfig {
     webauthn: WebAuthnConfig;
     alerting: AlertingConfig;
     cron: CronConfig | undefined;
+    healthCheck: HealthCheckConfig;
     logLevel: string;
   }
 
@@ -125,6 +131,9 @@ export namespace AppConfig {
       },
       alerting: loadAlertingConfig(optional),
       cron: loadCronConfig(optional),
+      healthCheck: {
+        startupTimeoutMs: Number.parseInt(optional('HEALTH_CHECK_STARTUP_TIMEOUT_MS', '10000')),
+      },
       logLevel: optional('LOG_LEVEL', 'debug'),
     };
   }

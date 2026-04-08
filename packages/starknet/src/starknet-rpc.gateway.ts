@@ -1,4 +1,5 @@
 import {StarknetAddress} from "@bim/domain/account";
+import type {HealthRegistry} from "@bim/domain/health";
 import type {
   DeployTransaction,
   PaymasterGateway,
@@ -7,12 +8,15 @@ import type {
   StarknetTransaction,
   TransactionReceipt,
 } from "@bim/domain/ports";
-import {DomainError, ExternalServiceError} from "@bim/domain/shared";
+import {DomainError, ExternalServiceError, SanitizedError} from "@bim/domain/shared";
 
+import pTimeout from 'p-timeout';
 import type {Logger} from "pino";
 import {ETransactionType} from '@starknet-io/starknet-types-010';
 import {CallData, hash, RpcProvider, typedData as starknetTypedData} from 'starknet';
 import {ARGENT_WEBAUTHN_SALT, buildArgentWebauthnCalldata} from './argent-calldata.js';
+
+const HEALTH_CHECK_TIMEOUT_MS = 5_000;
 
 /**
  * Configuration for Starknet gateway.
@@ -36,9 +40,28 @@ export class StarknetRpcGateway implements StarknetGateway {
     private readonly config: StarknetGatewayConfig,
     private readonly paymasterGateway: PaymasterGateway,
     rootLogger: Logger,
+    private readonly healthRegistry: HealthRegistry,
   ) {
     this.provider = new RpcProvider({nodeUrl: config.rpcUrl});
     this.log = rootLogger.child({name: 'starknet-rpc.gateway.ts'});
+  }
+
+  /**
+   * Pings the Starknet RPC by fetching the chain id.
+   * Reports the component status to the injected HealthRegistry.
+   */
+  async checkHealth(): Promise<void> {
+    try {
+      await pTimeout(this.provider.getChainId(), {
+        milliseconds: HEALTH_CHECK_TIMEOUT_MS,
+        message: 'starknet_chainId timed out',
+      });
+      this.healthRegistry.reportHealthy('starknet-rpc');
+    } catch (err: unknown) {
+      const sanitized = SanitizedError.sanitize('Starknet RPC', err);
+      this.log.error({starknetError: sanitized}, 'Starknet RPC health check failed');
+      this.healthRegistry.reportDown('starknet-rpc', sanitized);
+    }
   }
 
   calculateAccountAddress(params: {

@@ -1,6 +1,9 @@
+import type {HealthRegistry} from '@bim/domain/health';
 import type {SwapGateway, StarknetCall} from '@bim/domain/ports';
-import {ExternalServiceError, type StarknetAddress, validateExternalCalls} from '@bim/domain/shared';
+import {ExternalServiceError, SanitizedError, type StarknetAddress, validateExternalCalls} from '@bim/domain/shared';
 import type {Logger} from 'pino';
+
+const HEALTH_CHECK_TIMEOUT_MS = 5_000;
 
 /**
  * Configuration for AVNU Swap gateway.
@@ -65,8 +68,37 @@ export class AvnuSwapGateway implements SwapGateway {
   constructor(
     private readonly config: AvnuSwapConfig,
     rootLogger: Logger,
+    private readonly healthRegistry: HealthRegistry,
   ) {
     this.log = rootLogger.child({name: 'avnu-swap.gateway.ts'});
+  }
+
+  /**
+   * Pings the AVNU DEX API with a lightweight HTTP GET to the base URL.
+   * Any HTTP response (even 404) means the server is reachable.
+   * A network error, timeout, or Cloudflare 530 means it is down.
+   */
+  async checkHealth(): Promise<void> {
+    try {
+      const response = await fetch(this.config.baseUrl, {
+        signal: AbortSignal.timeout(HEALTH_CHECK_TIMEOUT_MS),
+      });
+      if (response.status === 530) {
+        const sanitized: SanitizedError = {
+          kind: 'cloudflare_tunnel',
+          httpCode: 530,
+          summary: 'AVNU DEX unreachable (Cloudflare Tunnel error)',
+        };
+        this.log.error({avnuSwapError: sanitized}, 'AVNU DEX health check failed');
+        this.healthRegistry.reportDown('avnu-swap', sanitized);
+        return;
+      }
+      this.healthRegistry.reportHealthy('avnu-swap');
+    } catch (err: unknown) {
+      const sanitized = SanitizedError.sanitize('AVNU DEX', err);
+      this.log.error({avnuSwapError: sanitized}, 'AVNU DEX health check failed');
+      this.healthRegistry.reportDown('avnu-swap', sanitized);
+    }
   }
 
   async getSwapCalls(params: {

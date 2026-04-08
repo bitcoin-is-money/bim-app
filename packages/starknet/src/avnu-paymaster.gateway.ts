@@ -1,4 +1,5 @@
 import type {StarknetAddress} from "@bim/domain/account";
+import type {HealthRegistry} from "@bim/domain/health";
 import type {
   DeployTransaction,
   PaymasterGateway,
@@ -7,11 +8,14 @@ import type {
   StarknetCall,
   StarknetTransaction
 } from "@bim/domain/ports";
-import {ExternalServiceError, InsufficientBalanceError, PaymasterServiceError} from "@bim/domain/shared";
+import {ExternalServiceError, InsufficientBalanceError, PaymasterServiceError, SanitizedError} from "@bim/domain/shared";
 
 import type {Logger} from "pino";
 import type {WALLET_API} from '@starknet-io/starknet-types-010';
 import {type ExecutableUserTransaction, type ExecutionParameters, PaymasterRpc, type UserTransaction} from 'starknet';
+
+/** Minimum remaining STRK credits below which the paymaster is considered down. */
+const MIN_STRK_CREDITS_WEI = 1_000_000_000_000_000_000n;
 
 /**
  * Configuration for AVNU Paymaster gateway.
@@ -66,6 +70,7 @@ export class AvnuPaymasterGateway implements PaymasterGateway {
   constructor(
     private readonly config: AvnuPaymasterConfig,
     rootLogger: Logger,
+    private readonly healthRegistry: HealthRegistry,
   ) {
     this.log = rootLogger.child({name: 'avnu-paymaster.gateway.ts'});
 
@@ -77,6 +82,38 @@ export class AvnuPaymasterGateway implements PaymasterGateway {
       nodeUrl: config.apiUrl,
       headers,
     });
+  }
+
+  /**
+   * Checks paymaster health by fetching remaining sponsor credits.
+   *
+   * Reports the component as down when:
+   * - `getRemainingCredits()` fails (API unreachable, invalid key, etc.)
+   * - Remaining credits are below `MIN_STRK_CREDITS_WEI` (1 STRK)
+   *
+   * The credit threshold is critical: AVNU error 163 ("InvalidAPIKey") is
+   * raised at runtime when credits drop to zero, so the startup check catches
+   * this misconfiguration before the first user transaction fails.
+   */
+  async checkHealth(): Promise<void> {
+    try {
+      const credits = await this.getRemainingCredits();
+      if (credits < MIN_STRK_CREDITS_WEI) {
+        const sanitized: SanitizedError = {
+          kind: 'credits',
+          summary: `AVNU paymaster credits exhausted: ${credits.toString()} wei remaining (threshold: ${MIN_STRK_CREDITS_WEI.toString()} wei)`,
+        };
+        this.log.error({avnuError: sanitized}, 'AVNU paymaster health check failed');
+        this.healthRegistry.reportDown('avnu-paymaster', sanitized);
+        return;
+      }
+      this.log.debug({credits: credits.toString()}, 'AVNU paymaster healthy');
+      this.healthRegistry.reportHealthy('avnu-paymaster');
+    } catch (err: unknown) {
+      const sanitized = sanitizeAvnuError(err);
+      this.log.error({avnuError: sanitized}, 'AVNU paymaster health check failed');
+      this.healthRegistry.reportDown('avnu-paymaster', sanitized);
+    }
   }
 
   async executeTransaction(params: {
@@ -480,4 +517,24 @@ export class AvnuPaymasterGateway implements PaymasterGateway {
     this.log.debug({gasLimit: gasLimit.toString()}, 'Sponsored gas limit result');
     return gasLimit;
   }
+}
+
+function sanitizeAvnuError(err: unknown): SanitizedError {
+  const message = err instanceof Error ? err.message : String(err);
+  const lower = message.toLowerCase();
+  // AVNU-specific: error 163 returned when API key is invalid or credits are exhausted.
+  if (lower.includes('163') && lower.includes('api-key')) {
+    return {kind: 'unknown', summary: `AVNU API key invalid or credits exhausted (error 163): ${message}`};
+  }
+  // AVNU-specific: local check when AVNU_API_KEY env var is absent.
+  if (lower.includes('not configured')) {
+    return {kind: 'unknown', summary: message};
+  }
+  // AVNU-specific: structured HTTP error carries the status code in the message.
+  const httpMatch = /http (\d{3})/i.exec(message);
+  if (httpMatch) {
+    const httpCode = Number.parseInt(httpMatch[1]!, 10);
+    return {kind: 'html_response', httpCode, summary: `AVNU paymaster HTTP ${httpCode}`};
+  }
+  return SanitizedError.sanitize('AVNU paymaster', err);
 }

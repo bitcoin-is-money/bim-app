@@ -1,4 +1,5 @@
 import {StarknetAddress} from '@bim/domain/account';
+import {HealthRegistry} from '@bim/domain/health';
 import type {PaymasterGateway} from '@bim/domain/ports';
 import type {Logger} from 'pino';
 import {CallData, hash} from 'starknet';
@@ -26,7 +27,14 @@ export class DevnetStarknetGateway extends StarknetRpcGateway {
     paymasterGateway: PaymasterGateway,
     logger: Logger,
   ) {
-    super(config, paymasterGateway, logger);
+    // Devnet tests don't exercise the health registry; provide a standalone
+    // instance with all tracked components and a no-op listener.
+    const noopHealthRegistry = new HealthRegistry(
+      ['database', 'starknet-rpc', 'avnu-paymaster', 'atomiq', 'avnu-swap', 'coingecko-price'],
+      () => {},
+      logger,
+    );
+    super(config, paymasterGateway, logger, noopHealthRegistry);
     this.classHash = config.accountClassHash;
   }
 

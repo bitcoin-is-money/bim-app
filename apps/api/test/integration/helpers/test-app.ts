@@ -40,6 +40,7 @@ export namespace TestApp {
       skipStaticFiles: true,
       skipMonitor: true,
       skipRateLimit: true,
+      skipStartupHealthChecks: true,
       config: {logLevel: 'silent'},
       ...options,
     });
@@ -57,6 +58,7 @@ export namespace TestApp {
       skipStaticFiles: true,
       skipMonitor: true,
       skipRateLimit: true,
+      skipStartupHealthChecks: true,
       config: {logLevel: 'info'},
       ...options,
     });
@@ -72,6 +74,7 @@ export namespace TestApp {
     return createApp({
       skipStaticFiles: true,
       skipRateLimit: true,
+      skipStartupHealthChecks: true,
       config: {logLevel: 'silent'},
       ...options,
     });
