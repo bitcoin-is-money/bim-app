@@ -25,6 +25,7 @@ import {Amount} from "@bim/domain/shared";
 import type {Logger} from "pino";
 import {Account as StarknetAccount, BlockTag, RpcProvider, Signer as StarknetSigner} from 'starknet';
 import {isInfraFailure, sanitizeAtomiqError} from './atomiq-error';
+import {mapAtomiqStateToStatus} from './atomiq-state-mapping';
 
 /* eslint-disable
    @typescript-eslint/no-unsafe-assignment,
@@ -710,7 +711,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
 
       const state = swap.getState();
 
-      const {isPaid, isClaimable, isCompleted, isFailed, isExpired, isRefunded, isRefundable} = this.mapStateToStatus(state, direction);
+      const {isPaid, isClaimable, isCompleted, isFailed, isExpired, isRefunded, isRefundable} = mapAtomiqStateToStatus(state, direction);
       const result: AtomiqSwapStatus = {
         state,
         isPaid,
@@ -734,89 +735,6 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       this.log.warn({swapId, atomiqError: sanitized}, 'getSwapStatus failed');
       throw err;
     }
-  }
-
-  /**
-   * Maps SDK state to status flags.
-   *
-   * Atomiq SDK states (direction-dependent):
-   *
-   * FromBTCLN (Lightning → Starknet):
-   *   0: PR_CREATED, 1: PR_PAID, 2: CLAIM_COMMITED, 3: CLAIM_CLAIMED
-   *
-   * FromBTC (Bitcoin → Starknet):
-   *   0: PR_CREATED, 1: CLAIM_COMMITED, 2: BTC_TX_CONFIRMED, 3: CLAIM_CLAIMED
-   *
-   * ToBTCLN (Starknet → Lightning):
-   *   0: CREATED, 1: COMMITED, 2: SOFT_CLAIMED, 3: CLAIMED
-   *
-   * ToBTC (Starknet → Bitcoin):
-   *   0: CREATED, 1: COMMITED, 2: SOFT_CLAIMED, 3: CLAIMED, 4: REFUNDABLE
-   *
-   * isPaid = payment detected (user has paid, but claim may not be possible yet)
-   * isClaimable = swap is ready for on-chain claim (only relevant for forward swaps)
-   */
-  private mapStateToStatus(state: number, direction?: SwapDirection): {
-    isPaid: boolean;
-    isClaimable: boolean;
-    isCompleted: boolean;
-    isFailed: boolean;
-    isExpired: boolean;
-    isRefunded: boolean;
-    isRefundable: boolean;
-  } {
-    const neutral = {isPaid: false, isClaimable: false, isCompleted: false, isFailed: false, isExpired: false, isRefunded: false, isRefundable: false};
-
-    if (state < 0) {
-      // QUOTE_SOFT_EXPIRED (-1): The LP authorization expired, but an on-chain
-      // commit may still be pending confirmation. For reverse swaps (Starknet →
-      // Lightning/Bitcoin), BIM submits the commit externally via AVNU paymaster,
-      // so the SDK doesn't know about it until _sync() detects it on-chain.
-      // Treat -1 as "still pending" for reverse swaps to avoid premature expiration.
-      const isReverseSwap = direction === 'starknet_to_lightning' || direction === 'starknet_to_bitcoin';
-      if (state === -1 && isReverseSwap) {
-        return neutral;
-      }
-
-      // State -3 for reverse swaps (ToBTC/ToBTCLN) = REFUNDED (LP refunded escrow on source chain)
-      if (state === -3 && isReverseSwap) {
-        return {...neutral, isRefunded: true};
-      }
-
-      return {
-        ...neutral,
-        isFailed: state <= -3,
-        isExpired: state > -3,
-      };
-    }
-
-    const isForward = direction === 'lightning_to_starknet' || direction === 'bitcoin_to_starknet';
-    const isReverseSwap = direction === 'starknet_to_lightning' || direction === 'starknet_to_bitcoin';
-
-    // State 4 (REFUNDABLE) only exists for ToBTC/ToBTCLN: the LP failed to process
-    // the swap and the escrow is refundable by the user on the source chain.
-    if (state === 4 && isReverseSwap) {
-      return {...neutral, isRefundable: true};
-    }
-
-    // For Bitcoin-to-Starknet swaps, the commit (state 1) happens before the
-    // Bitcoin deposit (state 2). Only treat as "paid" once BTC is actually received.
-    const paidThreshold = direction === 'bitcoin_to_starknet' ? 2 : 1;
-
-    // Claimable: the swap is ready for on-chain claim by the backend.
-    // Forward swaps: Lightning needs state >= 2 (CLAIM_COMMITED), Bitcoin needs state >= 2 (BTC_TX_CONFIRMED).
-    // Reverse swaps: never claimable (LP handles claiming).
-    const claimableThreshold = 2;
-
-    return {
-      isPaid: state >= paidThreshold,
-      isClaimable: isForward && state >= claimableThreshold,
-      isCompleted: state === 3,
-      isFailed: false,
-      isExpired: false,
-      isRefunded: false,
-      isRefundable: false,
-    };
   }
 
   async isSwapPaid(swapId: SwapId): Promise<boolean> {
