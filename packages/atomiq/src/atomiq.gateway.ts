@@ -607,7 +607,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     const result: SwapLimits = {
       minSats: limits.input.min.rawAmount ?? 0n,
       maxSats: limits.input.max?.rawAmount ?? BigInt(Number.MAX_SAFE_INTEGER),
-      feePercent: this.getSwapFeePercent(SwapType.FROM_BTCLN),
+      feePercent: this.getSwapFeePercent(SwapType.FROM_BTCLN_AUTO),
     };
     this.log.debug({...result}, `getLightningToStarknetLimits result`);
     return result;
