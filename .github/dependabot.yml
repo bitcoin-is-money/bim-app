@@ -1,0 +1,64 @@
+version: 2
+updates:
+  # Root workspace + all npm workspaces
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "npm"
+    groups:
+      angular:
+        patterns:
+          - "@angular/*"
+          - "@angular-eslint/*"
+          - "angular-*"
+      atomiq:
+        patterns:
+          - "@atomiqlabs/*"
+      starknet:
+        patterns:
+          - "starknet"
+          - "@bim/starknet"
+      testing:
+        patterns:
+          - "vitest"
+          - "@vitest/*"
+          - "@testcontainers/*"
+          - "testcontainers"
+      linting:
+        patterns:
+          - "eslint"
+          - "eslint-*"
+          - "@typescript-eslint/*"
+          - "typescript-eslint"
+      drizzle:
+        patterns:
+          - "drizzle-*"
+      pino:
+        patterns:
+          - "pino"
+          - "pino-*"
+
+  # GitHub Actions workflows
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "github-actions"
+
+  # Docker (api Dockerfile)
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "docker"

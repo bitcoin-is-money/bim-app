@@ -214,7 +214,8 @@ export function createReceiveRoutes(
       await appContext.gateways.starknet.waitForTransaction(txHash);
 
       // 6. Save swap to DB immediately — ensures SwapMonitor can track it
-      //    even if subsequent steps fail (see doc/flow/bitcoin-receive-security-deposit.md)
+      //    even if subsequent steps fail (see doc/flow/receive-bitcoin-swap-commit.md —
+      //    "Why the swap is persisted before completion")
       const starknetAddress = account.requireStarknetAddress();
       await swapService.saveBitcoinCommit({
         swapId: build.swapId,

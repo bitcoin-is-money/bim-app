@@ -3,6 +3,26 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
+  "description": "BIM backend server (Hono + esbuild). Serves the HTTP API and the built Angular frontend.",
+  "license": "GPL-3.0-or-later",
+  "author": "yannicklacaute@bitcoinismoney.app",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bitcoin-is-money/bim.git",
+    "directory": "apps/api"
+  },
+  "bugs": {
+    "url": "https://github.com/bitcoin-is-money/bim/issues"
+  },
+  "homepage": "https://github.com/bitcoin-is-money/bim#readme",
+  "keywords": [
+    "bim",
+    "hono",
+    "api",
+    "backend",
+    "bitcoin",
+    "starknet"
+  ],
   "scripts": {
     "clean": "rm -rf dist public/app",
     "typecheck": "tsc --noEmit",

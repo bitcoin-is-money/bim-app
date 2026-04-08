@@ -3,6 +3,25 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
+  "description": "Database schema, connection, and migrations for BIM (Drizzle ORM + PostgreSQL).",
+  "license": "GPL-3.0-or-later",
+  "author": "yannicklacaute@bitcoinismoney.app",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bitcoin-is-money/bim.git",
+    "directory": "packages/db"
+  },
+  "bugs": {
+    "url": "https://github.com/bitcoin-is-money/bim/issues"
+  },
+  "homepage": "https://github.com/bitcoin-is-money/bim#readme",
+  "keywords": [
+    "bim",
+    "drizzle",
+    "postgresql",
+    "database",
+    "migrations"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

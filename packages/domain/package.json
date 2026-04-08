@@ -3,6 +3,25 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
+  "description": "Domain and application layer for BIM (entities, value objects, use cases, ports). Pure TypeScript, no framework dependencies.",
+  "license": "GPL-3.0-or-later",
+  "author": "yannicklacaute@bitcoinismoney.app",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bitcoin-is-money/bim.git",
+    "directory": "packages/domain"
+  },
+  "bugs": {
+    "url": "https://github.com/bitcoin-is-money/bim/issues"
+  },
+  "homepage": "https://github.com/bitcoin-is-money/bim#readme",
+  "keywords": [
+    "bim",
+    "domain",
+    "hexagonal-architecture",
+    "use-cases",
+    "ports"
+  ],
   "exports": {
     "./account": {
       "types": "./dist/account/index.d.ts",

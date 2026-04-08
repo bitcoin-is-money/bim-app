@@ -3,6 +3,24 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
+  "description": "Slack notification adapter for BIM (alerting and operational events).",
+  "license": "GPL-3.0-or-later",
+  "author": "yannicklacaute@bitcoinismoney.app",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bitcoin-is-money/bim.git",
+    "directory": "packages/slack"
+  },
+  "bugs": {
+    "url": "https://github.com/bitcoin-is-money/bim/issues"
+  },
+  "homepage": "https://github.com/bitcoin-is-money/bim#readme",
+  "keywords": [
+    "bim",
+    "slack",
+    "notifications",
+    "alerting"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

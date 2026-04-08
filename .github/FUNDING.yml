@@ -1,0 +1,41 @@
+# Enable the GitHub "Sponsor this project" button by filling in the
+# relevant field(s) below and uncommenting the line.
+#
+# Docs: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository
+
+# github: [TODO]
+# patreon: TODO
+# open_collective: TODO
+# ko_fi: TODO
+# custom: ["https://example.com/donate"]
+
+
+#┌──────────────────┬───────────────────────────────────────────┬────────────────────────────────────┐
+#│       key        │                Plateform                  │          Format                    │
+#├──────────────────┼───────────────────────────────────────────┼────────────────────────────────────┤
+#│ github           │ GitHub Sponsors                           │ username or list  ([user1, user2]) │
+#├──────────────────┼───────────────────────────────────────────┼────────────────────────────────────┤
+#│ patreon          │ Patreon                                   │ username                           │
+#├──────────────────┼───────────────────────────────────────────┼────────────────────────────────────┤
+#│ open_collective  │ Open Collective                           │ slug du collectif                  │
+#├──────────────────┼───────────────────────────────────────────┼────────────────────────────────────┤
+#│ ko_fi            │ Ko-fi (plateforme de "café" / micro-dons) │ username                           │
+#├──────────────────┼───────────────────────────────────────────┼────────────────────────────────────┤
+#│ tidelift         │ Tidelift                                  │ npm/pacakge-name                   │
+#├──────────────────┼───────────────────────────────────────────┼────────────────────────────────────┤
+#│ community_bridge │ LFX Crowdfunding                          │ project name                       │
+#├──────────────────┼───────────────────────────────────────────┼────────────────────────────────────┤
+#│ liberapay        │ Liberapay                                 │ username                           │
+#├──────────────────┼───────────────────────────────────────────┼────────────────────────────────────┤
+#│ issuehunt        │ IssueHunt                                 │ username                           │
+#├──────────────────┼───────────────────────────────────────────┼────────────────────────────────────┤
+#│ lfx_crowdfunding │ LFX Crowdfunding                          │ project name                       │
+#├──────────────────┼───────────────────────────────────────────┼────────────────────────────────────┤
+#│ polar            │ Polar                                     │ username                           │
+#├──────────────────┼───────────────────────────────────────────┼────────────────────────────────────┤
+#│ buy_me_a_coffee  │ Buy Me a Coffee                           │ username                           │
+#├──────────────────┼───────────────────────────────────────────┼────────────────────────────────────┤
+#│ thanks_dev       │ thanks.dev                                │ u/gh/username                      │
+#├──────────────────┼───────────────────────────────────────────┼────────────────────────────────────┤
+#│ custom           │ URL(s) arbitraire(s)                      │ string or list                     │
+#└──────────────────┴───────────────────────────────────────────┴────────────────────────────────────┘

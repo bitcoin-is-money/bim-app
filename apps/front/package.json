@@ -2,6 +2,25 @@
   "name": "@bim/front",
   "version": "0.0.1",
   "private": true,
+  "description": "BIM Angular 21 frontend — Bitcoin wallet UI with WebAuthn passkey authentication.",
+  "license": "GPL-3.0-or-later",
+  "author": "yannicklacaute@bitcoinismoney.app",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bitcoin-is-money/bim.git",
+    "directory": "apps/front"
+  },
+  "bugs": {
+    "url": "https://github.com/bitcoin-is-money/bim/issues"
+  },
+  "homepage": "https://github.com/bitcoin-is-money/bim#readme",
+  "keywords": [
+    "bim",
+    "angular",
+    "frontend",
+    "wallet",
+    "webauthn"
+  ],
   "scripts": {
     "clean": "rm -rf dist .angular",
     "ng": "ng",

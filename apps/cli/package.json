@@ -3,6 +3,24 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
+  "description": "BIM command-line tools for operational tasks (health checks, E2E flows, AVNU credit monitoring).",
+  "license": "GPL-3.0-or-later",
+  "author": "yannicklacaute@bitcoinismoney.app",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bitcoin-is-money/bim.git",
+    "directory": "apps/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/bitcoin-is-money/bim/issues"
+  },
+  "homepage": "https://github.com/bitcoin-is-money/bim#readme",
+  "keywords": [
+    "bim",
+    "cli",
+    "operations",
+    "health-check"
+  ],
   "exports": {
     "./core": "./src/core/index.ts",
     "./core/*": "./src/core/*.ts",

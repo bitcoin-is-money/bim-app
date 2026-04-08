@@ -3,6 +3,28 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
+  "description": "Bitcoin wallet on Starknet with WebAuthn (passkey/biometric) key management, Lightning Network support, and gasless account deployment via AVNU paymaster.",
+  "license": "GPL-3.0-or-later",
+  "author": "yannicklacaute@bitcoinismoney.app",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bitcoin-is-money/bim.git"
+  },
+  "bugs": {
+    "url": "https://github.com/bitcoin-is-money/bim/issues"
+  },
+  "homepage": "https://github.com/bitcoin-is-money/bim#readme",
+  "keywords": [
+    "bitcoin",
+    "starknet",
+    "lightning",
+    "webauthn",
+    "passkey",
+    "wallet",
+    "atomiq",
+    "avnu",
+    "paymaster"
+  ],
   "workspaces": [
     "packages/*",
     "apps/*"
