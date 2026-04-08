@@ -1,0 +1,26 @@
+diff --git a/node_modules/@atomiqlabs/sdk/dist/intermediaries/IntermediaryDiscovery.js b/node_modules/@atomiqlabs/sdk/dist/intermediaries/IntermediaryDiscovery.js
+index 3095382..259bc0c 100644
+--- a/node_modules/@atomiqlabs/sdk/dist/intermediaries/IntermediaryDiscovery.js
++++ b/node_modules/@atomiqlabs/sdk/dist/intermediaries/IntermediaryDiscovery.js
+@@ -191,7 +191,20 @@ class IntermediaryDiscovery extends events_1.EventEmitter {
+             return new Intermediary_1.Intermediary(url, nodeInfo.addresses, services);
+         }
+         catch (e) {
+-            logger.warn("fetchIntermediaries(): Error contacting intermediary " + url + ": ", e);
++            // BIM patch: avoid dumping full HTML error pages (e.g. Cloudflare 530)
++            // into the logs. Detect HTML payloads and warn with a short summary.
++            let summary = e;
++            if (e instanceof Error && typeof e.message === 'string') {
++                const msg = e.message;
++                const looksHtml = msg.startsWith('<!doctype') || msg.startsWith('<!DOCTYPE') || msg.startsWith('<html');
++                if (looksHtml) {
++                    const titleMatch = msg.match(/<title>([^<]*)<\/title>/i);
++                    const httpCode = e.httpCode != null ? ` (HTTP ${e.httpCode})` : '';
++                    const title = titleMatch != null ? `: ${titleMatch[1].trim()}` : '';
++                    summary = `${e.name}${httpCode}${title}`;
++                }
++            }
++            logger.warn("fetchIntermediaries(): Error contacting intermediary " + url + ": ", summary);
+             return null;
+         }
+     }
