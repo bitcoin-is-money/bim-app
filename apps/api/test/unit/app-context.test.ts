@@ -59,6 +59,7 @@ function createMockConfig(): AppConfig.Config {
     session: SessionConfig.create({durationMs: SessionConfig.DEFAULT_DURATION_MS}),
     alerting: {slack: undefined},
     cron: undefined,
+    healthCheck: {startupTimeoutMs: 10_000},
     logLevel: 'silent',
   };
 }

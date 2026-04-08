@@ -12,7 +12,6 @@ import {createSecurityHeadersMiddleware} from './middleware/security-headers.mid
 import {SwapMonitor} from './monitoring/swap.monitor';
 import {
   createAccountRoutes,
-  createAdminRoutes,
   createAuthRoutes,
   createCronRoutes,
   createCurrencyRoutes,
@@ -22,6 +21,7 @@ import {
   createUserRoutes,
 } from './routes';
 import {AppConfig} from './app-config';
+import {runStartupHealthChecks} from './app-startup-health';
 import {installGlobalErrorHandler} from './middleware/global-error-handler';
 import {BalanceMonitoring} from './monitoring/balance.monitoring';
 
@@ -31,12 +31,18 @@ export interface CreateAppOptions {
   skipStaticFiles?: boolean;
   skipMonitor?: boolean;
   skipRateLimit?: boolean;
+  /**
+   * Skip startup health checks entirely. Primarily used by tests to avoid
+   * hitting real external services (Starknet, AVNU, CoinGecko) during boot.
+   */
+  skipStartupHealthChecks?: boolean;
 }
 
 export interface AppInstance {
   app: Hono;
   swapMonitor: SwapMonitor | null;
   rootLogger: Logger;
+  context: AppContext;
 }
 
 /**
@@ -85,8 +91,12 @@ export async function createApp(options: CreateAppOptions = {}): Promise<AppInst
   }
 
   // Startup health checks: optimistic init (healthy), verify immediately.
-  // Fire-and-forget — failures flip the registry and trigger Slack alerts.
-  void runStartupHealthChecks(context, rootLogger);
+  // Database check is blocking (process.exit on failure). All other checks
+  // run in parallel with a global timeout and never block startup — failures
+  // flip the registry and trigger Slack alerts.
+  if (!options.skipStartupHealthChecks) {
+    await runStartupHealthChecks(context, rootLogger, config.healthCheck.startupTimeoutMs);
+  }
 
   // Swap monitor (background polling + auto-claim, auto-stops when idle)
   let swapMonitor: SwapMonitor | null = null;
@@ -132,43 +142,5 @@ export async function createApp(options: CreateAppOptions = {}): Promise<AppInst
     app.get('*', serveStatic({path: './public/app/index.html'}));
   }
 
-  return {app, swapMonitor, rootLogger: rootLogger};
-}
-
-/**
- * Runs health checks for all tracked components immediately after startup.
- * Components start as healthy (optimistic). If a check fails, the registry
- * transitions to down and sends a Slack alert right away.
- */
-async function runStartupHealthChecks(
-  context: AppContext,
-  rootLogger: Logger,
-): Promise<void> {
-  const log = rootLogger.child({name: 'app.ts'});
-  const results = await Promise.allSettled([
-    pingDatabaseAtStartup(context),
-    context.gateways.atomiq.checkHealth(),
-  ]);
-  for (const result of results) {
-    if (result.status === 'rejected') {
-      log.warn({cause: result.reason instanceof Error ? result.reason.message : String(result.reason)},
-        'Startup health check threw unexpectedly');
-    }
-  }
-}
-
-async function pingDatabaseAtStartup(context: AppContext): Promise<void> {
-  try {
-    const ok = await Database.get().testConnection();
-    if (ok) {
-      context.healthRegistry.reportHealthy('database');
-    } else {
-      context.healthRegistry.reportDown('database', {kind: 'unknown', summary: 'Database connection test failed at startup'});
-    }
-  } catch (err: unknown) {
-    context.healthRegistry.reportDown('database', {
-      kind: 'unknown',
-      summary: err instanceof Error ? err.message : 'Database connection test failed at startup',
-    });
-  }
+  return {app, swapMonitor, rootLogger: rootLogger, context};
 }

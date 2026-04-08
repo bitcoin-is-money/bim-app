@@ -1,28 +1,30 @@
+import {Database} from "@bim/db/database";
 import {AccountService} from "@bim/domain/account";
 import {AuthService, type SessionConfig, SessionService} from "@bim/domain/auth";
-import {Erc20CallFactory, FeeConfig, ParseService, PayService, ReceiveService,} from "@bim/domain/payment";
 import {CurrencyService} from "@bim/domain/currency";
+import {type ComponentName, HealthRegistry, type HealthTransitionEvent} from "@bim/domain/health";
+import {ServiceHealthChange} from "@bim/domain/notifications";
+import {Erc20CallFactory, FeeConfig, ParseService, PayService, ReceiveService,} from "@bim/domain/payment";
 import type {
   AccountRepository,
   AtomiqGateway,
   ChallengeRepository,
-  NotificationGateway,
-  SwapGateway,
   LightningDecoder,
+  NotificationGateway,
   PaymasterGateway,
   PriceGateway,
   SessionRepository,
   StarknetGateway,
+  SwapGateway,
   SwapRepository,
   TransactionRepository,
   UserSettingsRepository,
   WebAuthnGateway,
 } from "@bim/domain/ports";
-import {HealthRegistry, type ComponentName, type HealthTransitionEvent} from "@bim/domain/health";
-import {ServiceHealthChange} from "@bim/domain/notifications";
 import type {StarknetConfig} from "@bim/domain/shared";
 import {SwapService,} from "@bim/domain/swap";
 import {TransactionService, UserSettingsService} from "@bim/domain/user";
+import type pg from 'pg';
 import type {Logger} from "pino";
 import {
   AtomiqSdkGateway,
@@ -33,17 +35,15 @@ import {
   DrizzleAccountRepository,
   DrizzleChallengeRepository,
   DrizzleSessionRepository,
-  DrizzleTransactionRepository,
-  DrizzleUserSettingsRepository,
   DrizzleSwapRepository,
   DrizzleTransactionManager,
+  DrizzleTransactionRepository,
+  DrizzleUserSettingsRepository,
   NoopNotificationGateway,
   SimpleWebAuthnGateway,
   SlackNotificationGateway,
+  StarknetRpcGateway,
 } from "./adapters";
-import {StarknetRpcGateway} from "./adapters";
-import {Database} from "@bim/db/database";
-import type pg from 'pg';
 import type {AppConfig} from "./app-config";
 
 /**
@@ -115,6 +115,7 @@ export namespace AppContext {
     rootLogger: Logger,
     overrides?: AppContextOverrides,
   ): AppContext {
+    const log = rootLogger.child({name: 'app-context.ts'});
 
     // Initialize repositories (with optional overrides)
     const repositories: AppContext['repositories'] = {
@@ -127,25 +128,29 @@ export namespace AppContext {
       ...overrides?.repositories,
     };
 
-    // Initialize paymaster first (needed by starknet gateway for executeCalls)
-    const paymasterGateway = new AvnuPaymasterGateway(config.avnuPaymaster, rootLogger);
-
     // Notification gateway: Slack when a bot token is configured, otherwise a
     // no-op that just logs. Available app-wide via context.gateways.notification.
     const notificationGateway: NotificationGateway = config.alerting.slack
       ? new SlackNotificationGateway(config.alerting.slack, rootLogger)
       : new NoopNotificationGateway(rootLogger);
 
-    // Health registry: tracks the health of critical components. On any
+    // Health registry: tracks the health of critical services. On any
     // transition, forwards a structured event to Slack via ServiceHealthChange.
-    const trackedComponents: readonly ComponentName[] = ['atomiq', 'database'];
-    const healthRegistryLog = rootLogger.child({name: 'app-context.ts'});
+    const trackedComponents: readonly ComponentName[] = [
+      'database',
+      'starknet-rpc',
+      'avnu-paymaster',
+      'atomiq',
+      'avnu-swap',
+      'coingecko-price',
+    ];
+
     const healthRegistry = new HealthRegistry(
       trackedComponents,
       (event: HealthTransitionEvent) => {
         const message = ServiceHealthChange.fromEvent(event);
         notificationGateway.send(message).catch((err: unknown) => {
-          healthRegistryLog.warn(
+          log.warn(
             {component: event.component, cause: err instanceof Error ? err.message : String(err)},
             'Failed to send health change notification',
           );
@@ -153,6 +158,9 @@ export namespace AppContext {
       },
       rootLogger,
     );
+
+    // Initialize paymaster first (needed by starknet gateway for executeCalls)
+    const paymasterGateway = new AvnuPaymasterGateway(config.avnuPaymaster, rootLogger, healthRegistry);
 
     // Initialize gateways (with optional overrides)
     const gateways: AppContext['gateways'] = {
@@ -170,12 +178,13 @@ export namespace AppContext {
         },
         paymasterGateway,
         rootLogger,
+        healthRegistry,
       ),
       paymaster: paymasterGateway,
       atomiq: new AtomiqSdkGateway({...config.atomiq, pool}, rootLogger, healthRegistry),
-      dex: new AvnuSwapGateway(config.avnuSwap, rootLogger),
+      dex: new AvnuSwapGateway(config.avnuSwap, rootLogger, healthRegistry),
       lightningDecoder: new Bolt11LightningDecoder(),
-      price: new CoinGeckoPriceGateway(rootLogger),
+      price: new CoinGeckoPriceGateway(rootLogger, healthRegistry),
       notification: notificationGateway,
       ...overrides?.gateways,
     };

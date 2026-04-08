@@ -35,6 +35,7 @@ describe('Receive — Insufficient Balance for Security Deposit', () => {
 
   // Simple DEX mock for auto-swap tests
   const dexMock: SwapGateway = {
+    async checkHealth() { /* no-op */ },
     async getSwapCalls() {
       return {
         calls: [{contractAddress: '0xavnu', entrypoint: 'swap', calldata: []}],

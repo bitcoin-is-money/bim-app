@@ -1,4 +1,5 @@
 import {StarknetAddress} from '@bim/domain/account';
+import {HealthRegistry} from '@bim/domain/health';
 import {createLogger} from '@bim/lib/logger';
 import {
   AvnuPaymasterGateway,
@@ -33,12 +34,20 @@ export function createCliGateways(
 ): CliGateways {
   const logger = createLogger('silent');
 
+  // CLI is a short-lived process and does not publish health transitions:
+  // provide a standalone registry that just tracks state in memory.
+  const healthRegistry = new HealthRegistry(
+    ['database', 'starknet-rpc', 'avnu-paymaster', 'atomiq', 'avnu-swap', 'coingecko-price'],
+    () => {},
+    logger,
+  );
+
   const paymasterConfig: AvnuPaymasterConfig = {
     apiUrl: AVNU_PAYMASTER_URLS[network],
     apiKey: avnuApiKey,
     sponsorActivityUrl: AVNU_SPONSOR_ACTIVITY_URLS[network],
   };
-  const paymaster = new AvnuPaymasterGateway(paymasterConfig, logger);
+  const paymaster = new AvnuPaymasterGateway(paymasterConfig, logger, healthRegistry);
 
   const starknetConfig: StarknetGatewayConfig = {
     rpcUrl: RPC_URLS[network],
@@ -52,7 +61,7 @@ export function createCliGateways(
     webauthnOrigin: 'https://app.bitcoinismoney.app',
     webauthnRpId: 'app.bitcoinismoney.app',
   };
-  const starknet = new StarknetRpcGateway(starknetConfig, paymaster, logger);
+  const starknet = new StarknetRpcGateway(starknetConfig, paymaster, logger, healthRegistry);
 
   return {starknet, paymaster, logger};
 }

@@ -6,6 +6,9 @@ import type {LightningInvoice, SwapDirection, SwapId, SwapLimits} from '../swap'
  * Gateway interface for Starknet blockchain interactions.
  */
 export interface StarknetGateway {
+  /** Pings the Starknet RPC endpoint and reports health to the registry. */
+  checkHealth(): Promise<void>;
+
   /** Calculates the deterministic account address from a public key. */
   calculateAccountAddress(params: {
     publicKey: string;
@@ -95,6 +98,12 @@ export interface TransactionReceipt {
  * Gateway interface for AVNU Paymaster interactions (gasless transactions).
  */
 export interface PaymasterGateway {
+  /**
+   * Pings the AVNU paymaster and reports health to the registry.
+   * Also verifies that remaining sponsor credits are above the minimum threshold.
+   */
+  checkHealth(): Promise<void>;
+
   /**
    * Executes deploy transaction via the paymaster (gasless).
    * Deploy transactions don't need client-side signing.
@@ -298,6 +307,9 @@ export interface BitcoinSwapCommitResult {
  * Gateway for token swap operations (e.g., AVNU DEX aggregator).
  */
 export interface SwapGateway {
+  /** Pings the DEX aggregator and reports health to the registry. */
+  checkHealth(): Promise<void>;
+
   /**
    * Gets the calls needed to swap tokens.
    * Returns StarknetCalls (approve and swap) ready to be included in a multicall.
@@ -323,6 +335,9 @@ export interface SwapGateway {
  * Gateway interface for fetching cryptocurrency prices.
  */
 export interface PriceGateway {
+  /** Pings the price API and reports health to the registry. */
+  checkHealth(): Promise<void>;
+
   /** Fetches BTC price in the given fiat currencies. Returns a map of currency -> price. */
   getBtcPrices(currencies: FiatCurrency[]): Promise<Map<FiatCurrency, number>>;
 }

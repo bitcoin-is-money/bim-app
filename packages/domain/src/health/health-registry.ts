@@ -9,7 +9,9 @@ export type ComponentName =
   | 'atomiq'
   | 'database'
   | 'starknet-rpc'
-  | 'avnu-paymaster';
+  | 'avnu-paymaster'
+  | 'avnu-swap'
+  | 'coingecko-price';
 
 export type ComponentStatus = 'healthy' | 'down';
 

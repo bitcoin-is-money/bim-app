@@ -25,6 +25,10 @@ export class StarknetGatewayMock implements StarknetGateway {
     this.balanceOverrides.set(token, balance);
   }
 
+  async checkHealth(): Promise<void> {
+    // Test mock: no-op health check, never reports to any registry.
+  }
+
   calculateAccountAddress(_params: {publicKey: string}): StarknetAddress {
     return StarknetAddress.of('0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef');
   }

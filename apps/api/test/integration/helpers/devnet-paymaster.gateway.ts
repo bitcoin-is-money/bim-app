@@ -173,6 +173,10 @@ export class DevnetPaymasterGateway implements PaymasterGateway {
     this.starkSigner = starkSigner;
   }
 
+  async checkHealth(): Promise<void> {
+    // Devnet paymaster: no-op health check, never reports to any registry.
+  }
+
   /**
    * Gets the address of the last deployed account.
    * This is different from the P256-based address stored in the DB because
