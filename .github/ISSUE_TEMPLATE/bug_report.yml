@@ -1,0 +1,128 @@
+name: Bug report
+description: Report a reproducible bug in BIM
+title: "[bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report. Please fill in the
+        sections below so maintainers can reproduce and fix the issue
+        quickly.
+
+        ⚠️ **Security vulnerabilities** should NOT be reported here — see
+        [SECURITY.md](../blob/main/SECURITY.md) for the private disclosure
+        process.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: A clear and concise description of the bug.
+      placeholder: When I try to X, Y happens instead of Z.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Exact steps to reproduce the bug.
+      placeholder: |
+        1. Run `npm run dev`
+        2. Open http://localhost:4200
+        3. Click on ...
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What you expected to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What actually happened, including any error messages or stack traces.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected component
+      description: Which part of BIM is affected?
+      options:
+        - Backend API (apps/api)
+        - Frontend (apps/front)
+        - Indexer (apps/indexer)
+        - CLI (apps/cli)
+        - Domain layer (packages/domain)
+        - Database (packages/db)
+        - Infrastructure / deploy
+        - Other / unknown
+    validations:
+      required: true
+
+  - type: dropdown
+    id: network
+    attributes:
+      label: Network
+      options:
+        - testnet
+        - mainnet
+        - local only
+        - not applicable
+    validations:
+      required: true
+
+  - type: input
+    id: node-version
+    attributes:
+      label: Node.js version
+      description: Output of `node --version`
+      placeholder: v22.10.0
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: Linux / macOS / Windows (+ version)
+    validations:
+      required: true
+
+  - type: input
+    id: commit
+    attributes:
+      label: Commit hash
+      description: The commit you tested against (`git rev-parse HEAD`)
+      placeholder: abc1234
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: |
+        Paste any relevant logs, stack traces, or console output. Please
+        redact any sensitive data (keys, tokens, addresses you do not
+        want public).
+      render: shell
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I have searched existing issues and this bug has not been reported yet.
+          required: true
+        - label: I have verified this is not a security vulnerability (those go to SECURITY.md).
+          required: true

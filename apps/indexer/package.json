@@ -3,6 +3,25 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
+  "description": "BIM Apibara blockchain indexer — watches Starknet for WBTC transfers to user addresses.",
+  "license": "GPL-3.0-or-later",
+  "author": "yannicklacaute@bitcoinismoney.app",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bitcoin-is-money/bim.git",
+    "directory": "apps/indexer"
+  },
+  "bugs": {
+    "url": "https://github.com/bitcoin-is-money/bim/issues"
+  },
+  "homepage": "https://github.com/bitcoin-is-money/bim#readme",
+  "keywords": [
+    "bim",
+    "apibara",
+    "indexer",
+    "starknet",
+    "wbtc"
+  ],
   "scripts": {
     "clean": "rm -rf .apibara",
     "dev": "dotenv -e .env.testnet.secret -- apibara dev --preset testnet",

@@ -3,6 +3,24 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
+  "description": "Test helpers for the BIM monorepo (WebAuthn fakes, crypto fixtures).",
+  "license": "GPL-3.0-or-later",
+  "author": "yannicklacaute@bitcoinismoney.app",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bitcoin-is-money/bim.git",
+    "directory": "packages/test-toolkit"
+  },
+  "bugs": {
+    "url": "https://github.com/bitcoin-is-money/bim/issues"
+  },
+  "homepage": "https://github.com/bitcoin-is-money/bim#readme",
+  "keywords": [
+    "bim",
+    "testing",
+    "webauthn",
+    "fixtures"
+  ],
   "exports": {
     "./auth": {
       "types": "./dist/auth/index.d.ts",
