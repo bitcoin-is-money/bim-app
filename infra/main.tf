@@ -99,6 +99,7 @@ resource "scaleway_container" "api" {
       NODE_ENV                          = "production"
       WEBAUTHN_AUTHENTICATOR_ATTACHMENT = var.webauthn_authenticator_attachment
       LOG_LEVEL                         = var.api_log_level
+      LOG_TIMESTAMP                     = "false"
       AVNU_SPONSOR_ACTIVITY_URL         = var.avnu_sponsor_activity_url
     },
     # WebAuthn domain requires api_domain (set after first apply from outputs).
@@ -153,6 +154,7 @@ resource "scaleway_container" "indexer" {
     PRESET           = var.network
     STARKNET_NETWORK = var.network
     LOG_LEVEL        = var.indexer_log_level
+    LOG_TIMESTAMP    = "false"
   }
 
   secret_environment_variables = {

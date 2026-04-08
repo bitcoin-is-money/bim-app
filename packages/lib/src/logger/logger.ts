@@ -25,6 +25,10 @@ export function isValidLevel(level: string | undefined): level is LogLevel {
  * @param level - Log level, read from the `LOG_LEVEL` environment variable. Defaults to 'info'.
  * @param style - Style configuration for colors and formatting
  * @param destination - Optional writable destination. When omitted, writes to stdout.
+ *
+ * Timestamps are rendered by default. Set the `LOG_TIMESTAMP` environment variable
+ * to `false` to suppress them (useful in environments where the log aggregator
+ * already provides timestamps, e.g. Scaleway / Grafana).
  */
 export function createLogger(
   level?: string,
@@ -32,16 +36,17 @@ export function createLogger(
   destination?: NodeJS.WritableStream,
 ): Logger {
   level = level ?? process.env.LOG_LEVEL ?? 'info';
+  const showTimestamp = process.env.LOG_TIMESTAMP !== 'false';
   const prettyOptions: PrettyOptions = {
     singleLine: false,
     colorize: true,
     translateTime: 'SYS:HH:MM:ss.l',
-    ignore: 'pid,hostname,name',
+    ignore: showTimestamp ? 'pid,hostname,name' : 'pid,hostname,name,time',
     customColors: `property:${style.extraKey},greyMessage:${style.extraValue}`,
     messageFormat: createMessageFormat(style),
     customPrettifiers: {
       level: createLevelPrettifier(style),
-      time: createTimestampPrettifier(style),
+      ...(showTimestamp && {time: createTimestampPrettifier(style)}),
       err: createErrorPrettifier(style),
       // Suppress requestId from extra key-value output (it's already displayed by the level prettifier)
       ...(style.requestId !== undefined && {
