@@ -76,6 +76,7 @@ function createMockGateway(): AtomiqGateway {
     getStarknetToBitcoinLimits: vi.fn(),
     getSwapStatus: vi.fn(),
     isSwapPaid: vi.fn(),
+    claimForwardSwap: vi.fn(),
   };
 }
 
@@ -235,6 +236,7 @@ describe('SwapService', () => {
         isFailed: false,
         isExpired: false,
         isRefunded: false,
+        isRefundable: false,
         txHash: '0xabc',
       });
 
@@ -255,6 +257,7 @@ describe('SwapService', () => {
         isFailed: true,
         isExpired: false,
         isRefunded: false,
+        isRefundable: false,
         error: 'Network error',
       });
 
@@ -400,6 +403,7 @@ describe('SwapService', () => {
       expect(result.getStatus()).toBe('committed');
       expect(result.getTxHash()).toBe('0xcommit123');
       expect(result.data.direction).toBe('bitcoin_to_starknet');
+      if (result.data.direction !== 'bitcoin_to_starknet') throw new Error('expected bitcoin_to_starknet');
       expect(result.data.depositAddress).toBeUndefined();
       expect(result.isTerminal()).toBe(false);
       expect(result.getProgress()).toBe(10);
@@ -434,6 +438,7 @@ describe('SwapService', () => {
 
       expect(result.depositAddress).toBe('bc1qdeposit123');
       expect(result.bip21Uri).toBe('bitcoin:bc1qdeposit123?amount=0.005');
+      if (result.swap.data.direction !== 'bitcoin_to_starknet') throw new Error('expected bitcoin_to_starknet');
       expect(result.swap.data.depositAddress).toBe('bc1qdeposit123');
       expect(result.swap.getStatus()).toBe('paid');
       expect(repository.save).toHaveBeenCalledWith(committedSwap);
