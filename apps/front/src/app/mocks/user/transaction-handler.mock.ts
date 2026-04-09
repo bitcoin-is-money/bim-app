@@ -68,6 +68,12 @@ function mockTx(
 }
 
 const MOCK_TRANSACTIONS: Transaction[] = [
+  mockTx('26', 'receipt', '206186', 1, 'adma birthday'),
+  mockTx('27', 'spent', '1997938', 1, 'New grillz'),
+  mockTx('28', 'spent', '5196', 1, 'Coffee'),
+  mockTx('29', 'receipt', '15505', 2, 'no desc -'),
+  mockTx('30', 'receipt', '23711', 3, 'Beers after a long run'),
+  mockTx('31', 'spent', '15505', 4, 'no desc -'),
   mockTx('1', 'receipt', '5000000', 1, 'Salary'),
   mockTx('2', 'spent', '2500000', 2, 'Rent looooooooooooooooooooooooooooooooonnnnnnngggggggggggggggggggg and multi line '),
   mockTx('3', 'receipt', '15000000', 3),

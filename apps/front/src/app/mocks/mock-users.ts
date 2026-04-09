@@ -30,6 +30,31 @@ export interface MockUserProfile {
 
 export const MOCK_USERS: [MockUserProfile, ...MockUserProfile[]] = [
   {
+    // For screenshots
+    username: 'JJcale',
+    starknetAddress: '0x04a3b2c1d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8',
+    deploymentTxHash: '0x01ab23cd45ef6789ab01cd23ef4567890123456789abcdef0123456789abcdef',
+    createdAt: '2025-11-15T10:30:00.000Z',
+    deployAccountSuccess: true,
+    hasTransactions: true,
+    balance: '250000',
+    paymentExecuteSuccess: true,
+    receiveInvoiceSuccess: true,
+    paymentParseResult: {
+      network: 'starknet',
+      amount: {value: 50_000_000, currency: 'SAT'}, // 0.5 BTC
+      amountEditable: false,
+      fee: {value: 50_000, currency: 'SAT'}, // 0.1% BIM fee
+      description: 'Payment to Starknet account',
+      address: '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d',
+      tokenAddress: '0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac',
+    },
+    paymentBuildFee: null, // Starknet: same fee as parse
+    existingSwaps: [],
+    swapConfig: {statusProgression: ['pending', 'paid', 'completed']},
+    language: 'en',
+  },
+  {
     // STARKNET USER - NO SWAPS (starknet doesn't create swaps)
     username: 'alice',
     starknetAddress: '0x04a3b2c1d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8',
