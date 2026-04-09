@@ -151,15 +151,50 @@
     "authenticationCancelled": "Authentification annulée",
     "registrationFailed": "L'inscription a échoué",
     "authenticationFailed": "L'authentification a échoué",
-    "invoiceCreated": "Facture créée",
-    "invoiceCreationFailed": "Échec de la création de la facture",
-    "paymentFailed": "Le paiement a échoué",
-    "swapDetected": "{{type}} détecté, confirmation...",
-    "swapCompleted": "{{type}} terminé !",
-    "swapExpired": "{{type}} expiré",
-    "swapFailed": "{{type}} échoué",
-    "swapTypeReceive": "Réception",
-    "swapTypePayment": "Paiement"
+    "receive": {
+      "lightning": {
+        "ready": "Facture Lightning prête",
+        "paid": "Paiement Lightning reçu",
+        "completed": "Fonds disponibles",
+        "expired": "Facture expirée",
+        "failed": "Réception échouée",
+        "lost": "Suivi de réception perdu"
+      },
+      "bitcoin": {
+        "ready": "Adresse de dépôt Bitcoin prête",
+        "paid": "Bitcoin confirmé, finalisation…",
+        "completed": "Fonds disponibles",
+        "depositRefunded": "Dépôt de sécurité remboursé",
+        "expired": "Fenêtre de dépôt expirée",
+        "failed": "Réception échouée",
+        "lost": "Suivi de réception perdu"
+      },
+      "starknet": {
+        "ready": "Adresse Starknet prête",
+        "paid": "Transfert entrant reçu"
+      }
+    },
+    "send": {
+      "lightning": {
+        "sent": "Paiement envoyé",
+        "completed": "Paiement Lightning délivré",
+        "refunded": "Paiement remboursé",
+        "failed": "Paiement échoué",
+        "lost": "Suivi de paiement perdu"
+      },
+      "bitcoin": {
+        "sent": "Paiement Bitcoin diffusé",
+        "completed": "Paiement Bitcoin confirmé",
+        "refundable": "Action requise : remboursement disponible",
+        "refunded": "Paiement remboursé",
+        "failed": "Paiement échoué",
+        "lost": "Suivi de paiement perdu"
+      },
+      "starknet": {
+        "sent": "Transaction soumise",
+        "failed": "Transaction échouée"
+      }
+    }
   },
   "common": {
     "loading": "Chargement",

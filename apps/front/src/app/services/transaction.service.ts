@@ -16,6 +16,12 @@ export interface DisplayedTransaction {
   currency: Currency;
 }
 
+export interface WaitForNewOptions {
+  intervalMs?: number;
+  maxAttempts?: number;
+  onDetected?: () => void;
+}
+
 const PAGE_SIZE = 10;
 
 @Injectable({
@@ -94,19 +100,26 @@ export class TransactionService {
 
   /**
    * Polls the backend until a new transaction appears or the timeout is reached.
-   * Used after Starknet direct payments where there is no swap to track.
-   * Stops immediately when a new transaction is detected.
+   * Used after Starknet direct payments (send) and Starknet receives where there
+   * is no swap to track. Captures the current server-side total before polling
+   * to avoid firing on stale local state. Stops immediately on detection.
    */
-  waitForNew(intervalMs = 2000, maxAttempts = 15): Subscription {
-    const currentTotal = this._transactions()?.length ?? 0;
+  waitForNew(options: WaitForNewOptions = {}): Subscription {
+    const intervalMs = options.intervalMs ?? 2000;
+    const maxAttempts = options.maxAttempts ?? 15;
 
-    return interval(intervalMs).pipe(
-      take(maxAttempts),
-      switchMap(() => this.httpService.getTransactions(1, 0)),
-      filter(result => result.total > currentTotal),
-      take(1),
+    return this.httpService.getTransactions(1, 0).pipe(
+      switchMap((initial) =>
+        interval(intervalMs).pipe(
+          take(maxAttempts),
+          switchMap(() => this.httpService.getTransactions(1, 0)),
+          filter((result) => result.total > initial.total),
+          take(1),
+        ),
+      ),
     ).subscribe(() => {
       this.loadFirst();
+      options.onDetected?.();
     });
   }
 

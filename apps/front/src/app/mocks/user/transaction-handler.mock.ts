@@ -6,6 +6,44 @@ import type {DataStoreMock} from "../data-store.mock";
 const MOCK_STARKNET_ADDRESS = '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d';
 const MOCK_TOKEN_ADDRESS = '0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac';
 
+/**
+ * Module-scoped list of transactions simulated during the current session.
+ * Used to emulate the Apibara indexer picking up incoming/outgoing Starknet
+ * transfers a few seconds after the user creates a Starknet receive or
+ * submits a Starknet payment — so that `transactionService.waitForNew()`
+ * actually detects something in mock mode.
+ */
+const DYNAMIC_TRANSACTIONS: Transaction[] = [];
+
+/**
+ * Schedules a simulated Starknet transaction to appear after `delayMs`.
+ * Called by the receive and payment mock handlers to exercise the
+ * transaction detection flow in mock mode.
+ */
+export function scheduleSimulatedStarknetTransaction(
+  type: 'receipt' | 'spent',
+  amountSats: number,
+  counterpartyAddress: string,
+  delayMs: number,
+): void {
+  setTimeout(() => {
+    const id = 'dyn-' + String(Date.now());
+    const now = new Date();
+    DYNAMIC_TRANSACTIONS.unshift({
+      id,
+      transactionHash: '0x' + id.padStart(64, '0'),
+      blockNumber: String(800000),
+      type,
+      amount: String(amountSats),
+      tokenAddress: MOCK_TOKEN_ADDRESS,
+      fromAddress: type === 'receipt' ? counterpartyAddress : MOCK_STARKNET_ADDRESS,
+      toAddress: type === 'spent' ? counterpartyAddress : MOCK_STARKNET_ADDRESS,
+      timestamp: now.toISOString(),
+      indexedAt: now.toISOString(),
+    });
+  }, delayMs);
+}
+
 function mockTx(
   id: string,
   type: 'spent' | 'receipt',
@@ -65,23 +103,21 @@ export class TransactionHandlerMock {
   }
 
   getTransactions(req: HttpRequest<unknown>): HttpResponse<PaginatedTransactions> {
-    if (!this.store.getMockUserProfile().hasTransactions) {
-      return new HttpResponse({
-        status: 200,
-        body: {transactions: [], total: 0, limit: 10, offset: 0},
-      });
-    }
+    const hasHistoricalTxs = this.store.getMockUserProfile().hasTransactions;
+    const allTransactions: Transaction[] = hasHistoricalTxs
+      ? [...DYNAMIC_TRANSACTIONS, ...MOCK_TRANSACTIONS]
+      : [...DYNAMIC_TRANSACTIONS];
 
     const urlParams = new URL(req.urlWithParams, 'http://localhost').searchParams;
     const limit = Number(urlParams.get('limit') ?? '10');
     const offset = Number(urlParams.get('offset') ?? '0');
-    const page = MOCK_TRANSACTIONS.slice(offset, offset + limit);
+    const page = allTransactions.slice(offset, offset + limit);
 
     return new HttpResponse({
       status: 200,
       body: {
         transactions: page,
-        total: MOCK_TRANSACTIONS.length,
+        total: allTransactions.length,
         limit,
         offset,
       },

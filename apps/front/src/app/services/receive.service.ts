@@ -13,6 +13,18 @@ import {
 } from './receive.http.service';
 import {SwapPollingService} from './swap-polling.service';
 import {SwapStorageService} from './swap-storage.service';
+import {TransactionService} from './transaction.service';
+
+const I18N_READY_KEYS: Record<ReceiveNetwork, string> = {
+  lightning: 'notifications.receive.lightning.ready',
+  bitcoin: 'notifications.receive.bitcoin.ready',
+  starknet: 'notifications.receive.starknet.ready',
+};
+
+// Starknet receives have no swap to poll; watch the transactions endpoint for
+// up to 1 minute for an incoming WBTC transfer indexed by Apibara.
+const STARKNET_WATCH_INTERVAL_MS = 2000;
+const STARKNET_WATCH_MAX_ATTEMPTS = 30;
 
 @Injectable({
   providedIn: 'root',
@@ -23,6 +35,7 @@ export class ReceiveService {
   private readonly i18n = inject(I18nService);
   private readonly swapStorageService = inject(SwapStorageService);
   private readonly swapPollingService = inject(SwapPollingService);
+  private readonly transactionService = inject(TransactionService);
 
   readonly isLoading = signal(false);
   readonly invoice = signal<ReceiveResponse | null>(null);
@@ -113,9 +126,26 @@ export class ReceiveService {
   private handleReceiveSuccess(response: ReceiveResponse): void {
     this.invoice.set(response);
     this.isLoading.set(false);
-    this.notificationService.success({message: this.i18n.t('notifications.invoiceCreated')});
+    // eslint-disable-next-line security/detect-object-injection -- network is ReceiveNetwork union type
+    const readyKey = I18N_READY_KEYS[response.network];
+    this.notificationService.success({message: this.i18n.t(readyKey)});
 
-    if (response.network !== 'starknet' && 'swapId' in response) {
+    if (response.network === 'starknet') {
+      // No swap is created for Starknet receives — watch the transactions
+      // endpoint (fed by the Apibara indexer) for the incoming WBTC transfer.
+      this.transactionService.waitForNew({
+        intervalMs: STARKNET_WATCH_INTERVAL_MS,
+        maxAttempts: STARKNET_WATCH_MAX_ATTEMPTS,
+        onDetected: () => {
+          this.notificationService.info({
+            message: this.i18n.t('notifications.receive.starknet.paid'),
+          });
+        },
+      });
+      return;
+    }
+
+    if ('swapId' in response) {
       const swap: StoredSwap = {
         id: response.swapId,
         type: 'receive',
