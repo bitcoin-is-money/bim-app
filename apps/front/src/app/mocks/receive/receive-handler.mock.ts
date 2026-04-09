@@ -3,6 +3,11 @@ import {type ApiErrorResponse, ErrorCode, type SwapDirection} from '../../model'
 import type {ReceiveResponse} from '../../services/receive.http.service';
 import type {DataStoreMock} from '../data-store.mock';
 import {createErrorResponse} from '../mock-error';
+import {scheduleSimulatedStarknetTransaction} from '../user/transaction-handler.mock';
+
+// Delay before a simulated incoming Starknet transfer appears after the
+// receive address is shown — emulates the Apibara indexer catch-up time.
+const STARKNET_RECEIVE_SIMULATION_DELAY_MS = 5000;
 
 interface ReceiveRequestBody {
   network: 'lightning' | 'bitcoin' | 'starknet';
@@ -81,6 +86,15 @@ export class ReceiveHandlerMock {
           address,
           uri: `starknet:${address}`,
         };
+        // Simulate an incoming Starknet transfer a few seconds later so that
+        // the frontend's `waitForNew()` polling has something to detect and
+        // can fire the receive.starknet.paid notification.
+        scheduleSimulatedStarknetTransaction(
+          'receipt',
+          amount,
+          '0x0123456789abcdef',
+          STARKNET_RECEIVE_SIMULATION_DELAY_MS,
+        );
         break;
       }
     }

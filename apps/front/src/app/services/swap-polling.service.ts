@@ -3,13 +3,57 @@ import type { OnDestroy} from '@angular/core';
 import {inject, Injectable} from '@angular/core';
 import type { Subscription} from 'rxjs';
 import {catchError, filter, interval, of, switchMap, takeWhile, tap} from 'rxjs';
-import {isTerminalStatus, type StoredSwap, type SwapStatus} from '../model';
+import {isTerminalStatus, type StoredSwap, type SwapDirection, type SwapStatus} from '../model';
 import {AccountService} from './account.service';
 import {I18nService} from './i18n.service';
 import {NotificationService} from './notification.service';
 import {SwapHttpService} from './swap.http.service';
 import {SwapStorageService} from './swap-storage.service';
 import {TransactionService} from './transaction.service';
+
+type NotificationKind = 'info' | 'success' | 'error';
+
+interface NotificationEntry {
+  readonly key: string;
+  readonly kind: NotificationKind;
+  readonly useConfetti?: boolean;
+}
+
+/**
+ * Maps (direction, status) tuples to the notification to display.
+ * Missing entries mean "no notification for this transition" — e.g. sends
+ * skip the intermediate `paid` to avoid noise between "Payment sent" and
+ * the terminal state.
+ */
+const NOTIFICATIONS: Record<SwapDirection, Partial<Record<SwapStatus, NotificationEntry>>> = {
+  lightning_to_starknet: {
+    paid:      {key: 'notifications.receive.lightning.paid',      kind: 'info'},
+    completed: {key: 'notifications.receive.lightning.completed', kind: 'success', useConfetti: true},
+    expired:   {key: 'notifications.receive.lightning.expired',   kind: 'error'},
+    failed:    {key: 'notifications.receive.lightning.failed',    kind: 'error'},
+    lost:      {key: 'notifications.receive.lightning.lost',      kind: 'error'},
+  },
+  bitcoin_to_starknet: {
+    paid:      {key: 'notifications.receive.bitcoin.paid',      kind: 'info'},
+    completed: {key: 'notifications.receive.bitcoin.completed', kind: 'success', useConfetti: true},
+    expired:   {key: 'notifications.receive.bitcoin.expired',   kind: 'error'},
+    failed:    {key: 'notifications.receive.bitcoin.failed',    kind: 'error'},
+    lost:      {key: 'notifications.receive.bitcoin.lost',      kind: 'error'},
+  },
+  starknet_to_lightning: {
+    completed:  {key: 'notifications.send.lightning.completed', kind: 'success', useConfetti: true},
+    refunded:   {key: 'notifications.send.lightning.refunded',  kind: 'info'},
+    failed:     {key: 'notifications.send.lightning.failed',    kind: 'error'},
+    lost:       {key: 'notifications.send.lightning.lost',      kind: 'error'},
+  },
+  starknet_to_bitcoin: {
+    completed:  {key: 'notifications.send.bitcoin.completed',  kind: 'success', useConfetti: true},
+    refundable: {key: 'notifications.send.bitcoin.refundable', kind: 'error'},
+    refunded:   {key: 'notifications.send.bitcoin.refunded',   kind: 'info'},
+    failed:     {key: 'notifications.send.bitcoin.failed',     kind: 'error'},
+    lost:       {key: 'notifications.send.bitcoin.lost',       kind: 'error'},
+  },
+};
 
 const POLL_INTERVAL_MS = 5000;
 const POLL_DURATION_MS = 5 * 60 * 1000;
@@ -85,12 +129,11 @@ export class SwapPollingService implements OnDestroy {
           this.resetErrors(swapId);
 
           const storedSwap = this.storageService.getSwap(swapId);
-          const previousStatus = storedSwap?.lastKnownStatus;
           const newStatus = response.status as SwapStatus;
 
           this.storageService.updateSwapStatus(swapId, newStatus);
 
-          if (previousStatus && previousStatus !== newStatus) {
+          if (storedSwap && storedSwap.lastKnownStatus !== newStatus) {
             this.showStatusNotification(storedSwap, newStatus);
           }
 
@@ -147,32 +190,38 @@ export class SwapPollingService implements OnDestroy {
     });
   }
 
-  private showStatusNotification(storedSwap: StoredSwap | undefined, newStatus: SwapStatus): void {
-    const type = storedSwap?.type === 'receive'
-      ? this.i18n.t('notifications.swapTypeReceive')
-      : this.i18n.t('notifications.swapTypePayment');
+  private showStatusNotification(storedSwap: StoredSwap, newStatus: SwapStatus): void {
+    // eslint-disable-next-line security/detect-object-injection -- direction is SwapDirection union, newStatus is SwapStatus union
+    const entry = NOTIFICATIONS[storedSwap.direction][newStatus];
+    if (entry) {
+      this.fireNotification(entry);
+    }
 
-    switch (newStatus) {
-      case 'paid':
-        this.notificationService.info({
-          message: this.i18n.t('notifications.swapDetected', {type}),
-        });
+    // Bitcoin receive: the security deposit is refunded atomically with the
+    // claim tx inside SwapMonitor, so completion implies the bounty is back
+    // in the user's wallet — surface it as a separate toast.
+    if (storedSwap.direction === 'bitcoin_to_starknet' && newStatus === 'completed') {
+      this.fireNotification({
+        key: 'notifications.receive.bitcoin.depositRefunded',
+        kind: 'info',
+      });
+    }
+  }
+
+  private fireNotification(entry: NotificationEntry): void {
+    const message = this.i18n.t(entry.key);
+    switch (entry.kind) {
+      case 'info':
+        this.notificationService.info({message});
         break;
-      case 'completed':
+      case 'success':
         this.notificationService.success({
-          message: this.i18n.t('notifications.swapCompleted', {type}),
-          useConfetti: true,
+          message,
+          ...(entry.useConfetti === true && {useConfetti: true}),
         });
         break;
-      case 'expired':
-        this.notificationService.error({
-          message: this.i18n.t('notifications.swapExpired', {type}),
-        });
-        break;
-      case 'failed':
-        this.notificationService.error({
-          message: this.i18n.t('notifications.swapFailed', {type}),
-        });
+      case 'error':
+        this.notificationService.error({message});
         break;
     }
   }

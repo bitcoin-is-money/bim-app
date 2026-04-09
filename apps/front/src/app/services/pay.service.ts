@@ -4,10 +4,18 @@ import {Base64Url} from '@bim/lib/encoding';
 import {firstValueFrom, Subscription} from 'rxjs';
 import {ParsedPayment, type StoredSwap} from '../model';
 import {AccountService} from './account.service';
+import {I18nService} from './i18n.service';
+import {NotificationService} from './notification.service';
 import {type BuildPaymentResponse, type ExecutePaymentResponse, type PaymentNetwork, PayHttpService} from './pay.http.service';
 import {SwapPollingService} from './swap-polling.service';
 import {SwapStorageService} from './swap-storage.service';
 import {TransactionService} from './transaction.service';
+
+const SENT_KEYS: Record<PaymentNetwork, string> = {
+  lightning: 'notifications.send.lightning.sent',
+  bitcoin: 'notifications.send.bitcoin.sent',
+  starknet: 'notifications.send.starknet.sent',
+};
 
 @Injectable({
   providedIn: 'root',
@@ -19,6 +27,8 @@ export class PayService {
   private readonly transactionService = inject(TransactionService);
   private readonly swapStorageService = inject(SwapStorageService);
   private readonly swapPollingService = inject(SwapPollingService);
+  private readonly notificationService = inject(NotificationService);
+  private readonly i18n = inject(I18nService);
 
   parsedPayment = signal<ParsedPayment | null>(null);
   isLoading = signal(false);
@@ -165,6 +175,10 @@ export class PayService {
 
   private handleSuccess(response: ExecutePaymentResponse): void {
     this.lastPaymentNetwork.set(response.network);
+
+    // eslint-disable-next-line security/detect-object-injection -- network is PaymentNetwork union type
+    const sentKey = SENT_KEYS[response.network];
+    this.notificationService.info({message: this.i18n.t(sentKey)});
 
     if (response.network !== 'starknet' && 'swapId' in response) {
       const swap: StoredSwap = {

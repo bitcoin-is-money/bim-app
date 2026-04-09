@@ -3,6 +3,11 @@ import {type ApiErrorResponse, ErrorCode, type SwapDirection} from '../../model'
 import type {BuildPaymentResponse, ExecutePaymentResponse, ParsePaymentResponse} from '../../services/pay.http.service';
 import type {DataStoreMock} from '../data-store.mock';
 import {createErrorResponse} from '../mock-error';
+import {scheduleSimulatedStarknetTransaction} from '../user/transaction-handler.mock';
+
+// Delay before a simulated outgoing Starknet transfer appears after the
+// payment is submitted — emulates the Apibara indexer catch-up time.
+const STARKNET_SEND_SIMULATION_DELAY_MS = 4000;
 
 export class PaymentHandlerMock {
   constructor(private readonly store: DataStoreMock) {}
@@ -73,6 +78,15 @@ export class PaymentHandlerMock {
           recipientAddress: parseResult.address,
           tokenAddress: parseResult.tokenAddress,
         };
+        // Simulate the outgoing Starknet transfer appearing in the user's
+        // history shortly after submit, so `waitForNew()` detects it and
+        // the success page can refresh with the new transaction.
+        scheduleSimulatedStarknetTransaction(
+          'spent',
+          parseResult.amount.value,
+          parseResult.address,
+          STARKNET_SEND_SIMULATION_DELAY_MS,
+        );
         break;
       case 'lightning': {
         const swapId = 'mock-swap-ln-pay-' + String(Date.now());

@@ -151,15 +151,50 @@
     "authenticationCancelled": "Authentication cancelled",
     "registrationFailed": "Registration failed",
     "authenticationFailed": "Authentication failed",
-    "invoiceCreated": "Invoice created",
-    "invoiceCreationFailed": "Invoice creation failed",
-    "paymentFailed": "Payment failed",
-    "swapDetected": "{{type}} detected, confirming...",
-    "swapCompleted": "{{type}} completed!",
-    "swapExpired": "{{type}} expired",
-    "swapFailed": "{{type}} failed",
-    "swapTypeReceive": "Receive",
-    "swapTypePayment": "Payment"
+    "receive": {
+      "lightning": {
+        "ready": "Lightning invoice ready",
+        "paid": "Lightning payment received",
+        "completed": "Funds available",
+        "expired": "Invoice expired",
+        "failed": "Receive failed",
+        "lost": "Receive tracking lost"
+      },
+      "bitcoin": {
+        "ready": "Bitcoin deposit address ready",
+        "paid": "Bitcoin confirmed, finalizing…",
+        "completed": "Funds available",
+        "depositRefunded": "Security deposit refunded",
+        "expired": "Deposit window expired",
+        "failed": "Receive failed",
+        "lost": "Receive tracking lost"
+      },
+      "starknet": {
+        "ready": "Starknet address ready",
+        "paid": "Incoming transfer received"
+      }
+    },
+    "send": {
+      "lightning": {
+        "sent": "Payment sent",
+        "completed": "Lightning payment delivered",
+        "refunded": "Payment refunded",
+        "failed": "Payment failed",
+        "lost": "Payment tracking lost"
+      },
+      "bitcoin": {
+        "sent": "Bitcoin payment broadcast",
+        "completed": "Bitcoin payment confirmed",
+        "refundable": "Action required: refund available",
+        "refunded": "Payment refunded",
+        "failed": "Payment failed",
+        "lost": "Payment tracking lost"
+      },
+      "starknet": {
+        "sent": "Transaction submitted",
+        "failed": "Transaction failed"
+      }
+    }
   },
   "common": {
     "loading": "Loading",
