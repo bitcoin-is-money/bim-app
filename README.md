@@ -20,11 +20,7 @@ phrase to write down. No browser extension. No gas to pre-fund.
 
 <br/>
 <p align="center">
-  <img src="doc/screenshots/auth-page.png" alt="BIM wallet — receive Lightning" width="180px" />
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <img src="doc/screenshots/home-page.png" alt="BIM wallet — receive Lightning" width="180px" />
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <img src="doc/screenshots/receive-ln-page.png" alt="BIM wallet — receive Lightning" width="180px" />
+  <img src="doc/screenshots/auth-home-ln-pages.png" alt="BIM wallet screenshots" width="100%" />
 </p>
 <br/>
 
