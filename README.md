@@ -59,17 +59,18 @@ user sends a payment.
 
 <br/>
 <p align="center">
-  <img src="doc/icons/tech/ts-logo-256.webp" alt="Typescript" title="Typescript - strict - 100% ESM" width="64px" /> &nbsp;
-  <img src="doc/icons/tech/nodejs-logo-256.webp" alt="NodeJS" title="NodeJS" width="64px" /> &nbsp;
-  <img src="doc/icons/tech/angular-logo-256.webp" alt="Angular" title="Angular" width="64px" /> &nbsp;
-  <img src="doc/icons/tech/hono-logo-256.webp" alt="Hono web server" title="Hono web server" width="64px" /> &nbsp;
-  <img src="doc/icons/tech/starknet-logo-256.webp" alt="Starknet SDK" title="Starknet SDK" width="64px" /> &nbsp;
-  <img src="doc/icons/tech/atomiq-logo-256.webp" alt="Atomiq SDK" title="Atomiq SDK" width="64px" /> &nbsp;
-  <img src="doc/icons/tech/avnu-logo-256.webp" alt="AVNU Paymaster" title="AVNU Paymaster" width="64px" /> &nbsp;
-  <img src="doc/icons/tech/drizzle-logo-256.webp" alt="Drizzle ORM" title="Drizzle ORM" width="64px" /> &nbsp;
-  <img src="doc/icons/tech/passkeys-logo-256.webp" alt="WebAuthn / passkeys" title="WebAuthn / passkeys" width="64px" /> &nbsp;
-  <img src="doc/icons/tech/testcontainers-logo-256.webp" alt="Testcontainers" title="Testcontainers" width="64px" /> &nbsp;
-  <img src="doc/icons/tech/vitest-logo-256.webp" alt="Vitest" title="Vitest" width="64px" />
+  <img src="doc/icons/tech/ts-logo-256.webp" alt="Typescript" title="Typescript - strict - 100% ESM" width="58px" /> &nbsp;
+  <img src="doc/icons/tech/nodejs-logo-256.webp" alt="NodeJS" title="NodeJS" width="58px" /> &nbsp;
+  <img src="doc/icons/tech/angular-logo-256.webp" alt="Angular" title="Angular" width="58px" /> &nbsp;
+  <img src="doc/icons/tech/hono-logo-256.webp" alt="Hono web server" title="Hono web server" width="58px" /> &nbsp;
+  <img src="doc/icons/tech/starknet-logo-256.webp" alt="Starknet SDK" title="Starknet SDK" width="58px" /> &nbsp;
+  <img src="doc/icons/tech/atomiq-logo-256.webp" alt="Atomiq SDK" title="Atomiq SDK" width="58px" /> &nbsp;
+  <img src="doc/icons/tech/avnu-logo-256.webp" alt="AVNU Paymaster" title="AVNU Paymaster" width="58px" /> &nbsp;
+  <img src="doc/icons/tech/apibara-logo-256.webp" alt="Apibara indexer" title="Apibara indexer" width="58px" /> &nbsp;
+  <img src="doc/icons/tech/drizzle-logo-256.webp" alt="Drizzle ORM" title="Drizzle ORM" width="58px" /> &nbsp;
+  <img src="doc/icons/tech/passkeys-logo-256.webp" alt="WebAuthn / passkeys" title="WebAuthn / passkeys" width="58px" /> &nbsp;
+  <img src="doc/icons/tech/testcontainers-logo-256.webp" alt="Testcontainers" title="Testcontainers" width="58px" /> &nbsp;
+  <img src="doc/icons/tech/vitest-logo-256.webp" alt="Vitest" title="Vitest" width="58px" />
 </p>
 <br/>
 
