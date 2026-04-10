@@ -8,7 +8,13 @@ import {type ApiErrorResponse, handleDomainError} from '../../errors';
 import {createAuthMiddleware} from '../../middleware/auth.middleware';
 import type {AuthenticatedHono} from '../../types.js';
 import {SwapDirectionSchema, SwapIdParamSchema} from './swap.types';
-import type {SwapDirection, SwapIdParam, SwapLimitsResponse, SwapStatusResponse} from './swap.types';
+import type {
+  ActiveSwapsResponse,
+  SwapDirection,
+  SwapIdParam,
+  SwapLimitsResponse,
+  SwapStatusResponse,
+} from './swap.types';
 
 // =============================================================================
 // Routes
@@ -67,6 +73,28 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
         amountSats: result.swap.data.amount.toSatString(),
         destinationAddress: result.swap.data.destinationAddress,
         expiresAt: result.swap.data.expiresAt.toISOString(),
+      });
+    } catch (error) {
+      return handleDomainError(honoCtx, error, log);
+    }
+  });
+
+  // ---------------------------------------------------------------------------
+  // Active Swaps (count for the authenticated account)
+  // ---------------------------------------------------------------------------
+  // Used by the PWA update flow on the frontend: after a successful login,
+  // the client calls this endpoint to know whether it is safe to apply a
+  // pending client update. We never reload the app while swaps are in flight.
+
+  app.get('/active', async (honoCtx): Promise<TypedResponse<ActiveSwapsResponse | ApiErrorResponse>> => {
+    try {
+      const account: Account = honoCtx.get('account');
+
+      const count = await swapService.countActiveForAccount(account.id);
+
+      return honoCtx.json<ActiveSwapsResponse>({
+        active: count > 0,
+        count,
       });
     } catch (error) {
       return handleDomainError(honoCtx, error, log);

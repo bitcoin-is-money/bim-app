@@ -7,6 +7,9 @@
     "chooseUsername": "Choose your username",
     "useDeviceSecurity": "Use your device security to access your wallet"
   },
+  "pwa": {
+    "updating": "Updating app"
+  },
   "home": {
     "greeting": "Hi {{username}}",
     "receive": "Receive",

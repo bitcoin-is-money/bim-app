@@ -7,6 +7,9 @@
     "chooseUsername": "Choisissez votre nom d'utilisateur",
     "useDeviceSecurity": "Utilisez la sécurité de votre appareil pour accéder à votre portefeuille"
   },
+  "pwa": {
+    "updating": "Mise à jour de l'application"
+  },
   "home": {
     "greeting": "Bonjour {{username}}",
     "receive": "Recevoir",
