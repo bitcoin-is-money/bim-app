@@ -1,10 +1,10 @@
-import {AsyncLocalStorage} from 'node:async_hooks';
-import * as schema from './schema.js';
 import {getTableName} from 'drizzle-orm';
 import {drizzle} from 'drizzle-orm/node-postgres';
 import type {PgTable} from 'drizzle-orm/pg-core';
+import {AsyncLocalStorage} from 'node:async_hooks';
 import pg from 'pg';
 import type {Logger} from 'pino';
+import * as schema from './schema.js';
 
 export type DrizzleDatabase = ReturnType<typeof drizzle<typeof schema>>;
 

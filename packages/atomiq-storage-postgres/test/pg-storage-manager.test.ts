@@ -9,8 +9,8 @@ class FakeStorageObject implements StorageObject {
   }
 }
 
-function createMockPool(): {pool: unknown; calls: Array<{sql: string; params?: unknown[]}>} {
-  const calls: Array<{sql: string; params?: unknown[]}> = [];
+function createMockPool(): {pool: unknown; calls: {sql: string; params?: unknown[]}[]} {
+  const calls: {sql: string; params?: unknown[]}[] = [];
   const pool = {
     query: vi.fn(async (sql: string, params?: unknown[]) => {
       calls.push({sql, params});
@@ -130,8 +130,8 @@ describe('PgStorageManager', () => {
       expect(results[0].data).toBe('data-1');
       expect(results[1].data).toBe('data-2');
 
-      expect(storage.data['k1'].data).toBe('data-1');
-      expect(storage.data['k2'].data).toBe('data-2');
+      expect(storage.data.k1.data).toBe('data-1');
+      expect(storage.data.k2.data).toBe('data-2');
     });
 
     it('clears previous data cache on reload', async () => {
@@ -142,14 +142,14 @@ describe('PgStorageManager', () => {
         rows: [{id: 'old', value: JSON.stringify('old-data')}],
       });
       await storage.loadData(FakeStorageObject);
-      expect(storage.data['old']).toBeDefined();
+      expect(storage.data.old).toBeDefined();
 
       (pool as {query: ReturnType<typeof vi.fn>}).query.mockResolvedValueOnce({
         rows: [{id: 'new', value: JSON.stringify('new-data')}],
       });
       await storage.loadData(FakeStorageObject);
-      expect(storage.data['old']).toBeUndefined();
-      expect(storage.data['new']).toBeDefined();
+      expect(storage.data.old).toBeUndefined();
+      expect(storage.data.new).toBeDefined();
     });
   });
 

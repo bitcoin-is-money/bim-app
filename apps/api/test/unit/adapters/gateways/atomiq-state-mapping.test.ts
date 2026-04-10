@@ -1,7 +1,7 @@
-import {describe, expect, it} from 'vitest';
 import type {AtomiqSwapStatusFlags} from '@bim/atomiq';
 import {mapAtomiqStateToStatus} from '@bim/atomiq';
 import type {SwapDirection} from '@bim/domain/swap';
+import {describe, expect, it} from 'vitest';
 
 const NEUTRAL: AtomiqSwapStatusFlags = {
   isPaid: false,

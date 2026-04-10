@@ -20,6 +20,9 @@ import {
   SessionNotFoundError,
 } from '@bim/domain/auth';
 
+// Domain errors - Currency
+import {UnsupportedCurrencyError} from '@bim/domain/currency';
+
 // Domain errors - Payment
 import {
   InvalidPaymentAddressError,
@@ -55,9 +58,6 @@ import {
   SwapNotFoundError,
   SwapOwnershipError,
 } from '@bim/domain/swap';
-
-// Domain errors - Currency
-import {UnsupportedCurrencyError} from '@bim/domain/currency';
 
 // Domain errors - User
 import {UserSettingsNotFoundError} from '@bim/domain/user';

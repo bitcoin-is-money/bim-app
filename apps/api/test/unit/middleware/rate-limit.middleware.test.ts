@@ -4,8 +4,8 @@ import {beforeEach, describe, expect, it} from 'vitest';
 import {
   createAuthRateLimit,
   createGlobalRateLimit,
-  createPaymentRateLimit,
   createPaymentExecuteRateLimit,
+  createPaymentRateLimit,
 } from '../../../src/middleware/rate-limit.middleware';
 
 function createTestApp(middleware: ReturnType<typeof createGlobalRateLimit>) {

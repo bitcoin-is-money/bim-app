@@ -84,7 +84,7 @@ describe('HealthRegistry', () => {
   });
 
   it('throws if an unknown component is reported', () => {
-    expect(() => registry.reportHealthy('starknet-rpc')).toThrow(/not declared/);
+    expect(() => { registry.reportHealthy('starknet-rpc'); }).toThrow(/not declared/);
   });
 
   it('swallows listener exceptions so they do not break callers', () => {
@@ -92,7 +92,7 @@ describe('HealthRegistry', () => {
       throw new Error('boom');
     });
     const safeRegistry = new HealthRegistry(['atomiq'], throwingListener, silentLogger);
-    expect(() => safeRegistry.reportDown('atomiq', sampleError)).not.toThrow();
+    expect(() => { safeRegistry.reportDown('atomiq', sampleError); }).not.toThrow();
     expect(throwingListener).toHaveBeenCalledTimes(1);
   });
 });

@@ -13,8 +13,8 @@ const sampleCompositeIndexes: UnifiedStorageCompositeIndexes = [
   {keys: ['type', 'state'], unique: false},
 ];
 
-function createMockPool(): {pool: unknown; calls: Array<{sql: string; params?: unknown[]}>} {
-  const calls: Array<{sql: string; params?: unknown[]}> = [];
+function createMockPool(): {pool: unknown; calls: {sql: string; params?: unknown[]}[]} {
+  const calls: {sql: string; params?: unknown[]}[] = [];
   const pool = {
     query: vi.fn(async (sql: string, params?: unknown[]) => {
       calls.push({sql, params});
@@ -31,7 +31,7 @@ function mockPool(pool: unknown): {query: ReturnType<typeof vi.fn>} {
 describe('PgUnifiedStorage', () => {
 
   let pool: unknown;
-  let calls: Array<{sql: string; params?: unknown[]}>;
+  let calls: {sql: string; params?: unknown[]}[];
 
   beforeEach(() => {
     ({pool, calls} = createMockPool());

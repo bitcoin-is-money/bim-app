@@ -8,10 +8,15 @@ import type {
   StarknetCall,
   StarknetTransaction
 } from "@bim/domain/ports";
-import {ExternalServiceError, InsufficientBalanceError, PaymasterServiceError, SanitizedError} from "@bim/domain/shared";
+import {
+  ExternalServiceError,
+  InsufficientBalanceError,
+  PaymasterServiceError,
+  SanitizedError
+} from "@bim/domain/shared";
+import type {WALLET_API} from '@starknet-io/starknet-types-010';
 
 import type {Logger} from "pino";
-import type {WALLET_API} from '@starknet-io/starknet-types-010';
 import {type ExecutableUserTransaction, type ExecutionParameters, PaymasterRpc, type UserTransaction} from 'starknet';
 
 /** Minimum remaining STRK credits below which the paymaster is considered down. */

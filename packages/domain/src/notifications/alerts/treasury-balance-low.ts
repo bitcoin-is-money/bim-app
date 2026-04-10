@@ -1,5 +1,5 @@
-import type {StarknetAddress} from '../../shared';
 import type {NotificationMessage} from '../../ports';
+import type {StarknetAddress} from '../../shared';
 import {formatStrk, starkscanUrl, truncateAddress} from '../format';
 
 export class TreasuryBalanceLow {
@@ -15,7 +15,7 @@ export class TreasuryBalanceLow {
       return undefined;
     }
 
-    const fields: Map<string, string> = new Map([
+    const fields = new Map<string, string>([
       ['Account', `\`${truncateAddress(params.address)}\``],
       ['Network', params.network],
       ['Balance', `${formatStrk(params.currentBalance)} STRK`],

@@ -1,7 +1,7 @@
+import {Database} from '@bim/db/database';
 import {serve} from '@hono/node-server';
 
 import {createApp} from './app';
-import {Database} from '@bim/db/database';
 import {loadEnv} from './load-env';
 
 loadEnv();

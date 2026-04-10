@@ -1,10 +1,10 @@
 // @noble/curves v1 imports — pinned due to @noble/hashes 1.8.0 override (starknet compat)
+import {P256Signer} from '@bim/test-toolkit/crypto';
 // TODO: when upgrading to v2, change to: '@noble/curves/utils.js' and '@noble/curves/nist.js'
 /* eslint-disable @typescript-eslint/no-deprecated */
 import {bytesToHex, hexToBytes} from '@noble/curves/abstract/utils';
 import {p256} from '@noble/curves/p256';
 import {describe, expect, it} from 'vitest';
-import {P256Signer} from '@bim/test-toolkit/crypto';
 
 describe('P256Signer', () => {
   // Known test private key (32 bytes hex)

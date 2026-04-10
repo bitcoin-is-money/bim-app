@@ -1,4 +1,4 @@
-import {STRK_DECIMALS, WBTC_DECIMALS} from '../config/constants.js';
+import {STRK_DECIMALS} from '../config/constants.js';
 
 export function formatToken(
   amount: bigint,

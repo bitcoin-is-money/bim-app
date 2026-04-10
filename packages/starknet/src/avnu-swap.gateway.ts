@@ -1,5 +1,5 @@
 import type {HealthRegistry} from '@bim/domain/health';
-import type {SwapGateway, StarknetCall} from '@bim/domain/ports';
+import type {StarknetCall, SwapGateway} from '@bim/domain/ports';
 import {ExternalServiceError, SanitizedError, type StarknetAddress, validateExternalCalls} from '@bim/domain/shared';
 import type {Logger} from 'pino';
 

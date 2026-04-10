@@ -1,5 +1,5 @@
 import type {Hono} from 'hono';
-import {afterAll, beforeAll, describe, expect, it} from 'vitest';
+import {beforeAll, describe, expect, it} from 'vitest';
 import {TestApp} from '../helpers';
 
 describe('Health API', () => {

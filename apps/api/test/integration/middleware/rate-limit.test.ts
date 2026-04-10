@@ -1,6 +1,6 @@
+import type {Hono} from 'hono';
 import type pg from 'pg';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import type {Hono} from 'hono';
 import type {ApiErrorResponse} from '../../../src/errors';
 import {TestApp, TestDatabase} from '../helpers';
 

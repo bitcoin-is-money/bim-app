@@ -1,10 +1,5 @@
 import {InvalidStarknetAddressError, StarknetAddress} from '@bim/domain/account';
-import {
-  ParseService,
-  PaymentParsingError,
-  UnsupportedNetworkError,
-  UnsupportedTokenError
-} from '@bim/domain/payment';
+import {ParseService, PaymentParsingError, UnsupportedNetworkError, UnsupportedTokenError} from '@bim/domain/payment';
 import type {LightningDecoder} from '@bim/domain/ports';
 import {type StarknetConfig, ValidationError} from '@bim/domain/shared';
 import {BitcoinAddressNetworkMismatchError, InvalidBitcoinAddressError, LightningInvoice} from '@bim/domain/swap';

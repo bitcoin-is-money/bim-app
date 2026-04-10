@@ -58,8 +58,8 @@ export class PullRefreshContainerComponent {
 
   private snapBack(): void {
     this.isSnapping.set(true);
-    requestAnimationFrame(() => this.pullDistance.set(0));
-    setTimeout(() => this.isSnapping.set(false), 500);
+    requestAnimationFrame(() => { this.pullDistance.set(0); });
+    setTimeout(() => { this.isSnapping.set(false); }, 500);
   }
 
   onTouchEnd(): void {
@@ -70,7 +70,7 @@ export class PullRefreshContainerComponent {
     if (this.pullDistance() >= THRESHOLD && !this.isRefreshing()) {
       this.isRefreshing.set(true);
       this.snapBack();
-      this.refreshRequest.emit(new PullRefreshEvent(() => this.isRefreshing.set(false)));
+      this.refreshRequest.emit(new PullRefreshEvent(() => { this.isRefreshing.set(false); }));
     } else {
       this.snapBack();
     }

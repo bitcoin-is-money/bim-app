@@ -2,14 +2,7 @@ import type {Amount, BitcoinAddress, StarknetAddress} from '../shared';
 import {ValidationError} from '../shared';
 import type {LightningInvoice} from './lightning-invoice';
 
-import {
-  isForwardSwap,
-  type SwapData,
-  type SwapDirection,
-  type SwapState,
-  type SwapStatus,
-  type SwapId,
-} from './types';
+import {isForwardSwap, type SwapData, type SwapId, type SwapState, type SwapStatus,} from './types';
 
 /**
  * Swap entity representing a cross-chain swap operation.

@@ -1,8 +1,8 @@
 import {registerLocaleData} from '@angular/common';
-import localeFr from '@angular/common/locales/fr';
 import {provideHttpClient, withInterceptors} from '@angular/common/http';
+import localeFr from '@angular/common/locales/fr';
 import type {ApplicationConfig} from '@angular/core';
-import { importProvidersFrom, inject, provideAppInitializer, provideBrowserGlobalErrorListeners} from '@angular/core';
+import {importProvidersFrom, inject, provideAppInitializer, provideBrowserGlobalErrorListeners} from '@angular/core';
 import {provideRouter} from '@angular/router';
 import {provideServiceWorker} from '@angular/service-worker';
 import {FaIconLibrary} from '@fortawesome/angular-fontawesome';

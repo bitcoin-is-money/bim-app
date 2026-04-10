@@ -1,8 +1,5 @@
 import {describe, expect, it} from 'vitest';
-import type {
-  BuildPaymentResponse,
-  StarknetPaymentResultResponse,
-} from '../../../src/routes';
+import type {BuildPaymentResponse, StarknetPaymentResultResponse,} from '../../../src/routes';
 import {createTestLogger} from '../../helpers';
 import {
   assertTreasuryFeeCollected,

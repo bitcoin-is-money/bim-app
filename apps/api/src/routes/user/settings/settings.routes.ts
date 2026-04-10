@@ -7,8 +7,8 @@ import {Hono} from 'hono';
 import type {AppContext} from '../../../app-context';
 import {type ApiErrorResponse, handleDomainError} from '../../../errors';
 import type {AuthenticatedHono} from '../../../types.js';
-import {UpdateSettingsSchema} from './settings.types';
 import type {GetSettingsResponse, UpdateSettingsBody, UpdateSettingsResponse} from './settings.types';
+import {UpdateSettingsSchema} from './settings.types';
 
 // =============================================================================
 // Routes

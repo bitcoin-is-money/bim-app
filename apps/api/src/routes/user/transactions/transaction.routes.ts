@@ -5,8 +5,14 @@ import {Hono} from 'hono';
 import type {AppContext} from '../../../app-context';
 import {type ApiErrorResponse, handleDomainError} from '../../../errors';
 import type {AuthenticatedHono} from '../../../types.js';
+import type {
+  DeleteDescriptionResponse,
+  GetTransactionsQuery,
+  GetTransactionsResponse,
+  SetDescriptionBody,
+  SetDescriptionResponse
+} from './transaction.types';
 import {GetTransactionsQuerySchema, SetDescriptionSchema} from './transaction.types';
-import type {DeleteDescriptionResponse, GetTransactionsQuery, GetTransactionsResponse, SetDescriptionBody, SetDescriptionResponse} from './transaction.types';
 
 // =============================================================================
 // Routes

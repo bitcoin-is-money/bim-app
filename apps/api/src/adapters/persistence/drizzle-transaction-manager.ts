@@ -1,4 +1,4 @@
-import {Database} from '@bim/db/database';
+import type {Database} from '@bim/db/database';
 import type {TransactionManager} from '@bim/domain/ports';
 
 export class DrizzleTransactionManager implements TransactionManager {

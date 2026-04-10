@@ -1,8 +1,8 @@
 import {inject, Injectable, signal} from '@angular/core';
-import type { Observable} from 'rxjs';
+import type {Observable} from 'rxjs';
 import {map, tap} from 'rxjs';
 import {Amount} from "../model";
-import type { AccountInfoResponse, DeployAccountResponse, DeploymentStatusResponse} from './account.http.service';
+import type {AccountInfoResponse, DeployAccountResponse, DeploymentStatusResponse} from './account.http.service';
 import {AccountHttpService} from './account.http.service';
 
 @Injectable({

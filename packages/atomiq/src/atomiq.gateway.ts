@@ -3,8 +3,8 @@ import type {FromBTCSwap, TypedSwapper, TypedSwapperOptions} from '@atomiqlabs/s
 import {BitcoinNetwork, SwapperFactory, SwapType} from '@atomiqlabs/sdk';
 import {OutOfBoundsError} from '@atomiqlabs/sdk/dist/errors/RequestError';
 import {PgStorageManager, PgUnifiedStorage} from '@bim/atomiq-storage-postgres';
-import type pg from 'pg';
 import type {StarknetAddress} from "@bim/domain/account";
+import type {HealthRegistry} from "@bim/domain/health";
 import type {
   AtomiqGateway,
   AtomiqReverseSwapResult,
@@ -15,13 +15,23 @@ import type {
   ForwardSwapClaimResult,
   StarknetCall,
 } from '@bim/domain/ports';
-import {ExternalServiceError, type BitcoinNetwork as DomainBitcoinNetwork, type SanitizedError, validateExternalCalls} from "@bim/domain/shared";
-import type {HealthRegistry} from "@bim/domain/health";
-import type {SwapDirection, SwapLimits, BitcoinAddress, LightningInvoice, SwapId,
-  ClaimerConfig
+import {
+  Amount,
+  type BitcoinNetwork as DomainBitcoinNetwork,
+  ExternalServiceError,
+  type SanitizedError,
+  validateExternalCalls
+} from "@bim/domain/shared";
+import type {
+  BitcoinAddress,
+  ClaimerConfig,
+  LightningInvoice,
+  SwapDirection,
+  SwapId,
+  SwapLimits
 } from "@bim/domain/swap";
 import {LightningInvoiceExpiredError, SwapAmountError} from "@bim/domain/swap";
-import {Amount} from "@bim/domain/shared";
+import type pg from 'pg';
 import type {Logger} from "pino";
 import {Account as StarknetAccount, BlockTag, RpcProvider, Signer as StarknetSigner} from 'starknet';
 import {isInfraFailure, sanitizeAtomiqError} from './atomiq-error';
@@ -513,7 +523,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     const commitTxs = await swap.txsCommit();
     const commitCalls: StarknetCall[] = [];
     for (const tx of commitTxs) {
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive: SDK tx structure may vary
+       
       if (tx && typeof tx === 'object' && 'type' in tx && tx.type === 'INVOKE' && 'tx' in tx) {
         const calls = tx.tx as {contractAddress: string; entrypoint: string; calldata?: string[]}[];
         for (const call of calls) {

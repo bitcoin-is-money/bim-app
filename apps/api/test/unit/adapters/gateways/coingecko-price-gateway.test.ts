@@ -1,9 +1,9 @@
-import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
-import {CoinGeckoPriceGateway} from '../../../../src/adapters';
 import {FiatCurrency} from '@bim/domain/currency';
 import {HealthRegistry} from '@bim/domain/health';
 import {ExternalServiceError} from '@bim/domain/shared';
 import {createLogger} from '@bim/lib/logger';
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
+import {CoinGeckoPriceGateway} from '../../../../src/adapters';
 
 describe('CoinGeckoPriceGateway', () => {
   let gateway: CoinGeckoPriceGateway;

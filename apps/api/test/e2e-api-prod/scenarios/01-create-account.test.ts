@@ -3,14 +3,14 @@ import {afterAll, afterEach, beforeAll, describe, expect, it} from 'vitest';
 import type {DeployAccountResponse, GetAccountResponse, GetDeploymentStatusResponse} from '../../../src/routes';
 import {createTestLogger} from '../../helpers';
 import {
-  E2eClient,
-  registerUser,
-  isServerHealthy,
   buildDeployReport,
   buildFailReport,
+  E2eClient,
   formatAvnuCredits,
   getAvnuCredits,
+  isServerHealthy,
   pollAvnuCreditsAfter,
+  registerUser,
   sendSlackReport,
 } from '../helpers';
 

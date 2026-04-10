@@ -1,5 +1,6 @@
 import {Amount, type StarknetAddress} from '../shared';
-import {FeeCalculator, FeeConfig} from './fee';
+import type { FeeConfig} from './fee';
+import {FeeCalculator} from './fee';
 import type {PaymentNetwork} from './types';
 
 /**

@@ -1,5 +1,5 @@
-import {Database} from '@bim/db/database';
 import type {DrizzleDatabase} from '@bim/db/database';
+import type {Database} from '@bim/db/database';
 
 export abstract class AbstractDrizzleRepository {
 

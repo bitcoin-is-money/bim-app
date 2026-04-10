@@ -1,15 +1,15 @@
-import {run as treasuryCreate} from './commands/treasury-create.js';
-import {run as treasuryDeploy} from './commands/treasury-deploy.js';
 import accountBalance from './commands/account-balance.js';
+import {run as apiHealth} from './commands/api-health.js';
 import {run as avnuRefund} from './commands/avnu-refund.js';
-import {run as e2eInit} from './commands/e2e-init.js';
-import {run as e2eFund} from './commands/e2e-fund.js';
-import {run as slackTest} from './commands/slack-test.js';
-import {run as deployerCreate} from './commands/deployer-create.js';
-import {run as deployerDeploy} from './commands/deployer-deploy.js';
 import {run as contractCheck} from './commands/contract-check.js';
 import {run as contractDeclare} from './commands/contract-declare.js';
-import {run as apiHealth} from './commands/api-health.js';
+import {run as deployerCreate} from './commands/deployer-create.js';
+import {run as deployerDeploy} from './commands/deployer-deploy.js';
+import {run as e2eFund} from './commands/e2e-fund.js';
+import {run as e2eInit} from './commands/e2e-init.js';
+import {run as slackTest} from './commands/slack-test.js';
+import {run as treasuryCreate} from './commands/treasury-create.js';
+import {run as treasuryDeploy} from './commands/treasury-deploy.js';
 
 // =============================================================================
 // Command registry

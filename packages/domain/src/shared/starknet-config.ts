@@ -1,5 +1,5 @@
-import type {StarknetAddress} from './starknet-address';
 import type {BitcoinNetwork, StarknetNetwork} from './network';
+import type {StarknetAddress} from './starknet-address';
 
 /**
  * Starknet environment configuration.

@@ -1,5 +1,5 @@
 import {Component, computed, effect, inject, signal} from '@angular/core';
-import type { SafeHtml} from '@angular/platform-browser';
+import type {SafeHtml} from '@angular/platform-browser';
 import {DomSanitizer} from '@angular/platform-browser';
 import {TranslateModule} from '@ngx-translate/core';
 import {renderSVG} from 'uqr';

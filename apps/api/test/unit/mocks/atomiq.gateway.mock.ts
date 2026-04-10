@@ -8,8 +8,7 @@ import type {
   BitcoinSwapQuote,
 } from '@bim/domain/ports';
 import {ExternalServiceError} from "@bim/domain/shared";
-import type {BitcoinAddress, LightningInvoice, SwapId} from '@bim/domain/swap';
-import type {SwapDirection, SwapLimits} from '@bim/domain/swap';
+import type {BitcoinAddress, LightningInvoice, SwapDirection, SwapId, SwapLimits} from '@bim/domain/swap';
 
 /**
  * Mock implementation of AtomiqGateway for testing purposes.

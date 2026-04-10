@@ -1,5 +1,5 @@
-import type {PreparedCalls} from '@bim/domain/payment';
 import type {StarknetAddress} from '@bim/domain/account';
+import type {PreparedCalls} from '@bim/domain/payment';
 
 /**
  * Data stored for a pending payment build (between /build and /execute).

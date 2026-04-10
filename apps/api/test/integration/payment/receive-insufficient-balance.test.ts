@@ -1,5 +1,5 @@
-import {InsufficientBalanceError} from '@bim/domain/shared';
 import type {SwapGateway} from '@bim/domain/ports';
+import {InsufficientBalanceError} from '@bim/domain/shared';
 import type {Hono} from 'hono';
 import type pg from 'pg';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';

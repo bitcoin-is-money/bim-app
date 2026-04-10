@@ -1,10 +1,10 @@
 import type {Logger} from 'pino';
 import {afterAll, afterEach, beforeAll, expect, it} from 'vitest';
+import {type E2eSecretFile, loadAndLoginAccounts, type SenderStrategy, type TransferPair} from './e2e-accounts.js';
 import {E2eClient} from './e2e-client.js';
-import {loadAndLoginAccounts, type E2eSecretFile, type SenderStrategy, type TransferPair} from './e2e-accounts.js';
-import {isServerHealthy, areAccountsReady} from './prechecks.js';
-import {fetchPrices, getAvnuCredits, getTokenBalance, type Prices} from './e2e-rpc.js';
 import {buildFailReport, sendSlackReport} from './e2e-report.js';
+import {fetchPrices, getAvnuCredits, getTokenBalance, type Prices} from './e2e-rpc.js';
+import {areAccountsReady, isServerHealthy} from './prechecks.js';
 
 // STRK token address on Starknet mainnet (same as apps/api/src/app-config.ts)
 export const STRK_TOKEN_ADDRESS = '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d';

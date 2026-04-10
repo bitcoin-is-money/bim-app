@@ -1,6 +1,6 @@
 import {CommonModule} from "@angular/common";
 import type {AfterViewInit, TemplateRef} from '@angular/core';
-import { Component, inject, ViewChild} from '@angular/core';
+import {Component, inject, ViewChild} from '@angular/core';
 import {NotificationService} from "../../services/notification.service";
 
 @Component({

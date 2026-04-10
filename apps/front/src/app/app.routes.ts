@@ -1,5 +1,5 @@
 import {inject} from '@angular/core';
-import type { Routes} from '@angular/router';
+import type {Routes} from '@angular/router';
 import {Router} from '@angular/router';
 import {AuthService} from './services/auth.service';
 

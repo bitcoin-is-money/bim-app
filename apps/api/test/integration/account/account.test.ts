@@ -1,7 +1,6 @@
-import type {Hono} from 'hono';
+import {accounts} from '@bim/db';
 import type pg from "pg";
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import {accounts} from '@bim/db';
 import {type DbClient, TestApp, TestDatabase} from '../helpers';
 import {AccountFixture} from "../helpers/account";
 import {AuthFixture} from "../helpers/auth";

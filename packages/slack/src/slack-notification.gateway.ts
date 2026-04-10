@@ -1,8 +1,8 @@
-import {ExternalServiceError} from '@bim/domain/shared';
 import type {NotificationGateway, NotificationMessage, NotificationSeverity} from '@bim/domain/ports';
-import {SlackAPIClient} from 'slack-web-api-client';
-import type {AnyMessageBlock, MessageAttachment} from 'slack-web-api-client';
+import {ExternalServiceError} from '@bim/domain/shared';
 import type {Logger} from 'pino';
+import type {AnyMessageBlock, MessageAttachment} from 'slack-web-api-client';
+import {SlackAPIClient} from 'slack-web-api-client';
 
 export interface SlackNotificationConfig {
   readonly botToken: string;

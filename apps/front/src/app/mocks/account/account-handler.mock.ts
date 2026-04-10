@@ -1,6 +1,11 @@
 import {HttpResponse} from '@angular/common/http';
 import {type ApiErrorResponse, ErrorCode} from '../../model';
-import type {AccountInfoResponse, BalanceResponse, DeployAccountResponse, DeploymentStatusResponse,} from '../../services/account.http.service';
+import type {
+  AccountInfoResponse,
+  BalanceResponse,
+  DeployAccountResponse,
+  DeploymentStatusResponse,
+} from '../../services/account.http.service';
 import type {DataStoreMock} from '../data-store.mock';
 import {createErrorResponse} from '../mock-error';
 

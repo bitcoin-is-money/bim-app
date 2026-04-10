@@ -1,4 +1,4 @@
-import type { OnInit} from '@angular/core';
+import type {OnInit} from '@angular/core';
 import {Component, computed, inject, signal} from '@angular/core';
 import {TranslateModule} from '@ngx-translate/core';
 import {ButtonComponent} from "../../components/button/button.component";

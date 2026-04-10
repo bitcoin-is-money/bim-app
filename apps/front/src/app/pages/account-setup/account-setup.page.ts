@@ -1,5 +1,5 @@
 import {HttpErrorResponse} from '@angular/common/http';
-import type { OnInit} from '@angular/core';
+import type {OnInit} from '@angular/core';
 import {Component, DestroyRef, inject, signal} from '@angular/core';
 import {Router} from '@angular/router';
 import {TranslateModule} from '@ngx-translate/core';

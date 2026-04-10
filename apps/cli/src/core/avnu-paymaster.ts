@@ -1,4 +1,4 @@
-import {StarknetAddress} from '@bim/domain/account';
+import type {StarknetAddress} from '@bim/domain/account';
 import type {AvnuPaymasterGateway} from '@bim/starknet';
 import {Account, CallData, RpcProvider, Signer} from 'starknet';
 import {STRK_TOKEN_ADDRESS} from '../config/constants.js';

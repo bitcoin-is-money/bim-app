@@ -1,12 +1,18 @@
 import {inject, Injectable, signal} from '@angular/core';
 import {Router} from '@angular/router';
 import {Base64Url} from '@bim/lib/encoding';
-import {firstValueFrom, Subscription} from 'rxjs';
+import type { Subscription} from 'rxjs';
+import {firstValueFrom} from 'rxjs';
 import {ParsedPayment, type StoredSwap} from '../model';
 import {AccountService} from './account.service';
 import {I18nService} from './i18n.service';
 import {NotificationService} from './notification.service';
-import {type BuildPaymentResponse, type ExecutePaymentResponse, type PaymentNetwork, PayHttpService} from './pay.http.service';
+import {
+  type BuildPaymentResponse,
+  type ExecutePaymentResponse,
+  PayHttpService,
+  type PaymentNetwork
+} from './pay.http.service';
 import {SwapPollingService} from './swap-polling.service';
 import {SwapStorageService} from './swap-storage.service';
 import {TransactionService} from './transaction.service';
@@ -176,7 +182,7 @@ export class PayService {
   private handleSuccess(response: ExecutePaymentResponse): void {
     this.lastPaymentNetwork.set(response.network);
 
-    // eslint-disable-next-line security/detect-object-injection -- network is PaymentNetwork union type
+     
     const sentKey = SENT_KEYS[response.network];
     this.notificationService.info({message: this.i18n.t(sentKey)});
 

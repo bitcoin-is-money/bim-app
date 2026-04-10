@@ -1,4 +1,4 @@
-import {InvalidUserSettingsIdError, InvalidTransactionIdError, InvalidTransactionHashError} from './errors';
+import {InvalidTransactionHashError, InvalidTransactionIdError, InvalidUserSettingsIdError} from './errors';
 
 // =============================================================================
 // Branded Types

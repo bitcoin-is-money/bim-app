@@ -1,7 +1,7 @@
 import type {Logger} from 'pino';
 import type {AccountRepository, PaymasterGateway, StarknetGateway} from '../ports';
 import {Account} from './account';
-import {type STRKTokenBalance, STRKToken, type WBTCTokenBalance, WBTCToken, Token} from './balance';
+import {STRKToken, type STRKTokenBalance, Token, WBTCToken, type WBTCTokenBalance} from './balance';
 import {AccountAlreadyExistsError, AccountNotFoundError, InvalidAccountStateError} from './errors';
 import {AccountId, CredentialId} from './types';
 

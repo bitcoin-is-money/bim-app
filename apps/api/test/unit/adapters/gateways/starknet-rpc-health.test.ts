@@ -1,7 +1,7 @@
 import {HealthRegistry} from '@bim/domain/health';
 import type {PaymasterGateway} from '@bim/domain/ports';
 import {createLogger} from '@bim/lib/logger';
-import {StarknetRpcGateway, type StarknetGatewayConfig} from '@bim/starknet';
+import {type StarknetGatewayConfig, StarknetRpcGateway} from '@bim/starknet';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
 const logger = createLogger('silent');

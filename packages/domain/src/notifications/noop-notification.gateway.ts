@@ -1,5 +1,5 @@
-import type {NotificationGateway, NotificationMessage} from '../ports/index.js';
 import type {Logger} from 'pino';
+import type {NotificationGateway, NotificationMessage} from '../ports/index.js';
 
 /**
  * No-op implementation of NotificationGateway.

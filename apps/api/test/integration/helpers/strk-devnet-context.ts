@@ -1,11 +1,10 @@
 import {StarknetAddress} from '@bim/domain/account';
 import {createLogger} from '@bim/lib/logger';
+import type {StarknetRpcGateway} from '@bim/starknet';
 import {P256Signer} from "@bim/test-toolkit/crypto";
 import type {Logger} from "pino";
 import {Account, RpcProvider, Signer} from 'starknet';
-import {StarknetRpcGateway} from '@bim/starknet';
 import {StarkSigner} from './crypto';
-import {DevnetStarknetGateway} from './devnet-starknet.gateway.js';
 import {
   DEVNET_ACCOUNT_CLASS_HASH,
   DevnetPaymasterGateway,
@@ -13,6 +12,7 @@ import {
   resetCachedAccountClassHash,
   resetCachedAccounts,
 } from './devnet-paymaster.gateway.js';
+import {DevnetStarknetGateway} from './devnet-starknet.gateway.js';
 import {StrkDevnet} from "./strk-devnet";
 
 /**

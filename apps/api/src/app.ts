@@ -1,15 +1,24 @@
+import {Database} from '@bim/db/database';
 import {createLogger} from "@bim/lib/logger";
 import {serveStatic} from '@hono/node-server/serve-static';
 import {Hono} from 'hono';
 import {cors} from 'hono/cors';
 
 import type {Logger} from 'pino';
+import {AppConfig} from './app-config';
 import {AppContext, type AppContextOverrides} from "./app-context";
-import {Database} from '@bim/db/database';
-import {createGlobalRateLimit, createAuthRateLimit, createPaymentRateLimit, createPaymentExecuteRateLimit} from './middleware/rate-limit.middleware';
+import {runStartupHealthChecks} from './app-startup-health';
+import {installGlobalErrorHandler} from './middleware/global-error-handler';
 import {createPwaCacheHeadersMiddleware} from './middleware/pwa-cache-headers.middleware';
+import {
+  createAuthRateLimit,
+  createGlobalRateLimit,
+  createPaymentExecuteRateLimit,
+  createPaymentRateLimit
+} from './middleware/rate-limit.middleware';
 import {createRequestLoggerMiddleware} from './middleware/request-logger.middleware';
 import {createSecurityHeadersMiddleware} from './middleware/security-headers.middleware';
+import {BalanceMonitoring} from './monitoring/balance.monitoring';
 import {SwapMonitor} from './monitoring/swap.monitor';
 import {
   createAccountRoutes,
@@ -21,10 +30,6 @@ import {
   createSwapRoutes,
   createUserRoutes,
 } from './routes';
-import {AppConfig} from './app-config';
-import {runStartupHealthChecks} from './app-startup-health';
-import {installGlobalErrorHandler} from './middleware/global-error-handler';
-import {BalanceMonitoring} from './monitoring/balance.monitoring';
 
 export interface CreateAppOptions {
   config?: Partial<AppConfig.Config>;

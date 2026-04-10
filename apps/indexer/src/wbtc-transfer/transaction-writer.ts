@@ -1,4 +1,3 @@
-
 import type {NewTransactionRecord} from '@bim/db';
 import * as schema from '@bim/db';
 import type {Logger} from 'pino';

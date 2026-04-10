@@ -2,10 +2,14 @@ import {WebauthnUserHandleDecoder} from "@bim/lib/auth";
 
 import type {Logger} from 'pino';
 import {Account, AccountAlreadyExistsError, AccountId, AccountNotFoundError, CredentialId} from '../account';
-import type {AccountRepository, ChallengeRepository, SessionRepository, TransactionManager, WebAuthnGateway,} from '../ports';
-import {Challenge} from './challenge';
-import {Session} from './session';
-import type {SessionConfig} from './session.config';
+import type {
+  AccountRepository,
+  ChallengeRepository,
+  SessionRepository,
+  TransactionManager,
+  WebAuthnGateway,
+} from '../ports';
+import {Challenge, ChallengeId} from './challenge';
 import {
   AuthenticationFailedError,
   ChallengeAlreadyUsedError,
@@ -13,7 +17,8 @@ import {
   InvalidChallengeError,
   RegistrationFailedError,
 } from './errors';
-import {ChallengeId} from './challenge';
+import {Session} from './session';
+import type {SessionConfig} from './session.config';
 import type {WebAuthnAuthenticationOptions, WebAuthnRegistrationOptions} from './webauthn.types';
 
 // =============================================================================

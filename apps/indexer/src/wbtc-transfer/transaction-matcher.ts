@@ -1,4 +1,3 @@
-
 import type {NewTransactionRecord} from '@bim/db';
 import type {Logger} from 'pino';
 import type {AccountMatch, TransferEvent} from './types.js';

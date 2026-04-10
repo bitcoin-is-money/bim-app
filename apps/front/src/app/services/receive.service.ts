@@ -126,7 +126,7 @@ export class ReceiveService {
   private handleReceiveSuccess(response: ReceiveResponse): void {
     this.invoice.set(response);
     this.isLoading.set(false);
-    // eslint-disable-next-line security/detect-object-injection -- network is ReceiveNetwork union type
+     
     const readyKey = I18N_READY_KEYS[response.network];
     this.notificationService.success({message: this.i18n.t(readyKey)});
 

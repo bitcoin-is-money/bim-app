@@ -1,8 +1,8 @@
 import * as schema from '@bim/db';
 import type {Database} from '@bim/db/database';
 import {AccountId} from '@bim/domain/account';
-import type {UserSettingsRepository} from "@bim/domain/ports";
 import {FiatCurrency} from "@bim/domain/currency";
+import type {UserSettingsRepository} from "@bim/domain/ports";
 import {Language, UserSettings, UserSettingsId} from "@bim/domain/user";
 
 import {eq} from 'drizzle-orm';

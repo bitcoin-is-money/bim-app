@@ -39,7 +39,7 @@ export class SwapHandlerMock {
 
     // Check if it's a predefined swap (Bob's existing swaps)
     if (swapId in PREDEFINED_SWAP_STATUSES) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, security/detect-object-injection -- guarded by `in` check
+       
       const status = PREDEFINED_SWAP_STATUSES[swapId]!;
       const body: SwapStatusResponse = {
         swapId,
@@ -66,7 +66,7 @@ export class SwapHandlerMock {
     const pollCount = this.store.incrementPollCount(swapId);
     const progression = profile.swapConfig.statusProgression;
     const statusIndex = Math.min(pollCount, progression.length - 1);
-    // eslint-disable-next-line security/detect-object-injection -- numeric index
+     
     const status = progression[statusIndex] ?? progression[0];
 
     const body: SwapStatusResponse = {

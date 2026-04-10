@@ -1,5 +1,5 @@
-import {DomainError} from '../shared';
 import type {AccountId} from '../account';
+import {DomainError} from '../shared';
 import type {TransactionId} from './types';
 
 export class InvalidUserSettingsIdError extends DomainError {

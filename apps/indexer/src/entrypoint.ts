@@ -6,9 +6,9 @@
  * Configuration is loaded from environment variables via IndexerConfig.
  */
 
+import {createLogger} from '@bim/lib/logger';
 import {spawn} from 'node:child_process';
 import {createServer, type IncomingMessage, type ServerResponse} from 'node:http';
-import {createLogger} from '@bim/lib/logger';
 import {IndexerConfig} from './indexer-config';
 
 const rootLogger = createLogger('info');
@@ -95,5 +95,5 @@ function shutdown(signal: NodeJS.Signals): void {
   server.close();
 }
 
-process.on('SIGTERM', () => shutdown('SIGTERM'));
-process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => { shutdown('SIGTERM'); });
+process.on('SIGINT', () => { shutdown('SIGINT'); });

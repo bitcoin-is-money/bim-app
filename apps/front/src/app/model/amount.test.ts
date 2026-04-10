@@ -1,7 +1,7 @@
 import {describe, expect, it} from 'vitest';
 import {Amount} from './amount';
 import type {ConversionRates} from './currency';
-import { Currency} from './currency';
+import {Currency} from './currency';
 
 const RATES: ConversionRates = {prices: {USD: 100_000}};
 

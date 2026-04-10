@@ -8,15 +8,8 @@ import {Account, Signer} from 'starknet';
 import {afterAll, beforeAll, describe, expect, it} from 'vitest';
 import type {DeployAccountResponse} from '../../../src/routes';
 import {registerUser} from '../../helpers';
-import type {
-  DevnetPaymasterGateway} from '../helpers';
-import {
-  ETH_TOKEN_ADDRESS,
-  STRK_TOKEN_ADDRESS,
-  StrkDevnetContext,
-  TestApp,
-  TestDatabase,
-} from '../helpers';
+import type {DevnetPaymasterGateway} from '../helpers';
+import {ETH_TOKEN_ADDRESS, STRK_TOKEN_ADDRESS, StrkDevnetContext, TestApp, TestDatabase,} from '../helpers';
 
 /**
  * Transfer Flow Integration Tests

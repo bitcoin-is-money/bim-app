@@ -15,7 +15,7 @@ export class AvnuBalanceLow {
       return undefined;
     }
 
-    const fields: Map<string, string> = new Map([
+    const fields = new Map<string, string>([
       ['Network', params.network],
       ['Remaining credits', `${formatStrk(params.currentBalance)} STRK`],
       ['Threshold', `${formatStrk(params.threshold)} STRK`],

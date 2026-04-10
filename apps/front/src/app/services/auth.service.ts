@@ -2,17 +2,11 @@ import {HttpErrorResponse} from '@angular/common/http';
 import {inject, Injectable, signal} from '@angular/core';
 import {Router} from '@angular/router';
 import {Base64Url, UuidCodec} from "@bim/lib/encoding";
-import type { Observable} from 'rxjs';
+import type {Observable} from 'rxjs';
 import {catchError, firstValueFrom, map} from 'rxjs';
 import type {Account} from "../model";
-import type {
-  AuthResponse,
-  BeginAuthResponse,
-  BeginRegisterResponse,
-  UserSessionResponse} from './auth.http.service';
-import {
-  AuthHttpService
-} from './auth.http.service';
+import type {AuthResponse, BeginAuthResponse, BeginRegisterResponse, UserSessionResponse} from './auth.http.service';
+import {AuthHttpService} from './auth.http.service';
 import {CurrencyService} from './currency.service';
 import {I18nService} from './i18n.service';
 import {NotificationService} from './notification.service';

@@ -1,5 +1,10 @@
-import {beforeEach, describe, expect, it, vi} from 'vitest';
 import type * as LibLogger from '@bim/lib/logger';
+import {createLogger} from '@bim/lib/logger';
+import {beforeEach, describe, expect, it, vi} from 'vitest';
+import {AccountCache} from '../../src/wbtc-transfer/account-cache.js';
+import {createWbtcTransferIndexer, type WbtcRuntimeConfig} from '../../src/wbtc-transfer/indexer.js';
+import {TransactionWriter} from '../../src/wbtc-transfer/transaction-writer.js';
+import {TransferEventDecoder} from '../../src/wbtc-transfer/transfer-event-decoder.js';
 
 // ---------------------------------------------------------------------------
 // Module mocks (hoisted by vitest before any import)
@@ -80,18 +85,11 @@ vi.mock('../../src/wbtc-transfer/transaction-writer.js', () => ({
 // Imports (resolved against mocks above)
 // ---------------------------------------------------------------------------
 
-import {createLogger, DEFAULT_LOGGER_CONFIG} from '@bim/lib/logger';
-import {INDEXER_LOGGER_CONFIG} from "../../src/wbtc-transfer/logger-config";
-import {TransferEventDecoder} from '../../src/wbtc-transfer/transfer-event-decoder.js';
-import {AccountCache} from '../../src/wbtc-transfer/account-cache.js';
-import {TransactionWriter} from '../../src/wbtc-transfer/transaction-writer.js';
-import {createWbtcTransferIndexer, type WbtcRuntimeConfig} from '../../src/wbtc-transfer/indexer.js';
-
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
- 
+
 function getLogger(): Record<string, ReturnType<typeof vi.fn>> {
   return (createLogger as any)();
 }
@@ -218,7 +216,7 @@ describe('createWbtcTransferIndexer', () => {
 // ---------------------------------------------------------------------------
 
 describe('transform error handling', () => {
-   
+
   function mockBlockArgs(blockNumber = 42n): any {
     return {
       block: {header: {timestamp: '1700000000'}, events: [{keys: ['a', 'b', 'c'], data: ['d', 'e']}]},
@@ -232,7 +230,7 @@ describe('transform error handling', () => {
     });
 
     const indexer = await createWbtcTransferIndexer(makeConfig());
-     
+
     await (indexer as any).transform(mockBlockArgs());
 
     expect(getLogger().error).toHaveBeenCalledWith(
@@ -247,13 +245,13 @@ describe('transform error handling', () => {
     });
 
     const indexer = await createWbtcTransferIndexer(makeConfig());
-     
+
     await expect((indexer as any).transform(mockBlockArgs())).resolves.toBeUndefined();
   });
 
   it('does not log error when processing succeeds', async () => {
     const indexer = await createWbtcTransferIndexer(makeConfig());
-     
+
     await (indexer as any).transform(mockBlockArgs());
 
     expect(getLogger().error).not.toHaveBeenCalled();
