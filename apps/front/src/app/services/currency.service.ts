@@ -7,6 +7,9 @@ import {UserSettingsHttpService} from './user-settings-http.service';
 
 const REFRESH_INTERVAL_MS = 6 * 3600 * 1000; // 6 hours
 
+/**
+ * Rates and auto-refresh are started in init(), called after authentication
+ */
 @Injectable({providedIn: 'root'})
 export class CurrencyService implements OnDestroy {
   private readonly currencyHttp = inject(CurrencyHttpService);
@@ -23,10 +26,6 @@ export class CurrencyService implements OnDestroy {
   readonly preferredCurrencies = this._preferredCurrencies.asReadonly();
   readonly supportedCurrencies = this._supportedCurrencies.asReadonly();
   readonly rates = this._rates.asReadonly();
-
-  constructor() {
-    // Rates and auto-refresh are started in init(), called after authentication
-  }
 
   setCurrentCurrency(currency: Currency): void {
     this._currentCurrency.set(currency);

@@ -31,7 +31,7 @@ export class DevnetStarknetGateway extends StarknetRpcGateway {
     // instance with all tracked components and a no-op listener.
     const noopHealthRegistry = new HealthRegistry(
       ['database', 'starknet-rpc', 'avnu-paymaster', 'atomiq', 'avnu-swap', 'coingecko-price'],
-      () => {},
+      () => { /* no-op */ },
       logger,
     );
     super(config, paymasterGateway, logger, noopHealthRegistry);

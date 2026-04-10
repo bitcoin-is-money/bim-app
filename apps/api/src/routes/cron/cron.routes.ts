@@ -22,8 +22,7 @@ export function createCronRoutes(
 
   app.post('/', async (honoCtx: Context): Promise<TypedResponse<CronResponse | ApiErrorResponse>> => {
     try {
-      const body = await honoCtx.req.json();
-      const input = CronRequestSchema.parse(body);
+      const input = CronRequestSchema.parse(await honoCtx.req.json());
 
       if (input.secret !== deps.cronSecret) {
         log.warn('Cron request with invalid secret');

@@ -27,3 +27,18 @@ export const AVNU_SPONSOR_ACTIVITY_URLS: Record<Network, string> = {
 };
 
 export const STARKNET_FAUCET_URL = 'https://starknet-faucet.vercel.app/';
+
+// Network-keyed URL lookups. Use these helpers instead of indexing the
+// corresponding records with a variable key — the literal property access
+// keeps the `security/detect-object-injection` rule quiet.
+export function getRpcUrl(network: Network): string {
+  return network === 'mainnet' ? RPC_URLS.mainnet : RPC_URLS.testnet;
+}
+
+export function getAvnuPaymasterUrl(network: Network): string {
+  return network === 'mainnet' ? AVNU_PAYMASTER_URLS.mainnet : AVNU_PAYMASTER_URLS.testnet;
+}
+
+export function getAvnuSponsorActivityUrl(network: Network): string {
+  return network === 'mainnet' ? AVNU_SPONSOR_ACTIVITY_URLS.mainnet : AVNU_SPONSOR_ACTIVITY_URLS.testnet;
+}

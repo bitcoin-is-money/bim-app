@@ -22,16 +22,11 @@ function toHexFelt(n: number): string {
 }
 
 /**
- * Converts a string to an array of ASCII byte values.
+ * Converts a string to an array of UTF-8 byte values.
+ * For ASCII inputs (WebAuthn origins per spec), this yields the ASCII bytes.
  */
 function toAsciiByteArray(str: string): number[] {
-  return [...str].map(c => {
-    const code = c.codePointAt(0);
-    if (code === undefined) {
-      throw new Error('Unexpected empty character');
-    }
-    return code;
-  });
+  return Array.from(new TextEncoder().encode(str));
 }
 
 /**

@@ -1,9 +1,9 @@
 import {Account, RpcProvider, Signer} from 'starknet';
-import {type Network, RPC_URLS, STRK_TOKEN_ADDRESS, WBTC_TOKEN_ADDRESS} from '../config/constants.js';
+import {getRpcUrl, type Network, STRK_TOKEN_ADDRESS, WBTC_TOKEN_ADDRESS} from '../config/constants.js';
 import type {StarknetAccountSecrets} from '../config/secrets.js';
 
 export function createProvider(network: Network): RpcProvider {
-  return new RpcProvider({nodeUrl: RPC_URLS[network]});
+  return new RpcProvider({nodeUrl: getRpcUrl(network)});
 }
 
 export function createAccount(

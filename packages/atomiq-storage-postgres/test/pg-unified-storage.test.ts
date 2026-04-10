@@ -1,6 +1,6 @@
 import type {UnifiedStorageCompositeIndexes, UnifiedStorageIndexes, UnifiedStoredObject} from '@atomiqlabs/sdk';
-import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {PgUnifiedStorage} from '../src/pg-unified-storage.js';
+import {beforeEach, describe, expect, it, vi, type Mock} from 'vitest';
+import {PgUnifiedStorage} from '../src';
 
 const sampleIndexes: UnifiedStorageIndexes = [
   {key: 'id', type: 'string', unique: true, nullable: false},
@@ -13,8 +13,8 @@ const sampleCompositeIndexes: UnifiedStorageCompositeIndexes = [
   {keys: ['type', 'state'], unique: false},
 ];
 
-function createMockPool(): {pool: unknown; calls: {sql: string; params?: unknown[]}[]} {
-  const calls: {sql: string; params?: unknown[]}[] = [];
+function createMockPool(): {pool: unknown; calls: {sql: string; params: unknown[] | undefined}[]} {
+  const calls: {sql: string; params: unknown[] | undefined}[] = [];
   const pool = {
     query: vi.fn(async (sql: string, params?: unknown[]) => {
       calls.push({sql, params});
@@ -24,14 +24,16 @@ function createMockPool(): {pool: unknown; calls: {sql: string; params?: unknown
   return {pool, calls};
 }
 
-function mockPool(pool: unknown): {query: ReturnType<typeof vi.fn>} {
-  return pool as {query: ReturnType<typeof vi.fn>};
+type QueryFn = (sql: string, params?: unknown[]) => Promise<{rows: unknown[]}>;
+
+function mockPool(pool: unknown): {query: Mock<QueryFn>} {
+  return pool as {query: Mock<QueryFn>};
 }
 
 describe('PgUnifiedStorage', () => {
 
   let pool: unknown;
-  let calls: {sql: string; params?: unknown[]}[];
+  let calls: {sql: string; params: unknown[] | undefined}[];
 
   beforeEach(() => {
     ({pool, calls} = createMockPool());
@@ -42,7 +44,7 @@ describe('PgUnifiedStorage', () => {
       const storage = new PgUnifiedStorage(pool as never, 'my_swaps');
       await storage.init(sampleIndexes, sampleCompositeIndexes);
 
-      const createSql = calls[0].sql;
+      const createSql = calls[0]!.sql;
       expect(createSql).toContain('CREATE TABLE IF NOT EXISTS "my_swaps"');
       expect(createSql).toContain('"type" TEXT NOT NULL');
       expect(createSql).toContain('"state" INTEGER NOT NULL');
@@ -72,7 +74,7 @@ describe('PgUnifiedStorage', () => {
       const storage = new PgUnifiedStorage(pool as never, 'my_swaps');
       await storage.init(sampleIndexes, []);
 
-      const createSql = calls[0].sql;
+      const createSql = calls[0]!.sql;
       expect(createSql).not.toContain('"id" TEXT');
     });
   });

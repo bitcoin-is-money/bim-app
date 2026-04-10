@@ -23,6 +23,13 @@ import {type ExecutableUserTransaction, type ExecutionParameters, PaymasterRpc, 
 const MIN_STRK_CREDITS_WEI = 1_000_000_000_000_000_000n;
 
 /**
+ * Matches "HTTP <code>" (case-insensitive) inside an error message, capturing
+ * the 3-digit status code. AVNU's structured HTTP errors embed the status in
+ * the message text, e.g. "... HTTP 503 Service Unavailable ...".
+ */
+const HTTP_STATUS_REGEX = /http (\d{3})/i;
+
+/**
  * Configuration for AVNU Paymaster gateway.
  */
 export interface AvnuPaymasterConfig {
@@ -536,9 +543,10 @@ function sanitizeAvnuError(err: unknown): SanitizedError {
     return {kind: 'unknown', summary: message};
   }
   // AVNU-specific: structured HTTP error carries the status code in the message.
-  const httpMatch = /http (\d{3})/i.exec(message);
+  const httpMatch = HTTP_STATUS_REGEX.exec(message);
   if (httpMatch) {
-    const httpCode = Number.parseInt(httpMatch[1]!, 10);
+    const [, codeStr = '0'] = httpMatch;
+    const httpCode = Number.parseInt(codeStr, 10);
     return {kind: 'html_response', httpCode, summary: `AVNU paymaster HTTP ${httpCode}`};
   }
   return SanitizedError.sanitize('AVNU paymaster', err);

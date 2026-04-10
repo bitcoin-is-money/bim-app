@@ -1,5 +1,4 @@
 import * as schema from '@bim/db';
-import type {Database} from '@bim/db/database';
 import {Challenge, ChallengeId, type ChallengePurpose} from "@bim/domain/auth";
 import type {ChallengeRepository} from "@bim/domain/ports";
 import {and, eq, gt} from 'drizzle-orm';
@@ -9,9 +8,6 @@ import {AbstractDrizzleRepository} from './abstract-drizzle.repository';
  * Drizzle-based implementation of ChallengeRepository.
  */
 export class DrizzleChallengeRepository extends AbstractDrizzleRepository implements ChallengeRepository {
-  constructor(db: Database) {
-    super(db);
-  }
 
   async save(challenge: Challenge): Promise<void> {
     await this.resolveDb()

@@ -1,7 +1,7 @@
 import {StarknetAddress} from '@bim/domain/account';
 import type {AtomiqGateway} from '@bim/domain/ports';
 import {Amount} from '@bim/domain/shared';
-import {Swap, SwapId, type SwapService} from '@bim/domain/swap';
+import {Swap, SwapId, type LightningInvoice, type SwapService} from '@bim/domain/swap';
 import {createLogger} from '@bim/lib/logger';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {SwapMonitor} from '../../../src/monitoring/swap.monitor';
@@ -215,7 +215,7 @@ describe('SwapMonitor', () => {
         id: SwapId.of('s-reverse'),
         amount: Amount.ofSatoshi(50_000n),
         sourceAddress: DESTINATION,
-        invoice: INVOICE as unknown as import('@bim/domain/swap').LightningInvoice,
+        invoice: INVOICE as unknown as LightningInvoice,
         depositAddress: '0xdeposit',
         expiresAt: new Date(Date.now() + 30 * 60 * 1000),
         description: 'Sent',

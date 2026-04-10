@@ -15,10 +15,11 @@ export class NoopNotificationGateway implements NotificationGateway {
     this.log = rootLogger.child({name: 'noop-notification.gateway.ts'});
   }
 
-  async send(message: NotificationMessage): Promise<void> {
+  send(message: NotificationMessage): Promise<void> {
     this.log.debug(
       {severity: message.severity, title: message.title, channel: message.channel},
       'Notification suppressed (no Slack bot token configured)',
     );
+    return Promise.resolve();
   }
 }

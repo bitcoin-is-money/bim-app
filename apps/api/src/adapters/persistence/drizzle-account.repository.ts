@@ -1,5 +1,4 @@
 import * as schema from '@bim/db';
-import type {Database} from '@bim/db/database';
 import {Account, AccountId, type AccountStatus, CredentialId, StarknetAddress,} from '@bim/domain/account';
 import type {AccountRepository} from '@bim/domain/ports';
 import {and, eq, or} from 'drizzle-orm';
@@ -9,10 +8,6 @@ import {AbstractDrizzleRepository} from './abstract-drizzle.repository';
  * Drizzle-based implementation of AccountRepository.
  */
 export class DrizzleAccountRepository extends AbstractDrizzleRepository implements AccountRepository {
-
-  constructor(db: Database) {
-    super(db);
-  }
 
   async save(account: Account): Promise<void> {
     await this.resolveDb()

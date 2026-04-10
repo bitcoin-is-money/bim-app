@@ -14,6 +14,16 @@ const pgTypes: Record<string, string> = {
 };
 
 /**
+ * Local narrowing of the SDK's `UnifiedStoredObject` type. The SDK defines it
+ * as `{id: string} & any`, which collapses to `any` and poisons every property
+ * access. We cast once at each adapter boundary to this concrete shape.
+ */
+interface StoredRow {
+  id: string;
+  [key: string]: unknown;
+}
+
+/**
  * PostgreSQL-based unified storage with indexed query support.
  * Drop-in replacement for SqliteUnifiedStorage from @atomiqlabs/storage-sqlite.
  *
@@ -89,10 +99,13 @@ export class PgUnifiedStorage implements IUnifiedStorage<UnifiedStorageIndexes, 
       ON CONFLICT(id) DO UPDATE SET ${updateSet};
     `;
 
-    const values = [
-      value.id,
-      ...this.indexedColumns.map((key) => value[key]),
-      JSON.stringify(value),
+    const row = value as unknown as StoredRow;
+
+    const values: unknown[] = [
+      row.id,
+      // eslint-disable-next-line security/detect-object-injection -- `key` comes from `this.indexedColumns`, populated only via `init()` from SDK-registered indexes, never from user input
+      ...this.indexedColumns.map((key) => row[key]),
+      JSON.stringify(row),
     ];
 
     await this.pool.query(sql, values);
@@ -132,18 +145,21 @@ export class PgUnifiedStorage implements IUnifiedStorage<UnifiedStorageIndexes, 
 
     const sql = `SELECT * FROM "${this.tableName}" WHERE ${orClauses.join(' OR ')}`;
     const result = await this.pool.query(sql, values);
-    return result.rows.map((row: {data: string}) => JSON.parse(row.data));
+    return result.rows.map((row: {data: string}): StoredRow =>
+      JSON.parse(row.data) as unknown as StoredRow,
+    );
   }
 
   async remove(value: UnifiedStoredObject): Promise<void> {
     this.assertInitialized();
-    await this.pool.query(`DELETE FROM "${this.tableName}" WHERE id = $1`, [value.id]);
+    const row = value as unknown as StoredRow;
+    await this.pool.query(`DELETE FROM "${this.tableName}" WHERE id = $1`, [row.id]);
   }
 
   async removeAll(values: UnifiedStoredObject[]): Promise<void> {
     this.assertInitialized();
     if (values.length === 0) return;
-    const ids = values.map((val) => val.id);
+    const ids = (values as unknown as StoredRow[]).map((val) => val.id);
     await this.pool.query(`DELETE FROM "${this.tableName}" WHERE id = ANY($1::text[])`, [ids]);
   }
 

@@ -14,13 +14,13 @@ export default tseslint.config(
       'tmp/',
       'data/',
       '.angular/',
-      '.apibara/',
+      '**/.apibara/',
       'patches/',
       '**/public/',
       'scripts/',
       '**/vitest.config*.ts',
       '**/*.js',
-      '**/*.mjs',
+      '**/*.mjs'
     ],
   },
 
@@ -42,6 +42,7 @@ export default tseslint.config(
       // Keep strict but allow these common patterns
       '@typescript-eslint/consistent-type-imports': 'error',
       '@typescript-eslint/no-import-type-side-effects': 'error',
+      '@typescript-eslint/no-extraneous-class': 'off',
       '@typescript-eslint/no-namespace': 'off',
       '@typescript-eslint/no-unused-vars': ['error', {argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_'}],
       '@typescript-eslint/restrict-template-expressions': ['error', {allowNumber: true, allowBoolean: true}],

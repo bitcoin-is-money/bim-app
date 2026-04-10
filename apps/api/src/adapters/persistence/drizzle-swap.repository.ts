@@ -1,5 +1,4 @@
 import * as schema from '@bim/db';
-import type {Database} from '@bim/db/database';
 import type {SwapRepository} from '@bim/domain/ports';
 import {Amount, type BitcoinAddress, type StarknetAddress} from '@bim/domain/shared';
 import type {LightningInvoice} from '@bim/domain/swap';
@@ -22,10 +21,6 @@ const TERMINAL_STATUSES: SwapStatus[] = ['completed', 'expired', 'failed', 'refu
  * Persists swap data in PostgreSQL via the bim_swaps table.
  */
 export class DrizzleSwapRepository extends AbstractDrizzleRepository implements SwapRepository {
-
-  constructor(db: Database) {
-    super(db);
-  }
 
   async save(swap: Swap): Promise<void> {
     const stateColumns = this.stateToColumns(swap.getState());

@@ -16,7 +16,7 @@ describe('AvnuSwapGateway.checkHealth', () => {
   let gateway: AvnuSwapGateway;
 
   beforeEach(() => {
-    healthRegistry = new HealthRegistry(['avnu-swap'], () => {}, logger);
+    healthRegistry = new HealthRegistry(['avnu-swap'], () => { /* no-op */ }, logger);
     gateway = new AvnuSwapGateway(config, logger, healthRegistry);
     vi.stubGlobal('fetch', vi.fn());
   });

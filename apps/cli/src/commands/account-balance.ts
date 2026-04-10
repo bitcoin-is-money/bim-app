@@ -1,6 +1,6 @@
 import {StarknetAddress} from '@bim/domain/account';
 import type {StarknetRpcGateway} from '@bim/starknet';
-import {type Network, RPC_URLS} from '../config/constants.js';
+import {getRpcUrl, type Network} from '../config/constants.js';
 import type {E2eAccountSecrets} from '../config/secrets.js';
 import {loadSecrets, requireTreasury} from '../config/secrets.js';
 import {AvnuPaymaster, createCliGateways, Treasury} from '../core';
@@ -144,7 +144,7 @@ async function run(args: string[]): Promise<void> {
   const treasurySecrets = requireTreasury(secrets, network);
   const {starknet, paymaster} = createCliGateways(network, secrets.avnu?.apiKey ?? '');
 
-  const treasury = new Treasury(starknet, RPC_URLS[network], treasurySecrets.address, treasurySecrets.privateKey);
+  const treasury = new Treasury(starknet, getRpcUrl(network), treasurySecrets.address, treasurySecrets.privateKey);
 
   const avnu = secrets.avnu ? new AvnuPaymaster(paymaster) : undefined;
 

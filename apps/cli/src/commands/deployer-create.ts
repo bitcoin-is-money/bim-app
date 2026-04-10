@@ -2,7 +2,7 @@ import {CallData, ec, hash, stark} from 'starknet';
 import {OZ_ACCOUNT_CLASS_HASH, STARKNET_FAUCET_URL} from '../config/constants.js';
 import {loadSecrets, saveSecrets} from '../config/secrets.js';
 
-export async function run(_args: string[]): Promise<void> {
+export function run(_args: string[]): Promise<void> {
   const secrets = loadSecrets();
 
   if (secrets.deployer) {
@@ -33,4 +33,5 @@ export async function run(_args: string[]): Promise<void> {
   console.log(`1. Go to ${STARKNET_FAUCET_URL}`);
   console.log('2. Paste the address above and request STRK');
   console.log('3. Run: ./bim deployer:deploy');
+  return Promise.resolve();
 }

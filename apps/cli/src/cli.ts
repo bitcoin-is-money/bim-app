@@ -20,20 +20,20 @@ interface Command {
   help: string;
 }
 
-const COMMANDS: Record<string, Command> = {
-  'treasury:create':   {run: treasuryCreate,  help: 'Create treasury account            <network>'},
-  'treasury:deploy':   {run: treasuryDeploy,  help: 'Deploy treasury account            <network>'},
-  'account:balance':   {run: accountBalance,  help: 'Show all account balances          [network=mainnet] [--json]'},
-  'avnu:refund':       {run: avnuRefund,      help: 'Refund AVNU paymaster credits      [amount_strk]'},
-  'e2e:init':          {run: e2eInit,         help: 'Create E2E test accounts (once)'},
-  'e2e:fund':          {run: e2eFund,         help: 'Fund E2E account with WBTC          <a|b> [amount_sats]'},
-  'slack:test':        {run: slackTest,       help: 'Send test Slack messages'},
-  'deployer:create':   {run: deployerCreate,  help: 'Create deployer account (Sepolia)'},
-  'deployer:deploy':   {run: deployerDeploy,  help: 'Deploy deployer account (Sepolia)'},
-  'contract:check':    {run: contractCheck,   help: 'Check BIM Argent contract declaration status'},
-  'contract:declare':  {run: contractDeclare, help: 'Declare BIM Argent contract (Sepolia)'},
-  'api:health':        {run: apiHealth,       help: 'Check API server health             [url] [--json]'},
-};
+const COMMANDS = new Map<string, Command>([
+  ['treasury:create',  {run: treasuryCreate,  help: 'Create treasury account            <network>'}],
+  ['treasury:deploy',  {run: treasuryDeploy,  help: 'Deploy treasury account            <network>'}],
+  ['account:balance',  {run: accountBalance,  help: 'Show all account balances          [network=mainnet] [--json]'}],
+  ['avnu:refund',      {run: avnuRefund,      help: 'Refund AVNU paymaster credits      [amount_strk]'}],
+  ['e2e:init',         {run: e2eInit,         help: 'Create E2E test accounts (once)'}],
+  ['e2e:fund',         {run: e2eFund,         help: 'Fund E2E account with WBTC          <a|b> [amount_sats]'}],
+  ['slack:test',       {run: slackTest,       help: 'Send test Slack messages'}],
+  ['deployer:create',  {run: deployerCreate,  help: 'Create deployer account (Sepolia)'}],
+  ['deployer:deploy',  {run: deployerDeploy,  help: 'Deploy deployer account (Sepolia)'}],
+  ['contract:check',   {run: contractCheck,   help: 'Check BIM Argent contract declaration status'}],
+  ['contract:declare', {run: contractDeclare, help: 'Declare BIM Argent contract (Sepolia)'}],
+  ['api:health',       {run: apiHealth,       help: 'Check API server health             [url] [--json]'}],
+]);
 
 // =============================================================================
 // Help
@@ -43,7 +43,7 @@ function printHelp(): void {
   console.log('BIM CLI\n');
   console.log('Usage: ./bim <command> [args]\n');
   console.log('Commands:');
-  for (const [name, cmd] of Object.entries(COMMANDS)) {
+  for (const [name, cmd] of COMMANDS) {
     console.log(`  ${name.padEnd(20)} ${cmd.help}`);
   }
   console.log();
@@ -61,7 +61,7 @@ if (!commandName || commandName === 'help' || commandName === '--help') {
   process.exit(0);
 }
 
-const command = COMMANDS[commandName];
+const command = COMMANDS.get(commandName);
 if (!command) {
   console.error(`Unknown command: ${commandName}\n`);
   printHelp();

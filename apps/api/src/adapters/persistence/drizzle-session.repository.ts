@@ -1,5 +1,4 @@
 import * as schema from '@bim/db';
-import type {Database} from '@bim/db/database';
 import {AccountId} from "@bim/domain/account";
 import {Session, SessionId} from "@bim/domain/auth";
 import type {SessionRepository} from "@bim/domain/ports";
@@ -10,9 +9,6 @@ import {AbstractDrizzleRepository} from './abstract-drizzle.repository';
  * Drizzle-based implementation of SessionRepository.
  */
 export class DrizzleSessionRepository extends AbstractDrizzleRepository implements SessionRepository {
-  constructor(db: Database) {
-    super(db);
-  }
 
   async save(session: Session): Promise<void> {
     await this.resolveDb()

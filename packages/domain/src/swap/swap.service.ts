@@ -333,7 +333,8 @@ export class SwapService {
       sourceAddress,
     });
 
-    if (atomiqSwap.commitCalls.length === 0) {
+    const [firstCommitCall] = atomiqSwap.commitCalls;
+    if (!firstCommitCall) {
       throw new SwapCreationError('Failed to generate escrow commit calls');
     }
 
@@ -346,7 +347,7 @@ export class SwapService {
       amount: swapAmount,
       sourceAddress,
       invoice,
-      depositAddress: atomiqSwap.commitCalls[0]!.contractAddress,
+      depositAddress: firstCommitCall.contractAddress,
       expiresAt: atomiqSwap.expiresAt,
       description: input.description,
       accountId: input.accountId,
@@ -396,7 +397,8 @@ export class SwapService {
       sourceAddress,
     });
 
-    if (atomiqSwap.commitCalls.length === 0) {
+    const [firstCommitCall] = atomiqSwap.commitCalls;
+    if (!firstCommitCall) {
       throw new SwapCreationError('Failed to generate escrow commit calls');
     }
 
@@ -405,7 +407,7 @@ export class SwapService {
       amount: input.amount,
       sourceAddress,
       destinationAddress,
-      depositAddress: atomiqSwap.commitCalls[0]!.contractAddress,
+      depositAddress: firstCommitCall.contractAddress,
       expiresAt: atomiqSwap.expiresAt,
       description: input.description,
       accountId: input.accountId,

@@ -85,7 +85,7 @@ export function requireTreasury(
   secrets: Secrets,
   network: 'testnet' | 'mainnet',
 ): StarknetAccountSecrets {
-  const account = secrets.treasury?.[network];
+  const account = network === 'mainnet' ? secrets.treasury?.mainnet : secrets.treasury?.testnet;
   if (!account) {
     throw new Error(
       `No treasury.${network} in .secrets.json.\n` +

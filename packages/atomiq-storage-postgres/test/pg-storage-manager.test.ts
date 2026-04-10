@@ -1,6 +1,6 @@
 import type {StorageObject} from '@atomiqlabs/base';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {PgStorageManager} from '../src/pg-storage-manager.js';
+import {PgStorageManager} from '../src';
 
 class FakeStorageObject implements StorageObject {
   constructor(public readonly data: unknown) {}
@@ -9,8 +9,8 @@ class FakeStorageObject implements StorageObject {
   }
 }
 
-function createMockPool(): {pool: unknown; calls: {sql: string; params?: unknown[]}[]} {
-  const calls: {sql: string; params?: unknown[]}[] = [];
+function createMockPool(): {pool: unknown; calls: {sql: string; params: unknown[] | undefined}[]} {
+  const calls: {sql: string; params: unknown[] | undefined}[] = [];
   const pool = {
     query: vi.fn(async (sql: string, params?: unknown[]) => {
       calls.push({sql, params});
@@ -47,7 +47,7 @@ describe('PgStorageManager', () => {
       await storage.init();
 
       expect((pool as {query: ReturnType<typeof vi.fn>}).query).toHaveBeenCalledOnce();
-      const sql = calls[0].sql;
+      const sql = calls[0]!.sql;
       expect(sql).toContain('CREATE TABLE IF NOT EXISTS "my_store"');
       expect(sql).toContain('id VARCHAR(255) PRIMARY KEY');
       expect(sql).toContain('value TEXT NOT NULL');
@@ -86,7 +86,7 @@ describe('PgStorageManager', () => {
       await storage.saveData('key1', obj);
 
       expect((pool as {query: ReturnType<typeof vi.fn>}).query).toHaveBeenCalledTimes(2);
-      const saveCall = calls[1];
+      const saveCall = calls[1]!;
       expect(saveCall.sql).toContain('INSERT INTO "my_store"');
       expect(saveCall.sql).toContain('ON CONFLICT(id) DO UPDATE SET value = $2');
       expect(saveCall.params).toEqual(['key1', JSON.stringify({foo: 'bar'})]);
@@ -106,9 +106,9 @@ describe('PgStorageManager', () => {
       await storage.saveDataArr(objects);
 
       expect((pool as {query: ReturnType<typeof vi.fn>}).query).toHaveBeenCalledTimes(4);
-      expect(calls[1].params![0]).toBe('a');
-      expect(calls[2].params![0]).toBe('b');
-      expect(calls[3].params![0]).toBe('c');
+      expect(calls[1]!.params![0]).toBe('a');
+      expect(calls[2]!.params![0]).toBe('b');
+      expect(calls[3]!.params![0]).toBe('c');
     });
   });
 
@@ -127,11 +127,11 @@ describe('PgStorageManager', () => {
       const results = await storage.loadData(FakeStorageObject);
 
       expect(results).toHaveLength(2);
-      expect(results[0].data).toBe('data-1');
-      expect(results[1].data).toBe('data-2');
+      expect(results[0]!.data).toBe('data-1');
+      expect(results[1]!.data).toBe('data-2');
 
-      expect(storage.data.k1.data).toBe('data-1');
-      expect(storage.data.k2.data).toBe('data-2');
+      expect(storage.data.k1!.data).toBe('data-1');
+      expect(storage.data.k2!.data).toBe('data-2');
     });
 
     it('clears previous data cache on reload', async () => {
@@ -159,7 +159,7 @@ describe('PgStorageManager', () => {
       await storage.init();
 
       await storage.removeData('key1');
-      const deleteCall = calls[1];
+      const deleteCall = calls[1]!;
       expect(deleteCall.sql).toContain('DELETE FROM "my_store" WHERE id = $1');
       expect(deleteCall.params).toEqual(['key1']);
     });
@@ -171,7 +171,7 @@ describe('PgStorageManager', () => {
       await storage.init();
 
       await storage.removeDataArr(['a', 'b', 'c']);
-      const deleteCall = calls[1];
+      const deleteCall = calls[1]!;
       expect(deleteCall.sql).toContain('DELETE FROM "my_store" WHERE id = ANY($1::text[])');
       expect(deleteCall.params).toEqual([['a', 'b', 'c']]);
     });
