@@ -163,8 +163,12 @@ function extractErrorInfo(err: unknown): ExtractedErrorInfo {
     return {message: '(no error captured — test failed before error could be recorded)'};
   }
   if (err instanceof Error) {
-    const causeRaw = (err as Error & {cause?: unknown}).cause;
-    const cause = causeRaw instanceof Error ? causeRaw.message : causeRaw !== undefined ? String(causeRaw) : undefined;
+    const causeRaw: unknown = (err as Error & {cause?: unknown}).cause;
+    const cause =
+      causeRaw instanceof Error ? causeRaw.message :
+      typeof causeRaw === 'string' ? causeRaw :
+      causeRaw === undefined ? undefined :
+      JSON.stringify(causeRaw);
     const stackLines = err.stack?.split('\n') ?? [];
     const firstFrame = stackLines.find(l => l.trim().startsWith('at '))?.trim();
     return {
@@ -178,7 +182,8 @@ function extractErrorInfo(err: unknown): ExtractedErrorInfo {
     const msg = typeof obj.message === 'string' ? obj.message : JSON.stringify(err);
     return {message: msg};
   }
-  return {message: String(err)};
+  if (typeof err === 'string') return {message: err};
+  return {message: JSON.stringify(err) ?? 'unknown error'};
 }
 
 function hasSwapInfo(summary: UserReportSummary): boolean {
@@ -318,12 +323,12 @@ export function buildFailReport(data: FailReportData): string {
   const addLabeled = (label: string, text: string): void => {
     const labelStr = `  ${label.padEnd(10)}`;
     const textWidth = (w - 4) - labelStr.length;
-    const wrapped = wrap(text, textWidth);
-    if (wrapped.length === 0) return;
-    lines.push(line(labelStr + wrapped[0], w));
+    const [first, ...rest] = wrap(text, textWidth);
+    if (first === undefined) return;
+    lines.push(line(labelStr + first, w));
     const contIndent = ' '.repeat(labelStr.length);
-    for (let i = 1; i < wrapped.length; i++) {
-      lines.push(line(contIndent + wrapped[i], w));
+    for (const cont of rest) {
+      lines.push(line(contIndent + cont, w));
     }
   };
 

@@ -20,7 +20,7 @@ describe('StarknetRpcGateway.checkHealth', () => {
   let healthRegistry: HealthRegistry;
 
   beforeEach(() => {
-    healthRegistry = new HealthRegistry(['starknet-rpc'], () => {}, logger);
+    healthRegistry = new HealthRegistry(['starknet-rpc'], () => { /* no-op */ }, logger);
   });
 
   it('reports healthy when the RPC responds to starknet_chainId', async () => {

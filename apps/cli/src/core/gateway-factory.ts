@@ -8,11 +8,11 @@ import {
 } from '@bim/starknet';
 import type {Logger} from 'pino';
 import {
-  AVNU_PAYMASTER_URLS,
-  AVNU_SPONSOR_ACTIVITY_URLS,
   BIM_CLASS_HASH,
+  getAvnuPaymasterUrl,
+  getAvnuSponsorActivityUrl,
+  getRpcUrl,
   type Network,
-  RPC_URLS,
   STRK_TOKEN_ADDRESS,
   WBTC_TOKEN_ADDRESS,
 } from '../config/constants.js';
@@ -37,19 +37,19 @@ export function createCliGateways(
   // provide a standalone registry that just tracks state in memory.
   const healthRegistry = new HealthRegistry(
     ['database', 'starknet-rpc', 'avnu-paymaster', 'atomiq', 'avnu-swap', 'coingecko-price'],
-    () => {},
+    () => { /* no-op */ },
     logger,
   );
 
   const paymasterConfig: AvnuPaymasterConfig = {
-    apiUrl: AVNU_PAYMASTER_URLS[network],
+    apiUrl: getAvnuPaymasterUrl(network),
     apiKey: avnuApiKey,
-    sponsorActivityUrl: AVNU_SPONSOR_ACTIVITY_URLS[network],
+    sponsorActivityUrl: getAvnuSponsorActivityUrl(network),
   };
   const paymaster = new AvnuPaymasterGateway(paymasterConfig, logger, healthRegistry);
 
   const starknetConfig: StarknetGatewayConfig = {
-    rpcUrl: RPC_URLS[network],
+    rpcUrl: getRpcUrl(network),
     accountClassHash: BIM_CLASS_HASH,
     tokenAddresses: {
       STRK: STRK_TOKEN_ADDRESS,

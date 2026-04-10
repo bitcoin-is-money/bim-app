@@ -34,7 +34,6 @@ export class PayPage implements OnDestroy {
 
   scanQRCode(): void {
     if (!environment.useQRCodeScanner) {
-      console.log('Skip QR code scanning');
       this.paymentService.parseAndNavigate('lnbc500000000n1mock');
       return;
     }
@@ -64,7 +63,7 @@ export class PayPage implements OnDestroy {
   }
 
   ngOnDestroy(): void {
-    void this.stopScanner();
+    this.closeScanner();
   }
 
   private startScanner(): void {
@@ -102,8 +101,7 @@ export class PayPage implements OnDestroy {
         },
         (decodedText) => {
           const sanitized = this.stripUrlPrefix(decodedText);
-          console.log("[QRCode] decodedText = ", decodedText, "sanitized = ", sanitized);
-          this.stopScanner();
+          this.closeScanner();
           this.paymentService.parseAndNavigate(sanitized);
         },
         () => {

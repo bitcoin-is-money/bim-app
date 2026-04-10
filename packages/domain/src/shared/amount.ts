@@ -7,6 +7,21 @@ import {ValidationError} from './errors';
 const PERCENTAGE_PRECISION = 1_000_000n;
 
 /**
+ * Regex for a BTC decimal string (BIP-21 format).
+ *
+ * Two top-level alternatives (instead of an optional group around the fractional
+ * part) are used to keep ReDoS analyzers happy — nested quantifiers trigger
+ * `safe-regex`, even when bounded.
+ *
+ * Anatomy:
+ *   ^\d{1,8}$                  integer-only: 1 to 8 digits — BTC max supply is ~21M
+ *   ^\d{1,8}\.\d{1,8}$         integer + fractional: dot + 1 to 8 digits (satoshi precision)
+ *
+ * Bounded quantifiers ({1,8}) encode the domain constraints directly.
+ */
+const BTC_STRING_REGEX = /^\d{1,8}$|^\d{1,8}\.\d{1,8}$/;
+
+/**
  * Immutable value object representing a monetary amount in millisatoshi (mSat).
  *
  * mSat is the smallest unit in the Lightning Network (1 sat = 1000 mSat).
@@ -56,10 +71,10 @@ export class Amount {
    */
   static fromBtcString(btcString: string): Amount {
     const trimmed = btcString.trim();
-    if (!/^\d+(\.\d+)?$/.test(trimmed)) {
+    if (!BTC_STRING_REGEX.test(trimmed)) {
       throw new ValidationError('amount', `invalid BTC amount: ${btcString}`);
     }
-    const [intPart, fracPart = ''] = trimmed.split('.');
+    const [intPart = '', fracPart = ''] = trimmed.split('.');
     if (fracPart.length > 8) {
       throw new ValidationError('amount', `BTC amount exceeds satoshi precision: ${btcString}`);
     }

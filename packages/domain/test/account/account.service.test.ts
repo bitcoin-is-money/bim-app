@@ -82,7 +82,7 @@ describe('AccountService', () => {
       vi.mocked(mockAccountRepo.findById).mockResolvedValue(account);
       vi.mocked(mockAccountRepo.markAsDeploying).mockResolvedValue(true);
       // Make waitForTransaction never resolve during test to keep status as 'deploying'
-      vi.mocked(mockStarknetGateway.waitForTransaction).mockReturnValue(new Promise(() => {}));
+      vi.mocked(mockStarknetGateway.waitForTransaction).mockReturnValue(new Promise(() => { /* never resolves — keeps status as 'deploying' */ }));
 
       const result = await service.deploy({accountId});
 

@@ -16,7 +16,7 @@ function parseNetwork(args: string[]): Network {
 export async function run(args: string[]): Promise<void> {
   const network = parseNetwork(args);
   const secrets = loadSecrets();
-  const existing = secrets.treasury?.[network];
+  const existing = network === 'mainnet' ? secrets.treasury?.mainnet : secrets.treasury?.testnet;
 
   if (existing) {
     // Check if already deployed on-chain (has nonce > 0 or has balance)

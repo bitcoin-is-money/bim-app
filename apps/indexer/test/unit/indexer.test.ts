@@ -15,7 +15,7 @@ vi.mock('@bim/lib/logger', async (importOriginal) => {
   const LOG_LEVEL = 'silent';
 
   const mod = await importOriginal<typeof LibLogger>();
-  const logger = mod.createLogger(LOG_LEVEL, {...mod.DEFAULT_LOGGER_CONFIG, requestId: undefined});
+  const logger = mod.createLogger(LOG_LEVEL);
   for (const m of ['fatal', 'error', 'warn', 'info', 'debug', 'trace']) {
     vi.spyOn(logger, m as any);
   }
@@ -38,7 +38,7 @@ vi.mock('@bim/db/database', () => ({
 
 vi.mock('@apibara/plugin-drizzle', () => ({
   drizzle: vi.fn(() => ({})),
-  drizzleStorage: vi.fn(() => (() => {})),
+  drizzleStorage: vi.fn(() => vi.fn()),
   useDrizzleStorage: vi.fn(() => ({db: {}})),
 }));
 
@@ -90,7 +90,10 @@ vi.mock('../../src/wbtc-transfer/transaction-writer.js', () => ({
 // ---------------------------------------------------------------------------
 
 
-function getLogger(): Record<string, ReturnType<typeof vi.fn>> {
+function getLogger(): Record<
+  'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace' | 'child',
+  ReturnType<typeof vi.fn>
+> {
   return (createLogger as any)();
 }
 

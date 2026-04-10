@@ -1,7 +1,7 @@
 
 export type CryptoCurrency = 'BTC' | 'SAT';
 export type FiatCurrency = string;
-export type Currency = CryptoCurrency | FiatCurrency;
+export type Currency = CryptoCurrency | (string & {});
 
 export interface ConversionRates {
   prices: Record<string, number>;

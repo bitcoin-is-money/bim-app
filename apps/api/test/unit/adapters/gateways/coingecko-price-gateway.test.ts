@@ -12,7 +12,7 @@ describe('CoinGeckoPriceGateway', () => {
   const eur = FiatCurrency.of('EUR');
 
   beforeEach(() => {
-    healthRegistry = new HealthRegistry(['coingecko-price'], () => {}, createLogger('silent'));
+    healthRegistry = new HealthRegistry(['coingecko-price'], () => { /* no-op */ }, createLogger('silent'));
     gateway = new CoinGeckoPriceGateway(createLogger('silent'), healthRegistry);
     vi.stubGlobal('fetch', vi.fn());
   });

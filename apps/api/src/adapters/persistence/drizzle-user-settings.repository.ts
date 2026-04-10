@@ -1,5 +1,4 @@
 import * as schema from '@bim/db';
-import type {Database} from '@bim/db/database';
 import {AccountId} from '@bim/domain/account';
 import {FiatCurrency} from "@bim/domain/currency";
 import type {UserSettingsRepository} from "@bim/domain/ports";
@@ -12,10 +11,6 @@ import {AbstractDrizzleRepository} from './abstract-drizzle.repository';
  * Drizzle-based implementation of UserSettingsRepository.
  */
 export class DrizzleUserSettingsRepository extends AbstractDrizzleRepository implements UserSettingsRepository {
-
-  constructor(db: Database) {
-    super(db);
-  }
 
   async save(settings: UserSettings): Promise<void> {
     const preferredCurrencies = settings.getPreferredCurrencies().join(',');

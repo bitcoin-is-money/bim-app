@@ -17,5 +17,4 @@ import {FullPageLayoutComponent} from '../../layout';
   templateUrl: './updating.page.html',
   styleUrl: './updating.page.scss',
 })
-// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class UpdatingPage {}

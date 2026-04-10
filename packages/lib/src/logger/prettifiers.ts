@@ -3,15 +3,14 @@ import {colorize} from './ansi';
 import type {StyleConfig} from './style';
 
 type PrettyOptions = PinoPretty.PrettyOptions;
-type LevelPrettifier = Exclude<PrettyOptions['customPrettifiers'], undefined>['level'] & Function;
+type LevelPrettifier = NonNullable<NonNullable<PrettyOptions['customPrettifiers']>['level']>;
 
 export function createMessageFormat(style: StyleConfig): NonNullable<PrettyOptions['messageFormat']> {
   return (log, messageKey) => {
     // eslint-disable-next-line security/detect-object-injection -- pino standard API
     const msg = String(log[messageKey]);
-    const name: string = log.name
-      ? String(log.name) + ' \u25b8 '
-      : '';
+    const nameStr = typeof log.name === 'string' ? log.name : '';
+    const name: string = nameStr ? nameStr + ' \u25b8 ' : '';
     const coloredName: string = colorize(style.name, name);
     const coloredMsg: string = colorize(style.msg, msg);
     return `${coloredName}${coloredMsg}`;
@@ -19,8 +18,10 @@ export function createMessageFormat(style: StyleConfig): NonNullable<PrettyOptio
 }
 
 export function createTimestampPrettifier(style: StyleConfig) {
-  return (timestamp: string | object) =>
-    colorize(style.timestamp, String(timestamp));
+  return (timestamp: string | object) => {
+    const ts = typeof timestamp === 'string' ? timestamp : JSON.stringify(timestamp);
+    return colorize(style.timestamp, ts);
+  };
 }
 
 export function createErrorPrettifier(style: StyleConfig) {
@@ -43,9 +44,10 @@ export function createLevelPrettifier(style: StyleConfig): LevelPrettifier {
     // Request ID prefix (padStart for right-alignment)
     let ridPrefix = '';
     if (style.requestId) {
-      const rid = log.requestId == null
-        ? ' '.repeat(padding)
-        : String(log.requestId).padStart(padding);
+      const ridValue = log.requestId;
+      const rid = typeof ridValue === 'string' || typeof ridValue === 'number'
+        ? String(ridValue).padStart(padding)
+        : ' '.repeat(padding);
       ridPrefix = "[" + colorize(style.requestId, rid) + '] ';
     }
 

@@ -29,12 +29,14 @@ export function loadEnv(network?: string): void {
 
   // 1. Local dev overrides (optional — absent in Docker)
   const localEnv = resolve(dirname, '../.env.local');
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- path is fully static (resolve + literal)
   if (existsSync(localEnv)) {
     expand(config({path: localEnv}));
   }
 
   // 2. Blockchain constants (always present — committed + copied into Docker)
   const networkEnv = resolve(dirname, `../config/${resolvedNetwork}.env`);
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- resolvedNetwork comes from operator-controlled env var at startup, not user input
   if (!existsSync(networkEnv)) {
     throw new Error(
       `Network config not found: ${networkEnv}. Expected config/${resolvedNetwork}.env.`,

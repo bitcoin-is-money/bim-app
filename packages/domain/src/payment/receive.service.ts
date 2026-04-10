@@ -51,14 +51,14 @@ export class ReceiveService {
           network: 'starknet',
           ...this.receiveStarknet(input.destinationAddress, input.amount, input.useUriPrefix, input.description)};
       case 'lightning': {
-        const description = input.description || 'Received';
+        const description = input.description ?? 'Received';
         return {
           network: 'lightning',
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           ...(await this.receiveLightning(input.destinationAddress, input.amount!, input.accountId, description))};
       }
       case 'bitcoin': {
-        const description = input.description || 'Received';
+        const description = input.description ?? 'Received';
         return {
           network: 'bitcoin',
           status: 'pending_commit' as const,

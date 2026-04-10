@@ -14,6 +14,10 @@ import {PwaUpdateService} from './pwa-update.service';
 
 export type {AuthResponse, BeginAuthResponse, BeginRegisterResponse, UserSessionResponse};
 
+/**
+ * Session loading is handled by provideAppInitializer in app.config.ts
+ * to ensure it completes before route guards run.
+ */
 @Injectable({
   providedIn: 'root',
 })
@@ -29,11 +33,6 @@ export class AuthService {
   currentUser = signal<Account | null>(null);
   isLoading = signal(false);
   isNewUser = signal(false);
-
-  constructor() {
-    // Session loading is handled by provideAppInitializer in app.config.ts
-    // to ensure it completes before route guards run.
-  }
 
   // ===========================================================================
   // Public Methods (for components)

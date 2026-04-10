@@ -1,3 +1,4 @@
+import type {DomainError} from "@bim/domain/shared";
 import {WebauthnUserHandleDecoder} from "@bim/lib/auth";
 
 import type {Logger} from 'pino';
@@ -347,7 +348,7 @@ export class AuthService {
    * When atomic consumeById returns undefined, look up the challenge
    * to throw the most specific error (not found / expired / already used).
    */
-  private async throwChallengeConsumptionError(challengeId: ChallengeId): Promise<never> {
+  private async throwChallengeConsumptionError(challengeId: ChallengeId): Promise<DomainError> {
     const stale = await this.deps.challengeRepository.findById(challengeId);
     if (!stale) {
       throw new ChallengeNotFoundError(challengeId);

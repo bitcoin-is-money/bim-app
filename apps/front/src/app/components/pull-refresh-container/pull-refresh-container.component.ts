@@ -20,8 +20,7 @@ export class PullRefreshEvent {
   styleUrl: './pull-refresh-container.component.scss',
 })
 export class PullRefreshContainerComponent {
-  private readonly el = inject(ElementRef<HTMLElement>);
-
+  private readonly el = inject<ElementRef<HTMLElement>>(ElementRef);
   readonly disabled = input(false);
   readonly refreshRequest = output<PullRefreshEvent>();
   readonly pullDistance = signal(0);

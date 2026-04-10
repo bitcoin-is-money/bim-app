@@ -1,5 +1,4 @@
 import * as schema from '@bim/db';
-import type {Database} from '@bim/db/database';
 import {AccountId, StarknetAddress} from '@bim/domain/account';
 import type {TransactionPaginationOptions, TransactionRepository} from "@bim/domain/ports";
 import {Transaction, TransactionHash, TransactionId, type TransactionType} from "@bim/domain/user";
@@ -10,10 +9,6 @@ import {AbstractDrizzleRepository} from './abstract-drizzle.repository';
  * Drizzle-based implementation of TransactionRepository.
  */
 export class DrizzleTransactionRepository extends AbstractDrizzleRepository implements TransactionRepository {
-
-  constructor(db: Database) {
-    super(db);
-  }
 
   async save(transaction: Transaction): Promise<void> {
     await this.resolveDb()

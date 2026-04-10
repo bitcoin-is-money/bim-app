@@ -227,7 +227,7 @@ export function createReceiveRoutes(
         swapId: build.swapId,
         destinationAddress: starknetAddress,
         amount: build.amount,
-        description: build.description || 'Received',
+        description: build.description ?? 'Received',
         accountId: build.accountId,
         commitTxHash: txHash,
         expiresAt: build.expiresAt,

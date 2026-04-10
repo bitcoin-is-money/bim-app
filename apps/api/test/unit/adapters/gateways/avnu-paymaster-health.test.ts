@@ -20,7 +20,7 @@ describe('AvnuPaymasterGateway.checkHealth', () => {
   let gateway: AvnuPaymasterGateway;
 
   beforeEach(() => {
-    healthRegistry = new HealthRegistry(['avnu-paymaster'], () => {}, logger);
+    healthRegistry = new HealthRegistry(['avnu-paymaster'], () => { /* no-op */ }, logger);
     gateway = new AvnuPaymasterGateway(baseConfig, logger, healthRegistry);
     vi.stubGlobal('fetch', vi.fn());
   });

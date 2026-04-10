@@ -23,7 +23,11 @@ export class FeeConfig {
   }
 
   percentageFor(network: PaymentNetwork): number {
-    return this.percentages[network];
+    switch (network) {
+      case 'starknet': return this.percentages.starknet;
+      case 'lightning': return this.percentages.lightning;
+      case 'bitcoin': return this.percentages.bitcoin;
+    }
   }
 
   static create(params: {

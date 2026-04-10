@@ -1,9 +1,8 @@
-import type {DrizzleDatabase} from '@bim/db/database';
-import type {Database} from '@bim/db/database';
+import type {Database, DrizzleDatabase} from '@bim/db/database';
 
 export abstract class AbstractDrizzleRepository {
 
-  protected constructor(
+  public constructor(
     private readonly db: Database,
   ) {}
 
