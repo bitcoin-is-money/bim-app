@@ -37,6 +37,7 @@
           },
           "configurations": {
             "production": {
+              "serviceWorker": "ngsw-config.json",
               "budgets": [
                 {
                   "type": "initial",
@@ -58,6 +59,7 @@
               ]
             },
             "testnet": {
+              "serviceWorker": "ngsw-config.json",
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true,

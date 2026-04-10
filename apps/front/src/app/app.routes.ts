@@ -94,6 +94,10 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'updating',
+    loadComponent: () => import('./pages/updating/updating.page').then(m => m.UpdatingPage),
+  },
+  {
     path: '',
     redirectTo: '/auth',
     pathMatch: 'full',

@@ -7,6 +7,7 @@ import type {Logger} from 'pino';
 import {AppContext, type AppContextOverrides} from "./app-context";
 import {Database} from '@bim/db/database';
 import {createGlobalRateLimit, createAuthRateLimit, createPaymentRateLimit, createPaymentExecuteRateLimit} from './middleware/rate-limit.middleware';
+import {createPwaCacheHeadersMiddleware} from './middleware/pwa-cache-headers.middleware';
 import {createRequestLoggerMiddleware} from './middleware/request-logger.middleware';
 import {createSecurityHeadersMiddleware} from './middleware/security-headers.middleware';
 import {SwapMonitor} from './monitoring/swap.monitor';
@@ -138,8 +139,19 @@ export async function createApp(options: CreateAppOptions = {}): Promise<AppInst
 
   // Serve static files (frontend) - skip for tests
   if (!options.skipStaticFiles) {
+    // Must run before serveStatic so that post-next() header writes can
+    // override any Cache-Control set by the static file handler.
+    app.use('/*', createPwaCacheHeadersMiddleware());
     app.use('/*', serveStatic({root: './public/app'}));
-    app.get('*', serveStatic({path: './public/app/index.html'}));
+    app.get('*', async (c, next) => {
+      // SPA fallback: every unmatched path returns index.html. The entry
+      // HTML must never be cached or users can end up referencing hashed
+      // bundles that no longer exist after a deploy.
+      c.header('Cache-Control', 'no-cache, no-store, must-revalidate');
+      c.header('Pragma', 'no-cache');
+      c.header('Expires', '0');
+      return serveStatic({path: './public/app/index.html'})(c, next);
+    });
   }
 
   return {app, swapMonitor, rootLogger: rootLogger, context};

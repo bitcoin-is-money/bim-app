@@ -1,0 +1,25 @@
+{
+  "name": "BIM - Bitcoin Is Money",
+  "short_name": "BIM",
+  "description": "Pay and receive in Bitcoin. That's it.",
+  "theme_color": "#000000",
+  "background_color": "#000000",
+  "display": "standalone",
+  "scope": "/",
+  "start_url": "/",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "tiny-logo-512px.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "tiny-logo-512px.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

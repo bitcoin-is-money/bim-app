@@ -37,6 +37,11 @@ export interface SwapStatusResponse {
   expiresAt: string;
 }
 
+export interface ActiveSwapsResponse {
+  active: boolean;
+  count: number;
+}
+
 export function isTerminalStatus(status: SwapStatus, direction?: SwapDirection): boolean {
   if (status === 'expired' && direction === 'bitcoin_to_starknet') {
     return false;

@@ -1,0 +1,28 @@
+@reference "tailwindcss";
+
+.updating-page {
+  @apply h-full flex flex-col overflow-hidden;
+
+  .updating-main {
+    @apply flex-1 flex flex-col items-center justify-center gap-6;
+  }
+
+  .updating-icon {
+    color: var(--color-orange, #f59e0b);
+    font-size: 5rem;
+    animation: updating-spin 1.2s linear infinite;
+  }
+
+  .updating-text {
+    @apply text-2xl font-semibold text-white;
+  }
+}
+
+@keyframes updating-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

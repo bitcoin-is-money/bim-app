@@ -16,6 +16,7 @@ import {
 import {CurrencyService} from './currency.service';
 import {I18nService} from './i18n.service';
 import {NotificationService} from './notification.service';
+import {PwaUpdateService} from './pwa-update.service';
 
 export type {AuthResponse, BeginAuthResponse, BeginRegisterResponse, UserSessionResponse};
 
@@ -29,6 +30,7 @@ export class AuthService {
   private readonly i18n = inject(I18nService);
   private readonly currency = inject(CurrencyService);
   private readonly notifications = inject(NotificationService);
+  private readonly pwaUpdate = inject(PwaUpdateService);
 
   currentUser = signal<Account | null>(null);
   isLoading = signal(false);
@@ -83,6 +85,7 @@ export class AuthService {
 
       this.isNewUser.set(true);
       await this.currency.init();
+      await this.pwaUpdate.tryApplyUpdate();
       await this.router.navigate(['/account-setup']);
     } catch (error) {
       // HTTP errors are already handled by the interceptor
@@ -126,6 +129,7 @@ export class AuthService {
       // Load user preferences after login
       await this.i18n.init();
       await this.currency.init();
+      await this.pwaUpdate.tryApplyUpdate();
 
       await this.router.navigate(['/home']);
     } catch (error) {
@@ -164,10 +168,6 @@ export class AuthService {
     await this.router.navigate(['/auth']);
   }
 
-  // ===========================================================================
-  // Private Methods
-  // ===========================================================================
-
   async loadCurrentUser(): Promise<void> {
     try {
       const response = await firstValueFrom(
@@ -188,6 +188,10 @@ export class AuthService {
       await this.i18n.initFromBrowser();
     }
   }
+
+  // ===========================================================================
+  // Private Methods
+  // ===========================================================================
 
   private completeLogin(challengeId: string, credential: PublicKeyCredential): Observable<AuthResponse> {
     const credentialJson = this.credentialToJson(credential);
