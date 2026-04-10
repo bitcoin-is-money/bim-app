@@ -1,5 +1,5 @@
 import {CommonModule} from '@angular/common';
-import type { OnDestroy} from '@angular/core';
+import type {OnDestroy} from '@angular/core';
 import {Component, inject, signal} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {TranslateModule} from '@ngx-translate/core';

@@ -1,7 +1,7 @@
+import {createLogger} from '@bim/lib/logger';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {CurrencyService, FiatCurrency} from '../../src/currency';
 import type {PriceGateway} from '../../src/ports';
-import {createLogger} from '@bim/lib/logger';
 
 describe('CurrencyService', () => {
   let service: CurrencyService;

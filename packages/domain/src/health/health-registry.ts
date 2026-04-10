@@ -65,7 +65,7 @@ interface MutableComponentHealth {
  * concrete notification channel.
  */
 export class HealthRegistry {
-  private readonly components: Map<ComponentName, MutableComponentHealth> = new Map();
+  private readonly components = new Map<ComponentName, MutableComponentHealth>();
   private readonly log: Logger;
 
   constructor(

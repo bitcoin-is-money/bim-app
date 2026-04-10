@@ -1,9 +1,9 @@
+import {signal} from '@angular/core';
 import {TestBed} from '@angular/core/testing';
 import {describe, expect, it} from 'vitest';
-import {signal} from '@angular/core';
-import {FormatAmountPipe} from './format-amount.pipe';
 import {Amount} from '../model';
 import {I18nService} from '../services/i18n.service';
+import {FormatAmountPipe} from './format-amount.pipe';
 
 describe('FormatAmountPipe', () => {
   function setup(locale: string) {

@@ -1,4 +1,4 @@
-import {stark, ec, hash, CallData} from 'starknet';
+import {CallData, ec, hash, stark} from 'starknet';
 import {OZ_ACCOUNT_CLASS_HASH, STARKNET_FAUCET_URL} from '../config/constants.js';
 import {loadSecrets, saveSecrets} from '../config/secrets.js';
 

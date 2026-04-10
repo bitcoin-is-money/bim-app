@@ -1,8 +1,8 @@
 import {Component, computed, inject, input} from '@angular/core';
-import {CurrencyDisplayComponent} from '../currency-display/currency-display.component';
-import {FormatAmountPipe} from '../../pipes/format-amount.pipe';
 import type {Amount} from '../../model';
+import {FormatAmountPipe} from '../../pipes/format-amount.pipe';
 import {CurrencyService} from '../../services/currency.service';
+import {CurrencyDisplayComponent} from '../currency-display/currency-display.component';
 
 @Component({
   selector: 'app-amount-highlight',

@@ -1,13 +1,11 @@
+import type {Account} from '@bim/domain/account';
 import type {TypedResponse} from 'hono';
 import {Hono} from 'hono';
-
-import type {Account} from '@bim/domain/account';
 
 import type {AppContext} from '../../app-context';
 import {type ApiErrorResponse, handleDomainError} from '../../errors';
 import {createAuthMiddleware} from '../../middleware/auth.middleware';
 import type {AuthenticatedHono} from '../../types.js';
-import {SwapDirectionSchema, SwapIdParamSchema} from './swap.types';
 import type {
   ActiveSwapsResponse,
   SwapDirection,
@@ -15,6 +13,7 @@ import type {
   SwapLimitsResponse,
   SwapStatusResponse,
 } from './swap.types';
+import {SwapDirectionSchema, SwapIdParamSchema} from './swap.types';
 
 // =============================================================================
 // Routes

@@ -3,8 +3,8 @@ import {SessionConfig} from '@bim/domain/auth';
 import type {AccountRepository, PaymasterGateway,} from '@bim/domain/ports';
 import {createLogger} from '@bim/lib/logger';
 import {describe, expect, it, vi} from 'vitest';
-import {AppContext, type AppContextOverrides} from '../../src/app-context.js';
 import type {AppConfig} from '../../src/app-config.js';
+import {AppContext, type AppContextOverrides} from '../../src/app-context.js';
 
 const logger = createLogger();
 
@@ -31,8 +31,8 @@ vi.mock('../../src/adapters/index.js', () => {
   };
 });
 
-const mockDb = {} as any; // eslint-disable-line @typescript-eslint/no-explicit-any
-const mockPool = {} as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+const mockDb = {} as any;  
+const mockPool = {} as any;  
 
 function createMockConfig(): AppConfig.Config {
   return {

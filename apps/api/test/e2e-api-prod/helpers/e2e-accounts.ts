@@ -1,15 +1,12 @@
-import {
-  WebauthnVirtualAuthenticator,
-  type SerializedAuthenticator,
-} from '@bim/test-toolkit/auth';
-import type {Logger} from 'pino';
+import {type SerializedAuthenticator, WebauthnVirtualAuthenticator,} from '@bim/test-toolkit/auth';
 import {readFileSync, writeFileSync} from 'node:fs';
 import {dirname, join} from 'node:path';
 import {fileURLToPath} from 'node:url';
+import type {Logger} from 'pino';
 import type {GetBalanceResponse} from '../../../src/routes';
-import type {E2eClient} from './e2e-client.js';
 import {loginUser} from './e2e-auth.js';
-import {E2eUser, type AccountKey} from './e2e-user.js';
+import type {E2eClient} from './e2e-client.js';
+import {type AccountKey, E2eUser} from './e2e-user.js';
 
 // =============================================================================
 // Types

@@ -1,4 +1,3 @@
-
 import * as schema from '@bim/db';
 import {isNotNull} from 'drizzle-orm';
 import type {Logger} from 'pino';

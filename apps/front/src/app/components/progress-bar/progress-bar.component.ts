@@ -31,7 +31,7 @@ export class ProgressBarComponent {
   private scheduleHide(): void {
     const elapsed = Date.now() - this.cycleStart;
     const remaining = CYCLE_DURATION_MS - (elapsed % CYCLE_DURATION_MS);
-    this.hideTimeout = setTimeout(() => this.visible.set(false), remaining);
+    this.hideTimeout = setTimeout(() => { this.visible.set(false); }, remaining);
   }
 
   private clearHideTimeout(): void {

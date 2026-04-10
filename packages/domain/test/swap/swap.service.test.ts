@@ -1,7 +1,7 @@
 import {StarknetAddress} from '@bim/domain/account';
 import type {AtomiqGateway, SwapRepository, TransactionRepository} from '@bim/domain/ports';
 import {Amount} from '@bim/domain/shared';
-import {BitcoinAddress, type LightningInvoice, Swap, SwapCreationError, SwapId, SwapNotFoundError, SwapService} from '@bim/domain/swap';
+import {BitcoinAddress, Swap, SwapCreationError, SwapId, SwapNotFoundError, SwapService} from '@bim/domain/swap';
 import {createLogger} from '@bim/lib/logger';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 

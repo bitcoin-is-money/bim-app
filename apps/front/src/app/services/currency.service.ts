@@ -1,4 +1,4 @@
-import type { OnDestroy} from '@angular/core';
+import type {OnDestroy} from '@angular/core';
 import {inject, Injectable, signal} from '@angular/core';
 import {firstValueFrom} from 'rxjs';
 import type {Amount, ConversionRates, Currency} from "../model";

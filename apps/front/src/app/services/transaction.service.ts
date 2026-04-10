@@ -1,12 +1,12 @@
 import {computed, inject, Injectable, signal} from '@angular/core';
 import type {Observable, Subscription} from 'rxjs';
 import {filter, interval, map, switchMap, take, tap} from 'rxjs';
-import {TransactionHttpService} from './transaction.http.service';
-import type {Transaction} from './transaction.http.service';
+import type {ConversionRates} from '../model';
+import {Amount, Currency} from '../model';
 import {CurrencyService} from './currency.service';
 import {I18nService} from './i18n.service';
-import type { ConversionRates} from '../model';
-import {Amount, Currency} from '../model';
+import type {Transaction} from './transaction.http.service';
+import {TransactionHttpService} from './transaction.http.service';
 
 export type {Transaction} from './transaction.http.service';
 

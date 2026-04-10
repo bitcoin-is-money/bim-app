@@ -1,5 +1,5 @@
-import {describe, expect, it} from 'vitest';
 import {isInfraFailure, sanitizeAtomiqError} from '@bim/atomiq';
+import {describe, expect, it} from 'vitest';
 
 const CLOUDFLARE_530_HTML = `<!doctype html>
 <html lang="en-US">

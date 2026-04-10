@@ -1,7 +1,7 @@
 import {StarknetAddress} from '@bim/domain/account';
 import {HealthRegistry} from '@bim/domain/health';
 import {createLogger} from '@bim/lib/logger';
-import {AvnuSwapGateway, type AvnuSwapConfig} from '@bim/starknet';
+import {type AvnuSwapConfig, AvnuSwapGateway} from '@bim/starknet';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
 const logger = createLogger('silent');

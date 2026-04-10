@@ -37,7 +37,7 @@ export async function runStartupHealthChecks(
   ];
 
   const timeout = new Promise<'timeout'>(resolve => {
-    setTimeout(() => resolve('timeout'), healthChecksTimeoutMs);
+    setTimeout(() => { resolve('timeout'); }, healthChecksTimeoutMs);
   });
 
   const raceResult = await Promise.race([

@@ -1,5 +1,5 @@
-import {Writable} from 'node:stream';
 import {createLogger, isValidLevel} from '@bim/lib/logger';
+import {Writable} from 'node:stream';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
 function createMemoryStream(): {stream: Writable; read: () => string} {

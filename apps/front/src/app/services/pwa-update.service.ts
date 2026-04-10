@@ -103,10 +103,10 @@ export class PwaUpdateService {
     try {
       const checkPromise = this.swUpdate.checkForUpdate();
       const deadline = new Promise<boolean>((resolve) => {
-        setTimeout(() => resolve(false), budgetMs);
+        setTimeout(() => { resolve(false); }, budgetMs);
       });
       const result = await Promise.race([checkPromise, deadline]);
-      return result === true || this.updateAvailable();
+      return result || this.updateAvailable();
     } catch {
       return false;
     }

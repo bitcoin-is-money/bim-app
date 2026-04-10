@@ -1,8 +1,7 @@
+import * as schema from '@bim/db';
 import type {Hono} from 'hono';
 import type pg from 'pg';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-
-import * as schema from '@bim/db';
 
 import type {ActiveSwapsResponse} from '../../../src/routes';
 import {type DbClient, TestApp, TestDatabase} from '../helpers';

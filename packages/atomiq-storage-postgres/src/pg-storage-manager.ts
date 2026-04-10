@@ -14,7 +14,7 @@ export class PgStorageManager<T extends StorageObject> implements IStorageManage
   private initialized = false;
 
   /** In-memory cache of stored objects, keyed by hash, required by IStorageManager */
-  data: { [key: string]: T } = {};
+  data: Record<string, T> = {};
 
   constructor(pool: pg.Pool, tableName = 'atomiq_store') {
     this.pool = pool;
@@ -46,12 +46,12 @@ export class PgStorageManager<T extends StorageObject> implements IStorageManage
     }
   }
 
-  async loadData(type: { new(data: unknown): T }): Promise<T[]> {
+  async loadData(type: new(data: unknown) => T): Promise<T[]> {
     this.assertInitialized();
     const result = await this.pool.query(`SELECT * FROM "${this.tableName}"`);
     this.data = {};
     const allData: T[] = [];
-    for (const row of result.rows as Array<{id: string; value: string}>) {
+    for (const row of result.rows as {id: string; value: string}[]) {
       const parsed: unknown = JSON.parse(row.value);
       const obj = new type(parsed);
       this.data[row.id] = obj;

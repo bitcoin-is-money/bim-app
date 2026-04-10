@@ -1,7 +1,5 @@
 import {StarknetAddress} from '@bim/domain/account';
 import type {HealthTransitionEvent} from '@bim/domain/health';
-import {createLogger} from '@bim/lib/logger';
-import type {NotificationGateway, NotificationMessage} from '@bim/domain/ports';
 import {
   AvnuBalanceLow,
   AvnuCreditsRecharged,
@@ -9,7 +7,9 @@ import {
   SwapClaimFailed,
   TreasuryBalanceLow,
 } from '@bim/domain/notifications';
+import type {NotificationGateway, NotificationMessage} from '@bim/domain/ports';
 import type {SwapId} from '@bim/domain/swap';
+import {createLogger} from '@bim/lib/logger';
 import {SlackNotificationGateway} from '@bim/slack';
 import {loadSecrets, requireSlack} from '../config/secrets.js';
 

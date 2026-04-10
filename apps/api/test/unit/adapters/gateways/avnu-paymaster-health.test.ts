@@ -1,6 +1,6 @@
 import {HealthRegistry} from '@bim/domain/health';
 import {createLogger} from '@bim/lib/logger';
-import {AvnuPaymasterGateway, type AvnuPaymasterConfig} from '@bim/starknet';
+import {type AvnuPaymasterConfig, AvnuPaymasterGateway} from '@bim/starknet';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
 const logger = createLogger('silent');

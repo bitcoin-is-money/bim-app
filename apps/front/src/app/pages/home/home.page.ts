@@ -1,12 +1,15 @@
 import {CommonModule} from '@angular/common';
-import type { OnInit} from '@angular/core';
+import type {OnInit} from '@angular/core';
 import {Component, inject} from '@angular/core';
 import {Router} from '@angular/router';
 import {TranslateModule} from '@ngx-translate/core';
 import {forkJoin} from 'rxjs';
 import {AmountHighlightComponent} from '../../components/amount-highlight/amount-highlight.component';
 import {ButtonComponent} from "../../components/button/button.component";
-import {type PullRefreshEvent, PullRefreshContainerComponent} from '../../components/pull-refresh-container/pull-refresh-container.component';
+import {
+  PullRefreshContainerComponent,
+  type PullRefreshEvent
+} from '../../components/pull-refresh-container/pull-refresh-container.component';
 import {SpinnerComponent} from '../../components/spinner/spinner.component';
 import {FullPageLayoutComponent} from '../../layout';
 import {AccountService} from "../../services/account.service";
@@ -48,7 +51,7 @@ export class HomePage implements OnInit {
     forkJoin([
       this.accountService.refreshBalance(),
       this.transactionService.refresh(),
-    ]).subscribe(() => event.complete());
+    ]).subscribe(() => { event.complete(); });
   }
 
   onScroll(event: Event): void {

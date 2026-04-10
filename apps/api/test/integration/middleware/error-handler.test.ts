@@ -1,5 +1,5 @@
-import type pg from 'pg';
 import type {Hono} from 'hono';
+import type pg from 'pg';
 import {afterAll, beforeAll, describe, expect, it} from 'vitest';
 import {TestApp, TestDatabase} from '../helpers';
 

@@ -1,7 +1,7 @@
-import {ExternalServiceError, SanitizedError} from '@bim/domain/shared';
 import type {FiatCurrency} from '@bim/domain/currency';
 import type {HealthRegistry} from '@bim/domain/health';
 import type {PriceGateway} from '@bim/domain/ports';
+import {ExternalServiceError, SanitizedError} from '@bim/domain/shared';
 import type {Logger} from 'pino';
 
 const COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3/simple/price';

@@ -6,11 +6,6 @@ import type {AppContext} from '../../app-context';
 import {type ApiErrorResponse, handleDomainError} from '../../errors';
 import {getSessionId} from '../../middleware/auth.middleware';
 import {clearSessionCookie, setSessionCookie} from '../../middleware/session-cookie';
-import {
-  BeginRegistrationSchema,
-  CompleteAuthenticationSchema,
-  CompleteRegistrationSchema,
-} from './auth.types';
 import type {
   BeginAuthenticationResponse,
   BeginRegistrationBody,
@@ -22,6 +17,7 @@ import type {
   LogoutResponse,
   SessionResponse,
 } from './auth.types';
+import {BeginRegistrationSchema, CompleteAuthenticationSchema, CompleteRegistrationSchema,} from './auth.types';
 
 // =============================================================================
 // Routes

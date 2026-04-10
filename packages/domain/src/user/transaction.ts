@@ -1,7 +1,6 @@
 import type {AccountId} from '../account';
 import type {StarknetAddress} from '../shared';
-import type {TransactionHash, TransactionId} from './types';
-import type { TransactionType} from './types';
+import type {TransactionHash, TransactionId, TransactionType} from './types';
 
 /**
  * Transaction entity representing a recorded blockchain transaction.

@@ -1,4 +1,4 @@
-import {Database} from "@bim/db/database";
+import type {Database} from "@bim/db/database";
 import {AccountService} from "@bim/domain/account";
 import {AuthService, type SessionConfig, SessionService} from "@bim/domain/auth";
 import {CurrencyService} from "@bim/domain/currency";

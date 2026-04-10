@@ -13,25 +13,25 @@ describe('validateExternalCalls', () => {
 
   it('blocks transfer entrypoint', () => {
     const calls = [{contractAddress: KNOWN_WBTC, entrypoint: 'transfer', calldata: ['0x1', '100', '0']}];
-    expect(() => validateExternalCalls(calls, KNOWN_TOKENS, 'TestService'))
+    expect(() => { validateExternalCalls(calls, KNOWN_TOKENS, 'TestService'); })
       .toThrow(UnsafeExternalCallError);
   });
 
   it('blocks transfer_from entrypoint', () => {
     const calls = [{contractAddress: KNOWN_WBTC, entrypoint: 'transfer_from', calldata: ['0x1', '0x2', '100', '0']}];
-    expect(() => validateExternalCalls(calls, KNOWN_TOKENS, 'TestService'))
+    expect(() => { validateExternalCalls(calls, KNOWN_TOKENS, 'TestService'); })
       .toThrow(UnsafeExternalCallError);
   });
 
   it('blocks increase_allowance entrypoint', () => {
     const calls = [{contractAddress: KNOWN_WBTC, entrypoint: 'increase_allowance', calldata: ['0x1', '100', '0']}];
-    expect(() => validateExternalCalls(calls, KNOWN_TOKENS, 'TestService'))
+    expect(() => { validateExternalCalls(calls, KNOWN_TOKENS, 'TestService'); })
       .toThrow(UnsafeExternalCallError);
   });
 
   it('blocks forbidden entrypoints case-insensitively', () => {
     const calls = [{contractAddress: KNOWN_WBTC, entrypoint: 'Transfer', calldata: ['0x1', '100', '0']}];
-    expect(() => validateExternalCalls(calls, KNOWN_TOKENS, 'TestService'))
+    expect(() => { validateExternalCalls(calls, KNOWN_TOKENS, 'TestService'); })
       .toThrow(UnsafeExternalCallError);
   });
 
@@ -41,31 +41,31 @@ describe('validateExternalCalls', () => {
 
   it('allows approve on known token contract', () => {
     const calls = [{contractAddress: KNOWN_WBTC, entrypoint: 'approve', calldata: ['0xspender', '100', '0']}];
-    expect(() => validateExternalCalls(calls, KNOWN_TOKENS, 'TestService')).not.toThrow();
+    expect(() => { validateExternalCalls(calls, KNOWN_TOKENS, 'TestService'); }).not.toThrow();
   });
 
   it('blocks approve on unknown contract', () => {
     const calls = [{contractAddress: UNKNOWN_CONTRACT, entrypoint: 'approve', calldata: ['0xspender', '100', '0']}];
-    expect(() => validateExternalCalls(calls, KNOWN_TOKENS, 'TestService'))
+    expect(() => { validateExternalCalls(calls, KNOWN_TOKENS, 'TestService'); })
       .toThrow(UnsafeExternalCallError);
   });
 
   it('matches token addresses case-insensitively', () => {
     const calls = [{contractAddress: KNOWN_WBTC.toUpperCase(), entrypoint: 'approve', calldata: ['0xspender', '100', '0']}];
-    expect(() => validateExternalCalls(calls, KNOWN_TOKENS, 'TestService')).not.toThrow();
+    expect(() => { validateExternalCalls(calls, KNOWN_TOKENS, 'TestService'); }).not.toThrow();
   });
 
   it('matches approve when call uses short form and known list uses padded form', () => {
     const paddedWbtc = StarknetAddress.of('0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac');
     const unpaddedWbtc = '0x3fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac';
     const calls = [{contractAddress: unpaddedWbtc, entrypoint: 'approve', calldata: ['0xspender', '100', '0']}];
-    expect(() => validateExternalCalls(calls, [paddedWbtc, KNOWN_STRK], 'AVNU DEX')).not.toThrow();
+    expect(() => { validateExternalCalls(calls, [paddedWbtc, KNOWN_STRK], 'AVNU DEX'); }).not.toThrow();
   });
 
   it('matches approve when call uses padded form and known list uses padded form', () => {
     const paddedWbtc = StarknetAddress.of('0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac');
     const calls = [{contractAddress: paddedWbtc, entrypoint: 'approve', calldata: ['0xspender', '100', '0']}];
-    expect(() => validateExternalCalls(calls, [paddedWbtc, KNOWN_STRK], 'AVNU DEX')).not.toThrow();
+    expect(() => { validateExternalCalls(calls, [paddedWbtc, KNOWN_STRK], 'AVNU DEX'); }).not.toThrow();
   });
 
   // =========================================================================
@@ -78,11 +78,11 @@ describe('validateExternalCalls', () => {
       {contractAddress: UNKNOWN_CONTRACT, entrypoint: 'multi_route_swap', calldata: ['0x1']},
       {contractAddress: UNKNOWN_CONTRACT, entrypoint: 'init', calldata: []},
     ];
-    expect(() => validateExternalCalls(calls, KNOWN_TOKENS, 'TestService')).not.toThrow();
+    expect(() => { validateExternalCalls(calls, KNOWN_TOKENS, 'TestService'); }).not.toThrow();
   });
 
   it('allows empty calls array', () => {
-    expect(() => validateExternalCalls([], KNOWN_TOKENS, 'TestService')).not.toThrow();
+    expect(() => { validateExternalCalls([], KNOWN_TOKENS, 'TestService'); }).not.toThrow();
   });
 
   // =========================================================================
@@ -95,7 +95,7 @@ describe('validateExternalCalls', () => {
       {contractAddress: UNKNOWN_CONTRACT, entrypoint: 'commit', calldata: ['0x1']},
       {contractAddress: KNOWN_WBTC, entrypoint: 'transfer', calldata: ['0xattacker', '999999', '0']},
     ];
-    expect(() => validateExternalCalls(calls, KNOWN_TOKENS, 'TestService'))
+    expect(() => { validateExternalCalls(calls, KNOWN_TOKENS, 'TestService'); })
       .toThrow(UnsafeExternalCallError);
   });
 
@@ -105,7 +105,7 @@ describe('validateExternalCalls', () => {
 
   it('includes service name and reason in error message', () => {
     const calls = [{contractAddress: KNOWN_WBTC, entrypoint: 'transfer', calldata: []}];
-    expect(() => validateExternalCalls(calls, KNOWN_TOKENS, 'Atomiq'))
+    expect(() => { validateExternalCalls(calls, KNOWN_TOKENS, 'Atomiq'); })
       .toThrow(/Atomiq.*transfer/);
   });
 });

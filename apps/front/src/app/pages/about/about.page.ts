@@ -1,9 +1,9 @@
 import {Component} from '@angular/core';
 import {TranslateModule} from '@ngx-translate/core';
+import {APP_VERSION} from '../../../environments/version';
 import {GoBackHeaderComponent} from '../../components/go-back-header/go-back-header.component';
 import {InfoFieldComponent} from '../../components/info-field/info-field.component';
 import {FullPageLayoutComponent} from '../../layout';
-import {APP_VERSION} from '../../../environments/version';
 
 @Component({
   selector: 'app-about',

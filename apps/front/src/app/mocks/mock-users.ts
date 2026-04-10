@@ -1,6 +1,6 @@
 import type {StoredSwap, SwapStatus} from '../model';
-import type {Language} from '../services/user-settings-http.service';
 import type {ParsePaymentResponse} from '../services/pay.http.service';
+import type {Language} from '../services/user-settings-http.service';
 
 export interface MockSwapConfig {
   /** Predefined status progression for created swaps: status after N polls */

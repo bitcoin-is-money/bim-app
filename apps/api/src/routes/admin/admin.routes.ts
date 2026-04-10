@@ -6,8 +6,8 @@ import type {AppContext} from "../../app-context";
 import type {ApiErrorResponse} from '../../errors';
 import {handleDomainError} from '../../errors';
 import {createAuthMiddleware} from '../../middleware/auth.middleware';
-import {UpdateLogLevelSchema} from './admin.types';
 import type {GetLogLevelResponse, UpdateLogLevelBody, UpdateLogLevelResponse} from './admin.types';
+import {UpdateLogLevelSchema} from './admin.types';
 
 export function createAdminRoutes(appContext: AppContext): Hono {
   const rootLogger: Logger = appContext.logger;

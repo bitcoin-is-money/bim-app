@@ -1,8 +1,8 @@
 import {CommonModule, DatePipe} from '@angular/common';
 import {Component, computed, inject, input} from '@angular/core';
 import {TranslateModule} from '@ngx-translate/core';
-import type {DisplayedTransaction} from '../../../../services/transaction.service';
 import {I18nService} from '../../../../services/i18n.service';
+import type {DisplayedTransaction} from '../../../../services/transaction.service';
 
 @Component({
   selector: 'app-transaction-list',

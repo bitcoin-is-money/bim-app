@@ -99,7 +99,7 @@ describe('BalanceMonitoring', () => {
     await monitoring.run();
 
     expect(notificationGateway.send).toHaveBeenCalledOnce();
-    const message = vi.mocked(notificationGateway.send).mock.calls[0]![0] as NotificationMessage;
+    const message = vi.mocked(notificationGateway.send).mock.calls[0]![0];
     expect(message.title).toBe('AVNU Credits Low');
     expect(message.severity).toBe('alert');
   });
@@ -111,7 +111,7 @@ describe('BalanceMonitoring', () => {
     await monitoring.run();
 
     expect(notificationGateway.send).toHaveBeenCalledOnce();
-    const message = vi.mocked(notificationGateway.send).mock.calls[0]![0] as NotificationMessage;
+    const message = vi.mocked(notificationGateway.send).mock.calls[0]![0];
     expect(message.title).toBe('Treasury Balance Low');
     expect(message.severity).toBe('alert');
   });
@@ -124,7 +124,7 @@ describe('BalanceMonitoring', () => {
 
     expect(notificationGateway.send).toHaveBeenCalledTimes(2);
     const titles = vi.mocked(notificationGateway.send).mock.calls
-      .map(call => (call[0] as NotificationMessage).title);
+      .map(call => (call[0]).title);
     expect(titles).toContain('AVNU Credits Low');
     expect(titles).toContain('Treasury Balance Low');
   });
@@ -136,7 +136,7 @@ describe('BalanceMonitoring', () => {
     await monitoring.run();
 
     expect(notificationGateway.send).toHaveBeenCalledOnce();
-    const message = vi.mocked(notificationGateway.send).mock.calls[0]![0] as NotificationMessage;
+    const message = vi.mocked(notificationGateway.send).mock.calls[0]![0];
     expect(message.title).toBe('Treasury Balance Low');
   });
 
@@ -147,7 +147,7 @@ describe('BalanceMonitoring', () => {
     await monitoring.run();
 
     expect(notificationGateway.send).toHaveBeenCalledOnce();
-    const message = vi.mocked(notificationGateway.send).mock.calls[0]![0] as NotificationMessage;
+    const message = vi.mocked(notificationGateway.send).mock.calls[0]![0];
     expect(message.title).toBe('AVNU Credits Low');
   });
 });

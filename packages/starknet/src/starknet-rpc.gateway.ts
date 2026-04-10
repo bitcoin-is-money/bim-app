@@ -9,10 +9,10 @@ import type {
   TransactionReceipt,
 } from "@bim/domain/ports";
 import {DomainError, ExternalServiceError, SanitizedError} from "@bim/domain/shared";
+import {ETransactionType} from '@starknet-io/starknet-types-010';
 
 import pTimeout from 'p-timeout';
 import type {Logger} from "pino";
-import {ETransactionType} from '@starknet-io/starknet-types-010';
 import {CallData, hash, RpcProvider, typedData as starknetTypedData} from 'starknet';
 import {ARGENT_WEBAUTHN_SALT, buildArgentWebauthnCalldata} from './argent-calldata.js';
 

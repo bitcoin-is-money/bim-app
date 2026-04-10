@@ -1,12 +1,7 @@
 import {AccountId} from '@bim/domain/account';
 import {FiatCurrency} from '@bim/domain/currency';
 import type {UserSettingsRepository} from '@bim/domain/ports';
-import {
-  Language,
-  UserSettings,
-  UserSettingsId,
-  UserSettingsService,
-} from '@bim/domain/user';
+import {Language, UserSettings, UserSettingsId, UserSettingsService,} from '@bim/domain/user';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
 describe('UserSettingsService', () => {

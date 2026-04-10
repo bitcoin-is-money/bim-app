@@ -1,5 +1,5 @@
 import type {ConversionRates} from './currency';
-import { Currency} from './currency';
+import {Currency} from './currency';
 
 const SATS_PER_BTC = 100_000_000;
 

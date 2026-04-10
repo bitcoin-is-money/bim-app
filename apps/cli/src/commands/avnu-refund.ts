@@ -1,7 +1,7 @@
 import {StarknetAddress} from '@bim/domain/account';
-import {createLogger} from '@bim/lib/logger';
 import {AvnuCreditsRecharged} from '@bim/domain/notifications';
 import type {NotificationGateway} from '@bim/domain/ports';
+import {createLogger} from '@bim/lib/logger';
 import {SlackNotificationGateway} from '@bim/slack';
 import {createInterface} from 'node:readline';
 import {RPC_URLS, STRK_DECIMALS} from '../config/constants.js';

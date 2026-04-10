@@ -1,10 +1,10 @@
 import {UuidCodec} from '@bim/lib/encoding';
-import {WebauthnVirtualAuthenticator} from '@bim/test-toolkit/auth';
 import type {CredentialCreationOptions} from '@bim/test-toolkit/auth';
+import {WebauthnVirtualAuthenticator} from '@bim/test-toolkit/auth';
 import {existsSync, readFileSync} from 'node:fs';
-import {join, dirname} from 'node:path';
+import {dirname, join} from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {loadSecrets, saveSecrets, getSecretsPath} from '../config/secrets.js';
+import {getSecretsPath, loadSecrets, saveSecrets} from '../config/secrets.js';
 
 // =============================================================================
 // E2E API configuration (from apps/api/.env.e2e-api-prod)

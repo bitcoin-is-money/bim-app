@@ -8,7 +8,7 @@ import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 import type {ApiErrorResponse} from '../../../src/errors';
 import type {DeployAccountResponse, GetAccountResponse, GetDeploymentStatusResponse} from '../../../src/routes';
 import {registerUser} from '../../helpers';
-import type { DevnetPaymasterGateway} from '../helpers';
+import type {DevnetPaymasterGateway} from '../helpers';
 import {type DbClient, StrkDevnetContext, TestApp, TestDatabase,} from '../helpers';
 import {AccountFixture} from '../helpers/account';
 import {AuthFixture} from '../helpers/auth';

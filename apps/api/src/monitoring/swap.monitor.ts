@@ -50,7 +50,7 @@ export class SwapMonitor {
   private iterating = false;
   private idleIterations = 0;
   private iterationsSinceLastKeepalive = 0;
-  private readonly knownActiveSwapIds: Set<SwapId> = new Set();
+  private readonly knownActiveSwapIds = new Set<SwapId>();
   private readonly config: Required<SwapMonitorConfig>;
   private readonly log: Logger;
 
@@ -129,7 +129,7 @@ export class SwapMonitor {
       }
 
       this.idleIterations = 0;
-      const currentIds: Set<SwapId> = new Set(activeSwaps.map(s => s.data.id));
+      const currentIds = new Set<SwapId>(activeSwaps.map(s => s.data.id));
       const newIds = [...currentIds].filter(id => !this.knownActiveSwapIds.has(id));
       if (newIds.length > 0) {
         this.log.info(

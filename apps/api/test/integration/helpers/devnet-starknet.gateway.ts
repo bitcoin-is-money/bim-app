@@ -1,9 +1,9 @@
 import {StarknetAddress} from '@bim/domain/account';
 import {HealthRegistry} from '@bim/domain/health';
 import type {PaymasterGateway} from '@bim/domain/ports';
+import {type StarknetGatewayConfig, StarknetRpcGateway} from '@bim/starknet';
 import type {Logger} from 'pino';
 import {CallData, hash} from 'starknet';
-import {StarknetRpcGateway, type StarknetGatewayConfig} from '@bim/starknet';
 
 /**
  * Devnet-specific Starknet gateway that overrides address calculation.

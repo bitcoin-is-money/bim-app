@@ -1,9 +1,9 @@
-import type { HttpErrorResponse, HttpHandlerFn, HttpInterceptorFn, HttpRequest } from '@angular/common/http';
-import { inject, Injector } from '@angular/core';
-import { Router } from '@angular/router';
-import { catchError, throwError } from 'rxjs';
-import { AuthService } from '../services/auth.service';
-import { CurrencyService } from '../services/currency.service';
+import type {HttpErrorResponse, HttpHandlerFn, HttpInterceptorFn, HttpRequest} from '@angular/common/http';
+import {inject, Injector} from '@angular/core';
+import {Router} from '@angular/router';
+import {catchError, throwError} from 'rxjs';
+import {AuthService} from '../services/auth.service';
+import {CurrencyService} from '../services/currency.service';
 
 export const authInterceptor: HttpInterceptorFn = (
   req: HttpRequest<unknown>,

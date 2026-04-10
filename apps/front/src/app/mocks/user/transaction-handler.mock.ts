@@ -1,5 +1,5 @@
 import type {HttpRequest} from '@angular/common/http';
-import { HttpResponse} from '@angular/common/http';
+import {HttpResponse} from '@angular/common/http';
 import type {PaginatedTransactions, Transaction} from '../../services/transaction.http.service';
 import type {DataStoreMock} from "../data-store.mock";
 

@@ -1,6 +1,6 @@
+import type {NotificationMessage} from '../../ports';
 import type {StarknetAddress} from '../../shared';
 import type {SwapId} from '../../swap';
-import type {NotificationMessage} from '../../ports';
 import {starkscanUrl, truncateAddress} from '../format';
 
 export class SwapClaimFailed {
@@ -13,7 +13,7 @@ export class SwapClaimFailed {
     amount: string;
     error: string;
   }): NotificationMessage {
-    const fields: Map<string, string> = new Map([
+    const fields = new Map<string, string>([
       ['Swap ID', `\`${params.swapId}\``],
       ['User', `\`${truncateAddress(params.userAddress)}\``],
       ['Amount', params.amount],

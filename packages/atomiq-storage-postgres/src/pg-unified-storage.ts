@@ -104,7 +104,7 @@ export class PgUnifiedStorage implements IUnifiedStorage<UnifiedStorageIndexes, 
     }
   }
 
-  async query(params: Array<Array<QueryParams>>): Promise<Array<UnifiedStoredObject>> {
+  async query(params: QueryParams[][]): Promise<UnifiedStoredObject[]> {
     this.assertInitialized();
 
     const orClauses: string[] = [];

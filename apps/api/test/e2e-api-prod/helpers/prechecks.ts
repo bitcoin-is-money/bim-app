@@ -1,6 +1,6 @@
 import type {GetAccountResponse} from '../../../src/routes';
-import type {E2eClient} from './e2e-client.js';
 import type {TransferPair} from './e2e-accounts.js';
+import type {E2eClient} from './e2e-client.js';
 
 /**
  * Verifies the production server is reachable and healthy.

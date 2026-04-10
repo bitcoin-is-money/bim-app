@@ -1,11 +1,10 @@
-import {StarknetAddress} from '@bim/domain/account';
 import {HealthRegistry} from '@bim/domain/health';
 import {createLogger} from '@bim/lib/logger';
 import {
-  AvnuPaymasterGateway,
-  StarknetRpcGateway,
   type AvnuPaymasterConfig,
+  AvnuPaymasterGateway,
   type StarknetGatewayConfig,
+  StarknetRpcGateway,
 } from '@bim/starknet';
 import type {Logger} from 'pino';
 import {

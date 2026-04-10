@@ -1,5 +1,5 @@
-import type {NotificationMessage} from '../../ports';
 import type {ComponentHealth, HealthTransitionEvent} from '../../health';
+import type {NotificationMessage} from '../../ports';
 
 const ALERT_CHANNEL = '#alerting';
 
@@ -21,7 +21,7 @@ export class ServiceHealthChange {
   }
 
   private static buildDownMessage(event: HealthTransitionEvent): NotificationMessage {
-    const fields: Map<string, string> = new Map([
+    const fields = new Map<string, string>([
       ['Component', `\`${event.component}\``],
       ['Transition', `${event.from} → down`],
       ['Overall', event.snapshot.overall],
@@ -49,7 +49,7 @@ export class ServiceHealthChange {
   }
 
   private static buildRecoveredMessage(event: HealthTransitionEvent): NotificationMessage {
-    const fields: Map<string, string> = new Map([
+    const fields = new Map<string, string>([
       ['Component', `\`${event.component}\``],
       ['Transition', `${event.from} → healthy`],
       ['Overall', event.snapshot.overall],

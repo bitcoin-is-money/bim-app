@@ -1,4 +1,3 @@
-
 import type {Event} from '@apibara/starknet';
 import type {Logger} from 'pino';
 import {addAddressPadding, uint256} from 'starknet';

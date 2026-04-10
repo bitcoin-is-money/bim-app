@@ -2,11 +2,7 @@ import type {Logger} from 'pino';
 import type {LightningDecoder} from '../ports';
 import {Amount, BitcoinAddress, DomainError, StarknetAddress, type StarknetConfig} from '../shared';
 import {LightningInvoice} from '../swap';
-import {
-  PaymentParsingError,
-  UnsupportedNetworkError,
-  UnsupportedTokenError,
-} from './errors';
+import {PaymentParsingError, UnsupportedNetworkError, UnsupportedTokenError,} from './errors';
 import type {ParsedPaymentData} from './types';
 
 // =============================================================================
@@ -217,7 +213,7 @@ const SUPPORTED_SCHEMES = new Set(['bitcoin', 'starknet']);
  * Known address patterns for unsupported networks.
  * Each entry: [regex, network name]. Order matters — first match wins.
  */
-const UNSUPPORTED_ADDRESS_PATTERNS: ReadonlyArray<readonly [RegExp, string]> = [
+const UNSUPPORTED_ADDRESS_PATTERNS: readonly (readonly [RegExp, string])[] = [
   // Ethereum: 0x + 40 hex (not Starknet, which is 64 hex)
   [/^0x[0-9a-fA-F]{40}$/, 'ethereum'],
   // Toncoin: EQ/UQ prefix + 46 base64url chars

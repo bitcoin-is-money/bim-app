@@ -1,7 +1,7 @@
-import type {TypedResponse} from 'hono';
-import {Hono} from 'hono';
 import {Database} from '@bim/db/database';
 import type {ComponentHealth, HealthRegistry} from '@bim/domain/health';
+import type {TypedResponse} from 'hono';
+import {Hono} from 'hono';
 import type {AppContext} from '../../app-context';
 import type {HealthCheckResponse, LiveResponse, ReadyResponse, ServiceHealthEntry} from './health.types';
 

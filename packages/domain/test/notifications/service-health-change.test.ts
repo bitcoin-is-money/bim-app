@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
-import {ServiceHealthChange} from '../../src/notifications/alerts/service-health-change';
 import type {HealthTransitionEvent} from '../../src/health/health-registry';
+import {ServiceHealthChange} from '../../src/notifications/alerts/service-health-change';
 import type {SanitizedError} from '../../src/shared/sanitized-error';
 
 const atomiqError: SanitizedError = {

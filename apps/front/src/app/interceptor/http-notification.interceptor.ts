@@ -1,4 +1,4 @@
-import type { HttpErrorResponse, HttpHandlerFn, HttpInterceptorFn, HttpRequest} from '@angular/common/http';
+import type {HttpErrorResponse, HttpHandlerFn, HttpInterceptorFn, HttpRequest} from '@angular/common/http';
 import {HttpContextToken} from '@angular/common/http';
 import {inject, Injector} from '@angular/core';
 import {catchError, throwError} from 'rxjs';
