@@ -1,6 +1,6 @@
 <div align="center">
 
-# BIM — Bitcoin Is Money
+# <img src="doc/icons/tech/bim-logo-github-header.webp" alt="BIM logo" width="80px" /> — Bitcoin Is Money
 
 **A Bitcoin wallet on Starknet, unlocked by your fingerprint.**
 
@@ -17,12 +17,6 @@ phrase to write down. No browser extension. No gas to pre-fund.
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 </div>
-
-<br/>
-<p align="center">
-  <img src="doc/screenshots/auth-home-ln-pages.png" alt="BIM wallet screenshots" width="100%" />
-</p>
-<br/>
 
 ## Why BIM?
 
@@ -66,6 +60,22 @@ user sends a payment.
 
 ## Tech Stack
 
+<br/>
+<p align="center">
+  <img src="doc/icons/tech/ts-logo-256.webp" alt="Typescript" title="Typescript - strict - 100% ESM" width="64px" /> &nbsp;
+  <img src="doc/icons/tech/nodejs-logo-256.webp" alt="NodeJS" title="NodeJS" width="64px" /> &nbsp;
+  <img src="doc/icons/tech/angular-logo-256.webp" alt="Angular" title="Angular" width="64px" /> &nbsp;
+  <img src="doc/icons/tech/hono-logo-256.webp" alt="Hono web server" title="Hono web server" width="64px" /> &nbsp;
+  <img src="doc/icons/tech/starknet-logo-256.webp" alt="Starknet SDK" title="Starknet SDK" width="64px" /> &nbsp;
+  <img src="doc/icons/tech/atomiq-logo-256.webp" alt="Atomiq SDK" title="Atomiq SDK" width="64px" /> &nbsp;
+  <img src="doc/icons/tech/avnu-logo-256.webp" alt="AVNU Paymaster" title="AVNU Paymaster" width="64px" /> &nbsp;
+  <img src="doc/icons/tech/drizzle-logo-256.webp" alt="Drizzle ORM" title="Drizzle ORM" width="64px" /> &nbsp;
+  <img src="doc/icons/tech/passkeys-logo-256.webp" alt="WebAuthn / passkeys" title="WebAuthn / passkeys" width="64px" /> &nbsp;
+  <img src="doc/icons/tech/testcontainers-logo-256.webp" alt="Testcontainers" title="Testcontainers" width="64px" /> &nbsp;
+  <img src="doc/icons/tech/vitest-logo-256.webp" alt="Vitest" title="Vitest" width="64px" />
+</p>
+<br/>
+
 | Layer | Tech |
 |-------|------|
 | **Backend** | [Hono](https://hono.dev/) on Node.js 22, ESM, built with [esbuild](https://esbuild.github.io/) |
@@ -78,6 +88,14 @@ user sends a payment.
 | **Testing** | [Vitest](https://vitest.dev/) + [Testcontainers](https://testcontainers.com/) |
 | **Infra** | Docker, [Terraform](https://www.terraform.io/), Scaleway Serverless Containers |
 | **CI/CD** | GitHub Actions (deploy on push to `main`) |
+
+## Screenshots
+
+<br/>
+<p align="center">
+  <img src="doc/screenshots/auth-home-ln-pages.png" alt="BIM wallet screenshots" width="100%" />
+</p>
+<br/>
 
 ## Architecture at a Glance
 
