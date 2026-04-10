@@ -1,4 +1,3 @@
-<div align="center">
 
 # <img src="doc/icons/tech/bim-logo-github-header.webp" alt="BIM logo" width="80px" /> — Bitcoin Is Money
 
@@ -15,8 +14,6 @@ phrase to write down. No browser extension. No gas to pre-fund.
 [![Hono](https://img.shields.io/badge/Hono-4-orange.svg)](https://hono.dev/)
 [![Code of Conduct](https://img.shields.io/badge/Code%20of-Conduct-ff69b4.svg)](CODE_OF_CONDUCT.md)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
-
-</div>
 
 ## Why BIM?
 
