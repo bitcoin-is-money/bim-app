@@ -3,12 +3,13 @@ import {TranslateModule} from '@ngx-translate/core';
 import {APP_VERSION} from '../../../environments/version';
 import {GoBackHeaderComponent} from '../../components/go-back-header/go-back-header.component';
 import {InfoFieldComponent} from '../../components/info-field/info-field.component';
+import {PwaInstallInfoComponent} from '../../components/pwa-install-info/pwa-install-info.component';
 import {FullPageLayoutComponent} from '../../layout';
 
 @Component({
   selector: 'app-about',
   standalone: true,
-  imports: [TranslateModule, GoBackHeaderComponent, InfoFieldComponent, FullPageLayoutComponent],
+  imports: [TranslateModule, GoBackHeaderComponent, InfoFieldComponent, FullPageLayoutComponent, PwaInstallInfoComponent],
   templateUrl: './about.page.html',
   styleUrl: './about.page.scss',
 })

@@ -1,0 +1,20 @@
+@reference "tailwindcss";
+
+.pwa-install-banner {
+  @apply fixed left-0 right-0 bottom-0 z-40;
+  @apply bg-neutral-900 border-t border-neutral-700;
+  @apply px-4 py-4 flex flex-col gap-3;
+  @apply shadow-[0_-4px_12px_rgba(0,0,0,0.4)];
+
+  &__title {
+    @apply text-base font-semibold text-neutral-100;
+  }
+
+  &__text {
+    @apply text-sm text-neutral-300 mt-1;
+  }
+
+  &__actions {
+    @apply flex gap-3 justify-end;
+  }
+}
