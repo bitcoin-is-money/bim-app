@@ -6,8 +6,8 @@ import type {PaymentNetwork} from '../types';
  */
 export class FeeConfig {
   static readonly DEFAULT_PERCENTAGES: Readonly<Record<PaymentNetwork, number>> = {
-    starknet: 0.001,
-    lightning: 0.002,
+    starknet: 0.003,
+    lightning: 0.003,
     bitcoin: 0.003,
   };
 

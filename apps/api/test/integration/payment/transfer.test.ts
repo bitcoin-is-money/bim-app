@@ -1,5 +1,5 @@
 import {StarknetAddress} from '@bim/domain/account';
-import {Erc20CallFactory, FeeConfig} from '@bim/domain/payment';
+import {Erc20CallFactory, FeeCalculator, FeeConfig} from '@bim/domain/payment';
 import {Amount} from '@bim/domain/shared';
 import {WebauthnVirtualAuthenticator} from "@bim/test-toolkit/auth";
 import type {Hono} from 'hono';
@@ -307,7 +307,7 @@ describe('Transfer Flow', () => {
         recipientAddress: StarknetAddress.of(treasuryAddress),
       }));
 
-    it('transfers ETH with 0.1% fee to BIM treasury', async () => {
+    it('transfers ETH with BIM fee to treasury', async () => {
       const amountRaw = 1_000_000_000_000_000_000n; // 1 ETH
       const factory = createFactory(bimTreasuryAddress);
 
@@ -322,7 +322,11 @@ describe('Transfer Flow', () => {
 
       // Verify fee calculation from domain service
       const feeRaw = feeAmount.getSat();
-      expect(feeRaw).toBe(1_000_000_000_000_000n); // 0.001 ETH
+      const expectedFee = FeeCalculator.calculateFee(
+        Amount.ofSatoshi(amountRaw),
+        FeeConfig.DEFAULT_PERCENTAGES.starknet,
+      );
+      expect(feeRaw).toBe(expectedFee.getSat());
 
       // Get initial balances
       const initialSenderBalance = await strkContext.getEthBalance(deployedAddress);
@@ -349,7 +353,7 @@ describe('Transfer Flow', () => {
       expect(finalTreasuryBalance).toBe(initialTreasuryBalance + feeRaw);
     });
 
-    it('transfers STRK with 0.1% fee to BIM treasury', async () => {
+    it('transfers STRK with BIM fee to treasury', async () => {
       const amountRaw = 10_000_000_000_000_000_000n; // 10 STRK
       const factory = createFactory(bimTreasuryAddress);
 
@@ -364,7 +368,11 @@ describe('Transfer Flow', () => {
 
       // Verify fee calculation from domain service
       const feeRaw = feeAmount.getSat();
-      expect(feeRaw).toBe(10_000_000_000_000_000n); // 0.01 STRK
+      const expectedFee = FeeCalculator.calculateFee(
+        Amount.ofSatoshi(amountRaw),
+        FeeConfig.DEFAULT_PERCENTAGES.starknet,
+      );
+      expect(feeRaw).toBe(expectedFee.getSat());
 
       // Get initial balances
       const initialSenderBalance = await strkContext.getStrkBalance(deployedAddress);
@@ -392,8 +400,9 @@ describe('Transfer Flow', () => {
     });
 
     it('handles small amounts where fee rounds to zero', async () => {
-      // Amount small enough that 0.1% fee rounds down to 0
-      const amountRaw = 999n; // < 1000 wei
+      // Amount small enough that the BIM percentage rounds down to 0 sat
+      // (100 sat * any percentage <= 1% → < 1 sat → 0)
+      const amountRaw = 100n;
       const factory = createFactory(bimTreasuryAddress);
 
       // Use domain factory - fee should be 0
