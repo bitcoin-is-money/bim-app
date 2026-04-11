@@ -1,3 +1,4 @@
+import {FeeConfig} from '@bim/domain/payment';
 import {describe, expect, it} from 'vitest';
 import type {BuildPaymentResponse, StarknetPaymentResultResponse,} from '../../../src/routes';
 import {createTestLogger} from '../../helpers';
@@ -19,7 +20,7 @@ import {
  */
 
 const TRANSFER_AMOUNT_SATS = '1000';
-const BIM_FEE_PERCENT = '0.1%';
+const BIM_FEE_PERCENT = `${(FeeConfig.DEFAULT_PERCENTAGES.starknet * 100).toFixed(1)}%`;
 
 describe('Scenario 02 — Starknet Transfer', () => {
   const rootLogger = createTestLogger();

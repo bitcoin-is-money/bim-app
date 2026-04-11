@@ -144,8 +144,8 @@ describe('FeeConfig', () => {
 
   it('exposes DEFAULT_PERCENTAGES constant', () => {
     expect(FeeConfig.DEFAULT_PERCENTAGES).toEqual({
-      starknet: 0.001,
-      lightning: 0.002,
+      starknet: 0.003,
+      lightning: 0.003,
       bitcoin: 0.003,
     });
   });

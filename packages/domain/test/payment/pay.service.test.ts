@@ -1,6 +1,7 @@
 import {StarknetAddress} from '@bim/domain/account';
 import {
   Erc20CallFactory,
+  FeeCalculator,
   FeeConfig,
   InvalidPaymentAmountError,
   type ParsedPaymentData,
@@ -130,6 +131,11 @@ describe('PayService', () => {
       expect(result.network).toBe('starknet');
       if (result.network !== 'starknet') return;
 
+      const expectedFee = FeeCalculator.calculateFee(
+        Amount.ofSatoshi(100_000_000n),
+        feeConfig.percentageFor('starknet'),
+      );
+
       expect(result.calls).toHaveLength(2);
       expect(result.calls[0]).toEqual({
         contractAddress: ETH_TOKEN_ADDRESS,
@@ -138,7 +144,7 @@ describe('PayService', () => {
       });
       expect(result.calls[1]!.calldata[0]).toBe(TREASURY_ADDRESS.toString());
       expect(result.amount.getSat()).toBe(100_000_000n);
-      expect(result.feeAmount.getSat()).toBe(100_000n);
+      expect(result.feeAmount.getSat()).toBe(expectedFee.getSat());
       expect(result.recipientAddress).toBe(RECIPIENT_ADDRESS);
       expect(result.tokenAddress).toBe(ETH_TOKEN_ADDRESS);
     });
@@ -242,6 +248,11 @@ describe('PayService', () => {
       expect(result.network).toBe('lightning');
       if (result.network !== 'lightning') return;
 
+      const expectedBimFee = FeeCalculator.calculateFee(
+        Amount.ofSatoshi(50_000n),
+        feeConfig.percentageFor('lightning'),
+      );
+
       // 2 commit calls (approve + initiate) + 1 BIM fee call
       expect(result.calls).toHaveLength(3);
       expect(result.calls[0]).toEqual({
@@ -254,14 +265,14 @@ describe('PayService', () => {
         entrypoint: 'initiate',
         calldata: ['0x3', '0x4'],
       });
-      // Fee call: 0.2% of 50,000 sats = 100 sats, sent to treasury in WBTC
+      // Fee call: BIM lightning fee on 50,000 sats, sent to treasury in WBTC
       expect(result.calls[2]).toEqual({
         contractAddress: WBTC_TOKEN_ADDRESS,
         entrypoint: 'transfer',
-        calldata: [TREASURY_ADDRESS.toString(), '100', '0'],
+        calldata: [TREASURY_ADDRESS.toString(), expectedBimFee.getSat().toString(), '0'],
       });
       expect(result.amount.getSat()).toBe(50_000n);
-      expect(result.feeAmount.getSat()).toBe(100n);
+      expect(result.feeAmount.getSat()).toBe(expectedBimFee.getSat());
       expect(result.swapId).toBe(SwapId.of('swap-123'));
       expect(result.invoice).toBe(LightningInvoice.of(VALID_INVOICE));
       expect(result.expiresAt).toBeInstanceOf(Date);
@@ -347,6 +358,11 @@ describe('PayService', () => {
       expect(result.network).toBe('bitcoin');
       if (result.network !== 'bitcoin') return;
 
+      const expectedBimFee = FeeCalculator.calculateFee(
+        Amount.ofSatoshi(100_000n),
+        feeConfig.percentageFor('bitcoin'),
+      );
+
       // 2 commit calls (approve + initiate) + 1 BIM fee call
       expect(result.calls).toHaveLength(3);
       expect(result.calls[0]).toEqual({
@@ -359,14 +375,14 @@ describe('PayService', () => {
         entrypoint: 'initiate',
         calldata: ['0x3', '0x4'],
       });
-      // Fee call: 0.3% of 100,000 sats = 300 sats, sent to treasury in WBTC
+      // Fee call: BIM bitcoin fee on 100,000 sats, sent to treasury in WBTC
       expect(result.calls[2]).toEqual({
         contractAddress: WBTC_TOKEN_ADDRESS,
         entrypoint: 'transfer',
-        calldata: [TREASURY_ADDRESS.toString(), '300', '0'],
+        calldata: [TREASURY_ADDRESS.toString(), expectedBimFee.getSat().toString(), '0'],
       });
       expect(result.amount.getSat()).toBe(101_000n); // LP-quoted amount
-      expect(result.feeAmount.getSat()).toBe(300n);
+      expect(result.feeAmount.getSat()).toBe(expectedBimFee.getSat());
       expect(result.swapId).toBe(SwapId.of('swap-btc-456'));
       expect(result.destinationAddress).toBe(BitcoinAddress.of(BTC_BECH32));
       expect(result.expiresAt).toBeInstanceOf(Date);
@@ -440,49 +456,56 @@ describe('PayService', () => {
     });
 
     it('applies BIM fee for starknet payments', async () => {
+      const amount = Amount.ofSatoshi(100_000_000n);
       vi.mocked(mockParseService.parse).mockReturnValue({
         network: 'starknet',
         address: RECIPIENT_ADDRESS,
-        amount: Amount.ofSatoshi(100_000_000n),
+        amount,
         tokenAddress: ETH_TOKEN_ADDRESS,
         description: '',
       });
 
       const result = await service.prepare('starknet:...');
 
+      const expectedFee = FeeCalculator.calculateFee(amount, feeConfig.percentageFor('starknet'));
       expect(result.network).toBe('starknet');
-      expect(result.fee.getSat()).toBe(100_000n);
+      expect(result.fee.getSat()).toBe(expectedFee.getSat());
     });
 
     it('estimates LP fee + BIM fee for lightning payments', async () => {
+      const amount = Amount.ofSatoshi(50_000n);
       vi.mocked(mockParseService.parse).mockReturnValue({
         network: 'lightning',
         invoice: LightningInvoice.of(VALID_INVOICE),
-        amount: Amount.ofSatoshi(50_000n),
+        amount,
         description: 'test',
       });
 
       const result = await service.prepare(VALID_INVOICE);
 
+      // LP fee comes from mock feePercent: 0.3 (i.e. 0.3% as decimal 0.003)
+      const lpFee = FeeCalculator.calculateFee(amount, 0.3 / 100);
+      const bimFee = FeeCalculator.calculateFee(amount, feeConfig.percentageFor('lightning'));
       expect(result.network).toBe('lightning');
-      // LP fee: 50,000 * 0.3% = 150 sats + BIM fee: 50,000 * 0.2% = 100 sats = 250 sats
-      expect(result.fee.getSat()).toBe(250n);
+      expect(result.fee.getSat()).toBe(lpFee.getSat() + bimFee.getSat());
       expect(mockSwapService.fetchLimits).toHaveBeenCalledWith({direction: 'starknet_to_lightning'});
     });
 
     it('estimates LP fee + BIM fee for bitcoin payments', async () => {
+      const amount = Amount.ofSatoshi(100_000n);
       vi.mocked(mockParseService.parse).mockReturnValue({
         network: 'bitcoin',
         address: BitcoinAddress.of(BTC_BECH32),
-        amount: Amount.ofSatoshi(100_000n),
+        amount,
         description: '',
       });
 
       const result = await service.prepare(`bitcoin:${BTC_BECH32}?amount=0.001`);
 
+      const lpFee = FeeCalculator.calculateFee(amount, 0.3 / 100);
+      const bimFee = FeeCalculator.calculateFee(amount, feeConfig.percentageFor('bitcoin'));
       expect(result.network).toBe('bitcoin');
-      // LP fee: 100,000 * 0.3% = 300 sats + BIM fee: 100,000 * 0.3% = 300 sats = 600 sats
-      expect(result.fee.getSat()).toBe(600n);
+      expect(result.fee.getSat()).toBe(lpFee.getSat() + bimFee.getSat());
       expect(mockSwapService.fetchLimits).toHaveBeenCalledWith({direction: 'starknet_to_bitcoin'});
     });
   });

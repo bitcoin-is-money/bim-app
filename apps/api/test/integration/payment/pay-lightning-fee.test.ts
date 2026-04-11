@@ -29,8 +29,8 @@ const INVOICE_250K_SATS =
 const INVOICE_AMOUNT_SATS = 250_000;
 const LP_QUOTED_TOTAL_SATS = 252_500n; // invoice + 2500 sats LP fee (1% effective)
 const LP_FEE_SATS = 2_500; // 252500 - 250000
-const BIM_FEE_SATS = 500; // 0.2% of 250000 (FeeConfig.DEFAULT_PERCENTAGES.lightning)
-const EXPECTED_FEE_SATS = LP_FEE_SATS + BIM_FEE_SATS; // 2750 total
+const BIM_FEE_SATS = 750; // 0.3% of 250000 (FeeConfig.DEFAULT_PERCENTAGES.lightning)
+const EXPECTED_FEE_SATS = LP_FEE_SATS + BIM_FEE_SATS; // 3250 total
 
 const STARKNET_ADDRESS = '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
 
@@ -94,11 +94,11 @@ describe('Pay Lightning — fee accuracy', () => {
     // The invoice amount should be 250,000 sats
     expect(body.payment.amount.value).toBe(INVOICE_AMOUNT_SATS);
 
-    // The fee should reflect the real LP quote (2500 sats) + BIM fee (500 sats),
+    // The fee should reflect the real LP quote (2500 sats) + BIM fee (750 sats),
     // NOT the estimated catalogue percentage (0.5% of 250000 = 1250 sats)
     expect(body.payment.fee.value).toBe(EXPECTED_FEE_SATS);
 
-    // The bimFee should be the BIM portion only (0.2% of 250000 = 500 sats)
+    // The bimFee should be the BIM portion only (0.3% of 250000 = 750 sats)
     expect(body.payment.bimFee.value).toBe(BIM_FEE_SATS);
   });
 });

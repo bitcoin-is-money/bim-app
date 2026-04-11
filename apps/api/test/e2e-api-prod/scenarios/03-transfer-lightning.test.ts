@@ -1,3 +1,4 @@
+import {FeeConfig} from '@bim/domain/payment';
 import {describe, expect, it} from 'vitest';
 import type {
   BuildPaymentResponse,
@@ -23,7 +24,7 @@ import {
  */
 
 const TRANSFER_AMOUNT_SATS = '1000';
-const BIM_FEE_PERCENT = '0.2%';
+const BIM_FEE_PERCENT = `${(FeeConfig.DEFAULT_PERCENTAGES.lightning * 100).toFixed(1)}%`;
 
 describe('Scenario 03 — Lightning Transfer', () => {
   const rootLogger = createTestLogger();

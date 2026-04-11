@@ -1,3 +1,4 @@
+import {FeeConfig} from '@bim/domain/payment';
 import {describe, expect, it} from 'vitest';
 import type {
   BitcoinPaymentResultResponse,
@@ -25,7 +26,7 @@ import {
  */
 
 const TRANSFER_AMOUNT_SATS = '12000';
-const BIM_FEE_PERCENT = '0.3%';
+const BIM_FEE_PERCENT = `${(FeeConfig.DEFAULT_PERCENTAGES.bitcoin * 100).toFixed(1)}%`;
 
 describe('Scenario 04 — Bitcoin Transfer', () => {
   const rootLogger = createTestLogger();
