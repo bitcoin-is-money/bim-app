@@ -43,7 +43,10 @@ export const httpNotificationInterceptor: HttpInterceptorFn = (
 
       if (response.status >= 400 && response.status < 500) {
         console.warn(`[API ${response.status}] ${message}`, response.error);
-        notifications.error({message});
+        // Dedupe 401s: parallel requests on an expired session would otherwise
+        // each push an identical "session expired" toast.
+        const id = response.status === 401 ? 'session-expired' : undefined;
+        notifications.error({message, ...(id !== undefined && {id})});
       } else if (response.status >= 500) {
         // Use translated message when available (e.g. PAYMASTER_SERVICE_ERROR),
         // fallback to generic INTERNAL_ERROR only for unstructured responses

@@ -20,6 +20,12 @@ export interface NotificationData {
   message: string;
   icon?: IconProp;
   useConfetti?: boolean
+  /**
+   * Stable id used by hot-toast to dedupe toasts.
+   * A second `show()` with the same id updates the existing toast
+   * instead of stacking a duplicate (e.g. parallel 401s on session expiration).
+   */
+  id?: string;
 }
 
 /**
@@ -44,7 +50,7 @@ export class NotificationService {
       className: 'hot-toast-success',
     });
     if (data.useConfetti) {
-      void confetti({
+      confetti({
         particleCount: 100,
         spread: 70,
         origin: {y: 0.4}
@@ -85,6 +91,7 @@ export class NotificationService {
     setTimeout(() => {
       this.toast.show(this.toastTemplate, {
         ...options,
+        ...(data.id !== undefined && {id: data.id}),
         data: data
       });
     });
