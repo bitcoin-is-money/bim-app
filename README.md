@@ -378,3 +378,38 @@ BIM stands on the shoulders of some great open-source work:
 
 Thanks also to everyone who files issues, sends patches, and helps other
 users. Open source wouldn't work without you.
+
+## Buy Us a Coffee
+
+BIM is free and open-source, but it isn't free to run. Servers, domains,
+third-party APIs and infrastructure all cost real money, and the project
+is currently funded out of pocket. If BIM is useful to you and you'd like
+to help keep the lights on, a tip goes a long way — on-chain Bitcoin or
+Lightning.
+
+<table align="center">
+  <tr>
+    <td align="center">
+      <img src="doc/coffee/coffee-bitcoin.png" alt="Bitcoin on-chain address QR code" width="240" /><br/>
+      <strong>Bitcoin</strong>
+    </td>
+    <td align="center">
+      <img src="doc/coffee/coffee-lightning.png" alt="Lightning BOLT12 offer QR code" width="240" /><br/>
+      <strong>Lightning</strong>
+    </td>
+  </tr>
+</table>
+
+**Bitcoin (on-chain):**
+
+```
+bc1pdnjg4rztupfqr2rey36eq0m6x8x52p48fzhmmq4wr8eupchler7skf6j25
+```
+
+**Lightning (BOLT12):**
+
+```
+lno1pgqppmsrse80qf0aara4slvcjxrvu6j2rp5ftmjy4yntlsmsutpkvkt6878syv7z0purjdjjuf3xr4g532flx49fe9z6n2yt6wf3vlmtu5cc9rh8qgp9nlzyfxunyfgqx5l8jsx8dxr0289s9q5jckvj7la8vxhh4avmj2gqxwhmjuyz0snkaycdxy0j6dtncpft3ytkfc9jj0mcvjv866eawd8hpy2rruls8k8ak064swxvqyzktyet606s8u7gwj8v7z430pks253hwp6uh04y4xvyvkh3zplm8yx2hylt9udeqqeqm8njux88zzrwwarm04jkdwc07xnvcde23eurgnu2zj8dsv3wqs0amhdzvkpcl0yy3z7yqwnzda6dkqls
+```
+
+Thank you for your support — every sat helps. 🙏
