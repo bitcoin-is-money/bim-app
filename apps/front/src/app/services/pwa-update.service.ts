@@ -1,6 +1,7 @@
 import {inject, Injectable, signal} from '@angular/core';
 import {Router} from '@angular/router';
 import {SwUpdate, type VersionReadyEvent} from '@angular/service-worker';
+import pTimeout, {TimeoutError} from 'p-timeout';
 import {filter, firstValueFrom, timeout} from 'rxjs';
 
 import {SwapHttpService} from './swap.http.service';
@@ -12,6 +13,16 @@ import {SwapHttpService} from './swap.http.service';
  * retry at the next login.
  */
 const UPDATE_CHECK_BUDGET_MS = 5000;
+
+/**
+ * Maximum time we wait for `swUpdate.activateUpdate()` to resolve before we
+ * force a page reload anyway. On some mobile PWAs (iOS standalone, certain
+ * Android configurations) that promise can hang indefinitely, which would
+ * leave the user stuck on the /updating screen. Reloading is safe because
+ * the new SW is already downloaded and waiting — the fresh navigation will
+ * pick it up regardless.
+ */
+const ACTIVATE_UPDATE_TIMEOUT_MS = 5000;
 
 /**
  * Drives the PWA "login only" update strategy.
@@ -131,10 +142,18 @@ export class PwaUpdateService {
   private async applyUpdateAndReload(): Promise<void> {
     await this.router.navigate(['/updating']);
     try {
-      await this.swUpdate.activateUpdate();
+      await pTimeout(this.swUpdate.activateUpdate(), {
+        milliseconds: ACTIVATE_UPDATE_TIMEOUT_MS,
+        message: 'SW activateUpdate timed out',
+      });
     } catch (error) {
-      console.error('Failed to activate SW update', error);
+      if (error instanceof TimeoutError) {
+        console.error('SW activateUpdate hung, forcing reload', error);
+      } else {
+        console.error('Failed to activate SW update', error);
+      }
+    } finally {
+      document.location.reload();
     }
-    document.location.reload();
   }
 }
