@@ -106,6 +106,7 @@ describe('PayService', () => {
       network: 'starknet',
       address: RECIPIENT_ADDRESS,
       amount: Amount.ofSatoshi(100_000_000n),
+      amountEditable: false,
       tokenAddress: ETH_TOKEN_ADDRESS,
       description: '',
     };
@@ -154,6 +155,7 @@ describe('PayService', () => {
         network: 'starknet',
         address: RECIPIENT_ADDRESS,
         amount: Amount.ofMilliSatoshi(999n),
+        amountEditable: false,
         tokenAddress: ETH_TOKEN_ADDRESS,
         description: '',
       };
@@ -170,6 +172,7 @@ describe('PayService', () => {
         network: 'starknet',
         address: RECIPIENT_ADDRESS,
         amount: Amount.zero(),
+        amountEditable: true,
         tokenAddress: ETH_TOKEN_ADDRESS,
         description: '',
       };
@@ -184,6 +187,7 @@ describe('PayService', () => {
         network: 'starknet',
         address: SENDER_ADDRESS,
         amount: Amount.ofSatoshi(1_000n),
+        amountEditable: false,
         tokenAddress: ETH_TOKEN_ADDRESS,
         description: '',
       };
@@ -206,6 +210,7 @@ describe('PayService', () => {
       network: 'lightning',
       invoice: LightningInvoice.of(VALID_INVOICE),
       amount: Amount.ofSatoshi(50_000n),
+      amountEditable: false,
       description: 'test',
     };
 
@@ -315,6 +320,7 @@ describe('PayService', () => {
       network: 'bitcoin',
       address: BitcoinAddress.of(BTC_BECH32),
       amount: Amount.ofSatoshi(100_000n),
+      amountEditable: false,
       description: '',
     };
 
@@ -393,6 +399,7 @@ describe('PayService', () => {
         network: 'bitcoin',
         address: BitcoinAddress.of(BTC_BECH32),
         amount: Amount.zero(),
+        amountEditable: true,
         description: '',
       };
 
@@ -461,6 +468,7 @@ describe('PayService', () => {
         network: 'starknet',
         address: RECIPIENT_ADDRESS,
         amount,
+        amountEditable: false,
         tokenAddress: ETH_TOKEN_ADDRESS,
         description: '',
       });
@@ -478,6 +486,7 @@ describe('PayService', () => {
         network: 'lightning',
         invoice: LightningInvoice.of(VALID_INVOICE),
         amount,
+        amountEditable: false,
         description: 'test',
       });
 
@@ -497,6 +506,7 @@ describe('PayService', () => {
         network: 'bitcoin',
         address: BitcoinAddress.of(BTC_BECH32),
         amount,
+        amountEditable: false,
         description: '',
       });
 

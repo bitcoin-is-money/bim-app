@@ -18,6 +18,7 @@ describe('CurrencyService', () => {
     const merged = {...defaults, ...overrides};
     const map = new Map<FiatCurrency, number>();
     for (const [k, v] of Object.entries(merged)) {
+      if (v === undefined) continue;
       map.set(FiatCurrency.of(k), v);
     }
     return map;
@@ -26,6 +27,7 @@ describe('CurrencyService', () => {
   beforeEach(() => {
     mockGateway = {
       getBtcPrices: vi.fn(),
+      checkHealth: vi.fn(),
     };
     service = new CurrencyService({
       priceGateway: mockGateway,

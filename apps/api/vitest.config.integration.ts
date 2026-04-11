@@ -12,5 +12,10 @@ export default defineConfig({
     sequence: {
       shuffle: false, // Don't shuffle tests, run in order
     },
+    typecheck: {
+      enabled: true,
+      tsconfig: './tsconfig.json',
+      include: ['test/integration/**/*.test.ts'],
+    },
   },
 });

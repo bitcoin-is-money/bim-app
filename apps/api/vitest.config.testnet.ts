@@ -12,5 +12,10 @@ export default defineConfig({
     sequence: {
       shuffle: false, // Run in order
     },
+    typecheck: {
+      enabled: true,
+      tsconfig: './tsconfig.json',
+      include: ['test/testnet/**/*.test.ts'],
+    },
   },
 });
