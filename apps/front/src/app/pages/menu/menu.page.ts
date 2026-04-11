@@ -36,6 +36,10 @@ export class MenuPage {
     void this.router.navigate(['/about']);
   }
 
+  navigateToFaq(): void {
+    void this.router.navigate(['/faq']);
+  }
+
   logout(): void {
     void this.authService.signOut();
   }

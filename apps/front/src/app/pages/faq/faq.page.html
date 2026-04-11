@@ -1,0 +1,28 @@
+<app-full-page-layout [showFooter]="true">
+  <div class="faq-page">
+    <app-go-back-header [title]="'faq.title' | translate"></app-go-back-header>
+
+    <main class="faq-main">
+      <div class="faq-content">
+        @if (sections(); as loaded) {
+          @for (section of loaded; track section.title) {
+            <section class="faq-section">
+              <h2 class="faq-section-title">{{ section.title }}</h2>
+              @for (item of section.items; track item.question) {
+                <details class="faq-item">
+                  <summary class="faq-item-question">{{ item.question }}</summary>
+                  <div class="faq-item-answer" [innerHTML]="item.answerHtml"></div>
+                </details>
+              }
+            </section>
+          }
+          @if (loaded.length === 0) {
+            <p class="faq-empty">{{ 'common.loading' | translate }}</p>
+          }
+        } @else {
+          <p class="faq-loading">{{ 'common.loading' | translate }}</p>
+        }
+      </div>
+    </main>
+  </div>
+</app-full-page-layout>
