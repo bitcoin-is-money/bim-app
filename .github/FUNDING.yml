@@ -3,12 +3,7 @@
 #
 # Docs: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository
 
-# github: [TODO]
-# patreon: TODO
-# open_collective: TODO
-# ko_fi: TODO
-# custom: ["https://example.com/donate"]
-
+custom: ["https://github.com/bitcoin-is-money/bim#buy-us-a-coffee"]
 
 #┌──────────────────┬───────────────────────────────────────────┬────────────────────────────────────┐
 #│       key        │                Plateform                  │          Format                    │
