@@ -98,6 +98,7 @@
     "general": "Général",
     "myAccount": "Mon Compte",
     "settings": "Paramètres",
+    "faq": "FAQ",
     "about": "À propos",
     "advanced": "Avancé",
     "swaps": "Échanges",
@@ -129,6 +130,9 @@
       "description": "BIM est une application de portefeuille numérique qui vous permet de payer et recevoir en Bitcoin via le réseau Lightning et Starknet.",
       "version": "Version de l'application"
     }
+  },
+  "faq": {
+    "title": "FAQ"
   },
   "swaps": {
     "title": "Échanges",

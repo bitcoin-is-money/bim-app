@@ -1,0 +1,107 @@
+@reference "tailwindcss";
+
+.faq-page {
+  @apply h-full flex flex-col;
+
+  .faq-main {
+    @apply flex-1 p-4 overflow-y-auto;
+
+    .faq-content {
+      @apply max-w-2xl mx-auto;
+    }
+
+    .faq-section {
+      @apply mb-8;
+
+      .faq-section-title {
+        @apply text-lg font-bold text-neutral-100 mb-3;
+      }
+    }
+
+    .faq-item {
+      @apply mb-3 rounded-lg bg-neutral-800/50 p-4;
+
+      .faq-item-question {
+        @apply cursor-pointer font-normal text-neutral-100 outline-none;
+        @apply list-none relative pl-6;
+
+        &::-webkit-details-marker {
+          display: none;
+        }
+
+        &::before {
+          content: '';
+          @apply absolute left-1 top-1/2;
+          width: 0.5rem;
+          height: 0.5rem;
+          border-right: 2px solid currentColor;
+          border-bottom: 2px solid currentColor;
+          transform: translateY(-65%) rotate(-45deg);
+          transform-origin: center;
+          transition: transform 200ms ease;
+        }
+
+        &:focus,
+        &:focus-visible,
+        &:active {
+          @apply outline-none ring-0;
+        }
+
+        &::-moz-focus-inner {
+          border: 0;
+        }
+      }
+
+      &[open] .faq-item-question::before {
+        transform: translateY(-35%) rotate(45deg);
+      }
+
+      // Answer content is rendered via [innerHTML], so Angular's view
+      // encapsulation does not apply scoped attributes to the markdown
+      // produced by `marked`. `::ng-deep` is required to pierce through
+      // and style those elements.
+      .faq-item-answer {
+        @apply mt-2 text-neutral-300 font-light leading-relaxed;
+
+        ::ng-deep {
+          p {
+            @apply mb-2;
+          }
+
+          p:last-child {
+            @apply mb-0;
+          }
+
+          ul {
+            @apply list-disc pl-5 mb-2;
+          }
+
+          ol {
+            @apply list-decimal pl-5 mb-2;
+          }
+
+          li {
+            @apply mb-1;
+          }
+
+          a {
+            @apply text-yellow-500 underline;
+          }
+
+          strong {
+            @apply font-semibold text-neutral-100;
+          }
+
+          em {
+            @apply italic;
+          }
+        }
+      }
+    }
+
+    .faq-loading,
+    .faq-empty {
+      @apply text-neutral-400 text-center py-8;
+    }
+  }
+}

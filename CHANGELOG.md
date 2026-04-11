@@ -18,7 +18,8 @@ uses WebAuthn (passkey / biometric) for key management.
 
 ### Added
 
-- 2026-04-11: Custom PWA install prompt on the auth page and a contextual install section in the About page, so users can install BIM as an app in one tap instead of hunting through the browser menu.
+- 2026-04-11: FAQ page accessible from the main menu.
+- 2026-04-11: Custom PWA install prompt.
 
 ### Base features
 
