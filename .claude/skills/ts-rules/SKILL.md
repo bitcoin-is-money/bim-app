@@ -21,6 +21,7 @@ description: Guide for TypeScript coding conventions. This skill should be used 
 | Discriminated unions | Narrow with `if (x.status === 'ok')` before accessing variant fields |
 | BigInt literals | Use `_` separators: `100_000n` |
 | Error assertions | `toThrow(SpecificDomainError)` not `toThrow(Error)` |
+| Nullish defaults | `x ?? 'default'` not `x \|\| 'default'` — `\|\|` also overrides `''`, `0`, `false` |
 
 ## Branded Types
 
@@ -121,6 +122,18 @@ Route errors via `handleDomainError()` in `apps/api/src/errors/error-handler.ts`
 | Prefer libraries over hand-rolled code | Always use a well-maintained library even for small utilities. Do not reinvent the wheel. |
 | Heavy transitive deps | If the library pulls in many transitive dependencies, ask the user before adding it. |
 
+## Lint Gotchas
+
+Patterns that repeatedly trip the lint config. Write the good form from the start.
+
+| Pitfall | Good form |
+|---------|-----------|
+| Empty arrow `() => {}` | `() => { /* clear explanation */ }` — bare empty body trips `no-empty-function`. The comment **must explain intent**; `/* no-op */` is fine when the no-op is obvious from context, but prefer a precise reason. |
+| Duplicate `import type` from same module | Merge: `import type {A, B} from 'x'` |
+| Unbounded regex `\d+` on user input | Bounded quantifier `\d{1,8}` — avoid nested quantifiers, satisfies `safe-regex` |
+| Bare `// eslint-disable-next-line rule` | Always add a `-- reason` suffix: `// eslint-disable-next-line rule -- why this is safe here` |
+| `arr[0]` with `noUncheckedIndexedAccess` | Destructure with guard: `const [first] = arr; if (!first) return;` — or `arr[0]!` only if provably non-empty |
+
 ## Forbidden Patterns
 
 | Forbidden | Use Instead |
@@ -133,3 +146,9 @@ Route errors via `handleDomainError()` in `apps/api/src/errors/error-handler.ts`
 | Classes for simple data | Types/interfaces |
 | Barrel files with circular deps | Direct imports |
 | Test-only methods in prod code | Test helpers in `test/helpers/` |
+| `process.env.X!` non-null assertion | `const x = process.env.X; if (!x) throw new Error('X is required');` |
+| `Record<K,V>` indexed with a variable | `Map<K,V>` **or** literal-branch helper (`network === 'mainnet' ? X.mainnet : X.testnet`) — avoids `security/detect-object-injection` |
+| `String(unknown)` in template literal | Narrow first: `typeof v === 'string' ? v : JSON.stringify(v)` |
+| `async` without `await` | Drop `async`, return `Promise.resolve()` if the type requires a Promise |
+| `Function` type / `& Function` | `NonNullable<NonNullable<T['k']>['sub']>` or a precise signature |
+| Pass-through subclass constructor | Delete it — let the parent constructor be inherited (make parent `public`) |
