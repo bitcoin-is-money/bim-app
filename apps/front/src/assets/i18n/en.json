@@ -8,7 +8,28 @@
     "useDeviceSecurity": "Use your device security to access your wallet"
   },
   "pwa": {
-    "updating": "Updating app"
+    "updating": "Updating app",
+    "install": {
+      "banner": {
+        "title": "Install BIM",
+        "description": "Install the app for a better native experience.",
+        "iosInstructions": "Tap the Share button, then \"Add to Home Screen\".",
+        "install": "Install",
+        "dismiss": "Not now"
+      },
+      "info": {
+        "installedTitle": "App installed",
+        "installedDescription": "BIM is installed on this device.",
+        "uninstallIos": "To uninstall: long-press the BIM icon on the home screen and tap \"Remove App\".",
+        "uninstallAndroid": "To uninstall: long-press the BIM icon and tap \"Uninstall\".",
+        "uninstallDesktop": "To uninstall: open the BIM window menu and choose \"Uninstall BIM\".",
+        "notInstalledTitle": "Install BIM",
+        "notInstalledDescription": "Install the app for a better native experience.",
+        "installButton": "Install",
+        "iosInstructions": "On iPhone or iPad, open this page in Safari, tap the Share button, then \"Add to Home Screen\".",
+        "unsupportedBrowser": "Your browser does not support installing this app. Try Chrome, Edge, or Brave."
+      }
+    }
   },
   "home": {
     "greeting": "Hi {{username}}",

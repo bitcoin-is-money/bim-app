@@ -1,0 +1,22 @@
+@if (visible()) {
+  <div class="pwa-install-banner" role="dialog" aria-live="polite">
+    <div class="pwa-install-banner__content">
+      <h3 class="pwa-install-banner__title">{{ 'pwa.install.banner.title' | translate }}</h3>
+      @if (canPrompt()) {
+        <p class="pwa-install-banner__text">{{ 'pwa.install.banner.description' | translate }}</p>
+      } @else if (isIos()) {
+        <p class="pwa-install-banner__text">{{ 'pwa.install.banner.iosInstructions' | translate }}</p>
+      }
+    </div>
+    <div class="pwa-install-banner__actions">
+      @if (canPrompt()) {
+        <app-button colorVariant="gold" variant="primary" (click)="onInstall()">
+          {{ 'pwa.install.banner.install' | translate }}
+        </app-button>
+      }
+      <app-button colorVariant="black" variant="secondary" (click)="onDismiss()">
+        {{ 'pwa.install.banner.dismiss' | translate }}
+      </app-button>
+    </div>
+  </div>
+}

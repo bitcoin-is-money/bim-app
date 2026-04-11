@@ -8,7 +8,28 @@
     "useDeviceSecurity": "Utilisez la sécurité de votre appareil pour accéder à votre portefeuille"
   },
   "pwa": {
-    "updating": "Mise à jour de l'application"
+    "updating": "Mise à jour de l'application",
+    "install": {
+      "banner": {
+        "title": "Installer BIM",
+        "description": "Installez l'app pour une meilleure expérience native.",
+        "iosInstructions": "Appuyez sur le bouton Partager, puis « Sur l'écran d'accueil ».",
+        "install": "Installer",
+        "dismiss": "Plus tard"
+      },
+      "info": {
+        "installedTitle": "App installée",
+        "installedDescription": "BIM est installée sur cet appareil.",
+        "uninstallIos": "Pour désinstaller : appuyez longuement sur l'icône BIM sur l'écran d'accueil, puis « Supprimer l'app ».",
+        "uninstallAndroid": "Pour désinstaller : appuyez longuement sur l'icône BIM, puis « Désinstaller ».",
+        "uninstallDesktop": "Pour désinstaller : ouvrez le menu de la fenêtre BIM et choisissez « Désinstaller BIM ».",
+        "notInstalledTitle": "Installer BIM",
+        "notInstalledDescription": "Installez l'app pour une meilleure expérience native.",
+        "installButton": "Installer",
+        "iosInstructions": "Sur iPhone ou iPad, ouvrez cette page dans Safari, appuyez sur le bouton Partager, puis « Sur l'écran d'accueil ».",
+        "unsupportedBrowser": "Votre navigateur ne supporte pas l'installation de cette app. Essayez Chrome, Edge ou Brave."
+      }
+    }
   },
   "home": {
     "greeting": "Bonjour {{username}}",
