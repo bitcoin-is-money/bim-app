@@ -14,5 +14,10 @@ export default defineConfig({
     include: ['src/test/**/*.test.ts'],
     environment: 'jsdom',
     watch: false,
+    typecheck: {
+      enabled: true,
+      tsconfig: './tsconfig.json',
+      include: ['src/test/**/*.test.ts'],
+    },
   }
 });

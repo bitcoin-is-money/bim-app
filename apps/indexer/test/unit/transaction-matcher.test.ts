@@ -28,11 +28,11 @@ describe('TransactionMatcher', () => {
     const rows = matcher.match(transfers, accounts, '100', timestamp);
 
     expect(rows).toHaveLength(1);
-    expect(rows[0].accountId).toBe('acc-alice');
-    expect(rows[0].transactionType).toBe('receipt');
-    expect(rows[0].amount).toBe('4096');
-    expect(rows[0].toAddress).toBe(ALICE);
-    expect(rows[0].fromAddress).toBe(STRANGER);
+    expect(rows[0]!.accountId).toBe('acc-alice');
+    expect(rows[0]!.transactionType).toBe('receipt');
+    expect(rows[0]!.amount).toBe('4096');
+    expect(rows[0]!.toAddress).toBe(ALICE);
+    expect(rows[0]!.fromAddress).toBe(STRANGER);
   });
 
   it('creates spent row when from matches an account', () => {
@@ -40,8 +40,8 @@ describe('TransactionMatcher', () => {
     const rows = matcher.match(transfers, accounts, '100', timestamp);
 
     expect(rows).toHaveLength(1);
-    expect(rows[0].accountId).toBe('acc-alice');
-    expect(rows[0].transactionType).toBe('spent');
+    expect(rows[0]!.accountId).toBe('acc-alice');
+    expect(rows[0]!.transactionType).toBe('spent');
   });
 
   it('creates both spent and receipt rows when from and to match different accounts', () => {
@@ -70,10 +70,10 @@ describe('TransactionMatcher', () => {
     const transfers = [{from: STRANGER, to: ALICE, amount: '4096', txHash: TX_HASH}];
     const rows = matcher.match(transfers, accounts, '500', timestamp);
 
-    expect(rows[0].blockNumber).toBe('500');
-    expect(rows[0].tokenAddress).toBe(WBTC);
-    expect(rows[0].transactionHash).toBe(TX_HASH);
-    expect(rows[0].timestamp).toBe(timestamp);
+    expect(rows[0]!.blockNumber).toBe('500');
+    expect(rows[0]!.tokenAddress).toBe(WBTC);
+    expect(rows[0]!.transactionHash).toBe(TX_HASH);
+    expect(rows[0]!.timestamp).toBe(timestamp);
   });
 
   it('aggregates multiple transfers in same txHash into one spent row', () => {
@@ -86,8 +86,8 @@ describe('TransactionMatcher', () => {
 
     const spentRows = rows.filter(r => r.transactionType === 'spent');
     expect(spentRows).toHaveLength(1);
-    expect(spentRows[0].amount).toBe('1001'); // 1000 + 1
-    expect(spentRows[0].toAddress).toBe(BOB); // keeps primary (largest) transfer address
+    expect(spentRows[0]!.amount).toBe('1001'); // 1000 + 1
+    expect(spentRows[0]!.toAddress).toBe(BOB); // keeps primary (largest) transfer address
   });
 
   it('aggregates multiple receipts in same txHash into one receipt row', () => {
@@ -100,8 +100,8 @@ describe('TransactionMatcher', () => {
 
     const receiptRows = rows.filter(r => r.transactionType === 'receipt');
     expect(receiptRows).toHaveLength(1);
-    expect(receiptRows[0].amount).toBe('600'); // 500 + 100
-    expect(receiptRows[0].fromAddress).toBe(STRANGER); // keeps primary (largest) transfer address
+    expect(receiptRows[0]!.amount).toBe('600'); // 500 + 100
+    expect(receiptRows[0]!.fromAddress).toBe(STRANGER); // keeps primary (largest) transfer address
   });
 
   it('keeps spent and receipt separate even in same txHash', () => {
@@ -122,6 +122,6 @@ describe('TransactionMatcher', () => {
     const rows = matcher.match(transfers, upperAccounts, '100', timestamp);
 
     expect(rows).toHaveLength(1);
-    expect(rows[0].accountId).toBe('acc-1');
+    expect(rows[0]!.accountId).toBe('acc-1');
   });
 });

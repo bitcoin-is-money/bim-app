@@ -32,18 +32,18 @@ export class TransferEventDecoder {
       // Cairo 1: keys=[selector, from, to], data=[amount_low, amount_high]
       if (event.keys.length >= 3 && event.data.length >= 2) {
         transfers.push({
-          from: addAddressPadding(event.keys[1]),
-          to: addAddressPadding(event.keys[2]),
-          amount: uint256.uint256ToBN({low: event.data[0], high: event.data[1]}).toString(),
+          from: addAddressPadding(event.keys[1]!),
+          to: addAddressPadding(event.keys[2]!),
+          amount: uint256.uint256ToBN({low: event.data[0]!, high: event.data[1]!}).toString(),
           txHash: addAddressPadding(event.transactionHash),
         });
       }
       // Cairo 0 (legacy): keys=[selector], data=[from, to, amount_low, amount_high]
       else if (event.keys.length >= 1 && event.data.length >= 4) {
         transfers.push({
-          from: addAddressPadding(event.data[0]),
-          to: addAddressPadding(event.data[1]),
-          amount: uint256.uint256ToBN({low: event.data[2], high: event.data[3]}).toString(),
+          from: addAddressPadding(event.data[0]!),
+          to: addAddressPadding(event.data[1]!),
+          amount: uint256.uint256ToBN({low: event.data[2]!, high: event.data[3]!}).toString(),
           txHash: addAddressPadding(event.transactionHash),
         });
       } else {

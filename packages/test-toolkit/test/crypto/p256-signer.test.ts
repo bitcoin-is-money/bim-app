@@ -159,7 +159,7 @@ describe('P256Signer', () => {
 
       // Verify using @noble/curves
       const signature = new p256.Signature(r, s);
-      const isValid = p256.verify(signature, data, publicKey);
+      const isValid = p256.verify(signature.toBytes('compact'), data, publicKey);
 
       expect(isValid).toBe(true);
     });
@@ -234,7 +234,7 @@ describe('P256Signer', () => {
       const hashBytes = hexToBytes(starknetHash.replace('0x', ''));
       const signature = new p256.Signature(r, s);
 
-      expect(p256.verify(signature, hashBytes, publicKey)).toBe(true);
+      expect(p256.verify(signature.toBytes('compact'), hashBytes, publicKey)).toBe(true);
     });
   });
 });

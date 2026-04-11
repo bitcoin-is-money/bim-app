@@ -3,7 +3,7 @@ import {Erc20CallFactory, FeeConfig} from '@bim/domain/payment';
 import {Amount} from '@bim/domain/shared';
 import {describe, expect, it} from 'vitest';
 
-const ETH_TOKEN_ADDRESS = '0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7';
+const ETH_TOKEN_ADDRESS = StarknetAddress.of('0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7');
 const RECIPIENT_ADDRESS = '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
 const TREASURY_ADDRESS = StarknetAddress.of('0x027367ddd36d7efc4694e1af5742f8d26626369c07abf15d136ff422b9a40fa0');
 
@@ -139,7 +139,7 @@ describe('Erc20CallFactory', () => {
     });
 
     it('uses correct token address for both calls', () => {
-      const customToken = '0xcustom_token_address';
+      const customToken = StarknetAddress.of('0xdeadbeef');
 
       const {calls} = factory.createTransfer({
         tokenAddress: customToken,
@@ -175,7 +175,7 @@ describe('Erc20CallFactory', () => {
   });
 
   describe('createFeeCall', () => {
-    const WBTC_TOKEN_ADDRESS = '0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac';
+    const WBTC_TOKEN_ADDRESS = StarknetAddress.of('0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac');
 
     it('creates a fee-only call to treasury with lightning rate', () => {
       const {calls, feeAmount} = factory.createFeeCall(

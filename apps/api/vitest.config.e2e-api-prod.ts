@@ -13,5 +13,10 @@ export default defineConfig({
     sequence: {
       shuffle: false,
     },
+    typecheck: {
+      enabled: true,
+      tsconfig: './tsconfig.json',
+      include: ['test/e2e-api-prod/**/*.test.ts'],
+    },
   },
 });

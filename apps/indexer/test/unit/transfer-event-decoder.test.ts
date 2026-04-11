@@ -73,7 +73,7 @@ describe('TransferEventDecoder', () => {
     it('decodes u256 amount with high part', () => {
       const result = decoder.decode([makeCairo1Event(ALICE, BOB, '0x5', '0x2')]);
 
-      expect(result[0].amount).toBe((5n + (2n << 128n)).toString());
+      expect(result[0]!.amount).toBe((5n + (2n << 128n)).toString());
     });
 
     it('skips events with insufficient keys and data', () => {
@@ -98,8 +98,8 @@ describe('TransferEventDecoder', () => {
     it('normalizes addresses to lowercase padded hex', () => {
       const result = decoder.decode([makeCairo1Event('0xABC', '0xDEF')]);
 
-      expect(result[0].from).toBe('0x' + '0'.repeat(61) + 'abc');
-      expect(result[0].to).toBe('0x' + '0'.repeat(61) + 'def');
+      expect(result[0]!.from).toBe('0x' + '0'.repeat(61) + 'abc');
+      expect(result[0]!.to).toBe('0x' + '0'.repeat(61) + 'def');
     });
   });
 
@@ -119,14 +119,14 @@ describe('TransferEventDecoder', () => {
     it('decodes u256 amount with high part', () => {
       const result = decoder.decode([makeCairo0Event(ALICE, BOB, '0x5', '0x2')]);
 
-      expect(result[0].amount).toBe((5n + (2n << 128n)).toString());
+      expect(result[0]!.amount).toBe((5n + (2n << 128n)).toString());
     });
 
     it('normalizes addresses to lowercase padded hex', () => {
       const result = decoder.decode([makeCairo0Event('0xABC', '0xDEF')]);
 
-      expect(result[0].from).toBe('0x' + '0'.repeat(61) + 'abc');
-      expect(result[0].to).toBe('0x' + '0'.repeat(61) + 'def');
+      expect(result[0]!.from).toBe('0x' + '0'.repeat(61) + 'abc');
+      expect(result[0]!.to).toBe('0x' + '0'.repeat(61) + 'def');
     });
 
     it('decodes real mainnet WBTC event (from Atomiq swap)', () => {
@@ -150,9 +150,9 @@ describe('TransferEventDecoder', () => {
       const result = decoder.decode([event]);
 
       expect(result).toHaveLength(1);
-      expect(result[0].from).toBe('0x04f278e1f19e495c3b1dd35ef307c4f7510768ed95481958fbae588bd173f79a');
-      expect(result[0].to).toBe('0x0633162ad5ea84dfd99a8e0d6792ef9fed972cdf490f08dbd2cdb5fc84306fe5');
-      expect(result[0].amount).toBe('40');
+      expect(result[0]!.from).toBe('0x04f278e1f19e495c3b1dd35ef307c4f7510768ed95481958fbae588bd173f79a');
+      expect(result[0]!.to).toBe('0x0633162ad5ea84dfd99a8e0d6792ef9fed972cdf490f08dbd2cdb5fc84306fe5');
+      expect(result[0]!.amount).toBe('40');
     });
   });
 
