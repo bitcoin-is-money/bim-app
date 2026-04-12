@@ -40,7 +40,7 @@
     "pino": "^10.3.1"
   },
   "peerDependencies": {
-    "@noble/curves": "^1.9.0",
+    "@noble/curves": "^2.2.0",
     "@noble/hashes": "^1.8.0",
     "starknet": "^9.0.0"
   }
