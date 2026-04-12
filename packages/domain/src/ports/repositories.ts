@@ -5,6 +5,14 @@ import type {Swap, SwapDirection, SwapId, SwapStatus} from '../swap';
 import type {Transaction, TransactionHash, TransactionId, UserSettings} from '../user';
 
 /**
+ * Options for count queries. Allows excluding test accounts (e.g. e2e_*)
+ * from reporting metrics without affecting other callers.
+ */
+export interface CountOptions {
+  readonly excludeUsernamePrefix?: string;
+}
+
+/**
  * Repository interface for Account persistence.
  */
 export interface AccountRepository {
@@ -25,6 +33,12 @@ export interface AccountRepository {
 
   /** Checks if a username already exists. */
   existsByUsername(username: string): Promise<boolean>;
+
+  /** Counts all accounts. */
+  countAll(options?: CountOptions): Promise<number>;
+
+  /** Counts accounts created at or after the given date. */
+  countCreatedSince(date: Date, options?: CountOptions): Promise<number>;
 
   /**
    * Atomically transitions the account from 'pending' to 'deploying'.
@@ -147,6 +161,16 @@ export interface TransactionRepository {
 
   /** Counts transactions for an account. */
   countByAccountId(accountId: AccountId): Promise<number>;
+
+  /** Counts all transactions. */
+  countAll(options?: CountOptions): Promise<number>;
+
+  /**
+   * Counts transactions whose on-chain `timestamp` is at or after the given
+   * date. Uses the block timestamp (not `indexed_at`) so the result reflects
+   * real economic activity rather than indexer ingestion time.
+   */
+  countCreatedSince(date: Date, options?: CountOptions): Promise<number>;
 
   /** Checks if a transaction with the given hash exists. */
   existsByHash(hash: TransactionHash): Promise<boolean>;

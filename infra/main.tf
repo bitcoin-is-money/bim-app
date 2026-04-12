@@ -193,3 +193,15 @@ resource "scaleway_container_cron" "balance_check" {
     type   = "balance-check"
   })
 }
+
+resource "scaleway_container_cron" "activity_reporting" {
+  count        = var.enable_reporting ? 1 : 0
+  container_id = scaleway_container.api.id
+  schedule     = var.activity_reporting_cron
+  name         = "bim-weekly-activity-reporting"
+
+  args = jsonencode({
+    secret = var.cron_secret
+    type   = "activity-reporting"
+  })
+}

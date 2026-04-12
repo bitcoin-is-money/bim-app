@@ -18,6 +18,7 @@ uses WebAuthn (passkey / biometric) for key management.
 
 ### Added
 
+- 2026-04-12: Activity report posted weekly to Slack
 - 2026-04-11: FAQ page accessible from the main menu.
 - 2026-04-11: Custom PWA install prompt.
 

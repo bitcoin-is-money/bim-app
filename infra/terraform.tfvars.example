@@ -51,11 +51,23 @@ avnu_sponsor_activity_url = "https://starknet.api.avnu.fi/paymaster/v1/sponsor-a
 dna_token = ""
 
 # ------------------------------------------------------------------------------
-# Alerting (optional - Slack notifications for balance monitoring)
+# Cron (alerting / reporting)
+# every day - 8h : "0 8 * * *"
+# every 2 minutes : "*/2 * * * *"
+# ------------------------------------------------------------------------------
+cron_secret              = "..."
+alerting_slack_bot_token = "xoxb-..."
+
+# ------------------------------------------------------------------------------
+# Alerting (optional - Slack notifications on #alerting)
 # ------------------------------------------------------------------------------
 enable_alerting          = true
-cron_secret              = ""
-alerting_slack_bot_token = ""
 alerting_balance_cron             = "0 8 * * *"
 alerting_avnu_threshold_strk      = 0
 alerting_treasury_threshold_strk  = 0
+
+# ------------------------------------------------------------------------------
+# Reporting (optional - Slack notifications on #reporting)
+# ------------------------------------------------------------------------------
+enable_reporting        = false
+activity_reporting_cron = "0 8 * * 1"

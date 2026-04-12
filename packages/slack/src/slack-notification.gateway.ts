@@ -40,12 +40,18 @@ export class SlackNotificationGateway implements NotificationGateway {
     const icon = SEVERITY_ICONS[message.severity];
     const color = SEVERITY_COLORS[message.severity];
 
-    const blocks: AnyMessageBlock[] = [
-      {
-        type: 'section',
-        text: {type: 'mrkdwn', text: message.description},
-      },
-    ];
+    // Split the description on blank lines so each paragraph lands in its
+    // own `section` block. Slack collapses tall single-section blocks behind
+    // a "See more" link; multiple shorter blocks render in full.
+    const descriptionChunks = message.description
+      .split(/\n{2,}/)
+      .map(chunk => chunk.trim())
+      .filter(chunk => chunk.length > 0);
+
+    const blocks: AnyMessageBlock[] = descriptionChunks.map(chunk => ({
+      type: 'section',
+      text: {type: 'mrkdwn', text: chunk},
+    }));
 
     if (message.fields.size > 0) {
       const fields: {type: 'mrkdwn'; text: string}[] = [];

@@ -10,6 +10,8 @@ export function createAccountRepoMock(): AccountRepository {
     findByStarknetAddress: vi.fn(),
     findByUsername: vi.fn(),
     existsByUsername: vi.fn(),
+    countAll: vi.fn(),
+    countCreatedSince: vi.fn(),
     markAsDeploying: vi.fn(),
     delete: vi.fn(),
   }

@@ -1,6 +1,7 @@
 import {StarknetAddress} from '@bim/domain/account';
 import type {HealthTransitionEvent} from '@bim/domain/health';
 import {
+  ActivityReport,
   AvnuBalanceLow,
   AvnuCreditsRecharged,
   ServiceHealthChange,
@@ -13,49 +14,24 @@ import {createLogger} from '@bim/lib/logger';
 import {SlackNotificationGateway} from '@bim/slack';
 import {loadSecrets, requireSlack} from '../config/secrets.js';
 
-function buildTestMessages(): NotificationMessage[] {
-  const fakeAddress = StarknetAddress.of('0x0035b338c3fc75337e2e68a6f386ad95ad6edd1348b670dd9e8deb9f7a973fcb');
+interface TestMessageBuilder {
+  readonly key: string;
+  readonly description: string;
+  readonly build: () => NotificationMessage;
+}
 
-  const messages: NotificationMessage[] = [];
+const FAKE_ADDRESS = StarknetAddress.of('0x0035b338c3fc75337e2e68a6f386ad95ad6edd1348b670dd9e8deb9f7a973fcb');
 
-  // AvnuBalanceLow — force trigger by setting balance below threshold
-  const avnuLow = AvnuBalanceLow.evaluate({
-    network: 'mainnet',
-    currentBalance: 2_300_000_000_000_000_000n,
-    threshold: 5_000_000_000_000_000_000n,
-  });
-  if (avnuLow) messages.push(avnuLow);
+function required<T>(value: T | undefined, key: string): T {
+  if (value === undefined) {
+    throw new Error(`Test fixture "${key}" did not produce a message (check thresholds)`);
+  }
+  return value;
+}
 
-  // TreasuryBalanceLow — force trigger
-  const treasuryLow = TreasuryBalanceLow.evaluate({
-    address: fakeAddress,
-    network: 'mainnet',
-    currentBalance: 500_000_000_000_000_000n,
-    threshold: 2_000_000_000_000_000_000n,
-  });
-  if (treasuryLow) messages.push(treasuryLow);
-
-  // AvnuCreditsRecharged — force trigger with increased balance
-  const recharged = AvnuCreditsRecharged.evaluate({
-    address: fakeAddress,
-    network: 'mainnet',
-    previousBalance: 2_300_000_000_000_000_000n,
-    currentBalance: 50_000_000_000_000_000_000n,
-  });
-  if (recharged) messages.push(recharged);
-
-  // SwapClaimFailed — always produces a message
-  messages.push(SwapClaimFailed.build({
-    swapId: 'swap_test_123' as SwapId,
-    userAddress: fakeAddress,
-    network: 'mainnet',
-    amount: '0.001 WBTC',
-    error: 'Transaction reverted: insufficient gas',
-  }));
-
-  // ServiceHealthChange — component down
+function buildHealthDown(): NotificationMessage {
   const now = new Date();
-  const downEvent: HealthTransitionEvent = {
+  const event: HealthTransitionEvent = {
     component: 'atomiq',
     from: 'healthy',
     to: 'down',
@@ -70,10 +46,12 @@ function buildTestMessages(): NotificationMessage[] {
       updatedAt: now,
     },
   };
-  messages.push(ServiceHealthChange.fromEvent(downEvent));
+  return ServiceHealthChange.fromEvent(event);
+}
 
-  // ServiceHealthChange — component recovered
-  const recoveredEvent: HealthTransitionEvent = {
+function buildHealthRecovered(): NotificationMessage {
+  const now = new Date();
+  const event: HealthTransitionEvent = {
     component: 'atomiq',
     from: 'down',
     to: 'healthy',
@@ -88,18 +66,129 @@ function buildTestMessages(): NotificationMessage[] {
       updatedAt: now,
     },
   };
-  messages.push(ServiceHealthChange.fromEvent(recoveredEvent));
-
-  return messages;
+  return ServiceHealthChange.fromEvent(event);
 }
 
-export async function run(_args: string[]): Promise<void> {
+function buildActivityReport(): NotificationMessage {
+  const periodEnd = new Date();
+  const periodStart = new Date(periodEnd.getTime() - 7 * 24 * 60 * 60 * 1000);
+  return ActivityReport.build({
+    network: 'mainnet',
+    totalUsers: 1_284,
+    totalTransactions: 57_931,
+    newUsers: 42,
+    newTransactions: 1_337,
+    periodStart,
+    periodEnd,
+  });
+}
+
+const TEST_MESSAGES: readonly TestMessageBuilder[] = [
+  {
+    key: 'avnu-balance-low',
+    description: 'AVNU paymaster credits below threshold',
+    build: () => required(
+      AvnuBalanceLow.evaluate({
+        network: 'mainnet',
+        currentBalance: 2_300_000_000_000_000_000n,
+        threshold: 5_000_000_000_000_000_000n,
+      }),
+      'avnu-balance-low',
+    ),
+  },
+  {
+    key: 'treasury-balance-low',
+    description: 'BIM treasury STRK balance below threshold',
+    build: () => required(
+      TreasuryBalanceLow.evaluate({
+        address: FAKE_ADDRESS,
+        network: 'mainnet',
+        currentBalance: 500_000_000_000_000_000n,
+        threshold: 2_000_000_000_000_000_000n,
+      }),
+      'treasury-balance-low',
+    ),
+  },
+  {
+    key: 'avnu-credits-recharged',
+    description: 'AVNU paymaster credits topped up',
+    build: () => required(
+      AvnuCreditsRecharged.evaluate({
+        address: FAKE_ADDRESS,
+        network: 'mainnet',
+        previousBalance: 2_300_000_000_000_000_000n,
+        currentBalance: 50_000_000_000_000_000_000n,
+      }),
+      'avnu-credits-recharged',
+    ),
+  },
+  {
+    key: 'swap-claim-failed',
+    description: 'Swap auto-claim failed on-chain',
+    build: () => SwapClaimFailed.build({
+      swapId: 'swap_test_123' as SwapId,
+      userAddress: FAKE_ADDRESS,
+      network: 'mainnet',
+      amount: '0.001 WBTC',
+      error: 'Transaction reverted: insufficient gas',
+    }),
+  },
+  {
+    key: 'health-down',
+    description: 'Component health transition: healthy → down',
+    build: buildHealthDown,
+  },
+  {
+    key: 'health-recovered',
+    description: 'Component health transition: down → healthy',
+    build: buildHealthRecovered,
+  },
+  {
+    key: 'activity-report',
+    description: 'BIM usage KPIs (users & transactions)',
+    build: buildActivityReport,
+  },
+];
+
+function printAvailable(): void {
+  console.log('Available test messages:');
+  const keyWidth = Math.max(...TEST_MESSAGES.map(m => m.key.length));
+  for (const msg of TEST_MESSAGES) {
+    console.log(`  ${msg.key.padEnd(keyWidth)}  ${msg.description}`);
+  }
+  console.log('\nUsage:');
+  console.log('  ./bim slack:test              Send all test messages');
+  console.log('  ./bim slack:test <key>        Send only the named test message');
+  console.log('  ./bim slack:test list         List available keys');
+}
+
+export async function run(args: string[]): Promise<void> {
+  const selector = args[0];
+
+  if (selector === 'list' || selector === '--list' || selector === 'help' || selector === '--help') {
+    printAvailable();
+    return;
+  }
+
+  let selected: readonly TestMessageBuilder[];
+  if (selector === undefined) {
+    selected = TEST_MESSAGES;
+  } else {
+    const match = TEST_MESSAGES.find(m => m.key === selector);
+    if (!match) {
+      console.error(`Unknown test message: "${selector}"\n`);
+      printAvailable();
+      process.exit(1);
+    }
+    selected = [match];
+  }
+
   const secrets = loadSecrets();
   const slack = requireSlack(secrets);
   const logger = createLogger('silent');
   const gateway: NotificationGateway = new SlackNotificationGateway(slack, logger);
 
-  const messages = buildTestMessages().map(msg => ({...msg, channel: '#tmp'}));
+  const messages = selected.map(entry => ({...entry.build(), channel: '#tmp'}));
 
   for (const msg of messages) {
     console.log(`Sending ${msg.severity}: ${msg.title}...`);
@@ -107,5 +196,5 @@ export async function run(_args: string[]): Promise<void> {
     console.log('  Sent.');
   }
 
-  console.log(`\nAll ${messages.length} test messages sent.`);
+  console.log(`\nAll ${messages.length} test message${messages.length === 1 ? '' : 's'} sent.`);
 }
