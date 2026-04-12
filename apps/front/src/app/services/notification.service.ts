@@ -88,12 +88,10 @@ export class NotificationService {
       console.warn('Toast template not registered');
       return;
     }
-    setTimeout(() => {
-      this.toast.show(this.toastTemplate, {
-        ...options,
-        ...(data.id !== undefined && {id: data.id}),
-        data: data
-      });
+    this.toast.show(this.toastTemplate, {
+      ...options,
+      ...(data.id !== undefined && {id: data.id}),
+      data: data
     });
   }
 
