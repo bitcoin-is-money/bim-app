@@ -24,3 +24,13 @@
   --hot-toast-bg: #fff;
   --hot-toast-color: #151515;
 }
+
+// hot-toast pauses the exit animation on :hover/:focus (CSS) and mouseenter (JS).
+// On touch devices :hover is sticky, causing notifications to stay forever.
+// Force the animation to always run so notifications reliably auto-dismiss.
+// Must target :hover and :focus explicitly to beat the library's specificity.
+.hot-toast-bar-base,
+.hot-toast-bar-base:hover,
+.hot-toast-bar-base:focus {
+  animation-play-state: running !important;
+}
