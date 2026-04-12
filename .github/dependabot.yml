@@ -9,7 +9,7 @@ updates:
     open-pull-requests-limit: 10
     labels:
       - "dependencies"
-      - "npm"
+      - "deps:npm"
     groups:
       angular:
         patterns:
@@ -51,7 +51,7 @@ updates:
       day: "monday"
     labels:
       - "dependencies"
-      - "github-actions"
+      - "deps:github-actions"
 
   # Docker (api Dockerfile)
   - package-ecosystem: "docker"
@@ -61,4 +61,4 @@ updates:
       day: "monday"
     labels:
       - "dependencies"
-      - "docker"
+      - "deps:docker"
