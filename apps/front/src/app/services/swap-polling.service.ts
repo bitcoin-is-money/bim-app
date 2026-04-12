@@ -3,6 +3,7 @@ import type {OnDestroy} from '@angular/core';
 import {inject, Injectable} from '@angular/core';
 import type {Subscription} from 'rxjs';
 import {catchError, filter, interval, of, switchMap, takeWhile, tap} from 'rxjs';
+import {environment} from '../../environments/environment';
 import {isTerminalStatus, type StoredSwap, type SwapDirection, type SwapStatus} from '../model';
 import {AccountService} from './account.service';
 import {I18nService} from './i18n.service';
@@ -200,7 +201,11 @@ export class SwapPollingService implements OnDestroy {
     // Bitcoin receive: the security deposit is refunded atomically with the
     // claim tx inside SwapMonitor, so completion implies the bounty is back
     // in the user's wallet — surface it as a separate toast.
-    if (storedSwap.direction === 'bitcoin_to_starknet' && newStatus === 'completed') {
+    if (
+      environment.showSecurityDepositRefundNotification &&
+      storedSwap.direction === 'bitcoin_to_starknet' &&
+      newStatus === 'completed'
+    ) {
       this.fireNotification({
         key: 'notifications.receive.bitcoin.depositRefunded',
         kind: 'info',
