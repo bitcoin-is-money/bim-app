@@ -79,45 +79,36 @@ export class PwaUpdateService {
     if (!this.swUpdate.isEnabled) {
       return;
     }
-
     const startedAt = Date.now();
-
-    const hasUpdate = await this.waitForUpdate(UPDATE_CHECK_BUDGET_MS);
+    const hasUpdate = await this.hasUpdateAvailable(UPDATE_CHECK_BUDGET_MS);
     if (!hasUpdate) {
       return;
     }
-
     const remainingBudgetMs = Math.max(0, UPDATE_CHECK_BUDGET_MS - (Date.now() - startedAt));
     if (remainingBudgetMs === 0) {
       return;
     }
-
     const safeToReload = await this.isSafeToReload(remainingBudgetMs);
     if (!safeToReload) {
       return;
     }
-
     await this.applyUpdateAndReload();
   }
 
   /**
-   * Forces a fresh SW check and waits for VERSION_READY, bounded by the
-   * caller-supplied budget. Returns true if an update is ready to activate.
+   * Forces a fresh SW check and returns true if an update is ready to
+   * activate, bounded by the caller-supplied budget.
    *
-   * If the check throws (offline, stale cache, etc.) we treat it as "no
-   * update" so the user is never blocked by our optional check.
+   * If the check throws or times out (offline, stale cache, etc.) we
+   * treat it as "no update" so the user is never blocked.
    */
-  private async waitForUpdate(budgetMs: number): Promise<boolean> {
+  private async hasUpdateAvailable(budgetMs: number): Promise<boolean> {
     if (this.updateAvailable()) {
       return true;
     }
     try {
-      const checkPromise = this.swUpdate.checkForUpdate();
-      const deadline = new Promise<boolean>((resolve) => {
-        setTimeout(() => { resolve(false); }, budgetMs);
-      });
-      const result = await Promise.race([checkPromise, deadline]);
-      return result || this.updateAvailable();
+      await pTimeout(this.swUpdate.checkForUpdate(), {milliseconds: budgetMs});
+      return this.updateAvailable();
     } catch {
       return false;
     }
@@ -153,7 +144,7 @@ export class PwaUpdateService {
         console.error('Failed to activate SW update', error);
       }
     } finally {
-      document.location.reload();
+      document.location.assign('/');
     }
   }
 }
