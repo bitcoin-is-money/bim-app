@@ -73,7 +73,7 @@
     "@angular/build": "^21.2.0",
     "@angular/cli": "^21.2.0",
     "@angular/compiler-cli": "^21.2.0",
-    "@ngneat/overview": "^7.0.0",
+    "@ngneat/overview": "^8.0.1",
     "@ngxpert/hot-toast": "^6.1.0",
     "@tailwindcss/postcss": "^4.2.1",
     "@types/canvas-confetti": "^1.9.0",
