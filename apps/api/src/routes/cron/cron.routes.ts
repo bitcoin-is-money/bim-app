@@ -1,12 +1,14 @@
 import type {Context, Hono, TypedResponse} from 'hono';
 import type {Logger} from 'pino';
 import {type ApiErrorResponse, createErrorResponse, ErrorCode} from '../../errors';
+import type {ActivityMonitoring} from '../../monitoring/activity.monitoring';
 import type {BalanceMonitoring} from '../../monitoring/balance.monitoring';
 import {CronRequestSchema} from './cron.schemas';
 
 export interface CronRoutesDeps {
   readonly cronSecret: string;
   readonly balanceMonitoring: BalanceMonitoring;
+  readonly activityMonitoring: ActivityMonitoring;
   readonly logger: Logger;
 }
 
@@ -32,6 +34,10 @@ export function createCronRoutes(
       switch (input.type) {
         case 'balance-check':
           await deps.balanceMonitoring.run();
+          return honoCtx.json<CronResponse>({ok: true});
+
+        case 'activity-reporting':
+          await deps.activityMonitoring.run();
           return honoCtx.json<CronResponse>({ok: true});
 
         default:

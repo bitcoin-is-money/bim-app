@@ -27,7 +27,7 @@ const COMMANDS = new Map<string, Command>([
   ['avnu:refund',      {run: avnuRefund,      help: 'Refund AVNU paymaster credits      [amount_strk]'}],
   ['e2e:init',         {run: e2eInit,         help: 'Create E2E test accounts (once)'}],
   ['e2e:fund',         {run: e2eFund,         help: 'Fund E2E account with WBTC          <a|b> [amount_sats]'}],
-  ['slack:test',       {run: slackTest,       help: 'Send test Slack messages'}],
+  ['slack:test',       {run: slackTest,       help: 'Send test Slack messages       [key|list]'}],
   ['deployer:create',  {run: deployerCreate,  help: 'Create deployer account (Sepolia)'}],
   ['deployer:deploy',  {run: deployerDeploy,  help: 'Deploy deployer account (Sepolia)'}],
   ['contract:check',   {run: contractCheck,   help: 'Check BIM Argent contract declaration status'}],

@@ -151,3 +151,17 @@ variable "alerting_treasury_threshold_strk" {
   type        = number
   default     = 200
 }
+
+# ---------- Reporting (weekly BIM activity snapshot via Scaleway cron → API) ----------
+
+variable "enable_reporting" {
+  description = "Enable weekly reporting via Scaleway cron (requires cron_secret and alerting_slack_bot_token)"
+  type        = bool
+  default     = false
+}
+
+variable "activity_reporting_cron" {
+  description = "Cron schedule for the weekly activity report (default: Monday 8 AM UTC)"
+  type        = string
+  default     = "0 8 * * 1"
+}

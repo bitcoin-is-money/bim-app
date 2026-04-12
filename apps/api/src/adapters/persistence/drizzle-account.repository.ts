@@ -1,7 +1,7 @@
 import * as schema from '@bim/db';
 import {Account, AccountId, type AccountStatus, CredentialId, StarknetAddress,} from '@bim/domain/account';
-import type {AccountRepository} from '@bim/domain/ports';
-import {and, eq, or} from 'drizzle-orm';
+import type {AccountRepository, CountOptions} from '@bim/domain/ports';
+import {and, count, eq, gte, or, sql, type SQL} from 'drizzle-orm';
 import {AbstractDrizzleRepository} from './abstract-drizzle.repository';
 
 /**
@@ -100,6 +100,24 @@ export class DrizzleAccountRepository extends AbstractDrizzleRepository implemen
     return record !== undefined;
   }
 
+  async countAll(options?: CountOptions): Promise<number> {
+    const result = await this.resolveDb()
+      .select({count: count()})
+      .from(schema.accounts)
+      .where(usernameExclude(options));
+
+    return result[0]?.count ?? 0;
+  }
+
+  async countCreatedSince(date: Date, options?: CountOptions): Promise<number> {
+    const result = await this.resolveDb()
+      .select({count: count()})
+      .from(schema.accounts)
+      .where(and(gte(schema.accounts.createdAt, date), usernameExclude(options)));
+
+    return result[0]?.count ?? 0;
+  }
+
   async markAsDeploying(
     accountId: AccountId,
     starknetAddress: StarknetAddress,
@@ -146,4 +164,9 @@ export class DrizzleAccountRepository extends AbstractDrizzleRepository implemen
       record.updatedAt,
     );
   }
+}
+
+function usernameExclude(options?: CountOptions): SQL | undefined {
+  if (!options?.excludeUsernamePrefix) return undefined;
+  return sql`NOT starts_with(${schema.accounts.username}, ${options.excludeUsernamePrefix})`;
 }

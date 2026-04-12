@@ -18,6 +18,7 @@ import {
 } from './middleware/rate-limit.middleware';
 import {createRequestLoggerMiddleware} from './middleware/request-logger.middleware';
 import {createSecurityHeadersMiddleware} from './middleware/security-headers.middleware';
+import {ActivityMonitoring} from './monitoring/activity.monitoring';
 import {BalanceMonitoring} from './monitoring/balance.monitoring';
 import {SwapMonitor} from './monitoring/swap.monitor';
 import {
@@ -135,9 +136,17 @@ export async function createApp(options: CreateAppOptions = {}): Promise<AppInst
       config.cron.balanceMonitoring,
       rootLogger,
     );
+    const activityMonitoring = new ActivityMonitoring(
+      context.repositories.account,
+      context.repositories.transaction,
+      context.gateways.notification,
+      config.starknet,
+      rootLogger,
+    );
     createCronRoutes(app, {
       cronSecret: config.cron.secret,
       balanceMonitoring,
+      activityMonitoring,
       logger: rootLogger,
     });
   }

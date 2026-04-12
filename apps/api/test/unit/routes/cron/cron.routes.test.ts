@@ -1,6 +1,7 @@
 import {createLogger} from '@bim/lib/logger';
 import {Hono} from 'hono';
 import {describe, expect, it, vi} from 'vitest';
+import type {ActivityMonitoring} from '../../../../src/monitoring/activity.monitoring';
 import type {BalanceMonitoring} from '../../../../src/monitoring/balance.monitoring';
 import {createCronRoutes, type CronRoutesDeps} from '../../../../src/routes/cron/cron.routes';
 
@@ -10,10 +11,15 @@ function createMockBalanceMonitoring(): BalanceMonitoring {
   return {run: vi.fn().mockResolvedValue(undefined)} as unknown as BalanceMonitoring;
 }
 
+function createMockActivityMonitoring(): ActivityMonitoring {
+  return {run: vi.fn().mockResolvedValue(undefined)} as unknown as ActivityMonitoring;
+}
+
 function createTestDeps(overrides: Partial<CronRoutesDeps> = {}): CronRoutesDeps {
   return {
     cronSecret: CRON_SECRET,
     balanceMonitoring: createMockBalanceMonitoring(),
+    activityMonitoring: createMockActivityMonitoring(),
     logger: createLogger(),
     ...overrides,
   };
@@ -48,6 +54,20 @@ describe('cron routes', () => {
     const body = await res.json();
     expect(body).toEqual({ok: true});
     expect(balanceMonitoring.run).toHaveBeenCalledOnce();
+  });
+
+  it('returns 200 for valid activity-reporting request', async () => {
+    const activityMonitoring = createMockActivityMonitoring();
+    const app = createTestApp({activityMonitoring});
+    const res = await app.request('/', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({secret: CRON_SECRET, type: 'activity-reporting'}),
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toEqual({ok: true});
+    expect(activityMonitoring.run).toHaveBeenCalledOnce();
   });
 
   it('returns 400 for unknown cron type', async () => {

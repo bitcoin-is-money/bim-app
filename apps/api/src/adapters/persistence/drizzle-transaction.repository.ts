@@ -2,7 +2,8 @@ import * as schema from '@bim/db';
 import {AccountId, StarknetAddress} from '@bim/domain/account';
 import type {TransactionPaginationOptions, TransactionRepository} from "@bim/domain/ports";
 import {Transaction, TransactionHash, TransactionId, type TransactionType} from "@bim/domain/user";
-import {and, count, desc, eq} from 'drizzle-orm';
+import type {CountOptions} from '@bim/domain/ports';
+import {and, count, desc, eq, gte, sql, type SQL} from 'drizzle-orm';
 import {AbstractDrizzleRepository} from './abstract-drizzle.repository';
 
 /**
@@ -135,6 +136,24 @@ export class DrizzleTransactionRepository extends AbstractDrizzleRepository impl
     return result[0]?.count ?? 0;
   }
 
+  async countAll(options?: CountOptions): Promise<number> {
+    const result = await this.resolveDb()
+      .select({count: count()})
+      .from(schema.transactions)
+      .where(accountExclude(options));
+
+    return result[0]?.count ?? 0;
+  }
+
+  async countCreatedSince(date: Date, options?: CountOptions): Promise<number> {
+    const result = await this.resolveDb()
+      .select({count: count()})
+      .from(schema.transactions)
+      .where(and(gte(schema.transactions.timestamp, date), accountExclude(options)));
+
+    return result[0]?.count ?? 0;
+  }
+
   async existsByHash(hash: TransactionHash): Promise<boolean> {
     const record = await this.resolveDb().query.transactions.findFirst({
       where: eq(schema.transactions.transactionHash, hash),
@@ -186,4 +205,12 @@ export class DrizzleTransactionRepository extends AbstractDrizzleRepository impl
       description ?? (record.transactionType === 'receipt' ? 'Received' : 'Sent'),
     );
   }
+}
+
+function accountExclude(options?: CountOptions): SQL | undefined {
+  if (!options?.excludeUsernamePrefix) return undefined;
+  return sql`${schema.transactions.accountId} NOT IN (
+    SELECT ${schema.accounts.id} FROM ${schema.accounts}
+    WHERE starts_with(${schema.accounts.username}, ${options.excludeUsernamePrefix})
+  )`;
 }
