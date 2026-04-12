@@ -88,7 +88,7 @@ export class ReceiveHandlerMock {
         };
         // Simulate an incoming Starknet transfer a few seconds later so that
         // the frontend's `waitForNew()` polling has something to detect and
-        // can fire the receive.starknet.paid notification.
+        // can fire the receive.starknet.completed notification.
         scheduleSimulatedStarknetTransaction(
           'receipt',
           amount,

@@ -199,7 +199,7 @@
       },
       "starknet": {
         "ready": "Starknet address ready",
-        "paid": "Incoming transfer received"
+        "completed": "Funds available"
       }
     },
     "send": {

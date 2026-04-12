@@ -137,8 +137,9 @@ export class ReceiveService {
         intervalMs: STARKNET_WATCH_INTERVAL_MS,
         maxAttempts: STARKNET_WATCH_MAX_ATTEMPTS,
         onDetected: () => {
-          this.notificationService.info({
-            message: this.i18n.t('notifications.receive.starknet.paid'),
+          this.notificationService.success({
+            message: this.i18n.t('notifications.receive.starknet.completed'),
+            useConfetti: true,
           });
         },
       });
