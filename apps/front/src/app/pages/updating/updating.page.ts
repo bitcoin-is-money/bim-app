@@ -1,7 +1,7 @@
 import {Component} from '@angular/core';
-import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {TranslateModule} from '@ngx-translate/core';
 
+import {SpinnerComponent} from '../../components/spinner/spinner.component';
 import {FullPageLayoutComponent} from '../../layout';
 
 /**
@@ -13,7 +13,7 @@ import {FullPageLayoutComponent} from '../../layout';
 @Component({
   selector: 'app-updating',
   standalone: true,
-  imports: [TranslateModule, FaIconComponent, FullPageLayoutComponent],
+  imports: [TranslateModule, SpinnerComponent, FullPageLayoutComponent],
   templateUrl: './updating.page.html',
   styleUrl: './updating.page.scss',
 })
