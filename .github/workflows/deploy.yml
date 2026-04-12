@@ -26,7 +26,7 @@ jobs:
           password: ${{ secrets.SCW_SECRET_KEY }}
 
       - name: Build & push API image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: apps/api/Dockerfile
@@ -36,7 +36,7 @@ jobs:
             ${{ env.API_IMAGE }}:latest
 
       - name: Build & push Indexer image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: apps/indexer/Dockerfile
