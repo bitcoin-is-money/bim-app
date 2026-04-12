@@ -22,9 +22,11 @@ const I18N_READY_KEYS: Record<ReceiveNetwork, string> = {
 };
 
 // Starknet receives have no swap to poll; watch the transactions endpoint for
-// up to 1 minute for an incoming WBTC transfer indexed by Apibara.
-const STARKNET_WATCH_INTERVAL_MS = 2000;
-const STARKNET_WATCH_MAX_ATTEMPTS = 30;
+// up to 3 minutes for an incoming WBTC transfer indexed by Apibara. The window
+// must cover Sepolia block time + Apibara indexing latency + user reaction
+// time to send the tx from an external wallet.
+const STARKNET_WATCH_INTERVAL_MS = 3000;
+const STARKNET_WATCH_MAX_ATTEMPTS = 60;
 
 @Injectable({
   providedIn: 'root',
