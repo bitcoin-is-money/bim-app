@@ -1,6 +1,6 @@
 import {Account, AccountId, type AccountStatus, CredentialId, StarknetAddress} from "@bim/domain/account";
 import {vi} from "vitest";
-import type {AccountRepository, SessionRepository} from "../src/ports";
+import type {AccountRepository, ChallengeRepository, SessionRepository, TransactionManager, WebAuthnGateway} from "../src/ports";
 
 export function createAccountRepoMock(): AccountRepository {
   return {
@@ -24,6 +24,30 @@ export function createSessionRepoMock(): SessionRepository {
     findByAccountId: vi.fn(),
     delete: vi.fn(),
     deleteByAccountId: vi.fn(),
+  }
+}
+
+export function createChallengeRepoMock(): ChallengeRepository {
+  return {
+    save: vi.fn(),
+    findById: vi.fn(),
+    consumeById: vi.fn(),
+    findByChallenge: vi.fn(),
+    delete: vi.fn(),
+  }
+}
+
+export function createWebAuthnGatewayMock(): WebAuthnGateway {
+  return {
+    verifyRegistration: vi.fn(),
+    verifyAuthentication: vi.fn(),
+  }
+}
+
+export function createTransactionManagerMock(): TransactionManager {
+  return {
+    // Pass-through: just await the function inline (no real transaction in unit tests)
+    execute: vi.fn(async (fn: () => Promise<unknown>) => fn()) as TransactionManager['execute'],
   }
 }
 

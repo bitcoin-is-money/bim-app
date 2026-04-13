@@ -557,4 +557,243 @@ describe('SwapService', () => {
       ).rejects.toThrow(SwapNotFoundError);
     });
   });
+
+  // =========================================================================
+  // createLightningToStarknet (forward)
+  // =========================================================================
+
+  describe('createLightningToStarknet', () => {
+    const SWAP_ID = '660e8400-e29b-41d4-a716-446655440099';
+    const limits = {minSats: 1_000n, maxSats: 1_000_000n, baseFeeSats: 100n, feePercent: 1};
+
+    it('creates and persists a Lightning swap on happy path', async () => {
+      vi.mocked(gateway.getLightningToStarknetLimits).mockResolvedValue(limits);
+      vi.mocked(gateway.createLightningToStarknetSwap).mockResolvedValue({
+        swapId: SWAP_ID,
+        invoice: VALID_INVOICE,
+        expiresAt: new Date(Date.now() + 30 * 60_000),
+      });
+
+      const result = await service.createLightningToStarknet({
+        amount: Amount.ofSatoshi(50_000n),
+        destinationAddress: DESTINATION_ADDRESS,
+        description: 'test',
+        accountId: ACCOUNT_ID,
+      });
+
+      expect(result.invoice).toBe(VALID_INVOICE);
+      expect(repository.save).toHaveBeenCalledOnce();
+    });
+
+    it('throws SwapAmountError if amount below limits', async () => {
+      vi.mocked(gateway.getLightningToStarknetLimits).mockResolvedValue(limits);
+
+      await expect(
+        service.createLightningToStarknet({
+          amount: Amount.ofSatoshi(500n), // below min
+          destinationAddress: DESTINATION_ADDRESS,
+          description: 'test',
+          accountId: ACCOUNT_ID,
+        }),
+      ).rejects.toThrow(); // SwapAmountError
+      expect(gateway.createLightningToStarknetSwap).not.toHaveBeenCalled();
+    });
+
+    it('throws SwapCreationError if invoice is missing', async () => {
+      vi.mocked(gateway.getLightningToStarknetLimits).mockResolvedValue(limits);
+      vi.mocked(gateway.createLightningToStarknetSwap).mockResolvedValue({
+        swapId: SWAP_ID,
+        invoice: '',
+        expiresAt: new Date(),
+      });
+
+      await expect(
+        service.createLightningToStarknet({
+          amount: Amount.ofSatoshi(50_000n),
+          destinationAddress: DESTINATION_ADDRESS,
+          description: 'test',
+          accountId: ACCOUNT_ID,
+        }),
+      ).rejects.toThrow(SwapCreationError);
+    });
+  });
+
+  // =========================================================================
+  // prepareBitcoinToStarknet (forward)
+  // =========================================================================
+
+  describe('prepareBitcoinToStarknet', () => {
+    const SWAP_ID = '660e8400-e29b-41d4-a716-446655440098';
+    const limits = {minSats: 10_000n, maxSats: 10_000_000n, baseFeeSats: 100n, feePercent: 1};
+
+    it('returns swapId + commit calls + expiry on happy path', async () => {
+      const expiresAt = new Date(Date.now() + 60_000);
+      vi.mocked(gateway.getBitcoinToStarknetLimits).mockResolvedValue(limits);
+      vi.mocked(gateway.prepareBitcoinToStarknetSwap).mockResolvedValue({
+        swapId: SWAP_ID,
+        commitCalls: [{contractAddress: '0xescrow', entrypoint: 'commit', calldata: []}],
+        expiresAt,
+      });
+
+      const result = await service.prepareBitcoinToStarknet({
+        amount: Amount.ofSatoshi(500_000n),
+        destinationAddress: DESTINATION_ADDRESS,
+        description: 'test',
+        accountId: ACCOUNT_ID,
+      });
+
+      expect(result.swapId).toBe(SWAP_ID);
+      expect(result.commitCalls).toHaveLength(1);
+      expect(result.expiresAt).toBe(expiresAt);
+      expect(repository.save).not.toHaveBeenCalled(); // persisted later via saveBitcoinCommit
+    });
+
+    it('throws SwapAmountError if amount above limits', async () => {
+      vi.mocked(gateway.getBitcoinToStarknetLimits).mockResolvedValue(limits);
+
+      await expect(
+        service.prepareBitcoinToStarknet({
+          amount: Amount.ofSatoshi(50_000_000n), // above max
+          destinationAddress: DESTINATION_ADDRESS,
+          description: 'test',
+          accountId: ACCOUNT_ID,
+        }),
+      ).rejects.toThrow(); // SwapAmountError
+    });
+  });
+
+  // =========================================================================
+  // createStarknetToLightning (reverse)
+  // =========================================================================
+
+  describe('createStarknetToLightning', () => {
+    const SWAP_ID = '660e8400-e29b-41d4-a716-446655440097';
+    const limits = {minSats: 1_000n, maxSats: 1_000_000n, baseFeeSats: 100n, feePercent: 1};
+
+    it('creates and persists a reverse Lightning swap on happy path', async () => {
+      vi.mocked(gateway.getStarknetToLightningLimits).mockResolvedValue(limits);
+      vi.mocked(gateway.createStarknetToLightningSwap).mockResolvedValue({
+        swapId: SWAP_ID,
+        amountSats: 50_000n,
+        commitCalls: [{contractAddress: '0xescrow', entrypoint: 'commit', calldata: []}],
+        expiresAt: new Date(Date.now() + 30 * 60_000),
+      });
+
+      const result = await service.createStarknetToLightning({
+        invoice: VALID_INVOICE,
+        sourceAddress: DESTINATION_ADDRESS,
+        description: 'test',
+        accountId: ACCOUNT_ID,
+      });
+
+      expect(result.amount.getSat()).toBe(50_000n);
+      expect(result.commitCalls).toHaveLength(1);
+      expect(repository.save).toHaveBeenCalledOnce();
+    });
+
+    it('throws SwapCreationError if commit calls are empty', async () => {
+      vi.mocked(gateway.getStarknetToLightningLimits).mockResolvedValue(limits);
+      vi.mocked(gateway.createStarknetToLightningSwap).mockResolvedValue({
+        swapId: SWAP_ID,
+        amountSats: 50_000n,
+        commitCalls: [],
+        expiresAt: new Date(),
+      });
+
+      await expect(
+        service.createStarknetToLightning({
+          invoice: VALID_INVOICE,
+          sourceAddress: DESTINATION_ADDRESS,
+          description: 'test',
+          accountId: ACCOUNT_ID,
+        }),
+      ).rejects.toThrow(SwapCreationError);
+    });
+  });
+
+  // =========================================================================
+  // createStarknetToBitcoin (reverse)
+  // =========================================================================
+
+  describe('createStarknetToBitcoin', () => {
+    const SWAP_ID = '660e8400-e29b-41d4-a716-446655440096';
+    const limits = {minSats: 10_000n, maxSats: 10_000_000n, baseFeeSats: 100n, feePercent: 1};
+
+    it('creates and persists a reverse Bitcoin swap on happy path', async () => {
+      vi.mocked(gateway.getStarknetToBitcoinLimits).mockResolvedValue(limits);
+      vi.mocked(gateway.createStarknetToBitcoinSwap).mockResolvedValue({
+        swapId: SWAP_ID,
+        amountSats: 500_000n,
+        commitCalls: [{contractAddress: '0xescrow', entrypoint: 'commit', calldata: []}],
+        expiresAt: new Date(Date.now() + 30 * 60_000),
+      });
+
+      const result = await service.createStarknetToBitcoin({
+        amount: Amount.ofSatoshi(500_000n),
+        destinationAddress: 'bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4',
+        sourceAddress: DESTINATION_ADDRESS,
+        description: 'test',
+        accountId: ACCOUNT_ID,
+      });
+
+      expect(result.amount.getSat()).toBe(500_000n);
+      expect(repository.save).toHaveBeenCalledOnce();
+    });
+
+    it('throws SwapCreationError if commit calls are empty', async () => {
+      vi.mocked(gateway.getStarknetToBitcoinLimits).mockResolvedValue(limits);
+      vi.mocked(gateway.createStarknetToBitcoinSwap).mockResolvedValue({
+        swapId: SWAP_ID,
+        amountSats: 500_000n,
+        commitCalls: [],
+        expiresAt: new Date(),
+      });
+
+      await expect(
+        service.createStarknetToBitcoin({
+          amount: Amount.ofSatoshi(500_000n),
+          destinationAddress: 'bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4',
+          sourceAddress: DESTINATION_ADDRESS,
+          description: 'test',
+          accountId: ACCOUNT_ID,
+        }),
+      ).rejects.toThrow(SwapCreationError);
+    });
+  });
+
+  // =========================================================================
+  // fetchLimits
+  // =========================================================================
+
+  describe('fetchLimits', () => {
+    const limits = {minSats: 1_000n, maxSats: 1_000_000n, baseFeeSats: 100n, feePercent: 1};
+
+    it('dispatches lightning_to_starknet to the right gateway method', async () => {
+      vi.mocked(gateway.getLightningToStarknetLimits).mockResolvedValue(limits);
+      const result = await service.fetchLimits({direction: 'lightning_to_starknet'});
+      expect(result.limits).toBe(limits);
+      expect(gateway.getLightningToStarknetLimits).toHaveBeenCalledOnce();
+    });
+
+    it('dispatches bitcoin_to_starknet to the right gateway method', async () => {
+      vi.mocked(gateway.getBitcoinToStarknetLimits).mockResolvedValue(limits);
+      const result = await service.fetchLimits({direction: 'bitcoin_to_starknet'});
+      expect(result.limits).toBe(limits);
+      expect(gateway.getBitcoinToStarknetLimits).toHaveBeenCalledOnce();
+    });
+
+    it('dispatches starknet_to_lightning to the right gateway method', async () => {
+      vi.mocked(gateway.getStarknetToLightningLimits).mockResolvedValue(limits);
+      const result = await service.fetchLimits({direction: 'starknet_to_lightning'});
+      expect(result.limits).toBe(limits);
+      expect(gateway.getStarknetToLightningLimits).toHaveBeenCalledOnce();
+    });
+
+    it('dispatches starknet_to_bitcoin to the right gateway method', async () => {
+      vi.mocked(gateway.getStarknetToBitcoinLimits).mockResolvedValue(limits);
+      const result = await service.fetchLimits({direction: 'starknet_to_bitcoin'});
+      expect(result.limits).toBe(limits);
+      expect(gateway.getStarknetToBitcoinLimits).toHaveBeenCalledOnce();
+    });
+  });
 });

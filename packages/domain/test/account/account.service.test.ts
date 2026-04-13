@@ -122,6 +122,49 @@ describe('AccountService', () => {
 
       expect(mockPaymasterGateway.executeTransaction).not.toHaveBeenCalled();
     });
+
+    describe('recoverStuckDeployment (account stuck in deploying)', () => {
+      it('marks as deployed when tx confirmed on-chain', async () => {
+        const account = createAccount('deploying', accountId, starknetAddress);
+        vi.mocked(mockAccountRepo.findById).mockResolvedValue(account);
+        vi.mocked(mockStarknetGateway.waitForTransaction).mockResolvedValue({} as never);
+        vi.mocked(mockStarknetGateway.isDeployed).mockResolvedValue(true);
+
+        const result = await service.deploy({accountId});
+
+        expect(result.account.getStatus()).toBe('deployed');
+        expect(result.txHash).toBe('0xtx');
+        expect(mockPaymasterGateway.executeTransaction).not.toHaveBeenCalled();
+      });
+
+      it('marks as failed and throws when tx fails on-chain', async () => {
+        const account = createAccount('deploying', accountId, starknetAddress);
+        vi.mocked(mockAccountRepo.findById).mockResolvedValue(account);
+        vi.mocked(mockStarknetGateway.waitForTransaction).mockRejectedValue(new Error('reverted'));
+
+        let caught: unknown;
+        try {
+          await service.deploy({accountId});
+        } catch (err) {
+          caught = err;
+        }
+
+        expect(caught).toBeInstanceOf(InvalidAccountStateError);
+        expect(account.getStatus()).toBe('failed');
+        expect(mockAccountRepo.save).toHaveBeenCalledWith(account);
+      });
+
+      it('marks as failed and throws when tx confirmed but contract not deployed', async () => {
+        const account = createAccount('deploying', accountId, starknetAddress);
+        vi.mocked(mockAccountRepo.findById).mockResolvedValue(account);
+        vi.mocked(mockStarknetGateway.waitForTransaction).mockResolvedValue({} as never);
+        vi.mocked(mockStarknetGateway.isDeployed).mockResolvedValue(false);
+
+        await expect(service.deploy({accountId})).rejects.toThrow(InvalidAccountStateError);
+
+        expect(account.getStatus()).toBe('failed');
+      });
+    });
   });
 
   describe('getBalance', () => {
