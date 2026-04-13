@@ -87,7 +87,6 @@
     "eslint-plugin-security": "^4.0.0",
     "lockfile-lint": "^5.0.0",
     "patch-package": "^8.0.1",
-    "postinstall-postinstall": "^2.1.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.56.1",
