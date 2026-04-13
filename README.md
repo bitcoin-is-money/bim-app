@@ -7,13 +7,13 @@ BIM lets anyone send and receive Bitcoin — on-chain, on the Lightning
 Network, or as WBTC on Starknet — using nothing but a passkey. No seed
 phrase to write down. No browser extension. No gas to pre-fund.
 
+[![CI](https://github.com/bitcoin-is-money/bim-app/actions/workflows/ci.yml/badge.svg)](https://github.com/bitcoin-is-money/bim-app/actions/workflows/ci.yml)
+[![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=bitcoin-is-money_bim&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=bitcoin-is-money_bim)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=bitcoin-is-money_bim&metric=coverage)](https://sonarcloud.io/summary/new_code?id=bitcoin-is-money_bim)
+[![Maintainability](https://sonarcloud.io/api/project_badges/measure?project=bitcoin-is-money_bim&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=bitcoin-is-money_bim)
+[![Reliability](https://sonarcloud.io/api/project_badges/measure?project=bitcoin-is-money_bim&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=bitcoin-is-money_bim)
+[![Security](https://sonarcloud.io/api/project_badges/measure?project=bitcoin-is-money_bim&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=bitcoin-is-money_bim)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
-[![Node.js](https://img.shields.io/badge/node-%3E%3D22-brightgreen.svg)](.nvmrc)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue.svg)](https://www.typescriptlang.org/)
-[![Angular](https://img.shields.io/badge/Angular-21-red.svg)](https://angular.dev/)
-[![Hono](https://img.shields.io/badge/Hono-4-orange.svg)](https://hono.dev/)
-[![Code of Conduct](https://img.shields.io/badge/Code%20of-Conduct-ff69b4.svg)](CODE_OF_CONDUCT.md)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 ## Why BIM?
 
