@@ -1,4 +1,4 @@
-import {AccountId} from '@bim/domain/account';
+import {AccountId, type StarknetAddress} from '@bim/domain/account';
 import type {BitcoinReceiveResult, ReceiveResult} from '@bim/domain/payment';
 import type {StarknetCall} from '@bim/domain/ports';
 import {Amount, InsufficientBalanceError} from '@bim/domain/shared';
@@ -6,6 +6,7 @@ import {TransactionHash} from '@bim/domain/user';
 import type {TypedResponse} from 'hono';
 import {Hono} from 'hono';
 import {randomUUID} from 'node:crypto';
+import type {Logger} from 'pino';
 
 import {WebAuthnSignatureProcessor} from '../../../adapters';
 import type {AppContext} from '../../../app-context';
@@ -73,107 +74,18 @@ export function createReceiveRoutes(
       // Bitcoin two-phase flow: build commit typed data for WebAuthn signing
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive: guard against future ReceiveResult variants
       if (result.network === 'bitcoin' && 'status' in result && result.status === 'pending_commit') {
-        // Extract approve amount from commitCalls (for error enrichment + auto-swap)
-        const approveInfo = extractApproveAmount(result.commitCalls);
-
-        // Auto-swap WBTC → STRK if the account lacks sufficient STRK for the commit
-        let finalCalls: StarknetCall[] = [...result.commitCalls];
-        const {strkTokenAddress} = appContext.starknetConfig;
-
-        if (approveInfo?.tokenAddress.toLowerCase() === strkTokenAddress.toLowerCase()) {
-          const strkBalance = await appContext.gateways.starknet.getBalance({
-            address: starknetAddress,
-            token: 'STRK',
-          });
-          const rawDeficit = approveInfo.amount - strkBalance;
-
-          if (rawDeficit > 0n) {
-            // Add 10% buffer, round up to whole STRK, enforce minimum to avoid
-            // DEX "insufficient input amount" errors on tiny swaps.
-            const ONE_STRK = 10n ** 18n;
-            const MIN_SWAP = 50n * ONE_STRK; // 50 STRK — below this, DEX pools round to 0
-            const deficitWithBuffer = (rawDeficit * 110n) / 100n;
-            const rounded = ((deficitWithBuffer + ONE_STRK - 1n) / ONE_STRK) * ONE_STRK;
-            const deficit = rounded < MIN_SWAP ? MIN_SWAP : rounded;
-            log.info({
-              requiredStrk: approveInfo.amount.toString(),
-              currentStrk: strkBalance.toString(),
-              deficit: deficit.toString(),
-            }, 'STRK deficit detected, auto-swapping WBTC → STRK');
-
-            const swapResult = await appContext.gateways.dex.getSwapCalls({
-              sellToken: appContext.starknetConfig.wbtcTokenAddress,
-              buyToken: strkTokenAddress,
-              buyAmount: deficit,
-              takerAddress: starknetAddress.toString(),
-            });
-
-            log.info({
-              sellAmount: swapResult.sellAmount.toString(),
-              buyAmount: swapResult.buyAmount.toString(),
-              swapCallCount: swapResult.calls.length,
-            }, 'AVNU swap calls obtained, prepending to commit calls');
-
-            // Pre-check: verify the account has enough WBTC to cover the auto-swap
-            const wbtcBalance = await appContext.gateways.starknet.getBalance({
-              address: starknetAddress,
-              token: 'WBTC',
-            });
-            if (wbtcBalance < swapResult.sellAmount) {
-              log.warn({
-                requiredWbtc: swapResult.sellAmount.toString(),
-                currentWbtc: wbtcBalance.toString(),
-                securityDepositStrk: approveInfo.amount.toString(),
-              }, 'Insufficient WBTC balance to cover security deposit auto-swap');
-              throw new InsufficientBalanceError(
-                swapResult.sellAmount, appContext.starknetConfig.wbtcTokenAddress, 'security_deposit', 'WBTC', 8,
-              );
-            }
-
-            finalCalls = [...swapResult.calls, ...result.commitCalls];
-          }
-        }
-
-        // Build typed data via AVNU paymaster
-        let buildResult: {typedData: unknown; messageHash: string};
-        try {
-          buildResult = await appContext.gateways.starknet.buildCalls({
-            senderAddress: starknetAddress,
-            calls: finalCalls,
-          });
-        } catch (err) {
-          if (err instanceof InsufficientBalanceError && approveInfo) {
-            throw new InsufficientBalanceError(approveInfo.amount, approveInfo.tokenAddress, 'security_deposit', 'STRK', 18);
-          }
-          throw err;
-        }
-
-        const {typedData, messageHash} = buildResult;
-
-        // Cache for the commit step
-        const buildId = randomUUID();
-        buildCache.set(buildId, {
-          swapId: result.swapId,
-          typedData,
-          senderAddress: starknetAddress,
+        const response = await handlePendingCommit({
+          appContext,
+          buildCache,
+          log,
+          result,
+          starknetAddress,
           accountId: account.id,
-          amount: result.amount,
-          expiresAt: result.expiresAt,
+          credentialId: account.credentialId,
           description,
           useUriPrefix: input.useUriPrefix,
-          createdAt: Date.now(),
         });
-
-        return honoCtx.json<BitcoinReceivePendingCommitResponse>({
-          network: 'bitcoin',
-          status: 'pending_commit',
-          buildId,
-          messageHash,
-          credentialId: account.credentialId,
-          swapId: result.swapId,
-          amount: {value: Number(result.amount.getSat()), currency: 'SAT'},
-          expiresAt: result.expiresAt.toISOString(),
-        });
+        return honoCtx.json<BitcoinReceivePendingCommitResponse>(response);
       }
 
       swapMonitor?.ensureRunning();
@@ -263,6 +175,158 @@ export function createReceiveRoutes(
   });
 
   return app;
+}
+
+// =============================================================================
+// Bitcoin two-phase commit preparation
+// =============================================================================
+
+interface PendingCommitResult {
+  readonly network: 'bitcoin';
+  readonly status: 'pending_commit';
+  readonly swapId: string;
+  readonly amount: Amount;
+  readonly expiresAt: Date;
+  readonly commitCalls: readonly StarknetCall[];
+}
+
+interface HandlePendingCommitDeps {
+  appContext: AppContext;
+  buildCache: ReceiveBuildCache;
+  log: Logger;
+  result: PendingCommitResult;
+  starknetAddress: StarknetAddress;
+  accountId: string;
+  credentialId: string;
+  description: string | undefined;
+  useUriPrefix: boolean;
+}
+
+async function handlePendingCommit(deps: HandlePendingCommitDeps): Promise<BitcoinReceivePendingCommitResponse> {
+  const {appContext, buildCache, log, result, starknetAddress, accountId, credentialId, description, useUriPrefix} = deps;
+
+  // Extract approve amount from commitCalls (for error enrichment + auto-swap)
+  const approveInfo = extractApproveAmount(result.commitCalls);
+
+  // Auto-swap WBTC → STRK if the account lacks sufficient STRK for the commit
+  const finalCalls = await maybePrependAutoSwapCalls({appContext, log, result, starknetAddress, approveInfo});
+
+  // Build typed data via AVNU paymaster
+  const {typedData, messageHash} = await buildCommitTypedData(appContext, starknetAddress, finalCalls, approveInfo);
+
+  // Cache for the commit step
+  const buildId = randomUUID();
+  buildCache.set(buildId, {
+    swapId: result.swapId,
+    typedData,
+    senderAddress: starknetAddress,
+    accountId,
+    amount: result.amount,
+    expiresAt: result.expiresAt,
+    description,
+    useUriPrefix,
+    createdAt: Date.now(),
+  });
+
+  return {
+    network: 'bitcoin',
+    status: 'pending_commit',
+    buildId,
+    messageHash,
+    credentialId,
+    swapId: result.swapId,
+    amount: {value: Number(result.amount.getSat()), currency: 'SAT'},
+    expiresAt: result.expiresAt.toISOString(),
+  };
+}
+
+interface MaybeAutoSwapDeps {
+  appContext: AppContext;
+  log: Logger;
+  result: PendingCommitResult;
+  starknetAddress: StarknetAddress;
+  approveInfo: ReturnType<typeof extractApproveAmount>;
+}
+
+async function maybePrependAutoSwapCalls(deps: MaybeAutoSwapDeps): Promise<StarknetCall[]> {
+  const {appContext, log, result, starknetAddress, approveInfo} = deps;
+  const {strkTokenAddress} = appContext.starknetConfig;
+
+  if (approveInfo?.tokenAddress.toLowerCase() !== strkTokenAddress.toLowerCase()) {
+    return [...result.commitCalls];
+  }
+
+  const strkBalance = await appContext.gateways.starknet.getBalance({
+    address: starknetAddress,
+    token: 'STRK',
+  });
+  const rawDeficit = approveInfo.amount - strkBalance;
+  if (rawDeficit <= 0n) {
+    return [...result.commitCalls];
+  }
+
+  // Add 10% buffer, round up to whole STRK, enforce minimum to avoid
+  // DEX "insufficient input amount" errors on tiny swaps.
+  const ONE_STRK = 10n ** 18n;
+  const MIN_SWAP = 50n * ONE_STRK; // 50 STRK — below this, DEX pools round to 0
+  const deficitWithBuffer = (rawDeficit * 110n) / 100n;
+  const rounded = ((deficitWithBuffer + ONE_STRK - 1n) / ONE_STRK) * ONE_STRK;
+  const deficit = rounded < MIN_SWAP ? MIN_SWAP : rounded; // NOSONAR S7766 - Math.max does not support BigInt
+  log.info({
+    requiredStrk: approveInfo.amount.toString(),
+    currentStrk: strkBalance.toString(),
+    deficit: deficit.toString(),
+  }, 'STRK deficit detected, auto-swapping WBTC → STRK');
+
+  const swapResult = await appContext.gateways.dex.getSwapCalls({
+    sellToken: appContext.starknetConfig.wbtcTokenAddress,
+    buyToken: strkTokenAddress,
+    buyAmount: deficit,
+    takerAddress: starknetAddress.toString(),
+  });
+
+  log.info({
+    sellAmount: swapResult.sellAmount.toString(),
+    buyAmount: swapResult.buyAmount.toString(),
+    swapCallCount: swapResult.calls.length,
+  }, 'AVNU swap calls obtained, prepending to commit calls');
+
+  // Pre-check: verify the account has enough WBTC to cover the auto-swap
+  const wbtcBalance = await appContext.gateways.starknet.getBalance({
+    address: starknetAddress,
+    token: 'WBTC',
+  });
+  if (wbtcBalance < swapResult.sellAmount) {
+    log.warn({
+      requiredWbtc: swapResult.sellAmount.toString(),
+      currentWbtc: wbtcBalance.toString(),
+      securityDepositStrk: approveInfo.amount.toString(),
+    }, 'Insufficient WBTC balance to cover security deposit auto-swap');
+    throw new InsufficientBalanceError(
+      swapResult.sellAmount, appContext.starknetConfig.wbtcTokenAddress, 'security_deposit', 'WBTC', 8,
+    );
+  }
+
+  return [...swapResult.calls, ...result.commitCalls];
+}
+
+async function buildCommitTypedData(
+  appContext: AppContext,
+  starknetAddress: StarknetAddress,
+  calls: StarknetCall[],
+  approveInfo: ReturnType<typeof extractApproveAmount>,
+): Promise<{typedData: unknown; messageHash: string}> {
+  try {
+    return await appContext.gateways.starknet.buildCalls({
+      senderAddress: starknetAddress,
+      calls,
+    });
+  } catch (err) {
+    if (err instanceof InsufficientBalanceError && approveInfo) {
+      throw new InsufficientBalanceError(approveInfo.amount, approveInfo.tokenAddress, 'security_deposit', 'STRK', 18);
+    }
+    throw err;
+  }
 }
 
 // =============================================================================

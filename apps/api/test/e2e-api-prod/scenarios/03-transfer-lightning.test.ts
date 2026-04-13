@@ -130,7 +130,7 @@ describe('Scenario 03 — Lightning Transfer', () => {
     throw new Error(`Swap did not complete after ${maxAttempts * intervalMs / 1_000}s`);
   });
 
-  it('records balances after transfer', async () => {
+  it('records balances after transfer', async () => { // NOSONAR S2699 - scenario setup step; assertions happen in subsequent `it` blocks
     await ctx.pair.sender.ensureSessionAlive(log);
     await ctx.pair.receiver.ensureSessionAlive(log);
     await ctx.pair.sender.fetchBalance();

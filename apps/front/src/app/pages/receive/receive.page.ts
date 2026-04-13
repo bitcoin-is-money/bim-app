@@ -113,7 +113,7 @@ export class ReceivePage {
 
       this.qrData.set(data);
       // @review-accepted: renderSVG from uqr produces pure SVG rectangles, data comes from server response
-      this.qrSvg.set(this.sanitizer.bypassSecurityTrustHtml(renderSVG(data)));
+      this.qrSvg.set(this.sanitizer.bypassSecurityTrustHtml(renderSVG(data))); // NOSONAR S6268 - tracked for refactor to safe template-rendered SVG (uqr.encode + Angular bindings)
     });
   }
 

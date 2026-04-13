@@ -117,57 +117,16 @@ export class SwapMonitor {
       const activeSwaps = await this.swapService.getActiveSwaps();
 
       if (activeSwaps.length === 0) {
-        this.knownActiveSwapIds.clear();
-        this.idleIterations++;
-        if (this.idleIterations >= this.config.maxIdleIterations) {
-          this.log.info({idleIterations: this.idleIterations}, 'No active swaps, auto-stopping SwapMonitor');
-          this.iterating = false;
-          await this.stop();
-          return;
-        }
+        await this.handleIdleIteration();
         return;
       }
 
       this.idleIterations = 0;
-      const currentIds = new Set<SwapId>(activeSwaps.map(s => s.data.id));
-      const newIds = [...currentIds].filter(id => !this.knownActiveSwapIds.has(id));
-      if (newIds.length > 0) {
-        this.log.info(
-          {count: activeSwaps.length, newSwapIds: newIds},
-          'New active swap(s) detected',
-        );
-      }
-      for (const id of this.knownActiveSwapIds) {
-        if (!currentIds.has(id)) {
-          this.knownActiveSwapIds.delete(id);
-        }
-      }
-      for (const id of newIds) {
-        this.knownActiveSwapIds.add(id);
-      }
+      this.trackActiveSwaps(activeSwaps);
       await this.keepaliveIfNeeded(activeSwaps.length);
 
       for (const swap of activeSwaps) {
-        try {
-          const {swap: syncedSwap, status} = await this.swapService.fetchStatus({
-            swapId: swap.data.id,
-            accountId: swap.data.accountId,
-          });
-          this.log.debug({swapId: swap.data.id, status}, 'Swap status');
-
-          // Auto-claim forward swaps (Bitcoin/Lightning → Starknet) when claimable.
-          // The backend account submits the claim tx and receives the claimer bounty.
-          // Without this, the watchtower claims and the user loses the bounty.
-          if (status === 'claimable' && syncedSwap.isForward() && this.canClaim(syncedSwap)) {
-            await this.claimSwap(syncedSwap.data.id);
-          }
-        } catch (err) {
-          // Individual swap errors are non-fatal — continue with the next swap
-          this.log.warn({
-            swapId: swap.data.id,
-            cause: err instanceof Error ? err.message : String(err),
-          }, 'Unexpected behavior processing swap, skipping');
-        }
+        await this.processActiveSwap(swap);
       }
     } catch (err) {
       this.log.error(
@@ -176,6 +135,58 @@ export class SwapMonitor {
       );
     } finally {
       this.iterating = false;
+    }
+  }
+
+  private async handleIdleIteration(): Promise<void> {
+    this.knownActiveSwapIds.clear();
+    this.idleIterations++;
+    if (this.idleIterations >= this.config.maxIdleIterations) {
+      this.log.info({idleIterations: this.idleIterations}, 'No active swaps, auto-stopping SwapMonitor');
+      this.iterating = false;
+      await this.stop();
+    }
+  }
+
+  private trackActiveSwaps(activeSwaps: Swap[]): void {
+    const currentIds = new Set<SwapId>(activeSwaps.map(s => s.data.id));
+    const newIds = [...currentIds].filter(id => !this.knownActiveSwapIds.has(id));
+    if (newIds.length > 0) {
+      this.log.info(
+        {count: activeSwaps.length, newSwapIds: newIds},
+        'New active swap(s) detected',
+      );
+    }
+    for (const id of this.knownActiveSwapIds) {
+      if (!currentIds.has(id)) {
+        this.knownActiveSwapIds.delete(id);
+      }
+    }
+    for (const id of newIds) {
+      this.knownActiveSwapIds.add(id);
+    }
+  }
+
+  private async processActiveSwap(swap: Swap): Promise<void> {
+    try {
+      const {swap: syncedSwap, status} = await this.swapService.fetchStatus({
+        swapId: swap.data.id,
+        accountId: swap.data.accountId,
+      });
+      this.log.debug({swapId: swap.data.id, status}, 'Swap status');
+
+      // Auto-claim forward swaps (Bitcoin/Lightning → Starknet) when claimable.
+      // The backend account submits the claim tx and receives the claimer bounty.
+      // Without this, the watchtower claims and the user loses the bounty.
+      if (status === 'claimable' && syncedSwap.isForward() && this.canClaim(syncedSwap)) {
+        await this.claimSwap(syncedSwap.data.id);
+      }
+    } catch (err) {
+      // Individual swap errors are non-fatal — continue with the next swap
+      this.log.warn({
+        swapId: swap.data.id,
+        cause: err instanceof Error ? err.message : String(err),
+      }, 'Unexpected behavior processing swap, skipping');
     }
   }
 

@@ -9,7 +9,7 @@ printable_colours=256
 
 # Return a colour that contrasts with the given colour
 function contrast_colour {
-  local r g b luminance
+  local colour g
   colour="$1"
 
   if (( colour < 16 )); then
@@ -25,24 +25,27 @@ function contrast_colour {
   # 6x6x6 colour cube = 16 + 36*R + 6*G + B
   g=$(( ((colour-16) % 36) / 6 ))
   (( g > 2)) && printf "0" || printf "15"
+  return
 }
 
 # Print a coloured block with the number of that colour
 function print_colour {
   local colour="$1" contrast
-  contrast=$(contrast_colour "$1")
+  contrast=$(contrast_colour "$colour")
   printf "\e[48;5;%sm" "$colour"                # Start block of colour
   printf "\e[38;5;%sm%3d" "$contrast" "$colour"  # In contrast, print number
   printf "\e[0m "                                # Reset colour
+  return
 }
 
 # Starting at $1, print a run of $2 colours
 function print_run {
-  local i
-  for (( i = "$1"; i < "$1" + "$2" && i < printable_colours; i++ )); do
+  local start="$1" count="$2" i
+  for (( i = start; i < start + count && i < printable_colours; i++ )); do
     print_colour "$i"
   done
   printf " "
+  return
 }
 
 # Print blocks of colours
@@ -64,6 +67,7 @@ function print_blocks {
       printf "\n"
     done
   done
+  return
 }
 
 echo "=== 16 Standard Colors ==="

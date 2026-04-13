@@ -86,7 +86,7 @@ export class CurrencyService implements OnDestroy {
     this.currencyHttp.fetchRates().subscribe({
       next: (prices) => {
         this._rates.set({prices});
-        this._supportedCurrencies.set(Object.keys(prices).sort());
+        this._supportedCurrencies.set(Object.keys(prices).sort((a, b) => a.localeCompare(b)));
       }
     });
   }

@@ -74,46 +74,53 @@ function mapNegativeState(
 ): AtomiqSwapStatusFlags {
   switch (direction) {
     case 'lightning_to_starknet':
-      // -1 HTLC EXPIRED: destination HTLC past its safe-claim window —
-      //    the LP will refund the payer, BIM cannot recover the swap.
-      // -2 QUOTE_SOFT_EXPIRED: LP authorization expired but the swap
-      //    may still be revived via SDK _sync().
-      // -3 QUOTE_EXPIRED: definitive quote expiration.
-      // -4 FAILED: user never settled the HTLC on the destination.
-      if (state === -1 || state === -4) return {...NEUTRAL, isFailed: true};
-      if (state === -2) return NEUTRAL;
-      if (state === -3) return {...NEUTRAL, isExpired: true};
-      return {...NEUTRAL, isFailed: true};
-
+      return mapLightningToStarknetNegative(state);
     case 'bitcoin_to_starknet':
-      // -1 QUOTE_SOFT_EXPIRED: still recoverable.
-      // -2 QUOTE_EXPIRED: definitive.
-      // -3 EXPIRED: BTC swap address expired but LP has not yet
-      //    refunded; an in-flight BTC tx may still land. Surface as
-      //    "expired" — Swap.isTerminal() keeps bitcoin_to_starknet in
-      //    the active set on expired so the monitor keeps polling.
-      // -4 FAILED: expired AND the LP already refunded its own funds.
-      if (state === -1) return NEUTRAL;
-      if (state === -2 || state === -3) return {...NEUTRAL, isExpired: true};
-      if (state === -4) return {...NEUTRAL, isFailed: true};
-      return {...NEUTRAL, isFailed: true};
-
+      return mapBitcoinToStarknetNegative(state);
     case 'starknet_to_lightning':
     case 'starknet_to_bitcoin':
-      // -1 QUOTE_SOFT_EXPIRED: BIM submits the commit externally via
-      //    the AVNU paymaster, so the SDK lags until _sync() detects
-      //    the on-chain commit. Stay neutral to avoid premature expiry.
-      // -2 QUOTE_EXPIRED: definitive.
-      // -3 REFUNDED: LP refunded the escrow on the source chain.
-      if (state === -1) return NEUTRAL;
-      if (state === -2) return {...NEUTRAL, isExpired: true};
-      if (state === -3) return {...NEUTRAL, isRefunded: true};
-      return {...NEUTRAL, isFailed: true};
-
+      return mapReverseNegative(state);
     default:
       // Conservative fallback when the direction is unknown.
       return {...NEUTRAL, isFailed: state <= -3, isExpired: state > -3};
   }
+}
+
+// -1 HTLC EXPIRED: destination HTLC past its safe-claim window —
+//    the LP will refund the payer, BIM cannot recover the swap.
+// -2 QUOTE_SOFT_EXPIRED: LP authorization expired but the swap
+//    may still be revived via SDK _sync().
+// -3 QUOTE_EXPIRED: definitive quote expiration.
+// -4 FAILED: user never settled the HTLC on the destination.
+function mapLightningToStarknetNegative(state: number): AtomiqSwapStatusFlags {
+  if (state === -2) return NEUTRAL;
+  if (state === -3) return {...NEUTRAL, isExpired: true};
+  return {...NEUTRAL, isFailed: true};
+}
+
+// -1 QUOTE_SOFT_EXPIRED: still recoverable.
+// -2 QUOTE_EXPIRED: definitive.
+// -3 EXPIRED: BTC swap address expired but LP has not yet
+//    refunded; an in-flight BTC tx may still land. Surface as
+//    "expired" — Swap.isTerminal() keeps bitcoin_to_starknet in
+//    the active set on expired so the monitor keeps polling.
+// -4 FAILED: expired AND the LP already refunded its own funds.
+function mapBitcoinToStarknetNegative(state: number): AtomiqSwapStatusFlags {
+  if (state === -1) return NEUTRAL;
+  if (state === -2 || state === -3) return {...NEUTRAL, isExpired: true};
+  return {...NEUTRAL, isFailed: true};
+}
+
+// -1 QUOTE_SOFT_EXPIRED: BIM submits the commit externally via
+//    the AVNU paymaster, so the SDK lags until _sync() detects
+//    the on-chain commit. Stay neutral to avoid premature expiry.
+// -2 QUOTE_EXPIRED: definitive.
+// -3 REFUNDED: LP refunded the escrow on the source chain.
+function mapReverseNegative(state: number): AtomiqSwapStatusFlags {
+  if (state === -1) return NEUTRAL;
+  if (state === -2) return {...NEUTRAL, isExpired: true};
+  if (state === -3) return {...NEUTRAL, isRefunded: true};
+  return {...NEUTRAL, isFailed: true};
 }
 
 function mapNonNegativeState(

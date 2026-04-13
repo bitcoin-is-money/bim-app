@@ -34,6 +34,7 @@ print_matrix() {
     done
     echo
   done
+  return
 }
 
 if $BOLD_ONLY; then

@@ -38,7 +38,6 @@ export class ReceiveService {
    * @throws SwapAmountError if amount is outside swap limits
    * @throws SwapCreationError if invoice/address generation fails
    */
-  // TODO: amount should become optional for all networks (amountless invoices / open deposits)
   async receive(input: ReceivePaymentInput): Promise<ReceiveResult> {
     if (input.network !== 'starknet' && (!input.amount?.isPositive())) {
       throw new InvalidPaymentAmountError(input.network, input.amount?.getSat() ?? 0n);
@@ -71,8 +70,6 @@ export class ReceiveService {
   // ===========================================================================
   // Starknet — generate starknet: URI
   // ===========================================================================
-
-  // TODO: support multiple tokens when the app handles more than WBTC
   private receiveStarknet(address: StarknetAddress, amount?: Amount, useUriPrefix = true, description?: string) {
     const token = this.deps.starknetConfig.wbtcTokenAddress;
     const prefix = useUriPrefix ? 'starknet:' : '';

@@ -137,7 +137,7 @@ git clone https://github.com/bitcoin-is-money/bim.git
 cd bim
 
 # 2. Install workspace dependencies
-npm install
+npm install --ignore-scripts && npx patch-package
 
 # 3. Start PostgreSQL (docker-compose) and push the schema
 npm run db:up

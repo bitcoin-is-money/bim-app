@@ -1,8 +1,7 @@
 import {CommonModule, DatePipe} from '@angular/common';
 import {Component, computed, inject, input} from '@angular/core';
 import {TranslateModule} from '@ngx-translate/core';
-import type {SwapDirection} from '../../../../model';
-import {Amount, Currency, isTerminalStatus, type StoredSwap} from '../../../../model';
+import {Amount, Currency, isTerminalStatus, type StoredSwap, type SwapDirection} from '../../../../model';
 import {CurrencyService} from '../../../../services/currency.service';
 import {I18nService} from '../../../../services/i18n.service';
 import {SwapPollingService} from '../../../../services/swap-polling.service';

@@ -72,7 +72,7 @@ async function createWbtcTransferIndexerInternal(
     setTimeout(() => process.exit(1), 1000);
   });
 
-  const PROGRESS_LOG_INTERVAL_MS = 3600_000;
+  const PROGRESS_LOG_INTERVAL_MS = 3_600_000;
   let lastProgressLog = Date.now();
   let blocksProcessed = 0;
 

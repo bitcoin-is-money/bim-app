@@ -49,7 +49,7 @@ export class ReceiveService {
       network,
       amount,
       ...(description ? {description} : {}),
-      ...(useUriPrefix !== undefined ? {useUriPrefix} : {})
+      ...(useUriPrefix === undefined ? {} : {useUriPrefix})
     };
     this.httpService.createInvoice(request).subscribe({
       next: (response) => {
@@ -172,7 +172,7 @@ function hexToBytes(hex: string): Uint8Array {
   const bytes = new Uint8Array(padded.length / 2);
   for (let i = 0; i < bytes.length; i++) {
     // eslint-disable-next-line security/detect-object-injection -- numeric index on Uint8Array
-    bytes[i] = parseInt(padded.substring(i * 2, i * 2 + 2), 16);
+    bytes[i] = Number.parseInt(padded.substring(i * 2, i * 2 + 2), 16);
   }
   return bytes;
 }

@@ -12,7 +12,7 @@ import {I18nService} from './i18n.service';
 import {NotificationService} from './notification.service';
 import {PwaUpdateService} from './pwa-update.service';
 
-export type {AuthResponse, BeginAuthResponse, BeginRegisterResponse, UserSessionResponse};
+export type {AuthResponse, BeginAuthResponse, BeginRegisterResponse, UserSessionResponse} from './auth.http.service';
 
 /**
  * Session loading is handled by provideAppInitializer in app.config.ts

@@ -99,13 +99,15 @@ describe('SwapMonitor', () => {
       expect(swapService.getActiveSwaps).toHaveBeenCalled();
     });
 
-    it('does not start twice', () => {
+    it('does not start twice', async () => {
       vi.mocked(swapService.getActiveSwaps).mockResolvedValue([]);
 
-      monitor.start();
-      monitor.start(); // second call is a no-op
+      expect(() => {
+        monitor.start();
+        monitor.start(); // second call is a no-op
+      }).not.toThrow();
 
-      monitor.stop();
+      await monitor.stop();
     });
   });
 
@@ -249,7 +251,7 @@ describe('SwapMonitor', () => {
       vi.mocked(swapService.getActiveSwaps).mockResolvedValue([]);
 
       monitor.start();
-      monitor.ensureRunning(); // should not throw or restart
+      expect(() => monitor.ensureRunning()).not.toThrow(); // should not throw or restart
 
       await new Promise(resolve => setTimeout(resolve, 150));
       await monitor.stop();

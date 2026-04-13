@@ -23,7 +23,7 @@ export namespace Language {
   }
 
   export function getSupportedLanguages(): readonly string[] {
-    return [...SUPPORTED_LANGUAGES].sort();
+    return [...SUPPORTED_LANGUAGES].sort((a, b) => a.localeCompare(b));
   }
 }
 

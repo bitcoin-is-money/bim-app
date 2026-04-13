@@ -27,13 +27,13 @@ const payDelay = 3000;
 const receiveDelay = 3000;
 
 function randomDelay(): number {
-  return 100 + Math.random() * 400; // 100-500ms
+  return 100 + Math.random() * 400; // NOSONAR S2245 - simulated network latency in mock backend, not security-sensitive
 }
 
 export const backendInterceptor: HttpInterceptorFn = (
   req: HttpRequest<unknown>,
   next: HttpHandlerFn
-): Observable<HttpEvent<unknown>> => {
+): Observable<HttpEvent<unknown>> => { // NOSONAR S3776 - mock-only dispatcher, not shipped to prod builds
   const url = req.urlWithParams;
   const {method, body} = req;
   let httpFakeDelay = randomDelay();

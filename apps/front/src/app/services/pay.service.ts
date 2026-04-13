@@ -110,7 +110,7 @@ export class PayService {
   }
 
   setDescription(value: string): void {
-    const newDescription = value || null;
+    const newDescription = value === '' ? null : value;
     if (newDescription !== this.description) {
       this.description = newDescription;
       this.cachedBuild = null;
@@ -223,7 +223,7 @@ function hexToBytes(hex: string): Uint8Array {
   const bytes = new Uint8Array(padded.length / 2);
   for (let i = 0; i < bytes.length; i++) {
     // eslint-disable-next-line security/detect-object-injection -- numeric index on Uint8Array
-    bytes[i] = parseInt(padded.substring(i * 2, i * 2 + 2), 16);
+    bytes[i] = Number.parseInt(padded.substring(i * 2, i * 2 + 2), 16);
   }
   return bytes;
 }

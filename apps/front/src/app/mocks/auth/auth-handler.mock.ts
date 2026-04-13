@@ -1,7 +1,6 @@
 import {HttpResponse} from '@angular/common/http';
 import {WebauthnUserHandleDecoder} from '@bim/lib/auth';
-import type {Account} from '../../model';
-import {type ApiErrorResponse, ErrorCode} from '../../model';
+import {type Account, type ApiErrorResponse, ErrorCode} from '../../model';
 import type {
   AuthResponse,
   BeginAuthResponse,
@@ -16,14 +15,14 @@ const SWAPS_STORAGE_KEY = 'bim:swaps';
 
 // Predictable test Starknet address based on username
 function generateStarknetAddress(username: string): string {
-  const hash = username.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const hash = [...username].reduce((acc, char) => acc + (char.codePointAt(0) ?? 0), 0);
   const paddedHash = hash.toString(16).padStart(8, '0');
   return `0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7${paddedHash}`;
 }
 
 function generateUUID(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (char) => {
-    const rand = (Math.random() * 16) | 0;
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replaceAll(/[xy]/g, (char) => {
+    const rand = Math.trunc(Math.random() * 16); // NOSONAR S2245 - mock UUID for dev only, not security-sensitive
     const value = char === 'x' ? rand : (rand & 0x3) | 0x8;
     return value.toString(16);
   });
@@ -33,10 +32,10 @@ function generateChallenge(): string {
   const array = new Uint8Array(32);
   crypto.getRandomValues(array);
   // Convert to base64url (no padding, - instead of +, _ instead of /)
-  return btoa(String.fromCharCode(...array))
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
+  return btoa(String.fromCodePoint(...array))
+    .replaceAll('+', '-')
+    .replaceAll('/', '_')
+    .replace(/={1,2}$/, '');
 }
 
 export class AuthHandlerMock {

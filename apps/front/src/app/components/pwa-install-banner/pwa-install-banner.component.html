@@ -1,5 +1,5 @@
 @if (visible()) {
-  <div class="pwa-install-banner" role="dialog" aria-live="polite">
+  <div class="pwa-install-banner" role="region" aria-live="polite" [attr.aria-label]="'pwa.install.banner.title' | translate">
     <div class="pwa-install-banner__content">
       <h3 class="pwa-install-banner__title">{{ 'pwa.install.banner.title' | translate }}</h3>
       @if (canPrompt()) {

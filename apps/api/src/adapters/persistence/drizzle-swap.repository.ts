@@ -1,8 +1,8 @@
 import * as schema from '@bim/db';
 import type {SwapRepository} from '@bim/domain/ports';
 import {Amount, type BitcoinAddress, type StarknetAddress} from '@bim/domain/shared';
-import type {LightningInvoice} from '@bim/domain/swap';
 import {
+  type LightningInvoice,
   Swap,
   type SwapBase,
   type SwapData,

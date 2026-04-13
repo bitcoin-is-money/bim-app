@@ -77,8 +77,16 @@ export class PwaInstallService {
         this.standalone.set(true);
       });
     });
+  }
 
-    void this.checkRelatedApps();
+  /**
+   * Async initialization. Wired via `provideAppInitializer` in app.config.ts —
+   * kept out of the constructor so it can be awaited at boot time and to
+   * satisfy "no async work in constructor" lint rule.
+   */
+  async init(): Promise<void> {
+    if (globalThis.window === undefined) return;
+    await this.checkRelatedApps();
   }
 
   /**

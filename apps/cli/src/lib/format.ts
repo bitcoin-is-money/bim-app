@@ -9,7 +9,7 @@ export function formatToken(
   const whole = amount / 10n ** BigInt(decimals);
   const fraction = amount % 10n ** BigInt(decimals);
   const fractionStr = fraction.toString().padStart(decimals, '0');
-  const trimmed = displayDecimals !== undefined ? fractionStr.slice(0, displayDecimals) : fractionStr;
+  const trimmed = displayDecimals === undefined ? fractionStr : fractionStr.slice(0, displayDecimals);
   return `${whole}.${trimmed} ${symbol}`;
 }
 

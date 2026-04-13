@@ -9,7 +9,7 @@ export namespace Base64Url {
     return b64Encode(new Uint8Array(buffer))
       .replaceAll('+', '-')
       .replaceAll('/', '_')
-      .replace(/=+$/, '');
+      .replace(/={1,2}$/, '');
   }
 
   /**

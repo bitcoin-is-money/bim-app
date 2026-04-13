@@ -37,7 +37,7 @@ export class PaymentHandlerMock {
       : profile.paymentParseResult;
 
     const fakeBuildId = 'mock-build-' + String(Date.now());
-    const fakeMessageHash = '0x' + Array.from({length: 64}, () => Math.floor(Math.random() * 16).toString(16)).join('');
+    const fakeMessageHash = '0x' + Array.from({length: 64}, () => Math.floor(Math.random() * 16).toString(16)).join(''); // NOSONAR S2245 - mock fixture, not security-sensitive
     const fakeCredentialId = 'mock-credential-id';
 
     return new HttpResponse({
@@ -65,7 +65,7 @@ export class PaymentHandlerMock {
 
     const fakeTxHash =
       '0x' +
-      Array.from({length: 64}, () => Math.floor(Math.random() * 16).toString(16)).join('');
+      Array.from({length: 64}, () => Math.floor(Math.random() * 16).toString(16)).join(''); // NOSONAR S2245 - mock fixture, not security-sensitive
 
     let response: ExecutePaymentResponse;
     switch (parseResult.network) {

@@ -90,7 +90,7 @@ export class Amount {
       case 'SAT':
         return btcAmount * SATS_PER_BTC;
       default: {
-        // eslint-disable-next-line security/detect-object-injection -- key is FiatCurrency enum
+        // eslint-disable-next-line security/detect-object-injection -- key is a fiat currency code (string)
         const rate = rates.prices[target];
         if (!rate || rate === 0) {
           return undefined;

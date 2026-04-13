@@ -28,7 +28,7 @@ export interface HealthCheckResult {
  * Returns the full structured response — callers decide how to display it.
  */
 export async function checkApiHealth(baseUrl: string): Promise<HealthCheckResult> {
-  const url = `${baseUrl.replace(/\/+$/, '')}/api/health`;
+  const url = `${baseUrl.replace(/\/{1,10}$/, '')}/api/health`;
 
   const response = await fetch(url, {signal: AbortSignal.timeout(10_000)});
   const body = await response.json() as {

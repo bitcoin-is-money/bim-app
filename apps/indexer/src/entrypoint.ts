@@ -28,7 +28,7 @@ const STALE_THRESHOLD_MS = 10 * 60 * 1000;
 // ── Indexer subprocess ──
 
 const indexer = spawn(
-  'node',
+  process.execPath,
   ['.apibara/build/start.mjs', 'start', '--indexer', 'wbtc-transfers', '--preset', config.preset],
   {stdio: ['inherit', 'inherit', 'inherit', 'ipc']},
 );

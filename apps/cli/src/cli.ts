@@ -68,7 +68,9 @@ if (!command) {
   process.exit(1);
 }
 
-command.run(commandArgs).catch((err: unknown) => {
+try {
+  await command.run(commandArgs);
+} catch (err: unknown) {
   console.error('Failed:', err instanceof Error ? err.message : String(err));
   process.exit(1);
-});
+}

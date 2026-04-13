@@ -18,7 +18,7 @@ function formatServiceLine(service: ServiceHealthEntry): string {
 export async function run(args: string[]): Promise<void> {
   const jsonMode = args.includes('--json');
   const positional = args.find(a => !a.startsWith('--'));
-  const baseUrl = (positional ?? DEFAULT_URL).replace(/\/+$/, '');
+  const baseUrl = (positional ?? DEFAULT_URL).replace(/\/{1,10}$/, '');
 
   const result = await checkApiHealth(baseUrl);
 

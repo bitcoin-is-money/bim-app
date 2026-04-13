@@ -26,9 +26,9 @@ COPY packages/test-toolkit/package.json packages/test-toolkit/
 COPY apps/api/package.json apps/api/
 COPY apps/front/package.json apps/front/
 COPY apps/indexer/package.json apps/indexer/
-RUN npm ci
+RUN npm ci --ignore-scripts && npx patch-package
 
-# Code layers
+# Code layers — .dockerignore excludes node_modules, .env*, .git, dist, tests, docs
 COPY . .
 RUN npm run build:indexer
 
@@ -38,17 +38,22 @@ RUN npm run build:indexer
 FROM node:22-slim
 WORKDIR /app
 
-# Install pg (only external dependency needed by the Apibara bundle)
-RUN npm init -y && npm install pg
+# Install pg (only external dependency needed by the Apibara bundle).
+# pg is externalized from the bundle because it uses dynamic require() (notably
+# for the optional pg-native binding), which esbuild/Apibara cannot resolve
+# statically. Version pinned for reproducible builds — keep in sync with
+# package-lock.json.
+RUN echo '{"dependencies":{"pg":"8.20.0"}}' > package.json && npm install --ignore-scripts && chown -R node:node /app
 
 # Copy Apibara build output
-COPY --from=builder /app/apps/indexer/.apibara/build/ ./.apibara/build/
+COPY --from=builder --chown=node:node --chmod=0555 /app/apps/indexer/.apibara/build/ ./.apibara/build/
 
 # Copy bundled entrypoint (health server)
-COPY --from=builder /app/apps/indexer/dist/entrypoint.mjs ./entrypoint.mjs
+COPY --from=builder --chown=node:node --chmod=0444 /app/apps/indexer/dist/entrypoint.mjs ./entrypoint.mjs
 
 ARG APP_VERSION=dev
 ENV APP_VERSION=${APP_VERSION}
 
+USER node
 EXPOSE 8080
 CMD ["node", "entrypoint.mjs"]

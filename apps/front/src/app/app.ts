@@ -6,7 +6,6 @@ import {NotificationHostComponent} from "./components/notification/notification-
   selector: 'app-root',
   imports: [RouterOutlet, NotificationHostComponent],
   templateUrl: './app.html',
-  styleUrl: './app.scss'
 })
 export class App {
 }

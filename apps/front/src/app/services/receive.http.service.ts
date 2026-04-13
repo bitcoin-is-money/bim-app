@@ -71,7 +71,7 @@ export class ReceiveHttpService {
       network: request.network,
       amount: String(request.amount),
       ...(request.description ? {description: request.description} : {}),
-      ...(request.useUriPrefix !== undefined ? {useUriPrefix: request.useUriPrefix} : {}),
+      ...(request.useUriPrefix === undefined ? {} : {useUriPrefix: request.useUriPrefix}),
     });
   }
 

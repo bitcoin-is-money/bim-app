@@ -118,7 +118,6 @@ export async function createApp(options: CreateAppOptions = {}): Promise<AppInst
 
   // API routes
   app.route('/api/account', createAccountRoutes(context));
-  //app.route('/api/admin', createAdminRoutes(context));
   app.route('/api/auth', createAuthRoutes(context));
   app.route('/api/currency', createCurrencyRoutes(context));
   app.route('/api/health', createHealthRoutes(context));

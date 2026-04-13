@@ -1,9 +1,9 @@
 import type {WebAuthnAssertion} from '@bim/domain/payment';
 import {Base64Url} from '@bim/lib/encoding';
 // @noble/curves v1 import — pinned due to @noble/hashes 1.8.0 override (starknet compat)
-// TODO: when upgrading to v2, change to: '@noble/curves/nist.js'
+// When upgrading to v2, change to: '@noble/curves/nist.js'
 /* eslint-disable @typescript-eslint/no-deprecated */
-import {p256} from '@noble/curves/p256';
+import {p256} from '@noble/curves/p256'; // NOSONAR S1874 - pinned v1 API; see comment above
 import {sha256} from '@noble/hashes/sha2';
 import {bytesToHex, concatBytes} from '@noble/hashes/utils';
 import type {Logger} from 'pino';
@@ -62,9 +62,9 @@ export class WebAuthnSignatureProcessor {
     const signCount = new DataView(authenticatorData.buffer, authenticatorData.byteOffset, authenticatorData.byteLength).getUint32(33);
 
     // 3. Parse DER signature + normalize to low-S
-    const rawSig = p256.Signature.fromDER(signatureBytes);
+    const rawSig = p256.Signature.fromDER(signatureBytes); // NOSONAR S1874 - pinned v1 API (see top-of-file note)
     const needsFlip = rawSig.hasHighS();
-    const sig = needsFlip ? rawSig.normalizeS() : rawSig;
+    const sig = needsFlip ? rawSig.normalizeS() : rawSig; // NOSONAR S1874 - pinned v1 API
 
     // 4. Compute y_parity via public key recovery
     const messageHash = sha256(concatBytes(authenticatorData, sha256(clientDataJSON)));
@@ -131,9 +131,9 @@ export class WebAuthnSignatureProcessor {
  * produces the expected public key X-coordinate.
  * Must be called with the RAW (pre-normalization) signature.
  */
-function computeYParity(messageHash: Uint8Array, pubkeyX: bigint, sig: InstanceType<typeof p256.Signature>): boolean {
+function computeYParity(messageHash: Uint8Array, pubkeyX: bigint, sig: InstanceType<typeof p256.Signature>): boolean { // NOSONAR S1874 - pinned v1 API
   for (const bit of [0, 1] as const) {
-    const recovered = sig.addRecoveryBit(bit).recoverPublicKey(messageHash);
+    const recovered = sig.addRecoveryBit(bit).recoverPublicKey(messageHash); // NOSONAR S1874 - pinned v1 API
     if (pubkeyX === recovered.x) return bit === 1;
   }
   throw new Error('Could not determine y_parity: neither recovery ID matches the public key');

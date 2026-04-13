@@ -30,6 +30,6 @@ export namespace FiatCurrency {
   }
 
   export function getSupportedCurrencies(): readonly string[] {
-    return [...SUPPORTED_CURRENCIES].sort();
+    return [...SUPPORTED_CURRENCIES].sort((a, b) => a.localeCompare(b));
   }
 }

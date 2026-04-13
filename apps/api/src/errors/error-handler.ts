@@ -1,4 +1,3 @@
-// Domain errors - Account
 import {
   AccountAlreadyExistsError,
   AccountDeploymentError,
@@ -7,8 +6,6 @@ import {
   InvalidStarknetAddressError,
   InvalidUsernameError,
 } from '@bim/domain/account';
-
-// Domain errors - Auth
 import {
   AuthenticationFailedError,
   ChallengeAlreadyUsedError,
@@ -19,11 +16,7 @@ import {
   SessionExpiredError,
   SessionNotFoundError,
 } from '@bim/domain/auth';
-
-// Domain errors - Currency
 import {UnsupportedCurrencyError} from '@bim/domain/currency';
-
-// Domain errors - Payment
 import {
   InvalidPaymentAddressError,
   InvalidPaymentAmountError,
@@ -32,8 +25,6 @@ import {
   UnsupportedNetworkError,
   UnsupportedTokenError,
 } from '@bim/domain/payment';
-
-// Domain errors - Shared
 import {
   ExternalServiceError,
   InsufficientBalanceError,
@@ -44,8 +35,6 @@ import {
   UnsafeExternalCallError,
   ValidationError,
 } from '@bim/domain/shared';
-
-// Domain errors - Swap
 import {
   BitcoinAddressNetworkMismatchError,
   InvalidBitcoinAddressError,
@@ -58,8 +47,6 @@ import {
   SwapNotFoundError,
   SwapOwnershipError,
 } from '@bim/domain/swap';
-
-// Domain errors - User
 import {UserSettingsNotFoundError} from '@bim/domain/user';
 import type {Context, TypedResponse} from 'hono';
 import type {Logger} from 'pino';
@@ -68,11 +55,13 @@ import {type ApiErrorResponse, createErrorResponse} from './api-error';
 
 import {ErrorCode} from './error-codes';
 
+type ApiResponse = TypedResponse<ApiErrorResponse>;
+
 /**
  * Centralized error handler that maps domain errors to API responses.
  * All routes should use this function to handle errors consistently.
  */
-export function handleDomainError(ctx: Context, error: unknown, logger: Logger): TypedResponse<ApiErrorResponse> {
+export function handleDomainError(ctx: Context, error: unknown, logger: Logger): ApiResponse {
   // Swap not found is expected (e.g. polling after container restart) — warn only, no stack trace
   if (error instanceof SwapNotFoundError) {
     logger.warn(`Swap not found: ${error.swapId}`);
@@ -81,19 +70,34 @@ export function handleDomainError(ctx: Context, error: unknown, logger: Logger):
     });
   }
 
-  logger.error(error,'API error');
+  logger.error(error, 'API error');
 
-  // Zod validation errors
   if (error instanceof ZodError) {
-    const firstError = error.issues[0];
-    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- empty path should show 'unknown'
-    const field = firstError?.path.join('.') || 'unknown';
-    return createErrorResponse(ctx, 400, ErrorCode.VALIDATION_ERROR, `Invalid ${field}: ${firstError?.message}`, {
-      field,
-    });
+    return handleZodError(ctx, error);
   }
 
-  // --- Account errors ---
+  return (
+    handleAccountError(ctx, error) ??
+    handleAuthError(ctx, error) ??
+    handleSwapError(ctx, error) ??
+    handlePaymentError(ctx, error) ??
+    handleUserError(ctx, error) ??
+    handleBalanceError(ctx, error) ??
+    handleSharedError(ctx, error, logger) ??
+    createErrorResponse(ctx, 500, ErrorCode.INTERNAL_ERROR, 'Internal server error')
+  );
+}
+
+function handleZodError(ctx: Context, error: ZodError): ApiResponse {
+  const firstError = error.issues[0];
+  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- empty path should show 'unknown'
+  const field = firstError?.path.join('.') || 'unknown';
+  return createErrorResponse(ctx, 400, ErrorCode.VALIDATION_ERROR, `Invalid ${field}: ${firstError?.message}`, {
+    field,
+  });
+}
+
+function handleAccountError(ctx: Context, error: unknown): ApiResponse | undefined {
   if (error instanceof AccountNotFoundError) {
     return createErrorResponse(ctx, 404, ErrorCode.ACCOUNT_NOT_FOUND, 'Account not found');
   }
@@ -119,8 +123,10 @@ export function handleDomainError(ctx: Context, error: unknown, logger: Logger):
   if (error instanceof InvalidStarknetAddressError) {
     return createErrorResponse(ctx, 400, ErrorCode.INVALID_STARKNET_ADDRESS, 'Invalid Starknet address');
   }
+  return undefined;
+}
 
-  // --- Auth errors ---
+function handleAuthError(ctx: Context, error: unknown): ApiResponse | undefined {
   if (error instanceof ChallengeNotFoundError) {
     return createErrorResponse(ctx, 400, ErrorCode.CHALLENGE_NOT_FOUND, 'Challenge not found');
   }
@@ -147,8 +153,10 @@ export function handleDomainError(ctx: Context, error: unknown, logger: Logger):
   if (error instanceof SessionExpiredError) {
     return createErrorResponse(ctx, 401, ErrorCode.SESSION_EXPIRED, 'Session expired');
   }
+  return undefined;
+}
 
-  // --- Swap errors ---
+function handleSwapError(ctx: Context, error: unknown): ApiResponse | undefined {
   if (error instanceof SwapExpiredError) {
     return createErrorResponse(ctx, 400, ErrorCode.SWAP_EXPIRED, 'Swap expired', {
       swapId: error.swapId,
@@ -176,8 +184,10 @@ export function handleDomainError(ctx: Context, error: unknown, logger: Logger):
   if (error instanceof SwapOwnershipError) {
     return createErrorResponse(ctx, 403, ErrorCode.FORBIDDEN, 'Swap does not belong to this account');
   }
+  return undefined;
+}
 
-  // --- Payment errors ---
+function handlePaymentError(ctx: Context, error: unknown): ApiResponse | undefined {
   if (error instanceof PaymentParsingError) {
     return createErrorResponse(ctx, 400, ErrorCode.PAYMENT_PARSING_ERROR, 'Failed to parse payment data');
   }
@@ -192,13 +202,7 @@ export function handleDomainError(ctx: Context, error: unknown, logger: Logger):
     return createErrorResponse(ctx, 400, ErrorCode.SAME_ADDRESS_PAYMENT, 'Cannot send to your own address');
   }
   if (error instanceof UnsupportedNetworkError) {
-    const detected = error.detectedNetwork;
-    if (detected !== undefined) {
-      return createErrorResponse(ctx, 400, ErrorCode.UNSUPPORTED_NETWORK, `Unsupported network or format: ${detected}`, {
-        network: detected,
-      });
-    }
-    return createErrorResponse(ctx, 400, ErrorCode.UNSUPPORTED_NETWORK, 'Unsupported network or format');
+    return handleUnsupportedNetwork(ctx, error);
   }
   if (error instanceof UnsupportedTokenError) {
     return createErrorResponse(ctx, 400, ErrorCode.UNSUPPORTED_TOKEN, 'Unsupported token', {
@@ -222,8 +226,20 @@ export function handleDomainError(ctx: Context, error: unknown, logger: Logger):
   if (error instanceof InvalidPaymentAddressError) {
     return createErrorResponse(ctx, 400, ErrorCode.INVALID_PAYMENT_ADDRESS, 'Invalid payment address');
   }
+  return undefined;
+}
 
-  // --- User errors ---
+function handleUnsupportedNetwork(ctx: Context, error: UnsupportedNetworkError): ApiResponse {
+  const detected = error.detectedNetwork;
+  if (detected !== undefined) {
+    return createErrorResponse(ctx, 400, ErrorCode.UNSUPPORTED_NETWORK, `Unsupported network or format: ${detected}`, {
+      network: detected,
+    });
+  }
+  return createErrorResponse(ctx, 400, ErrorCode.UNSUPPORTED_NETWORK, 'Unsupported network or format');
+}
+
+function handleUserError(ctx: Context, error: unknown): ApiResponse | undefined {
   if (error instanceof UserSettingsNotFoundError) {
     return createErrorResponse(ctx, 404, ErrorCode.USER_SETTINGS_NOT_FOUND, 'User settings not found');
   }
@@ -232,33 +248,36 @@ export function handleDomainError(ctx: Context, error: unknown, logger: Logger):
       currency: error.currency,
     });
   }
+  return undefined;
+}
 
-  // --- Balance errors ---
-  if (error instanceof InsufficientBalanceError) {
-    if (error.reason === 'security_deposit') {
-      const args: Record<string, string> = {};
-      const decimals = error.tokenDecimals ?? 18;
-      const symbol = error.tokenSymbol ?? 'STRK';
-      if (error.requiredAmount !== undefined) {
-        args.amount = formatTokenAmount(error.requiredAmount, decimals);
-        args.token = symbol;
-      }
-      return createErrorResponse(ctx, 400, ErrorCode.INSUFFICIENT_BALANCE_SECURITY_DEPOSIT,
-        args.amount
-          ? `Insufficient balance to cover the security deposit (~${args.amount} ${symbol}). Fund your account before retrying.`
-          : 'Insufficient balance to cover the security deposit. Fund your account before retrying.',
-        args);
-    }
+function handleBalanceError(ctx: Context, error: unknown): ApiResponse | undefined {
+  if (!(error instanceof InsufficientBalanceError)) return undefined;
+
+  if (error.reason === 'security_deposit') {
+    const args: Record<string, string> = {};
+    const decimals = error.tokenDecimals ?? 18;
+    const symbol = error.tokenSymbol ?? 'STRK';
     if (error.requiredAmount !== undefined) {
-      const formatted = formatTokenAmount(error.requiredAmount, 18);
-      return createErrorResponse(ctx, 400, ErrorCode.INSUFFICIENT_BALANCE_WITH_AMOUNT,
-        `Insufficient balance. This operation requires ~${formatted} STRK.`,
-        {amount: formatted});
+      args.amount = formatTokenAmount(error.requiredAmount, decimals);
+      args.token = symbol;
     }
-    return createErrorResponse(ctx, 400, ErrorCode.INSUFFICIENT_BALANCE, 'Insufficient balance for this operation');
+    return createErrorResponse(ctx, 400, ErrorCode.INSUFFICIENT_BALANCE_SECURITY_DEPOSIT,
+      args.amount
+        ? `Insufficient balance to cover the security deposit (~${args.amount} ${symbol}). Fund your account before retrying.`
+        : 'Insufficient balance to cover the security deposit. Fund your account before retrying.',
+      args);
   }
+  if (error.requiredAmount !== undefined) {
+    const formatted = formatTokenAmount(error.requiredAmount, 18);
+    return createErrorResponse(ctx, 400, ErrorCode.INSUFFICIENT_BALANCE_WITH_AMOUNT,
+      `Insufficient balance. This operation requires ~${formatted} STRK.`,
+      {amount: formatted});
+  }
+  return createErrorResponse(ctx, 400, ErrorCode.INSUFFICIENT_BALANCE, 'Insufficient balance for this operation');
+}
 
-  // --- Shared errors ---
+function handleSharedError(ctx: Context, error: unknown, logger: Logger): ApiResponse | undefined {
   if (error instanceof ValidationError) {
     return createErrorResponse(ctx, 400, ErrorCode.VALIDATION_ERROR, error.message, {
       field: error.field,
@@ -295,9 +314,7 @@ export function handleDomainError(ctx: Context, error: unknown, logger: Logger):
       operation: error.operation,
     });
   }
-
-  // --- Fallback ---
-  return createErrorResponse(ctx, 500, ErrorCode.INTERNAL_ERROR, 'Internal server error');
+  return undefined;
 }
 
 /**
@@ -309,6 +326,6 @@ function formatTokenAmount(amount: bigint, decimals: number): string {
   const whole = amount / divisor;
   const remainder = amount % divisor;
   if (remainder === 0n) return whole.toString();
-  const fracStr = remainder.toString().padStart(decimals, '0').replace(/0+$/, '');
+  const fracStr = remainder.toString().padStart(decimals, '0').replace(/0{1,18}$/, '');
   return `${whole}.${fracStr}`;
 }

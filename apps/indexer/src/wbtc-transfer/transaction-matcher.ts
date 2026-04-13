@@ -98,7 +98,11 @@ export class TransactionMatcher {
     return [...grouped.values()].map(group => {
       // Sum amounts and keep address fields from the largest transfer (the main one, not the fee)
       const totalAmount = group.reduce((sum, r) => sum + BigInt(r.amount), 0n);
-      const primary = group.reduce((a, b) => BigInt(a.amount) >= BigInt(b.amount) ? a : b);
+      const [firstRow, ...restRows] = group;
+      const primary = restRows.reduce(
+        (a, b) => BigInt(a.amount) >= BigInt(b.amount) ? a : b,
+        firstRow!,
+      );
       return {...primary, amount: totalAmount.toString()};
     });
   }

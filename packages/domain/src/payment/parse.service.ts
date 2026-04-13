@@ -89,9 +89,9 @@ export class ParseService {
     const lightningInvoice = LightningInvoice.of(invoice);
     const decoded = this.deps.lightningDecoder.decode(lightningInvoice);
 
-    const amount = decoded.amountMSat != undefined
-      ? Amount.ofMilliSatoshi(decoded.amountMSat)
-      : Amount.zero();
+    const amount = decoded.amountMSat == undefined
+      ? Amount.zero()
+      : Amount.ofMilliSatoshi(decoded.amountMSat);
     const expiresAt = decoded.expiresAt;
     return {
       network: 'lightning',
@@ -121,9 +121,9 @@ export class ParseService {
     const address = BitcoinAddress.of(url.pathname, this.deps.starknetConfig.bitcoinNetwork);
 
     const amountParam = url.searchParams.get('amount');
-    const amount = amountParam != undefined
-      ? Amount.fromBtcString(amountParam)
-      : Amount.zero();
+    const amount = amountParam == undefined
+      ? Amount.zero()
+      : Amount.fromBtcString(amountParam);
     // BIP-21: "label" is for the recipient name, "message" is a note to the payer
     const description = url.searchParams.get('label')
       ?? url.searchParams.get('message')
@@ -157,9 +157,9 @@ export class ParseService {
     const address = StarknetAddress.of(url.pathname);
 
     const amountParam = url.searchParams.get('amount');
-    const amount = amountParam != undefined
-      ? Amount.ofSatoshi(BigInt(amountParam))
-      : Amount.zero();
+    const amount = amountParam == undefined
+      ? Amount.zero()
+      : Amount.ofSatoshi(BigInt(amountParam));
     const tokenParam = url.searchParams.get('token');
     const wbtcAddress = this.deps.starknetConfig.wbtcTokenAddress;
     if (tokenParam == undefined || tokenParam !== wbtcAddress) {

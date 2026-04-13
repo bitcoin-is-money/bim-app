@@ -24,7 +24,7 @@ export default defineConfig({
     // (see the `mainnet` preset and .env.mainnet.secret, git-ignored).
     testnet: {
       runtimeConfig: {
-        connectionString: 'postgresql://bim_user:bim_password@localhost:5432/bim',
+        connectionString: 'postgresql://bim_user:bim_password@localhost:5432/bim', // NOSONAR - local only
         streamUrl: 'https://sepolia.starknet.a5a.ch',
         contractAddress: '0x00452bd5c0512a61df7c7be8cfea5e4f893cb40e126bdc40aee6054db955129e', // wbtc
       },

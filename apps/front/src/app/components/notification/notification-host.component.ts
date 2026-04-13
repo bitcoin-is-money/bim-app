@@ -8,7 +8,6 @@ import {NotificationService} from "../../services/notification.service";
   standalone: true,
   imports: [CommonModule],
   templateUrl: './notification-host.component.html',
-  styleUrls: ['./notification-host.component.scss'],
 })
 export class NotificationHostComponent implements AfterViewInit {
 

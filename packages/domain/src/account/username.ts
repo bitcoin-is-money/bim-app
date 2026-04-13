@@ -10,7 +10,7 @@ export type Username = string & {readonly __brand: 'Username'};
 
 export namespace Username {
   /** Validation pattern: 3-25 chars, alphanumeric and underscore */
-  export const PATTERN = /^[a-zA-Z0-9_]{3,25}$/;
+  export const PATTERN = /^\w{3,25}$/;
 
   /**
    * Creates a Username from a string.

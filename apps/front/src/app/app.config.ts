@@ -16,6 +16,7 @@ import {authInterceptor} from './interceptor/auth.interceptor';
 import {httpNotificationInterceptor} from "./interceptor/http-notification.interceptor";
 import {backendInterceptor} from './mocks/backend.interceptor';
 import {AuthService} from './services/auth.service';
+import {PwaInstallService} from './services/pwa-install.service';
 import {PwaUpdateService} from './services/pwa-update.service';
 
 // Interceptors run in order: first intercepts request first, but catches errors last
@@ -41,6 +42,9 @@ export const appConfig: ApplicationConfig = {
     }),
     provideAppInitializer(() => {
       inject(PwaUpdateService).init();
+    }),
+    provideAppInitializer(async () => {
+      await inject(PwaInstallService).init();
     }),
     provideAppInitializer(async () => {
       const authService = inject(AuthService);
