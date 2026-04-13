@@ -92,6 +92,10 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.56.1",
     "vite-tsconfig-paths": "^6.1.1",
-    "vitest": "^4.0.18"
+    "vitest": "^4.0.18",
+    "@vitest/coverage-v8": "^4.0.18"
+  },
+  "overrides": {
+    "vitest": "$vitest"
   }
 }

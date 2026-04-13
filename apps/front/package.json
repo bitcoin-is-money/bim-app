@@ -29,7 +29,7 @@
     "build:watch": "ng build --watch --configuration development",
     "build:testnet": "ng build --configuration testnet",
     "build": "ng build",
-    "test": "ng test --watch=false",
+    "test": "ng test --watch=false --coverage",
     "test:watch": "ng test"
   },
   "prettier": {

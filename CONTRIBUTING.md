@@ -17,6 +17,7 @@ conventions we follow, and how to get a change merged.
 - [Repository Layout](#repository-layout)
 - [Coding Conventions](#coding-conventions)
 - [Testing](#testing)
+- [Continuous Integration](#continuous-integration)
 - [Commit Messages](#commit-messages)
 - [Pull Request Process](#pull-request-process)
 - [License](#license)
@@ -210,6 +211,36 @@ npm run build             # Catch any build-time regressions
 > This covers `@bim/lib`, `@bim/domain`, `@bim/db`, `@bim/test-toolkit`,
 > `@bim/atomiq`, `@bim/atomiq-storage-postgres`, `@bim/starknet`, and
 > `@bim/slack`.
+
+## Continuous Integration
+
+CI runs on GitHub Actions. The workflow is defined in
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) and triggers on
+every pull request, every push to `main`, and the merge queue (when
+enabled).
+
+A single job runs the following steps sequentially:
+
+1. **Build** — `npm run build` (full TypeScript compile of all workspaces)
+2. **Unit tests** — `npm run test` (with coverage, `v8` provider)
+3. **Integration tests** — `npm run test:integration` (with coverage,
+   Testcontainers-backed PostgreSQL; coverage written to a separate
+   `coverage-integration/` directory to avoid overwriting the unit
+   coverage)
+4. **SonarCloud scan** — enforces the project's quality gate (code
+   smells, duplication, security hotspots, coverage on new code). The
+   gate is **blocking**: a red gate fails the CI.
+
+Coverage report paths consumed by SonarCloud are listed in
+[`sonar-project.properties`](sonar-project.properties).
+
+Deployment (`deploy.yml.disabled`) is currently disabled while the CI
+pipeline is being stabilized.
+
+### Maintainer setup
+
+The SonarCloud step requires a `SONAR_TOKEN` repository secret for the
+[`bitcoin-is-money` organization](https://sonarcloud.io/organizations/bitcoin-is-money).
 
 ## Commit Messages
 

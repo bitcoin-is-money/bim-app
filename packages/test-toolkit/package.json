@@ -35,7 +35,7 @@
     "clean": "rm -rf dist",
     "build": "tsc -p tsconfig.build.json",
     "dev": "tsc --watch",
-    "test": "vitest run",
+    "test": "vitest run --coverage",
     "test:watch": "vitest"
   },
   "dependencies": {

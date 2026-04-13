@@ -27,7 +27,7 @@
     "dev": "dotenv -e .env.testnet.secret -- apibara dev --preset testnet",
     "build": "apibara build && node esbuild.prod.js",
     "start": "dotenv -e .env.mainnet.secret -- apibara start --preset mainnet --indexer wbtc-transfers",
-    "test": "vitest run",
+    "test": "vitest run --coverage",
     "test:watch": "vitest"
   },
   "dependencies": {

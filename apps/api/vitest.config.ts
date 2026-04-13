@@ -8,5 +8,12 @@ export default defineConfig({
       tsconfig: './tsconfig.json',
       include: ['test/unit/**/*.test.ts'],
     },
+    coverage: {
+      provider: 'v8',
+      reporter: ['lcov', 'text-summary'],
+      reportsDirectory: './coverage',
+      include: ['src/**/*.ts'],
+      exclude: ['**/*.test.ts', '**/test/**', 'dist/**', 'node_modules/**'],
+    },
   }
 });

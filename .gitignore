@@ -63,6 +63,7 @@ Thumbs.db
 .eslintcache
 tsconfig.tsbuildinfo
 coverage
+coverage-integration
 tmp
 *.log*
 
