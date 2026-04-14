@@ -26,6 +26,8 @@ export interface MockUserProfile {
   swapConfig: MockSwapConfig;
   /** User's preferred language */
   language: Language;
+  /** When true, simulates that a PWA update is available at login (dev only) */
+  updateApp: boolean;
 }
 
 export const MOCK_USERS: [MockUserProfile, ...MockUserProfile[]] = [
@@ -53,6 +55,7 @@ export const MOCK_USERS: [MockUserProfile, ...MockUserProfile[]] = [
     existingSwaps: [],
     swapConfig: {statusProgression: ['pending', 'paid', 'completed']},
     language: 'en',
+    updateApp: false,
   },
   {
     // STARKNET USER - NO SWAPS (starknet doesn't create swaps)
@@ -78,6 +81,7 @@ export const MOCK_USERS: [MockUserProfile, ...MockUserProfile[]] = [
     existingSwaps: [],
     swapConfig: {statusProgression: ['pending', 'paid', 'completed']},
     language: 'en',
+    updateApp: false,
   },
   {
     // LIGHTNING USER - HAS EXISTING SWAPS WITH ALL STATUSES
@@ -109,6 +113,7 @@ export const MOCK_USERS: [MockUserProfile, ...MockUserProfile[]] = [
     ],
     swapConfig: {statusProgression: ['pending', 'paid', 'completed']},
     language: 'en',
+    updateApp: true,
   },
   {
     // BITCOIN USER - NO SWAPS YET, swap will progress to completed
@@ -133,6 +138,7 @@ export const MOCK_USERS: [MockUserProfile, ...MockUserProfile[]] = [
     existingSwaps: [],
     swapConfig: {statusProgression: ['pending', 'paid', 'completed']},
     language: 'en',
+    updateApp: false,
   },
   {
     // BALANCE 0 USER - UNABLE TO PAY
@@ -158,6 +164,7 @@ export const MOCK_USERS: [MockUserProfile, ...MockUserProfile[]] = [
     existingSwaps: [],
     swapConfig: {statusProgression: ['pending', 'paid', 'completed']},
     language: 'en',
+    updateApp: false,
   },
   {
     // PAYMENT ERROR USER - swaps will fail - FRENCH USER
@@ -183,6 +190,7 @@ export const MOCK_USERS: [MockUserProfile, ...MockUserProfile[]] = [
     existingSwaps: [],
     swapConfig: {statusProgression: ['pending', 'failed']},
     language: 'fr',
+    updateApp: false,
   },
   {
     // INVALID USER - swaps will expire - FRENCH USER
@@ -208,6 +216,7 @@ export const MOCK_USERS: [MockUserProfile, ...MockUserProfile[]] = [
     existingSwaps: [],
     swapConfig: {statusProgression: ['pending', 'expired']},
     language: 'fr',
+    updateApp: false,
   }
 ];
 

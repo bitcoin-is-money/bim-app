@@ -78,7 +78,6 @@ export class AuthService {
 
       this.isNewUser.set(true);
       await this.currency.init();
-      await this.pwaUpdate.tryApplyUpdate();
       await this.router.navigate(['/account-setup']);
     } catch (error) {
       // HTTP errors are already handled by the interceptor
@@ -117,14 +116,20 @@ export class AuthService {
         return;
       }
 
-      await firstValueFrom(this.completeLogin(beginResponse.challengeId, credential));
+      const authResponse = await firstValueFrom(this.completeLogin(beginResponse.challengeId, credential));
+      if (authResponse.updateApp === true) {
+        this.pwaUpdate.updateAvailable.set(true);
+      }
 
       // Load user preferences after login
       await this.i18n.init();
       await this.currency.init();
-      await this.pwaUpdate.tryApplyUpdate();
 
-      await this.router.navigate(['/home']);
+      if (this.pwaUpdate.updateAvailable()) {
+        await this.router.navigate(['/updating']);
+      } else {
+        await this.router.navigate(['/home']);
+      }
     } catch (error) {
       // HTTP errors are already handled by the interceptor
       // Only handle non-HTTP errors here

@@ -8,7 +8,7 @@
     "useDeviceSecurity": "Utilisez la sécurité de votre appareil pour accéder à votre portefeuille"
   },
   "pwa": {
-    "updating": "Mise à jour de l'application",
+    "updating": "Mise à jour…",
     "install": {
       "banner": {
         "title": "Installer BIM",

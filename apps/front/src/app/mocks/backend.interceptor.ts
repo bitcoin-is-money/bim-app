@@ -109,7 +109,9 @@ export const backendInterceptor: HttpInterceptorFn = (
   }
 
   // Swap routes
-  else if (url.startsWith('/api/swap/status/') && method === 'GET') {
+  else if (url === '/api/swap/active' && method === 'GET') {
+    response = mockSwapHandler.getActive();
+  } else if (url.startsWith('/api/swap/status/') && method === 'GET') {
     const swapId = url.replace('/api/swap/status/', '');
     response = mockSwapHandler.getStatus(swapId);
   }

@@ -1,15 +1,24 @@
 @reference "tailwindcss";
 
 .updating-page {
-  @apply h-full flex flex-col overflow-hidden;
+  @apply h-full flex flex-col items-center justify-center relative overflow-hidden bg-black;
 
-  .updating-main {
-    @apply flex-1 flex flex-col items-center justify-center gap-6;
+  .updating-logo {
+    width: 90vmin;
+    height: 90vmin;
+    max-width: 100%;
+  }
+
+  .updating-status {
+    @apply absolute flex flex-row items-center gap-2;
+    bottom: 12%;
+    left: 50%;
+    transform: translateX(-50%);
   }
 
   .updating-spinner {
-    width: 20vw;
-    height: 20vw;
+    width: 1.5rem;
+    height: 1.5rem;
     color: var(--color-orange, #f59e0b);
   }
 

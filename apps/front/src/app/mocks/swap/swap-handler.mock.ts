@@ -1,5 +1,5 @@
 import {HttpResponse} from '@angular/common/http';
-import {type ApiErrorResponse, ErrorCode, type SwapStatus, type SwapStatusResponse} from '../../model';
+import {type ActiveSwapsResponse, type ApiErrorResponse, ErrorCode, type SwapStatus, type SwapStatusResponse} from '../../model';
 import type {DataStoreMock} from '../data-store.mock';
 import {createErrorResponse} from '../mock-error';
 
@@ -33,6 +33,11 @@ function getProgressForStatus(status: SwapStatus): number {
 
 export class SwapHandlerMock {
   constructor(private readonly store: DataStoreMock) {}
+
+  getActive(): HttpResponse<ActiveSwapsResponse> {
+    const body: ActiveSwapsResponse = {active: false, count: 0};
+    return new HttpResponse({status: 200, body});
+  }
 
   getStatus(swapId: string): HttpResponse<SwapStatusResponse | ApiErrorResponse> {
     const profile = this.store.getMockUserProfile();

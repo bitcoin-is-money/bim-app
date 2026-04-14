@@ -5,6 +5,8 @@ import type {Account} from '../model';
 
 export interface AuthResponse {
   account: Account;
+  /** Dev-only hint: when true, signals that a PWA update is available (simulated via mock backend). */
+  updateApp?: boolean;
 }
 
 export interface BeginAuthResponse {

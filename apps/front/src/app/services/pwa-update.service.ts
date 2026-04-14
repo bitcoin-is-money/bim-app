@@ -1,5 +1,4 @@
 import {inject, Injectable, signal} from '@angular/core';
-import {Router} from '@angular/router';
 import {SwUpdate, type VersionReadyEvent} from '@angular/service-worker';
 import pTimeout, {TimeoutError} from 'p-timeout';
 import {filter, firstValueFrom, timeout} from 'rxjs';
@@ -7,38 +6,19 @@ import {filter, firstValueFrom, timeout} from 'rxjs';
 import {SwapHttpService} from './swap.http.service';
 
 /**
- * Total budget for the pre-update check (checkForUpdate wait + active-swap
- * query). The native SW check is effectively instant (hash comparison), so
- * 3 seconds is generous. If the budget is exceeded, we skip the update and
- * retry at the next login.
- */
-const UPDATE_CHECK_BUDGET_MS = 5000;
-
-/**
  * Maximum time we wait for `swUpdate.activateUpdate()` to resolve before we
  * force a page reload anyway. On some mobile PWAs (iOS standalone, certain
- * Android configurations) that promise can hang indefinitely, which would
- * leave the user stuck on the /updating screen. Reloading is safe because
- * the new SW is already downloaded and waiting — the fresh navigation will
- * pick it up regardless.
+ * Android configurations) that promise can hang indefinitely. Reloading is
+ * safe because the new SW is already downloaded and waiting.
  */
 const ACTIVATE_UPDATE_TIMEOUT_MS = 5000;
 
 /**
  * Drives the PWA "login only" update strategy.
  *
- * Workflow:
- *   1. The SW downloads new versions in the background automatically.
- *   2. Exactly once per login transition, AuthService calls
- *      tryApplyUpdate(). We then:
- *        a. Force a fresh SW check.
- *        b. If a VERSION_READY arrives within the budget, ask the backend
- *           whether the account has any active swaps.
- *        c. If no active swap, navigate to /updating, activate the new SW
- *           and reload. Otherwise we do nothing and retry at the next login.
- *
- * We never reload the app during an active session, and we never trust
- * localStorage to decide "is there a swap in progress?" — only the backend.
+ * AuthService reads `updateAvailable` right after sign-in. If true, it routes
+ * the user to /updating, which then orchestrates the safety check, SW
+ * activation and reload itself.
  */
 @Injectable({
   providedIn: 'root',
@@ -47,9 +27,7 @@ export class PwaUpdateService {
 
   private readonly swUpdate = inject(SwUpdate);
   private readonly swapHttp = inject(SwapHttpService);
-  private readonly router = inject(Router);
 
-  /** Emits true as soon as a new SW version is downloaded and ready to activate. */
   readonly updateAvailable = signal(false);
 
   init(): void {
@@ -64,62 +42,11 @@ export class PwaUpdateService {
   }
 
   /**
-   * Called by AuthService right after a successful login / session restore.
-   *
-   * Resolves without reloading when:
-   *   - the SW is disabled (dev mode),
-   *   - no update is pending within the 3-second budget,
-   *   - a check fails for any reason,
-   *   - an active swap is detected.
-   *
-   * Otherwise navigates to /updating and triggers a full reload. In that
-   * case the returned promise never resolves — the page goes away first.
+   * Queries the backend for active swaps within the given budget. Any failure
+   * (network, timeout, server error) is treated conservatively as "not safe"
+   * to protect in-flight payments.
    */
-  async tryApplyUpdate(): Promise<void> {
-    if (!this.swUpdate.isEnabled) {
-      return;
-    }
-    const startedAt = Date.now();
-    const hasUpdate = await this.hasUpdateAvailable(UPDATE_CHECK_BUDGET_MS);
-    if (!hasUpdate) {
-      return;
-    }
-    const remainingBudgetMs = Math.max(0, UPDATE_CHECK_BUDGET_MS - (Date.now() - startedAt));
-    if (remainingBudgetMs === 0) {
-      return;
-    }
-    const safeToReload = await this.isSafeToReload(remainingBudgetMs);
-    if (!safeToReload) {
-      return;
-    }
-    await this.applyUpdateAndReload();
-  }
-
-  /**
-   * Forces a fresh SW check and returns true if an update is ready to
-   * activate, bounded by the caller-supplied budget.
-   *
-   * If the check throws or times out (offline, stale cache, etc.) we
-   * treat it as "no update" so the user is never blocked.
-   */
-  private async hasUpdateAvailable(budgetMs: number): Promise<boolean> {
-    if (this.updateAvailable()) {
-      return true;
-    }
-    try {
-      await pTimeout(this.swUpdate.checkForUpdate(), {milliseconds: budgetMs});
-      return this.updateAvailable();
-    } catch {
-      return false;
-    }
-  }
-
-  /**
-   * Queries the backend for active swaps within the remaining budget.
-   * Any failure (network, timeout, server error) is treated conservatively
-   * as "not safe" to protect in-flight payments.
-   */
-  private async isSafeToReload(budgetMs: number): Promise<boolean> {
+  async isSafeToReload(budgetMs: number): Promise<boolean> {
     try {
       const response = await firstValueFrom(
         this.swapHttp.getActive().pipe(timeout({first: budgetMs})),
@@ -130,8 +57,13 @@ export class PwaUpdateService {
     }
   }
 
-  private async applyUpdateAndReload(): Promise<void> {
-    await this.router.navigate(['/updating']);
+  /**
+   * Activates the pending Service Worker update, bounded by a timeout. Any
+   * failure or timeout is logged and swallowed — the caller is expected to
+   * reload anyway, since the new SW is already downloaded and the fresh
+   * navigation will pick it up.
+   */
+  async activate(): Promise<void> {
     try {
       await pTimeout(this.swUpdate.activateUpdate(), {
         milliseconds: ACTIVATE_UPDATE_TIMEOUT_MS,
@@ -143,8 +75,14 @@ export class PwaUpdateService {
       } else {
         console.error('Failed to activate SW update', error);
       }
-    } finally {
-      document.location.assign('/');
     }
+  }
+
+  /**
+   * Forces a full page reload so the browser picks up the newly activated
+   * Service Worker and its fresh assets.
+   */
+  reload(): void {
+    document.location.assign('/');
   }
 }
