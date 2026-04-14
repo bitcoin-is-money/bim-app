@@ -76,6 +76,7 @@ case "${1:-}" in
     VERSION=$(app_version)
     SERVICE="${2:-all}"
     echo "Building images (version: $VERSION, service: $SERVICE)"
+    export DOCKER_BUILDKIT=1
     if [ "$SERVICE" = "all" ] || [ "$SERVICE" = "api" ]; then
       docker build -f "$PROJECT_ROOT/apps/api/Dockerfile" \
         --build-arg APP_VERSION="$VERSION" \
