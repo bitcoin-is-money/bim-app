@@ -33,7 +33,8 @@
     "clean": "rm -rf dist",
     "clean:all": "npm run clean && rm -rf node_modules",
     "build": "tsc -p tsconfig.build.json",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "test": "vitest run --coverage"
   },
   "dependencies": {
     "@bim/atomiq-storage-postgres": "*",
