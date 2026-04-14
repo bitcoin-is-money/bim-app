@@ -15,7 +15,10 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['lcov', 'text-summary'],
       reportsDirectory: './coverage',
-      include: ['src/**/*.ts'],
+      // Only the model layer carries business logic worth covering on the front.
+      // Components, pages, services, mocks, interceptors, guards and config are
+      // either thin UI wiring or framework boilerplate — coverage there is noise.
+      include: ['src/app/model/**/*.ts'],
       exclude: ['**/*.test.ts', 'src/test/**', 'dist/**', 'node_modules/**'],
     },
   }
