@@ -78,6 +78,7 @@
     "node": ">=22.0.0"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@vitest/coverage-v8": "^4.0.18",
     "angular-eslint": "^21.2.0",
     "better-npm-audit": "^3.11.0",
