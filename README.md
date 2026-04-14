@@ -159,8 +159,7 @@ NETWORK=mainnet npm run dev
 ```
 
 You will need a real `AVNU_API_KEY` (with credits) in
-`apps/api/.env.mainnet.secret` — see the memory notes in
-[CLAUDE.md](CLAUDE.md) for details.
+`apps/api/.env.mainnet.secret`.
 
 ## Project Structure
 
