@@ -66,7 +66,7 @@ export const appConfig: ApplicationConfig = {
       await inject(PwaInstallService).init();
     }),
     provideAppInitializer(async () => {
-      const ctx = window.__splashCtx;
+      const ctx = globalThis.__splashCtx;
       if (!ctx) return;
       // Ensure the backend is reachable before running initializers that depend on it.
       await ctx.pingPromise;
@@ -80,7 +80,7 @@ export const appConfig: ApplicationConfig = {
       registerIcons(library);
     }),
     provideAppInitializer(async () => {
-      const ctx = window.__splashCtx;
+      const ctx = globalThis.__splashCtx;
       if (!ctx) return;
       if (ctx.result === 'slow' && ctx.splashShownAt !== null) {
         const elapsed = performance.now() - ctx.splashShownAt;
