@@ -1,11 +1,9 @@
 
 # <img src="doc/icons/tech/bim-logo-github-header.webp" alt="BIM logo" width="80px" /> — Bitcoin Is Money
 
-**A Bitcoin wallet on Starknet, unlocked by your fingerprint.**
+# **A self-custodial Bitcoin wallet, unlocked by your fingerprint.**
 
-BIM lets anyone send and receive Bitcoin — on-chain, on the Lightning
-Network, or as WBTC on Starknet — using nothing but a passkey. No seed
-phrase to write down. No browser extension. No gas to pre-fund.
+BIM (Bitcoin is money) lets anyone send and receive Bitcoin — on-chain, on the Lightning Network, or as WBTC on Starknet — using nothing but a passkey. No seed phrase to write down. No browser extension. No gas to pre-fund.
 
 [![CI](https://github.com/bitcoin-is-money/bim-app/actions/workflows/ci.yml/badge.svg)](https://github.com/bitcoin-is-money/bim-app/actions/workflows/ci.yml)
 [![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=bitcoin-is-money_bim&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=bitcoin-is-money_bim)
@@ -17,18 +15,13 @@ phrase to write down. No browser extension. No gas to pre-fund.
 
 ## Why BIM?
 
-Self-custodial Bitcoin wallets have historically forced users to choose
-between two painful options:
+Using Bitcoin as a money for day to day payment is historically difficult because of networks contraints and complexity.
 
-- **Seed phrases** — secure, but a catastrophic UX problem. Lost phrases
-  mean lost funds forever.
-- **Custodial wallets** — easy to use, but you don't own your coins.
+- Bitcoin doesn't allow for instant transfers required for day to day payments,
+- Lightning does, but non custodial Lightning wallets means managing liquidity in channels, which often creates poor UX and/or occurring L1 fees;
+- Both Bitcoin and Lightning doesn't support passkeys signature scheme.
 
-BIM takes a third path: a **smart-contract wallet on Starknet**, unlocked
-by **WebAuthn / passkeys** (the same biometric auth your phone and
-browser already speak). The cryptographic heavy lifting happens inside
-the Starknet account contract; the user only has to touch a fingerprint
-sensor.
+BIM takes a new path: a **smart-contract wallet on Starknet**, unlocked by **WebAuthn / passkeys** (the same biometric auth your phone and browser already speak). The cryptographic heavy lifting happens inside the Starknet account contract; the user only has to touch a fingerprint sensor.
 
 And because smart-contract accounts normally need gas to be deployed,
 BIM leans on the [AVNU paymaster](https://avnu.fi/) (SNIP-29) to
