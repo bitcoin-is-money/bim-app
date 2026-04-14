@@ -9,34 +9,42 @@ Terraform configuration to deploy BIM on Scaleway Serverless.
 | Resource | Type | Description |
 |----------|------|-------------|
 | Container Registry | `scaleway_registry_namespace` | Private Docker registry for API + Indexer images |
-| Managed PostgreSQL | `scaleway_rdb_instance` + `scaleway_rdb_database` | PostgreSQL 16 (DB-DEV-S, 20 GB LSSD) |
+| Managed PostgreSQL | `scaleway_rdb_instance` + `scaleway_rdb_database` + `scaleway_rdb_privilege` | PostgreSQL 16 (DB-DEV-S, 20 GB LSSD), DB user privileges |
+| Container Namespace | `scaleway_container_namespace` | Logical group hosting both serverless containers |
 | bim-api | `scaleway_container` | **Public** — frontend + API (HTTPS via Scaleway reverse proxy) |
 | bim-indexer | `scaleway_container` | **Private** — Apibara blockchain indexer |
+| Balance check cron | `scaleway_container_cron.balance_check` | Conditional (`enable_alerting`) — periodic balance alerting on bim-api |
+| Activity reporting cron | `scaleway_container_cron.activity_reporting` | Conditional (`enable_reporting`) — weekly activity report on bim-api |
 
 ### Architecture
 
 ```
-Internet (HTTPS :443)
-   │
-   ▼
-┌───────────────────────┐
-│ Scaleway reverse proxy│  ← auto-generated URL, TLS termination
-└──────────┬────────────┘
-           │ :8080 (internal)
-           ▼
-┌────────────────────┐     ┌────────────────────┐
-│  bim-api (public)  │     │ bim-indexer        │
-│  Hono + Angular    │     │ Apibara indexer    │
-└─────────┬──────────┘     └─────────┬──────────┘
-          │                          │
-          └────────────┬─────────────┘
-                       │ (no VPC routing yet — all traffic goes through public internet with TLS)
-                       ▼
-            ┌──────────────────┐
-            │ Serverless SQL   │
-            │ PostgreSQL       │
-            └──────────────────┘
+   Internet (HTTPS :443)       Scaleway Cron Scheduler
+            │                            │
+            ▼                            │ POST {secret, type}
+   ┌────────────────────────┐            │
+   │ Scaleway reverse proxy │            │
+   └──────────┬─────────────┘            │
+              │ :8080 (internal)         │
+              ▼                          │
+   ┌────────────────────────────┐        │     ┌────────────────────┐
+   │  bim-api (public)          │ ◄──────┘     │ bim-indexer        │
+   │  Hono + Angular            │              │ Apibara indexer    │
+   │                            │              │ (private)          │
+   └─────────┬──────────────────┘              └─────────┬──────────┘
+             │                                           │
+             └─────────────────────┬─────────────────────┘
+                                   │ (no VPC routing yet — all traffic goes through public internet with TLS)
+                                   ▼
+                        ┌──────────────────┐
+                        │ Managed          │
+                        │ PostgreSQL 16    │
+                        └──────────────────┘
 ```
+
+The cron resources are Scaleway-managed schedulers that POST to bim-api with
+a shared `CRON_SECRET` and a `type` discriminator. They are created only when
+`enable_alerting` / `enable_reporting` are `true` in `terraform.tfvars`.
 
 The containers listen internally on port 8080. Scaleway places a reverse proxy
 in front that handles HTTPS (port 443) and provides the public URL.
@@ -54,26 +62,37 @@ in front that handles HTTPS (port 443) and provides the public URL.
 ┌──────────────┐         ┌─────┴────┐   ┌─────┴───────────┐
 │ Atomiq LP    │◄────────┤ bim-api  │   │ bim-indexer     │
 │ (swap node)  │  REST   │          │   │                 │
-└──────────────┘         └─────┬────┘   └────────┬────────┘
-                               │                 │
-┌──────────────┐               │                 │
-│ AVNU         │◄──────────────┘                 │
-│ Paymaster    │  JSON-RPC                       │
-└──────────────┘                                 │
+└──────────────┘         └─┬─┬─┬─┬──┘   └────────┬────────┘
+                           │ │ │ │               │
+┌──────────────┐           │ │ │ │               │
+│ AVNU         │◄──────────┘ │ │ │               │
+│ Paymaster    │  JSON-RPC   │ │ │               │
+└──────────────┘             │ │ │               │
+┌──────────────┐             │ │ │               │
+│ AVNU sponsor │◄────────────┘ │ │               │
+│ activity     │  HTTPS        │ │               │
+└──────────────┘               │ │               │
+┌──────────────┐               │ │               │
+│ Slack API    │◄──────────────┘ │               │
+│ (alerting)   │  HTTPS          │               │
+└──────────────┘                 │               │
                           ┌──────────────────┐   │
                           │ Apibara DNA      │◄──┘
                           │ (block stream)   │  authenticated stream
                           └──────────────────┘
 
 API calls out to:
-  - Starknet RPC     — read state, submit transactions (Cartridge, Alchemy...)
-  - AVNU Paymaster   — gasless account deployment & sponsored transactions
-  - Atomiq LP Node   — cross-chain swaps (Lightning / Bitcoin ↔ Starknet)
+  - Starknet RPC          — read state, submit transactions (Cartridge, Alchemy...)
+  - AVNU Paymaster        — gasless account deployment & sponsored transactions
+  - AVNU sponsor activity — credit/usage monitoring (used by balance-check cron)
+  - Atomiq LP Node        — cross-chain swaps (Lightning / Bitcoin ↔ Starknet)
+  - Slack API             — alerting webhook (only when `enable_alerting = true`)
 
 Indexer calls out to:
   - Apibara DNA      — real-time Starknet block stream (WBTC transfer events)
+  - Starknet RPC     — additional on-chain reads via Cartridge gateway
 
-By default, scaleway containers have full internet access.
+By default, Scaleway containers have full internet access.
 ```
 
 ## Prerequisites
@@ -147,8 +166,10 @@ npm run docker:push
 npm run infra:apply
 ```
 
-Creates the database, container namespace, and both containers in one pass.
-Note the outputs, especially `api_domain` and `api_url`.
+Creates the database, container namespace, both containers, and any enabled
+crons (`balance_check` if `enable_alerting = true`, `activity_reporting` if
+`enable_reporting = true`) in one pass. Note the outputs, especially
+`api_domain` and `api_url`.
 
 ### 6. Set the WebAuthn domain
 
@@ -168,9 +189,19 @@ Your app is now live at the `api_url` output.
 
 ### 7. Run database migrations
 
+Migrations are versioned SQL files generated from the Drizzle schema. The full
+workflow (`db:generate` then `db:migrate`), conventions, and troubleshooting
+live in [`packages/db/DATABASE.md`](../packages/db/DATABASE.md).
+
+To apply pending migrations against the freshly created Scaleway database:
+
 ```bash
-DATABASE_URL=$(cd infra && terraform output -raw database_url) npm run db:push
+DATABASE_URL=$(cd infra && terraform output -raw database_url) npm run db:migrate
 ```
+
+**Do not use `db:push` against the prod database** — `drizzle-kit push` syncs
+the schema directly without migration files and can drop columns/tables
+without warning. It is intended for local dev only.
 
 ## Common Commands
 
@@ -314,12 +345,12 @@ All operations are accessible via `npm run docker:*` and `npm run infra:*` from 
 The Terraform outputs map directly to the GitHub Actions secrets
 used by `.github/workflows/deploy.yml`:
 
-| GitHub Secret | Terraform Output |
-|---------------|------------------|
-| `SCW_REGISTRY_ENDPOINT` | `registry_endpoint` |
-| `SCW_API_CONTAINER_ID` | `api_container_id` |
-| `SCW_INDEXER_CONTAINER_ID` | `indexer_container_id` |
-| `DATABASE_URL` | `database_endpoint` |
+| GitHub Secret | Terraform Output | Notes |
+|---------------|------------------|-------|
+| `SCW_REGISTRY_ENDPOINT` | `registry_endpoint` | |
+| `SCW_API_CONTAINER_ID` | `api_container_id` | |
+| `SCW_INDEXER_CONTAINER_ID` | `indexer_container_id` | |
+| `DATABASE_URL` | `database_url` | Full URL with credentials (sensitive). `database_endpoint` is host:port only and not enough for migrations. |
 
 Quick export:
 
@@ -327,13 +358,18 @@ Quick export:
 echo "SCW_REGISTRY_ENDPOINT=$(terraform output -raw registry_endpoint)"
 echo "SCW_API_CONTAINER_ID=$(terraform output -raw api_container_id)"
 echo "SCW_INDEXER_CONTAINER_ID=$(terraform output -raw indexer_container_id)"
-echo "DATABASE_URL=$(terraform output -raw database_endpoint)"
+echo "DATABASE_URL=$(terraform output -raw database_url)"
 ```
 
 ## Secrets Required
 
-| Secret | Where to get it |
-|--------|-----------------|
-| Scaleway API Key | Console Scaleway > Profile > API Keys |
-| `avnu_api_key` | https://portal.avnu.fi |
+| Secret (`terraform.tfvars`) | Where to get it / how to generate |
+|-----------------------------|-----------------------------------|
+| Scaleway API Key (`SCW_ACCESS_KEY`/`SCW_SECRET_KEY` env) | Scaleway Console > Profile > API Keys |
+| `db_password` | Generate (e.g. `openssl rand -base64 32`) — used by Terraform to create the DB user |
+| `avnu_api_key` | https://portal.avnu.fi (remember to add credits) |
 | `dna_token` | https://www.apibara.com |
+| `claimer_address` / `claimer_private_key` | Starknet account used by the API to claim on-chain payments |
+| `bim_treasury_address` / `bim_treasury_private_key` | Starknet treasury account (used by API and indexer) |
+| `cron_secret` | Generate (e.g. `openssl rand -hex 32`) — shared between Scaleway crons and the API handler |
+| `alerting_slack_bot_token` | Slack app > OAuth & Permissions (only if `enable_alerting = true`) |
