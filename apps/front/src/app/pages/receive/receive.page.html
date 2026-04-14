@@ -51,13 +51,11 @@
           [editable]="true"
           [placeholder]="'receive.optionalDescription' | translate"
           (valueChange)="onDescriptionChange($event)"/>
-        <!-- NOSONAR — deactivated feature; we currently always generate a standard invoice with prefix
-        @if (selectedNetwork() !== 'lightning') {
+        @if (uriPrefixOptionEnabled && selectedNetwork() !== 'lightning') {
           <app-checkbox-field
             [(checked)]="useUriPrefix"
             [label]="'receive.useUriPrefix' | translate"/>
         }
-        -->
       </div>
 
       <!-- Action buttons -->
