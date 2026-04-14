@@ -125,25 +125,30 @@ export class AuthService {
       await this.i18n.init();
       await this.currency.init();
 
-      if (this.pwaUpdate.updateAvailable()) {
-        await this.router.navigate(['/updating']);
-      } else {
-        await this.router.navigate(['/home']);
-      }
+      await this.navigateAfterSignIn();
     } catch (error) {
-      // HTTP errors are already handled by the interceptor
-      // Only handle non-HTTP errors here
-      if (!(error instanceof HttpErrorResponse)) {
-        if (error instanceof DOMException && error.name === 'NotAllowedError') {
-          this.notifications.error({ message: this.i18n.t('notifications.authenticationCancelled') });
-        } else {
-          const message = error instanceof Error ? error.message : this.i18n.t('notifications.authenticationFailed');
-          this.notifications.error({ message });
-        }
-      }
+      this.handleSignInError(error);
     } finally {
       this.isLoading.set(false);
     }
+  }
+
+  private async navigateAfterSignIn(): Promise<void> {
+    const route = this.pwaUpdate.updateAvailable() ? '/updating' : '/home';
+    await this.router.navigate([route]);
+  }
+
+  private handleSignInError(error: unknown): void {
+    // HTTP errors are already handled by the interceptor
+    if (error instanceof HttpErrorResponse) return;
+
+    if (error instanceof DOMException && error.name === 'NotAllowedError') {
+      this.notifications.error({ message: this.i18n.t('notifications.authenticationCancelled') });
+      return;
+    }
+
+    const message = error instanceof Error ? error.message : this.i18n.t('notifications.authenticationFailed');
+    this.notifications.error({ message });
   }
 
   /**
