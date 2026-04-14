@@ -19,6 +19,25 @@ import {AuthService} from './services/auth.service';
 import {PwaInstallService} from './services/pwa-install.service';
 import {PwaUpdateService} from './services/pwa-update.service';
 
+/**
+ * Total time (ms) the splash animation needs to play out once revealed.
+ * Matches the last meaningful keyframe in logo-cubes-animated.svg (74% of 5s)
+ * plus a small safety buffer.
+ */
+const SPLASH_ANIMATION_MS = 3800;
+
+interface SplashContext {
+  pingPromise: Promise<unknown>;
+  result: 'fast' | 'slow' | null;
+  splashShownAt: number | null;
+}
+
+declare global {
+  interface Window {
+    __splashCtx?: SplashContext;
+  }
+}
+
 // Interceptors run in order: first intercepts request first, but catches errors last
 // So: httpNotificationInterceptor catches errors from backendInterceptor
 const httpProviders = environment.useMockBackend
@@ -47,12 +66,30 @@ export const appConfig: ApplicationConfig = {
       await inject(PwaInstallService).init();
     }),
     provideAppInitializer(async () => {
+      const ctx = window.__splashCtx;
+      if (!ctx) return;
+      // Ensure the backend is reachable before running initializers that depend on it.
+      await ctx.pingPromise;
+    }),
+    provideAppInitializer(async () => {
       const authService = inject(AuthService);
       await authService.loadCurrentUser();
     }),
     provideAppInitializer(() => {
       const library = inject(FaIconLibrary);
       registerIcons(library);
+    }),
+    provideAppInitializer(async () => {
+      const ctx = window.__splashCtx;
+      if (!ctx) return;
+      if (ctx.result === 'slow' && ctx.splashShownAt !== null) {
+        const elapsed = performance.now() - ctx.splashShownAt;
+        const remaining = Math.max(0, SPLASH_ANIMATION_MS - elapsed);
+        if (remaining > 0) {
+          await new Promise<void>(resolve => setTimeout(resolve, remaining));
+        }
+      }
+      document.getElementById('splash')?.remove();
     }),
     importProvidersFrom(
       TranslateModule.forRoot({

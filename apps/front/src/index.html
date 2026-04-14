@@ -13,8 +13,50 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <!-- NOSONAR S5725 - Google Fonts CSS hash is not stable, SRI not applicable; trusted CDN -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..800&display=swap" rel="stylesheet">
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; background: #000; }
+    #splash {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #000;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    #splash img { width: 90vmin; height: 90vmin; max-width: 100%; }
+  </style>
+  <script>
+    // Splash gate: ping backend ASAP and decide if the splash needs to be revealed.
+    // - If /api/health/live answers within 20ms → splash stays hidden, app boots normally.
+    // - Otherwise → reveal splash; appInitializer (Angular) waits for the animation to
+    //   finish (and the ping to settle) before rendering the first route.
+    (function () {
+      const TIMEOUT_MS = 10;
+      const pingPromise = fetch('/api/health/live').catch(function () { return null; });
+      const ctx = { pingPromise: pingPromise, result: null, splashShownAt: null };
+      globalThis.__splashCtx = ctx;
+
+      Promise.race([
+        pingPromise.then(function () { return 'fast'; }),
+        new Promise(function (resolve) { setTimeout(function () { resolve('slow'); }, TIMEOUT_MS); })
+      ]).then(function (result) {
+        ctx.result = result;
+        if (result === 'slow') {
+          var splash = document.getElementById('splash');
+          if (splash) {
+            splash.style.display = 'flex';
+            ctx.splashShownAt = performance.now();
+          }
+        }
+      });
+    })();
+  </script>
 </head>
 <body>
   <app-root></app-root>
+  <div id="splash">
+    <img src="/logo-cubes-animated.svg" alt="" />
+  </div>
 </body>
 </html>
