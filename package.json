@@ -78,6 +78,7 @@
     "node": ">=22.0.0"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "^4.0.18",
     "angular-eslint": "^21.2.0",
     "better-npm-audit": "^3.11.0",
     "dotenv-cli": "^11.0.0",
@@ -91,10 +92,12 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.58.2",
     "vite-tsconfig-paths": "^6.1.1",
-    "vitest": "^4.0.18",
-    "@vitest/coverage-v8": "^4.0.18"
+    "vitest": "^4.0.18"
   },
   "overrides": {
     "vitest": "$vitest"
+  },
+  "dependencies": {
+    "@atomiqlabs/base": "^13.2.0"
   }
 }
