@@ -13,6 +13,12 @@ import {PwaUpdateService} from '../../services/pwa-update.service';
 const MINIMUM_DISPLAY_MS = 4900;
 
 /**
+ * Delay before revealing the "updating" status (spinner + text) once the
+ * logo is on screen, so the message only appears if the update lingers.
+ */
+const STATUS_REVEAL_DELAY_MS = 3000;
+
+/**
  * Safety-check budget: how long we wait for the backend to answer whether
  * the account has any active swaps before considering the reload unsafe.
  */
@@ -37,6 +43,7 @@ export class UpdatingPage implements OnInit {
   private readonly router = inject(Router);
 
   readonly showContent = signal(false);
+  readonly showStatus = signal(false);
 
   ngOnInit(): void {
     void this.runUpdateFlow();
@@ -52,6 +59,7 @@ export class UpdatingPage implements OnInit {
     }
 
     this.showContent.set(true);
+    setTimeout(() => this.showStatus.set(true), STATUS_REVEAL_DELAY_MS);
 
     const elapsed = Date.now() - arrivedAt;
     const remainingDisplay = Math.max(0, MINIMUM_DISPLAY_MS - elapsed);
