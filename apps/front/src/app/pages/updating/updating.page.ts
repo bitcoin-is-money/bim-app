@@ -10,7 +10,7 @@ import {PwaUpdateService} from '../../services/pwa-update.service';
  * Minimum time the page stays visible once the animated logo is revealed,
  * to prevent an imperceptible flash when SW activation is near-instant.
  */
-const MINIMUM_DISPLAY_MS = 390000;
+const MINIMUM_DISPLAY_MS = 4900;
 
 /**
  * Safety-check budget: how long we wait for the backend to answer whether
