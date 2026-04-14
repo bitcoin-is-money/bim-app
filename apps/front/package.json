@@ -61,6 +61,7 @@
     "@ngx-translate/core": "^17.0.0",
     "@ngx-translate/http-loader": "^17.0.0",
     "@stablelib/base64": "^2.0.1",
+    "@stablelib/hex": "^2.0.1",
     "canvas-confetti": "^1.9.4",
     "html5-qrcode": "^2.3.8",
     "marked": "^18.0.0",

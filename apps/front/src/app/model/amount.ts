@@ -21,6 +21,10 @@ export class Amount {
     return new Amount(value, currency);
   }
 
+  static satToBtc(sats: number): number {
+    return sats / SATS_PER_BTC;
+  }
+
   clone(): Amount {
     return Amount.of(this.value, this.currency);
   }

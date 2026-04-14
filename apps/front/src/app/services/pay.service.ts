@@ -1,9 +1,9 @@
 import {inject, Injectable, signal} from '@angular/core';
 import {Router} from '@angular/router';
-import {Base64Url} from '@bim/lib/encoding';
+import {Base64Url, Hex} from '@bim/lib/encoding';
 import type { Subscription} from 'rxjs';
 import {firstValueFrom} from 'rxjs';
-import {ParsedPayment, type StoredSwap} from '../model';
+import {Amount, ParsedPayment, type StoredSwap} from '../model';
 import {AccountService} from './account.service';
 import {I18nService} from './i18n.service';
 import {NotificationService} from './notification.service';
@@ -104,7 +104,7 @@ export class PayService {
    * Reconstructs the rawData as a BIP-21 URI with the new amount.
    */
   updatePaymentAmount(destination: string, amountSats: number): void {
-    const btcAmount = amountSats / 100_000_000;
+    const btcAmount = Amount.satToBtc(amountSats);
     this.rawData = `bitcoin:${destination}?amount=${btcAmount}`;
     this.cachedBuild = null;
   }
@@ -133,7 +133,7 @@ export class PayService {
         ?? await firstValueFrom(this.httpService.build(this.rawData, this.description ?? undefined));
 
       // 2. WebAuthn sign (user approves with biometrics)
-      const challenge = hexToBytes(buildResponse.messageHash).buffer as ArrayBuffer;
+      const challenge = Hex.decode(buildResponse.messageHash).buffer as ArrayBuffer;
       const credentialIdBytes = Base64Url.decode(buildResponse.credentialId).buffer as ArrayBuffer;
       const credential = (await navigator.credentials.get({
         publicKey: {
@@ -214,16 +214,3 @@ export class PayService {
   }
 }
 
-/**
- * Converts a 0x-prefixed hex string to Uint8Array (for WebAuthn challenge).
- */
-function hexToBytes(hex: string): Uint8Array {
-  const clean = hex.startsWith('0x') ? hex.slice(2) : hex;
-  const padded = clean.length % 2 === 0 ? clean : '0' + clean;
-  const bytes = new Uint8Array(padded.length / 2);
-  for (let i = 0; i < bytes.length; i++) {
-    // eslint-disable-next-line security/detect-object-injection -- numeric index on Uint8Array
-    bytes[i] = Number.parseInt(padded.substring(i * 2, i * 2 + 2), 16);
-  }
-  return bytes;
-}
