@@ -53,13 +53,13 @@ export class PwaInstallService {
   readonly isInstalled = computed(() => this.standalone() || this.installedRemotely());
 
   constructor() {
-    if (globalThis.window === undefined) {
+    if (typeof globalThis.window === 'undefined') {
       return;
     }
 
     const mq = globalThis.matchMedia('(display-mode: standalone)');
     mq.addEventListener('change', (event) => {
-      this.zone.run(() => this.standalone.set(event.matches || this.iosStandalone()));
+      this.zone.run(() => { this.standalone.set(event.matches || this.iosStandalone()); });
     });
 
     globalThis.addEventListener('beforeinstallprompt', (event) => {
@@ -85,7 +85,7 @@ export class PwaInstallService {
    * satisfy "no async work in constructor" lint rule.
    */
   async init(): Promise<void> {
-    if (globalThis.window === undefined) return;
+    if (typeof globalThis.window === 'undefined') return;
     await this.checkRelatedApps();
   }
 
@@ -103,7 +103,7 @@ export class PwaInstallService {
     }
     try {
       const apps = await nav.getInstalledRelatedApps();
-      this.zone.run(() => this.installedRemotely.set(apps.length > 0));
+      this.zone.run(() => { this.installedRemotely.set(apps.length > 0); });
     } catch (error) {
       console.error('getInstalledRelatedApps failed', error);
     }
@@ -127,14 +127,14 @@ export class PwaInstallService {
   }
 
   private detectStandalone(): boolean {
-    if (globalThis.window === undefined) {
+    if (typeof globalThis.window === 'undefined') {
       return false;
     }
     return globalThis.matchMedia('(display-mode: standalone)').matches || this.iosStandalone();
   }
 
   private iosStandalone(): boolean {
-    if (globalThis.navigator === undefined) {
+    if (typeof globalThis.navigator === 'undefined') {
       return false;
     }
     const nav = globalThis.navigator as Navigator & {standalone?: boolean};
@@ -142,17 +142,17 @@ export class PwaInstallService {
   }
 
   private detectPlatform(): PwaPlatform {
-    if (globalThis.navigator === undefined) {
+    if (typeof globalThis.navigator === 'undefined') {
       return 'other';
     }
     const ua = globalThis.navigator.userAgent.toLowerCase();
     if (/iphone|ipad|ipod/.test(ua)) {
       return 'ios';
     }
-    if (/android/.test(ua)) {
+    if (ua.includes('android')) {
       return 'android';
     }
-    if (/firefox/.test(ua)) {
+    if (ua.includes('firefox')) {
       return 'firefox';
     }
     if (/chrome|chromium|edg/.test(ua)) {

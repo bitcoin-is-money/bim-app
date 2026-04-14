@@ -33,9 +33,7 @@ interface SplashContext {
 }
 
 declare global {
-  interface Window {
-    __splashCtx?: SplashContext;
-  }
+  var __splashCtx: SplashContext | undefined;
 }
 
 // Interceptors run in order: first intercepts request first, but catches errors last

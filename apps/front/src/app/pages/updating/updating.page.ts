@@ -59,7 +59,7 @@ export class UpdatingPage implements OnInit {
     }
 
     this.showContent.set(true);
-    setTimeout(() => this.showStatus.set(true), STATUS_REVEAL_DELAY_MS);
+    setTimeout(() => { this.showStatus.set(true); }, STATUS_REVEAL_DELAY_MS);
 
     const elapsed = Date.now() - arrivedAt;
     const remainingDisplay = Math.max(0, MINIMUM_DISPLAY_MS - elapsed);

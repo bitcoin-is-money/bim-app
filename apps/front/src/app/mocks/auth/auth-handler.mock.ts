@@ -15,7 +15,8 @@ const SWAPS_STORAGE_KEY = 'bim:swaps';
 
 // Predictable test Starknet address based on username
 function generateStarknetAddress(username: string): string {
-  const hash = [...username].reduce((acc, char) => acc + (char.codePointAt(0) ?? 0), 0);
+  let hash = 0;
+  for (let i = 0; i < username.length; i++) hash += username.charCodeAt(i);
   const paddedHash = hash.toString(16).padStart(8, '0');
   return `0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7${paddedHash}`;
 }

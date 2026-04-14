@@ -251,7 +251,7 @@ describe('SwapMonitor', () => {
       vi.mocked(swapService.getActiveSwaps).mockResolvedValue([]);
 
       monitor.start();
-      expect(() => monitor.ensureRunning()).not.toThrow(); // should not throw or restart
+      expect(() => { monitor.ensureRunning(); }).not.toThrow(); // should not throw or restart
 
       await new Promise(resolve => setTimeout(resolve, 150));
       await monitor.stop();

@@ -92,8 +92,7 @@ export async function fetchDevnetAccounts(devnetUrl: string): Promise<DevnetAcco
 
     return cachedAccounts;
   } catch (err: unknown) {
-    const cause = err instanceof Error ? err.message : String(err)
-    throw new Error(`Failed to fetch devnet accounts: ${cause}`);
+    throw new Error('Failed to fetch devnet accounts', {cause: err});
   }
 }
 

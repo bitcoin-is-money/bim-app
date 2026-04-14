@@ -31,27 +31,35 @@ export class TransferEventDecoder {
     for (const event of events) {
       // Cairo 1: keys=[selector, from, to], data=[amount_low, amount_high]
       if (event.keys.length >= 3 && event.data.length >= 2) {
-        transfers.push({
-          from: addAddressPadding(event.keys[1]!),
-          to: addAddressPadding(event.keys[2]!),
-          amount: uint256.uint256ToBN({low: event.data[0]!, high: event.data[1]!}).toString(),
-          txHash: addAddressPadding(event.transactionHash),
-        });
+        const [, from, to] = event.keys;
+        const [low, high] = event.data;
+        if (from !== undefined && to !== undefined && low !== undefined && high !== undefined) {
+          transfers.push({
+            from: addAddressPadding(from),
+            to: addAddressPadding(to),
+            amount: uint256.uint256ToBN({low, high}).toString(),
+            txHash: addAddressPadding(event.transactionHash),
+          });
+          continue;
+        }
       }
       // Cairo 0 (legacy): keys=[selector], data=[from, to, amount_low, amount_high]
-      else if (event.keys.length >= 1 && event.data.length >= 4) {
-        transfers.push({
-          from: addAddressPadding(event.data[0]!),
-          to: addAddressPadding(event.data[1]!),
-          amount: uint256.uint256ToBN({low: event.data[2]!, high: event.data[3]!}).toString(),
-          txHash: addAddressPadding(event.transactionHash),
-        });
-      } else {
-        this.logger.warn(
-          {keys: event.keys.length, data: event.data.length, txHash: event.transactionHash},
-          'Unrecognized Transfer event layout — skipping',
-        );
+      if (event.keys.length >= 1 && event.data.length >= 4) {
+        const [from, to, low, high] = event.data;
+        if (from !== undefined && to !== undefined && low !== undefined && high !== undefined) {
+          transfers.push({
+            from: addAddressPadding(from),
+            to: addAddressPadding(to),
+            amount: uint256.uint256ToBN({low, high}).toString(),
+            txHash: addAddressPadding(event.transactionHash),
+          });
+          continue;
+        }
       }
+      this.logger.warn(
+        {keys: event.keys.length, data: event.data.length, txHash: event.transactionHash},
+        'Unrecognized Transfer event layout — skipping',
+      );
     }
 
     this.logger.debug(`Transfer events decoded (${transfers.length})`);

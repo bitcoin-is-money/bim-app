@@ -18,11 +18,11 @@ describe('createLogger rendering', () => {
     }).not.toThrow();
   });
 
-  it('trace', () => { expect(() => log.trace('This is a trace message')).not.toThrow(); });
-  it('debug', () => { expect(() => log.debug('This is a debug message')).not.toThrow(); });
-  it('info', () => { expect(() => log.info('This is an info message')).not.toThrow(); });
-  it('warn', () => { expect(() => log.warn('This is a warn message')).not.toThrow(); });
-  it('error', () => { expect(() => log.error('This is an error message')).not.toThrow(); });
-  it('fatal', () => { expect(() => log.fatal('This is a fatal message')).not.toThrow(); });
-  it('info with key', () => { expect(() => log.info({key: 'value'}, 'This is an info message')).not.toThrow(); });
+  it('trace', () => { expect(() => { log.trace('This is a trace message'); }).not.toThrow(); });
+  it('debug', () => { expect(() => { log.debug('This is a debug message'); }).not.toThrow(); });
+  it('info', () => { expect(() => { log.info('This is an info message'); }).not.toThrow(); });
+  it('warn', () => { expect(() => { log.warn('This is a warn message'); }).not.toThrow(); });
+  it('error', () => { expect(() => { log.error('This is an error message'); }).not.toThrow(); });
+  it('fatal', () => { expect(() => { log.fatal('This is a fatal message'); }).not.toThrow(); });
+  it('info with key', () => { expect(() => { log.info({key: 'value'}, 'This is an info message'); }).not.toThrow(); });
 });

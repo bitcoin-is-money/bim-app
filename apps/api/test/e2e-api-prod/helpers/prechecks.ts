@@ -17,8 +17,7 @@ export async function isServerHealthy(client: E2eClient): Promise<boolean> {
     if (error instanceof Error && error.message.startsWith('Server unhealthy')) {
       throw error;
     }
-    const message = error instanceof Error ? error.message : String(error);
-    throw new Error(`Server unreachable at ${client.baseUrl}: ${message}`);
+    throw new Error(`Server unreachable at ${client.baseUrl}`, {cause: error});
   }
 }
 

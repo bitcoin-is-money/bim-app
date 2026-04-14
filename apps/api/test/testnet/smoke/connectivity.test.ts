@@ -61,12 +61,11 @@ describe('Testnet Connectivity', () => {
         expect(contractClass).toBeDefined();
         expect(contractClass).toHaveProperty('abi');
       } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : String(error);
         throw new Error(
           `BIM Argent class hash is NOT declared on Sepolia.\n` +
           `Class hash: ${classHash}\n` +
-          `Run: npx tsx scripts/bim-argent/declare-contract.ts\n` +
-          `Original error: ${message}`
+          `Run: npx tsx scripts/bim-argent/declare-contract.ts`,
+          {cause: error}
         );
       }
     });

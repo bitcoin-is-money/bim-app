@@ -72,38 +72,43 @@ export class TransactionMatcher {
       }
     }
 
-    // Aggregate rows that share the same (txHash, accountId, transactionType).
-    // A multicall transaction (e.g. transfer + fee) emits multiple Transfer events
-    // that must be merged into a single row (DB has a unique constraint on txHash+accountId).
-    const aggregated = this.aggregate(rows);
+    const merged = this.mergeMulticallRows(rows);
 
-    this.logger.debug(`[Block ${blockNumber}] Transactions matched (${aggregated.length})`);
-    return aggregated;
+    this.logger.debug(`[Block ${blockNumber}] Transactions matched (${merged.length})`);
+    return merged;
   }
 
-  private aggregate(rows: NewTransactionRecord[]): NewTransactionRecord[] {
+  /**
+   * Merge multicall rows that share the same (txHash, accountId, type).
+   *
+   * A single transaction can emit several Transfer events (e.g., payment and fee).
+   * The DB has a unique constraint on (txHash, accountId, type), so we collapse
+   * each group into one row: sum amounts, and keep the address fields from
+   * the largest transfer (the main one — smaller transfers are fees).
+   */
+  private mergeMulticallRows(rows: NewTransactionRecord[]): NewTransactionRecord[] {
     if (rows.length <= 1) return rows;
 
-    const grouped = new Map<string, NewTransactionRecord[]>();
+    const groups = new Map<string, NewTransactionRecord[]>();
     for (const row of rows) {
       const key = `${row.transactionHash}|${row.accountId}|${row.transactionType}`;
-      const group = grouped.get(key);
-      if (group) {
-        group.push(row);
-      } else {
-        grouped.set(key, [row]);
-      }
+      const existing = groups.get(key);
+      if (existing) existing.push(row);
+      else groups.set(key, [row]);
     }
 
-    return [...grouped.values()].map(group => {
-      // Sum amounts and keep address fields from the largest transfer (the main one, not the fee)
-      const totalAmount = group.reduce((sum, r) => sum + BigInt(r.amount), 0n);
-      const [firstRow, ...restRows] = group;
-      const primary = restRows.reduce(
-        (a, b) => BigInt(a.amount) >= BigInt(b.amount) ? a : b,
-        firstRow!,
-      );
-      return {...primary, amount: totalAmount.toString()};
+    return [...groups.values()].map(group => {
+      const first = group[0];
+      if (first === undefined) {
+        throw new Error('unreachable: empty group');
+      }
+      let largest = first;
+      let totalAmount = 0n;
+      for (const row of group) {
+        totalAmount += BigInt(row.amount);
+        if (BigInt(row.amount) > BigInt(largest.amount)) largest = row;
+      }
+      return {...largest, amount: totalAmount.toString()};
     });
   }
 }

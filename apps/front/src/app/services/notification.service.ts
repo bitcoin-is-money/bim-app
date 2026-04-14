@@ -50,7 +50,7 @@ export class NotificationService {
       className: 'hot-toast-success',
     });
     if (data.useConfetti) {
-      confetti({
+      void confetti({
         particleCount: 100,
         spread: 70,
         origin: {y: 0.4}
