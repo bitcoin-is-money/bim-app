@@ -1,5 +1,6 @@
 import {inject, Injectable, signal} from '@angular/core';
 import {Router} from '@angular/router';
+import {buildBip21Uri} from '@bim/lib/bitcoin';
 import {Base64Url, Hex} from '@bim/lib/encoding';
 import type { Subscription} from 'rxjs';
 import {firstValueFrom} from 'rxjs';
@@ -105,7 +106,7 @@ export class PayService {
    */
   updatePaymentAmount(destination: string, amountSats: number): void {
     const btcAmount = Amount.satToBtc(amountSats);
-    this.rawData = `bitcoin:${destination}?amount=${btcAmount}`;
+    this.rawData = buildBip21Uri(destination, {amount: btcAmount});
     this.cachedBuild = null;
   }
 

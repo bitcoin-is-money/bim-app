@@ -26,6 +26,10 @@
       "types": "./dist/auth/index.d.ts",
       "import": "./dist/auth/index.js"
     },
+    "./bitcoin": {
+      "types": "./dist/bitcoin/index.d.ts",
+      "import": "./dist/bitcoin/index.js"
+    },
     "./encoding": {
       "types": "./dist/encoding/index.d.ts",
       "import": "./dist/encoding/index.js"
