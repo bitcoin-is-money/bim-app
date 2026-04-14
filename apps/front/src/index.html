@@ -32,7 +32,7 @@
     // - Otherwise → reveal splash; appInitializer (Angular) waits for the animation to
     //   finish (and the ping to settle) before rendering the first route.
     (function () {
-      const TIMEOUT_MS = 10;
+      const TIMEOUT_MS = 150;
       const pingPromise = fetch('/api/health/live').catch(function () { return null; });
       const ctx = { pingPromise: pingPromise, result: null, splashShownAt: null };
       globalThis.__splashCtx = ctx;
