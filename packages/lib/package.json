@@ -34,6 +34,10 @@
       "types": "./dist/logger/index.d.ts",
       "import": "./dist/logger/index.js"
     },
+    "./token": {
+      "types": "./dist/token/index.d.ts",
+      "import": "./dist/token/index.js"
+    },
     "./url": {
       "types": "./dist/url/index.d.ts",
       "import": "./dist/url/index.js"

@@ -1,3 +1,4 @@
+import {formatTokenAmount} from '@bim/lib/token';
 import type {StarknetAddress} from '../shared';
 
 const STARKSCAN_MAINNET = 'https://starkscan.co/contract';
@@ -15,8 +16,5 @@ export function truncateAddress(address: string): string {
 const STRK_DECIMALS = 18;
 
 export function formatStrk(wei: bigint): string {
-  const whole = wei / 10n ** BigInt(STRK_DECIMALS);
-  const fraction = wei % 10n ** BigInt(STRK_DECIMALS);
-  const fractionStr = fraction.toString().padStart(STRK_DECIMALS, '0').slice(0, 6);
-  return `${whole}.${fractionStr}`;
+  return formatTokenAmount(wei, STRK_DECIMALS, {fractionDigits: 6});
 }

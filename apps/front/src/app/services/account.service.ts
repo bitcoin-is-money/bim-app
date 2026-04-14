@@ -1,4 +1,5 @@
 import {inject, Injectable, signal} from '@angular/core';
+import {formatTokenAmount} from '@bim/lib/token';
 import type {Observable} from 'rxjs';
 import {map, tap} from 'rxjs';
 import {Amount} from "../model";
@@ -28,7 +29,11 @@ export class AccountService {
       .getBalance()
       .pipe(
         tap((response) => {
-          this.strkBalance.set(formatTokenBalance(response.strkBalance.amount, response.strkBalance.decimals));
+          this.strkBalance.set(formatTokenAmount(
+            response.strkBalance.amount,
+            response.strkBalance.decimals,
+            {fractionDigits: 2, omitZeroFraction: true},
+          ));
           const sats = Number(response.wbtcBalance.amount);
           this.balance.set(Amount.of(sats, 'SAT'));
         }),
@@ -47,16 +52,4 @@ export class AccountService {
   deploy(): Observable<DeployAccountResponse> {
     return this.httpService.deploy();
   }
-}
-
-/**
- * Formats a raw token balance (wei string) into a human-readable string.
- * E.g. "66041022140453590000" with 18 decimals → "66.04"
- */
-function formatTokenBalance(rawAmount: string, decimals: number): string {
-  if (rawAmount === '0') return '0';
-  const padded = rawAmount.padStart(decimals + 1, '0');
-  const whole = padded.slice(0, padded.length - decimals) || '0';
-  const frac = padded.slice(padded.length - decimals, padded.length - decimals + 2);
-  return frac === '00' ? whole : `${whole}.${frac}`;
 }

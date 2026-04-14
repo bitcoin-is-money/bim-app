@@ -1,6 +1,7 @@
 import {readFileSync} from 'node:fs';
 import {dirname, join} from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {formatTokenAmount} from '@bim/lib/token';
 import type {Logger} from 'pino';
 import type {Prices} from './e2e-rpc.js';
 import type {UserReportSummary} from './e2e-user.js';
@@ -59,7 +60,7 @@ export interface FailReportData {
 
 export function formatAvnuCredits(wei: bigint | undefined): string {
   if (wei === undefined) return 'N/A';
-  return (Number(wei) / 1e18).toFixed(6);
+  return formatTokenAmount(wei, 18, {fractionDigits: 6});
 }
 
 function pad(label: string, value: string, width: number): string {
@@ -85,7 +86,7 @@ function row3(
 }
 
 function formatStrk(wei: bigint): string {
-  return (Number(wei) / 1e18).toFixed(4);
+  return formatTokenAmount(wei, 18, {fractionDigits: 6});
 }
 
 function formatSats(sats: bigint): string {

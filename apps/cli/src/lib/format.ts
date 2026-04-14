@@ -1,3 +1,4 @@
+import {formatTokenAmount} from '@bim/lib/token';
 import {STRK_DECIMALS} from '../config/constants.js';
 
 export function formatToken(
@@ -6,11 +7,8 @@ export function formatToken(
   symbol: string,
   displayDecimals?: number,
 ): string {
-  const whole = amount / 10n ** BigInt(decimals);
-  const fraction = amount % 10n ** BigInt(decimals);
-  const fractionStr = fraction.toString().padStart(decimals, '0');
-  const trimmed = displayDecimals === undefined ? fractionStr : fractionStr.slice(0, displayDecimals);
-  return `${whole}.${trimmed} ${symbol}`;
+  const value = formatTokenAmount(amount, decimals, {fractionDigits: displayDecimals ?? decimals});
+  return `${value} ${symbol}`;
 }
 
 export function formatStrk(wei: bigint): string {
@@ -23,7 +21,7 @@ export function formatWbtc(sats: bigint): string {
 
 export function formatAvnuCredits(wei: bigint | undefined): string {
   if (wei === undefined) return 'N/A';
-  return (Number(wei) / 1e18).toFixed(6);
+  return formatTokenAmount(wei, 18, {fractionDigits: 6});
 }
 
 export function formatUsd(amount: number): string {
