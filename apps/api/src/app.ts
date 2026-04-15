@@ -9,6 +9,7 @@ import {AppConfig} from './app-config';
 import {AppContext, type AppContextOverrides} from "./app-context";
 import {runStartupHealthChecks} from './app-startup-health';
 import {installGlobalErrorHandler} from './middleware/global-error-handler';
+import {createApiCacheHeadersMiddleware} from './middleware/api-cache-headers.middleware';
 import {createPwaCacheHeadersMiddleware} from './middleware/pwa-cache-headers.middleware';
 import {
   createAuthRateLimit,
@@ -81,6 +82,7 @@ export async function createApp(options: CreateAppOptions = {}): Promise<AppInst
       '/api/currency/prices'
     ],
   }));
+  app.use('/api/*', createApiCacheHeadersMiddleware());
   app.use('/api/*', cors({
       origin: config.webauthn.origin,
       credentials: true,
