@@ -4,12 +4,18 @@
 
     <main class="about-main">
       <div class="about-content">
-        <p class="about-text">{{ 'about.app.description' | translate }}</p>
+        @if (html(); as rendered) {
+          <div class="about-markdown" [innerHTML]="rendered"></div>
+        } @else {
+          <p class="about-loading">{{ 'common.loading' | translate }}</p>
+        }
+
+        <section class="about-install">
+          <h2 class="about-install__title">{{ 'about.installation.title' | translate }}</h2>
+          <app-pwa-install-info />
+          <p class="about-install__version">BIM v{{ version }}</p>
+        </section>
       </div>
-      <app-info-field [label]="'about.app.version' | translate" variant="mono">
-        {{ version }}
-      </app-info-field>
-      <app-pwa-install-info />
     </main>
   </div>
 </app-full-page-layout>

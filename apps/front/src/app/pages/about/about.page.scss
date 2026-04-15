@@ -4,18 +4,60 @@
   @apply h-full flex flex-col;
 
   .about-main {
-    @apply flex-1 p-4;
+    @apply flex-1 p-4 overflow-y-auto;
 
     .about-content {
       @apply max-w-2xl mx-auto;
 
-      .about-text {
+      .about-loading {
+        @apply text-neutral-400 text-sm;
+      }
+
+      // Markdown content is rendered via [innerHTML], so Angular's view
+      // encapsulation does not apply scoped attributes to the elements
+      // produced by `marked`. `::ng-deep` is required to pierce through
+      // and style those elements.
+      .about-markdown {
         @apply text-neutral-300 leading-relaxed;
+
+        ::ng-deep {
+          h1 {
+            @apply text-xl font-semibold text-neutral-100 mb-4;
+          }
+
+          h2 {
+            @apply text-lg font-semibold text-neutral-100 mt-6 mb-2;
+          }
+
+          p {
+            @apply mb-3;
+          }
+
+          ul {
+            @apply list-disc pl-5 mb-3 space-y-1;
+          }
+
+          a {
+            @apply text-amber-500 underline hover:text-amber-400;
+          }
+
+          strong {
+            @apply text-neutral-100 font-semibold;
+          }
+        }
       }
     }
   }
 
-  app-pwa-install-info {
-    @apply block mt-10;
+  .about-install {
+    @apply max-w-2xl mx-auto mt-6;
+
+    &__title {
+      @apply text-lg font-semibold text-neutral-100 mt-6 mb-2;
+    }
+
+    &__version {
+      @apply text-xs text-neutral-400 mt-3 text-center;
+    }
   }
 }
