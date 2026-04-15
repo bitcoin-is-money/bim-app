@@ -68,7 +68,7 @@ git clone https://github.com/bitcoin-is-money/bim.git
 cd bim
 
 # 2. Install all workspace dependencies
-npm ci
+npm ci --ignore-scripts && npx patch-package && npx husky
 
 # 3. Start PostgreSQL and push the schema
 npm run db:up
@@ -88,6 +88,27 @@ npm run dev:front
 
 See [`apps/api/.env.local.example`](apps/api/.env.local.example) for the
 list of optional secret variables (AVNU API key, Slack tokens, etc.).
+
+### Git hooks
+
+Husky manages Git hooks from `.husky/`. Running `npx husky` once points
+Git to them via `core.hooksPath` (in `.git/config`). It does
+**not** need to be re-run after later `npm install` calls.
+
+On every commit:
+
+- **`pre-commit`** — runs [`lint-staged`](https://github.com/lint-staged/lint-staged)
+  on staged files:
+  - ESLint (`--fix --max-warnings=0`) on TypeScript and Angular HTML
+    templates.
+  - [`secretlint`](https://github.com/secretlint/secretlint) on every staged
+    file to block committed credentials (private keys, AWS/GCP tokens,
+    GitHub tokens, etc.). The `--maskSecrets` flag replaces any detected
+    secret with `*` in the error output, so the value is never echoedk.
+    Config: `"secretlint"` key in `package.json` (rules + allowed
+    patterns) and `.secretlintignore` (paths to skip).
+- **`commit-msg`** — runs [`commitlint`](https://commitlint.js.org/) to
+  enforce [Conventional Commits](#commit-messages).
 
 ### Useful scripts
 
@@ -244,7 +265,9 @@ The SonarCloud step requires a `SONAR_TOKEN` repository secret for the
 
 ## Commit Messages
 
-We follow [Conventional Commits](https://www.conventionalcommits.org/):
+We follow [Conventional Commits](https://www.conventionalcommits.org/).
+The format is enforced locally by a `commit-msg` hook
+(see [Git hooks](#git-hooks)) and in CI:
 
 ```
 <type>(<scope>): <short summary>

@@ -30,7 +30,6 @@
     "apps/*"
   ],
   "scripts": {
-    "postinstall": "patch-package",
     "clean": "npm run clean --workspaces --if-present",
     "clean:all": "npm run clean && rm -rf node_modules packages/*/node_modules apps/*/node_modules package-lock.json",
     "build:libs": "npm run build -w @bim/test-toolkit && npm run build -w @bim/lib && npm run build -w @bim/domain && npm run build -w @bim/db && npm run build -w @bim/atomiq-storage-postgres && npm run build -w @bim/starknet && npm run build -w @bim/atomiq && npm run build -w @bim/slack",
@@ -78,7 +77,10 @@
     "node": ">=22.0.0"
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.5.0",
+    "@commitlint/config-conventional": "^20.5.0",
     "@eslint/js": "^10.0.1",
+    "@secretlint/secretlint-rule-preset-recommend": "^11.7.1",
     "@vitest/coverage-v8": "^4.0.18",
     "angular-eslint": "^21.2.0",
     "better-npm-audit": "^3.11.0",
@@ -87,8 +89,11 @@
     "eslint": "^10.2.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-security": "^4.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "lockfile-lint": "^5.0.0",
     "patch-package": "^8.0.1",
+    "secretlint": "^11.7.1",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.58.2",
@@ -100,5 +105,26 @@
   },
   "dependencies": {
     "@atomiqlabs/base": "^13.2.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,mjs,cjs}": "eslint --fix --max-warnings=0",
+    "apps/front/src/**/*.html": "eslint --fix --max-warnings=0",
+    "*": "secretlint --maskSecrets"
+  },
+  "commitlint": {
+    "extends": ["@commitlint/config-conventional"]
+  },
+  "secretlint": {
+    "rules": [
+      {
+        "id": "@secretlint/secretlint-rule-preset-recommend",
+        "rules": [
+          {
+            "id": "@secretlint/secretlint-rule-database-connection-string",
+            "options": { "allows": ["/bim_user:bim_password/"] }
+          }
+        ]
+      }
+    ]
   }
 }

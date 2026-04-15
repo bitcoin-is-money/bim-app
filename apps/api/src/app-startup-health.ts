@@ -1,5 +1,4 @@
 import {Database} from '@bim/db/database';
-import type {OverallStatus} from "@bim/domain/health";
 import type {Logger} from 'pino';
 import type {AppContext} from './app-context';
 
