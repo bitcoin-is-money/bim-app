@@ -47,6 +47,14 @@ No. Once you sign a transaction it is broadcast and irreversible.
 ### I've lost my phone. What can I do?
 Not much, unless you backed up your passkey beforehand. This is why we strongly recommend using BIM as a day-to-day wallet rather than a long-term vault.
 
+### What is a passkey?
+Think of a passkey as a digital key stored on your phone or computer that replaces your password entirely. Instead of typing a long string of letters and numbers that you'll probably forget, you unlock your accounts the same way you unlock your phone: with your **face (FaceID)**, **fingerprint**, or **screen PIN**.
+
+BIM uses this technology to secure account sign-in and transaction signatures.
+
+### How do I back up my passkeys?
+You can use password managers such as KeePass, Bitwarden, 1Password or ProtonPass to back up your passkeys.
+
 ### Receiving or paying with BIM keeps failing. What can I do?
 BIM needs a reliable connection to work properly. Make sure your Wi-Fi or 4G/5G connection is stable and well configured, then try again.
 

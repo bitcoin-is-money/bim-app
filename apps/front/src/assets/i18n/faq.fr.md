@@ -47,6 +47,14 @@ Non. Dès que vous signez une transaction, elle est diffusée et irréversible.
 ### J'ai perdu mon téléphone. Que puis-je faire ?
 Pas grand-chose, sauf si vous avez sauvegardé votre passkey au préalable. C'est pour cette raison que nous recommandons d'utiliser BIM comme portefeuille du quotidien plutôt que comme coffre-fort long terme.
 
+### Qu'est-ce qu'une passkey ?
+Une passkey est une clé numérique stockée sur votre téléphone ou votre ordinateur qui remplace entièrement votre mot de passe. Au lieu de taper une longue suite de lettres et de chiffres que vous risquez d'oublier, vous déverrouillez vos comptes comme vous déverrouillez votre téléphone : avec votre **visage (FaceID)**, votre **empreinte digitale** ou votre **code PIN**.
+
+BIM s'appuie sur cette technologie pour sécuriser la connexion au compte et la signature des transactions.
+
+### Comment sauvegarder mes passkeys ?
+Vous pouvez utiliser des gestionnaires de mots de passe tels que KeePass, Bitwarden, 1Password ou ProtonPass pour sauvegarder vos passkeys.
+
 ### Recevoir ou payer avec BIM échoue systématiquement. Que faire ?
 BIM a besoin d'une connexion fiable pour fonctionner correctement. Vérifiez que votre Wi-Fi ou votre 4G/5G est stable et bien configurée, puis réessayez.
 
