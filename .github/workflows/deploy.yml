@@ -44,14 +44,12 @@ jobs:
         env:
           SCW_CLI_VERSION: 2.40.0
         run: |
-          set -euo pipefail
           url="https://github.com/scaleway/scaleway-cli/releases/download/v${SCW_CLI_VERSION}/scaleway-cli_${SCW_CLI_VERSION}_linux_amd64"
           curl -fsSL "$url" -o /usr/local/bin/scw
           chmod +x /usr/local/bin/scw
 
       - name: Preflight — tool versions
         run: |
-          set -euo pipefail
           echo "node:      $(node --version)"
           echo "npm:       $(npm --version)"
           echo "docker:    $(docker --version)"
