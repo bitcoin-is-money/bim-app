@@ -71,8 +71,12 @@ export class CurrencyService {
       .getBtcPrices(this.allCurrencies);
     this.cachedPrices = prices;
     this.cachedAt = Date.now();
-    this.log.info({prices: Object.fromEntries(prices)},
-      'Fetched BTC prices for all available currencies');
+    const logMsg = 'Fetched BTC prices for all available currencies';
+    if (this.log.isLevelEnabled("debug")) {
+      this.log.info({prices: Object.fromEntries(prices)}, logMsg);
+    } else {
+      this.log.info(logMsg);
+    }
   }
 
 }

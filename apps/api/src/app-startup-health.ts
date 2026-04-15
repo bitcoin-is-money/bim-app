@@ -1,4 +1,5 @@
 import {Database} from '@bim/db/database';
+import type {OverallStatus} from "@bim/domain/health";
 import type {Logger} from 'pino';
 import type {AppContext} from './app-context';
 
@@ -54,7 +55,12 @@ export async function runStartupHealthChecks(
   for (const comp of snapshot.components) {
     summary[comp.name] = comp.status === 'healthy' ? 'ok' : `down(${comp.lastError?.kind ?? 'unknown'})`;
   }
-  log.info({overall: snapshot.overall, services: summary}, 'Startup health check summary');
+  const logMsg = `Startup health check summary: ${snapshot.overall}`;
+  if (snapshot.overall == 'healthy') {
+    log.info(logMsg);
+  } else {
+    log.info({services: summary}, logMsg);
+  }
 }
 
 async function pingDatabaseAtStartup(context: AppContext): Promise<boolean> {

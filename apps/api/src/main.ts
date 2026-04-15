@@ -27,7 +27,7 @@ if (swapMonitor) {
 }
 // Graceful shutdown
 async function shutdown(signal: string): Promise<void> {
-  logger.info({signal}, 'Shutting down');
+  logger.info(`Shutting down (${signal})`);
   if (swapMonitor) {
     await swapMonitor.stop();
   }

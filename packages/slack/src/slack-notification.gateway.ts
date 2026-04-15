@@ -82,8 +82,7 @@ export class SlackNotificationGateway implements NotificationGateway {
     const attachment: MessageAttachment = {color, blocks};
 
     try {
-      this.log.info({severity: message.severity, title: message.title}, 'Sending Slack notification');
-
+      this.log.info('Sending Slack notification: ' + message.title);
       await this.client.chat.postMessage({
         channel: message.channel,
         text: `${icon} ${message.title}`,

@@ -142,7 +142,7 @@ export class SwapMonitor {
     this.knownActiveSwapIds.clear();
     this.idleIterations++;
     if (this.idleIterations >= this.config.maxIdleIterations) {
-      this.log.info({idleIterations: this.idleIterations}, 'No active swaps, auto-stopping SwapMonitor');
+      this.log.info(`No active swaps, auto-stopping SwapMonitor after ${this.idleIterations} idle iterations`);
       this.iterating = false;
       await this.stop();
     }
