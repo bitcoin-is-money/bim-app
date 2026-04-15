@@ -21,6 +21,23 @@ terraform {
     }
   }
   required_version = ">= 1.0"
+
+  # Remote backend — Scaleway Object Storage (S3-compatible).
+  # Bucket and access keys are provisioned by ./bootstrap/ (run it first).
+  # Export AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY with the rw IAM key
+  # before running any terraform command here.
+  backend "s3" {
+    bucket                      = "bim-tfstate"
+    key                         = "infra/terraform.tfstate"
+    region                      = "fr-par"
+    endpoints                   = { s3 = "https://s3.fr-par.scw.cloud" }
+    skip_credentials_validation = true
+    skip_region_validation      = true
+    skip_requesting_account_id  = true
+    skip_metadata_api_check     = true
+    skip_s3_checksum            = true
+    # use_lockfile = true  # Requires Terraform >= 1.10. Enable once upgraded.
+  }
 }
 
 provider "scaleway" {
@@ -204,4 +221,36 @@ resource "scaleway_container_cron" "activity_reporting" {
     secret = var.cron_secret
     type   = "activity-reporting"
   })
+}
+
+# ---------- CI IAM application (used by GitHub Actions) ----------
+# Single app with all permissions the deploy workflow needs:
+#   - read tfstate bucket (resolve registry URL, container IDs, DATABASE_URL)
+#   - push images to the registry
+#   - update + redeploy Scaleway containers
+# Rotate yearly (Scaleway cap on API key lifetime).
+
+resource "scaleway_iam_application" "ci" {
+  name        = "bim-ci"
+  description = "GitHub Actions CI — read tfstate + build/push images + redeploy containers"
+}
+
+resource "scaleway_iam_policy" "ci" {
+  name           = "bim-ci"
+  application_id = scaleway_iam_application.ci.id
+
+  rule {
+    project_ids = [var.project_id]
+    permission_set_names = [
+      "ObjectStorageReadOnly",
+      "ContainerRegistryFullAccess",
+      "ContainersFullAccess",
+    ]
+  }
+}
+
+resource "scaleway_iam_api_key" "ci" {
+  application_id = scaleway_iam_application.ci.id
+  description    = "GitHub Actions CI key"
+  expires_at     = "2027-04-14T00:00:00Z"
 }

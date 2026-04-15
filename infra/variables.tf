@@ -1,6 +1,10 @@
 # =============================================================================
 # Variable definitions
 # =============================================================================
+variable "project_id" {
+  description = "Scaleway BIM project ID"
+  type        = string
+}
 
 variable "region" {
   description = "Scaleway region"

@@ -1,0 +1,76 @@
+# Manual production deploy.
+#
+# NOTE: image build currently happens in this workflow. Eventually the build
+# step will move to ci.yml (built on every push to main, tagged by SHA) and
+# this workflow will only pull the pre-built image + run migration + redeploy.
+
+name: Deploy to Scaleway
+
+on:
+  workflow_dispatch:
+    inputs:
+      service:
+        description: 'Service to deploy'
+        type: choice
+        options: [all, api, indexer]
+        default: all
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.SCW_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.SCW_SECRET_KEY }}
+      SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
+      SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
+      SCW_DEFAULT_PROJECT_ID: ${{ secrets.SCW_PROJECT_ID }}
+      SCW_DEFAULT_REGION: fr-par
+      SCW_DEFAULT_ZONE: fr-par-1
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.1
+          terraform_wrapper: false
+
+      - name: Install Scaleway CLI
+        run: |
+          curl -sL https://github.com/scaleway/scaleway-cli/releases/latest/download/scaleway-cli_linux_amd64 \
+            -o /usr/local/bin/scw
+          chmod +x /usr/local/bin/scw
+
+      - name: Terraform init (remote backend)
+        working-directory: infra
+        run: terraform init
+
+      - name: Resolve registry endpoint
+        id: tf
+        working-directory: infra
+        run: echo "registry=$(terraform output -raw registry_endpoint)" >> "$GITHUB_OUTPUT"
+
+      - name: Login to Scaleway registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ steps.tf.outputs.registry }}
+          username: nologin
+          password: ${{ secrets.SCW_SECRET_KEY }}
+
+      - name: Install dependencies
+        run: |
+          npm ci --ignore-scripts
+          npx patch-package
+
+      - name: Run database migration
+        run: |
+          export DATABASE_URL="$(terraform -chdir=infra output -raw database_url)"
+          npm run db:migrate -w @bim/db
+
+      - name: Build, push, redeploy
+        run: scripts/docker.sh ship ${{ inputs.service }}

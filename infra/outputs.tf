@@ -37,3 +37,17 @@ output "indexer_container_id" {
   description = "Indexer container ID (for logs and CI/CD)"
   value       = scaleway_container.indexer.id
 }
+
+# ---------- CI IAM credentials (for GitHub Actions) ----------
+
+output "ci_access_key" {
+  description = "Access key for the GitHub Actions CI workflow"
+  value       = scaleway_iam_api_key.ci.access_key
+  sensitive   = true
+}
+
+output "ci_secret_key" {
+  description = "Secret key for the GitHub Actions CI workflow"
+  value       = scaleway_iam_api_key.ci.secret_key
+  sensitive   = true
+}
