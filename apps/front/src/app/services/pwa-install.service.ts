@@ -1,4 +1,5 @@
-import {computed, inject, Injectable, NgZone, signal} from '@angular/core';
+import {isPlatformBrowser} from '@angular/common';
+import {computed, inject, Injectable, NgZone, PLATFORM_ID, signal} from '@angular/core';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -42,6 +43,7 @@ export type PwaPromptOutcome = 'accepted' | 'dismissed' | 'unavailable';
 export class PwaInstallService {
 
   private readonly zone = inject(NgZone);
+  private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
   private readonly standalone = signal(this.detectStandalone());
   private readonly installedRemotely = signal(false);
@@ -53,7 +55,7 @@ export class PwaInstallService {
   readonly isInstalled = computed(() => this.standalone() || this.installedRemotely());
 
   constructor() {
-    if (typeof globalThis.window === 'undefined') {
+    if (!this.isBrowser) {
       return;
     }
 
@@ -85,7 +87,7 @@ export class PwaInstallService {
    * satisfy "no async work in constructor" lint rule.
    */
   async init(): Promise<void> {
-    if (typeof globalThis.window === 'undefined') return;
+    if (!this.isBrowser) return;
     await this.checkRelatedApps();
   }
 
@@ -127,14 +129,14 @@ export class PwaInstallService {
   }
 
   private detectStandalone(): boolean {
-    if (typeof globalThis.window === 'undefined') {
+    if (!this.isBrowser) {
       return false;
     }
     return globalThis.matchMedia('(display-mode: standalone)').matches || this.iosStandalone();
   }
 
   private iosStandalone(): boolean {
-    if (typeof globalThis.navigator === 'undefined') {
+    if (!this.isBrowser) {
       return false;
     }
     const nav = globalThis.navigator as Navigator & {standalone?: boolean};
@@ -142,7 +144,7 @@ export class PwaInstallService {
   }
 
   private detectPlatform(): PwaPlatform {
-    if (typeof globalThis.navigator === 'undefined') {
+    if (!this.isBrowser) {
       return 'other';
     }
     const ua = globalThis.navigator.userAgent.toLowerCase();
