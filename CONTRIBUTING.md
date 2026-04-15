@@ -54,9 +54,11 @@ pull request.
 
 ### Prerequisites
 
-- **Node.js >= 22** (see [`.nvmrc`](.nvmrc); `nvm use` works)
-- **npm** (the version is pinned in the root `package.json` via
-  `packageManager`)
+- **Node.js** — exact version pinned in [`.nvmrc`](.nvmrc) and
+  [`.tool-versions`](.tool-versions). Use `nvm install` (nvm) or
+  `asdf install` (asdf) to get the right version. npm is the one
+  bundled with that Node release, so everyone runs the same npm
+  automatically.
 - **Docker & Docker Compose** (for the local PostgreSQL and integration
   tests)
 
@@ -67,48 +69,32 @@ pull request.
 git clone https://github.com/bitcoin-is-money/bim.git
 cd bim
 
-# 2. Install all workspace dependencies
+# 2. Install the pinned Node version
+nvm install      # reads .nvmrc           (nvm users)
+# or
+asdf install     # reads .tool-versions   (asdf users)
+
+# 3. Install workspace dependencies
 npm ci --ignore-scripts && npx patch-package && npx husky
 
-# 3. Start PostgreSQL and push the schema
+# 4. Start PostgreSQL and push the schema
 npm run db:up
 
-# 4. Create the secret env files (they can start empty)
+# 5. Create the secret env files (they can start empty)
 touch apps/api/.env.testnet.secret
 touch apps/api/.env.mainnet.secret
 touch apps/indexer/.env.testnet.secret
 touch apps/indexer/.env.mainnet.secret
 
-# 5. Start the backend (testnet, port 8080)
+# 6. Start the backend (testnet, port 8080)
 npm run dev
 
-# 6. In another terminal, start the Angular dev server (port 4200)
+# 7. In another terminal, start the Angular dev server (port 4200)
 npm run dev:front
 ```
 
 See [`apps/api/.env.local.example`](apps/api/.env.local.example) for the
 list of optional secret variables (AVNU API key, Slack tokens, etc.).
-
-### Git hooks
-
-Husky manages Git hooks from `.husky/`. Running `npx husky` once points
-Git to them via `core.hooksPath` (in `.git/config`). It does
-**not** need to be re-run after later `npm install` calls.
-
-On every commit:
-
-- **`pre-commit`** — runs [`lint-staged`](https://github.com/lint-staged/lint-staged)
-  on staged files:
-  - ESLint (`--fix --max-warnings=0`) on TypeScript and Angular HTML
-    templates.
-  - [`secretlint`](https://github.com/secretlint/secretlint) on every staged
-    file to block committed credentials (private keys, AWS/GCP tokens,
-    GitHub tokens, etc.). The `--maskSecrets` flag replaces any detected
-    secret with `*` in the error output, so the value is never echoedk.
-    Config: `"secretlint"` key in `package.json` (rules + allowed
-    patterns) and `.secretlintignore` (paths to skip).
-- **`commit-msg`** — runs [`commitlint`](https://commitlint.js.org/) to
-  enforce [Conventional Commits](#commit-messages).
 
 ### Useful scripts
 
@@ -196,6 +182,28 @@ as skills under the `.claude/skills/` directory:
 `ts-rules`, `domain-modeling`, `api-routing`, `angular-patterns`,
 `testing-conventions`. These are the source of truth for package-specific
 patterns.
+
+
+### Git hooks
+
+Husky manages Git hooks from `.husky/`. Running `npx husky` once points
+Git to them via `core.hooksPath` (in `.git/config`). It does
+**not** need to be re-run after later `npm install` calls.
+
+On every commit:
+
+- **`pre-commit`** — runs [`lint-staged`](https://github.com/lint-staged/lint-staged)
+  on staged files:
+  - ESLint (`--fix --max-warnings=0`) on TypeScript and Angular HTML
+    templates.
+  - [`secretlint`](https://github.com/secretlint/secretlint) on every staged
+    file to block committed credentials (private keys, AWS/GCP tokens,
+    GitHub tokens, etc.). The `--maskSecrets` flag replaces any detected
+    secret with `*` in the error output, so the value is never echoedk.
+    Config: `"secretlint"` key in `package.json` (rules + allowed
+    patterns) and `.secretlintignore` (paths to skip).
+- **`commit-msg`** — runs [`commitlint`](https://commitlint.js.org/) to
+  enforce [Conventional Commits](#commit-messages).
 
 ## Testing
 

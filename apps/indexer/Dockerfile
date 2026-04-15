@@ -11,11 +11,9 @@
 # -----------------------------------------------------------------------------
 # Stage 1: Build
 # -----------------------------------------------------------------------------
-FROM node:22-slim AS builder
+ARG NODE_VERSION
+FROM node:${NODE_VERSION}-slim AS builder
 WORKDIR /app
-
-# Enable corepack to respect packageManager field (use npm version defined in package.json)
-RUN corepack enable
 
 # Dependencies layers
 COPY package.json package-lock.json ./
@@ -36,7 +34,8 @@ RUN npm run build:indexer
 # -----------------------------------------------------------------------------
 # Stage 2: Production
 # -----------------------------------------------------------------------------
-FROM node:22-slim
+ARG NODE_VERSION
+FROM node:${NODE_VERSION}-slim
 WORKDIR /app
 
 # Install pg (only external dependency needed by the Apibara bundle).

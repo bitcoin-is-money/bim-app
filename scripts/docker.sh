@@ -12,6 +12,13 @@ app_version() {
   git -C "$PROJECT_ROOT" rev-parse --short HEAD
 }
 
+# Single source of truth for the Node version used in Docker images.
+# Mirrors .nvmrc (and .tool-versions) so local dev, CI, and production
+# all run the exact same Node.
+node_version() {
+  cat "$PROJECT_ROOT/.nvmrc"
+}
+
 registry() {
   terraform -chdir="$INFRA_DIR" output -raw registry_endpoint
 }
@@ -29,11 +36,12 @@ case "${1:-}" in
     NETWORK="${NETWORK:-testnet}"
     DB_PORT="${DB_PORT:-5432}"
     VERSION=$(app_version)
+    NODE_VER=$(node_version)
 
-    echo "Starting full stack ($NETWORK, version $VERSION)..."
+    echo "Starting full stack ($NETWORK, version $VERSION, node $NODE_VER)..."
 
     # Build images
-    APP_VERSION="$VERSION" NETWORK="$NETWORK" DB_PORT="$DB_PORT" \
+    APP_VERSION="$VERSION" NODE_VERSION="$NODE_VER" NETWORK="$NETWORK" DB_PORT="$DB_PORT" \
       docker compose build
 
     # Start postgres and wait for readiness
@@ -51,7 +59,7 @@ case "${1:-}" in
       npm run db:push -w @bim/db
 
     # Start remaining services
-    APP_VERSION="$VERSION" NETWORK="$NETWORK" DB_PORT="$DB_PORT" \
+    APP_VERSION="$VERSION" NODE_VERSION="$NODE_VER" NETWORK="$NETWORK" DB_PORT="$DB_PORT" \
       docker compose up -d
     echo ""
     echo "All services started"
@@ -74,12 +82,14 @@ case "${1:-}" in
   build)
     REG=$(registry)
     VERSION=$(app_version)
+    NODE_VER=$(node_version)
     SERVICE="${2:-all}"
-    echo "Building images (version: $VERSION, service: $SERVICE)"
+    echo "Building images (version: $VERSION, node: $NODE_VER, service: $SERVICE)"
     export DOCKER_BUILDKIT=1
     if [ "$SERVICE" = "all" ] || [ "$SERVICE" = "api" ]; then
       docker build -f "$PROJECT_ROOT/apps/api/Dockerfile" \
         --build-arg APP_VERSION="$VERSION" \
+        --build-arg NODE_VERSION="$NODE_VER" \
         -t "$REG/bim-api:$VERSION" \
         -t "$REG/bim-api:latest" \
         "$PROJECT_ROOT"
@@ -87,11 +97,12 @@ case "${1:-}" in
     if [ "$SERVICE" = "all" ] || [ "$SERVICE" = "indexer" ]; then
       docker build -f "$PROJECT_ROOT/apps/indexer/Dockerfile" \
         --build-arg APP_VERSION="$VERSION" \
+        --build-arg NODE_VERSION="$NODE_VER" \
         -t "$REG/bim-indexer:$VERSION" \
         -t "$REG/bim-indexer:latest" \
         "$PROJECT_ROOT"
     fi
-    echo "Build done (version: $VERSION, service: $SERVICE)"
+    echo "Build done (version: $VERSION, node: $NODE_VER, service: $SERVICE)"
     ;;
 
   push)

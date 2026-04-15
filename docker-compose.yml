@@ -26,6 +26,7 @@ services:
       dockerfile: apps/api/Dockerfile
       args:
         APP_VERSION: ${APP_VERSION:-dev}
+        NODE_VERSION: ${NODE_VERSION:?NODE_VERSION is required (use scripts/docker.sh which reads .nvmrc)}
     image: bim-api:${APP_VERSION:-latest}
     ports:
       - "8080:8080"
@@ -44,6 +45,7 @@ services:
       dockerfile: apps/indexer/Dockerfile
       args:
         APP_VERSION: ${APP_VERSION:-dev}
+        NODE_VERSION: ${NODE_VERSION:?NODE_VERSION is required (use scripts/docker.sh which reads .nvmrc)}
     image: bim-indexer:${APP_VERSION:-latest}
     environment:
       PRESET: ${NETWORK:-testnet}

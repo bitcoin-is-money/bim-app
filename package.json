@@ -72,9 +72,8 @@
     "deps:check": "npx npm-check-updates --workspaces --root",
     "deps:update": "npx npm-check-updates --workspaces --root -u && npm install"
   },
-  "packageManager": "npm@11.12.1",
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=22.22.2 <23"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.5.0",
@@ -101,7 +100,7 @@
     "vitest": "^4.0.18"
   },
   "overrides": {
-    "vitest": "$vitest"
+    "vitest": "^4.0.18"
   },
   "dependencies": {
     "@atomiqlabs/base": "^13.2.0"
