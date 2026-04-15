@@ -27,7 +27,9 @@
     "start": "ng serve",
     "dev": "ng serve",
     "build:watch": "ng build --watch --configuration development",
+    "prebuild:testnet": "tsx scripts/write-build-version.ts",
     "build:testnet": "ng build --configuration testnet",
+    "prebuild": "tsx scripts/write-build-version.ts",
     "build": "ng build",
     "test": "ng test --watch=false --coverage",
     "test:watch": "ng test"

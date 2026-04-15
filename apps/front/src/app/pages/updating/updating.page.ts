@@ -65,7 +65,17 @@ export class UpdatingPage implements OnInit {
     const remainingDisplay = Math.max(0, MINIMUM_DISPLAY_MS - elapsed);
     const minDisplay = new Promise<void>(resolve => setTimeout(resolve, remainingDisplay));
 
-    await Promise.all([this.pwaUpdate.activate(), minDisplay]);
+    // Defer the heavy SW download until after the browser has painted at
+    // least one frame of the animated splash. Without this hop, the download
+    // can start on the same frame the logo is revealed and the user sees
+    // nothing during the first hundreds of ms on slow devices.
+    const downloaded = new Promise<void>(resolve => {
+      requestAnimationFrame(() => {
+        void this.pwaUpdate.download().then(resolve);
+      });
+    });
+
+    await Promise.all([downloaded, minDisplay]);
     this.pwaUpdate.reload();
   }
 }

@@ -17,6 +17,7 @@ const NO_CACHE_PATHS: ReadonlySet<string> = new Set([
   '/safety-worker.js',
   '/worker-basic.min.js',
   '/manifest.webmanifest',
+  '/version.json',
 ]);
 
 /**

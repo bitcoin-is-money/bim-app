@@ -55,6 +55,10 @@
                 {
                   "replace": "src/environments/environment.ts",
                   "with": "src/environments/environment.ts"
+                },
+                {
+                  "replace": "src/environments/build-version.ts",
+                  "with": "src/environments/build-version.prod.ts"
                 }
               ]
             },
@@ -67,6 +71,10 @@
                 {
                   "replace": "src/environments/environment.ts",
                   "with": "src/environments/environment.testnet.ts"
+                },
+                {
+                  "replace": "src/environments/build-version.ts",
+                  "with": "src/environments/build-version.prod.ts"
                 }
               ]
             },

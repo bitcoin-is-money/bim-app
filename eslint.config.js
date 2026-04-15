@@ -17,7 +17,7 @@ export default tseslint.config(
       '**/.apibara/',
       'patches/',
       '**/public/',
-      'scripts/',
+      '**/scripts/',
       '**/vitest.config*.ts',
       '**/*.js',
       '**/*.mjs'

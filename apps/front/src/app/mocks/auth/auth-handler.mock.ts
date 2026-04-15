@@ -239,7 +239,7 @@ export class AuthHandlerMock {
 
     return new HttpResponse({
       status: 200,
-      body: {account, updateApp: mockProfile.updateApp},
+      body: {account},
     });
   }
 

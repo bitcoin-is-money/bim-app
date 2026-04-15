@@ -7,6 +7,13 @@
     width: 90vmin;
     height: 90vmin;
     max-width: 100%;
+    // Promotes the SVG to its own compositor layer up front so the CSS
+    // keyframe animations (transform/opacity only) stay on the GPU even
+    // while the SW downloads and writes the new assets to Cache Storage.
+    will-change: transform;
+    // Isolates repaints: any work elsewhere on the page can't force the
+    // logo's layer to be re-rasterised.
+    contain: paint;
   }
 
   .updating-status {

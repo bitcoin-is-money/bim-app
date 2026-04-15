@@ -17,7 +17,6 @@ import {httpNotificationInterceptor} from "./interceptor/http-notification.inter
 import {backendInterceptor} from './mocks/backend.interceptor';
 import {AuthService} from './services/auth.service';
 import {PwaInstallService} from './services/pwa-install.service';
-import {PwaUpdateService} from './services/pwa-update.service';
 
 /**
  * Total time (ms) the splash animation needs to play out once revealed.
@@ -56,9 +55,6 @@ export const appConfig: ApplicationConfig = {
     provideHotToastConfig({
       dismissible: true,
       autoClose: true,
-    }),
-    provideAppInitializer(() => {
-      inject(PwaUpdateService).init();
     }),
     provideAppInitializer(async () => {
       await inject(PwaInstallService).init();

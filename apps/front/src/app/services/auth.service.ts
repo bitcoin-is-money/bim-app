@@ -15,6 +15,13 @@ import {PwaUpdateService} from './pwa-update.service';
 export type {AuthResponse, BeginAuthResponse, BeginRegisterResponse, UserSessionResponse} from './auth.http.service';
 
 /**
+ * Budget (ms) for `PwaUpdateService.hasUpdate()` at login / session resume.
+ * Short enough to avoid stalling navigation, long enough to let the SW
+ * answer on mobile networks.
+ */
+const UPDATE_CHECK_BUDGET_MS = 2000;
+
+/**
  * Session loading is handled by provideAppInitializer in app.config.ts
  * to ensure it completes before route guards run.
  */
@@ -116,10 +123,7 @@ export class AuthService {
         return;
       }
 
-      const authResponse = await firstValueFrom(this.completeLogin(beginResponse.challengeId, credential));
-      if (authResponse.updateApp === true) {
-        this.pwaUpdate.updateAvailable.set(true);
-      }
+      await firstValueFrom(this.completeLogin(beginResponse.challengeId, credential));
 
       // Load user preferences after login
       await this.i18n.init();
@@ -134,7 +138,7 @@ export class AuthService {
   }
 
   private async navigateAfterSignIn(): Promise<void> {
-    const route = this.pwaUpdate.updateAvailable() ? '/updating' : '/home';
+    const route = await this.pwaUpdate.hasUpdate(UPDATE_CHECK_BUDGET_MS) ? '/updating' : '/home';
     await this.router.navigate([route]);
   }
 
@@ -182,6 +186,9 @@ export class AuthService {
         this.currentUser.set(response.account);
         await this.i18n.init();
         await this.currency.init();
+        if (await this.pwaUpdate.hasUpdate(UPDATE_CHECK_BUDGET_MS)) {
+          await this.router.navigate(['/updating']);
+        }
       } else {
         this.currentUser.set(null);
         await this.i18n.initFromBrowser();

@@ -75,6 +75,10 @@ tmp
 # Claude Code agent memory
 .claude/agent-memory/
 
+# Generated at prebuild by scripts/write-build-version.ts
+apps/front/src/environments/build-version.prod.ts
+apps/front/public/version.json
+
 # Terraform
 infra/.terraform/
 infra/*.tfstate
