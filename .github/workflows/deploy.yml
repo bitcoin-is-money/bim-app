@@ -41,10 +41,22 @@ jobs:
           terraform_wrapper: false
 
       - name: Install Scaleway CLI
+        env:
+          SCW_CLI_VERSION: 2.40.0
         run: |
-          curl -sL https://github.com/scaleway/scaleway-cli/releases/latest/download/scaleway-cli_linux_amd64 \
-            -o /usr/local/bin/scw
+          set -euo pipefail
+          url="https://github.com/scaleway/scaleway-cli/releases/download/v${SCW_CLI_VERSION}/scaleway-cli_${SCW_CLI_VERSION}_linux_amd64"
+          curl -fsSL "$url" -o /usr/local/bin/scw
           chmod +x /usr/local/bin/scw
+
+      - name: Preflight — tool versions
+        run: |
+          set -euo pipefail
+          echo "node:      $(node --version)"
+          echo "npm:       $(npm --version)"
+          echo "docker:    $(docker --version)"
+          echo "terraform: $(terraform version | head -n1)"
+          echo "scw:       $(scw version 2>&1 | head -n1)"
 
       - name: Terraform init (remote backend)
         working-directory: infra
