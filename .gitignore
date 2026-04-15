@@ -43,6 +43,7 @@ yarn-error.log
 /libpeerconnection.log
 testem.log
 /typings
+.sonarlint
 
 # Secrets (env files, account keys, API credentials)
 # Covers *.secret, *.secret.json, .env.*.secret, etc.
