@@ -50,6 +50,7 @@ testem.log
 *.secret
 *.secret.json
 .secrets.json
+.envrc
 
 # Local dev env (secrets + dev overrides)
 *.local

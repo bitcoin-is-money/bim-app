@@ -100,10 +100,118 @@ By default, Scaleway containers have full internet access.
 - [Terraform](https://developer.hashicorp.com/terraform/install) >= 1.0
 - [Scaleway CLI](https://github.com/scaleway/scaleway-cli) configured (`scw init`)
 - [Docker](https://docs.docker.com/get-docker/) (for building and pushing images)
-- Scaleway API key (Access Key + Secret Key)
+- Scaleway API key (Access Key + Secret Key) for the **Scaleway provider**
+- An `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` pair for the **S3 remote backend** —
+  see [Remote Backend & Credentials](#remote-backend--credentials) (provisioned once
+  by `infra/bootstrap/`)
 
-The Terraform provider authenticates via environment variables (`SCW_ACCESS_KEY`, `SCW_SECRET_KEY`)
-or `~/.config/scw/config.yaml` (created by `scw init`).
+The Terraform **Scaleway provider** authenticates via `SCW_ACCESS_KEY` / `SCW_SECRET_KEY`
+environment variables, or `~/.config/scw/config.yaml` (created by `scw init`).
+
+The Terraform **S3 backend** (holding `terraform.tfstate`) uses a separate credential
+pair — see the next section.
+
+## Remote Backend & Credentials
+
+Terraform uses **two independent credential sets** that must both be configured locally:
+
+| Credential | Purpose | Source |
+|-----|-----|-----|
+| `SCW_ACCESS_KEY` / `SCW_SECRET_KEY` | Scaleway provider — manages all cloud resources | Your personal Scaleway API key |
+| `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | S3 backend — stores `terraform.tfstate` | `bim-tfstate-rw` IAM application (see bootstrap below) |
+
+The state is kept in a private Scaleway Object Storage bucket (`bim-tfstate`, S3-compatible).
+Two IAM applications sit in front of it:
+
+- **`bim-tfstate-rw`** — you, the local operator. Full access to the tfstate bucket.
+  Used to run `terraform apply` on `infra/` from your machine.
+- **`bim-ci`** — GitHub Actions. Read-only on the tfstate plus push / redeploy
+  permissions. Defined in `main.tf`. Never used locally.
+
+This split follows least-privilege: a CI-key leak cannot rewrite Terraform state or
+destroy the bucket.
+
+### First-time bootstrap
+
+The tfstate bucket and the `bim-tfstate-rw` IAM application are provisioned by a
+one-shot sub-project at `infra/bootstrap/`. Its own state stays local — it is tiny
+and rarely changes, and only the primary operator runs it.
+
+```sh
+cd infra/bootstrap
+cp terraform.tfvars.example terraform.tfvars   # fill in project_id
+terraform init
+terraform apply
+```
+
+Capture the RW key pair from the outputs and store it in your password manager:
+
+```sh
+terraform output -raw rw_access_key
+terraform output -raw rw_secret_key
+```
+
+You run the bootstrap **once per environment**. After that, you never use the
+personal Scaleway account for state — only for the Scaleway provider via
+`SCW_ACCESS_KEY` / `SCW_SECRET_KEY`.
+
+> **Why a separate sub-project** — chicken-and-egg: the backend bucket must exist
+> before the main infra can configure `backend "s3"`. Keeping the bucket in a
+> separate root avoids entangling its lifecycle with the app infra.
+
+### Configuring credentials locally
+
+Once you have the RW key pair, export it before any `terraform -chdir=infra *` or
+`npm run docker:*` command. Two compatible options:
+
+**Option A — `.envrc` file at the repo root (gitignored)**
+
+```sh
+# S3 backend — bim-tfstate-rw
+export AWS_ACCESS_KEY_ID="SCW..."
+export AWS_SECRET_ACCESS_KEY="..."
+
+# Scaleway provider — your personal key
+export SCW_ACCESS_KEY="SCW..."
+export SCW_SECRET_KEY="..."
+```
+
+Load it in each shell with `source .envrc`, or install [direnv](https://direnv.net/)
+to load / unload automatically on `cd`. `.envrc` is already in `.gitignore`.
+
+**Option B — `~/.aws/credentials` named profile**
+
+```ini
+[bim-tfstate]
+aws_access_key_id = SCW...
+aws_secret_access_key = ...
+```
+
+Then export `AWS_PROFILE=bim-tfstate` in the shell where you run Terraform.
+
+Both options coexist. The AWS SDK credential chain checks env vars first, then
+falls back to the named profile.
+
+### Common pitfalls
+
+- **`export` is required.** `AWS_ACCESS_KEY_ID=...` without `export` is visible to
+  `echo` in the current shell but **not inherited** by the `terraform` subprocess.
+- **Beware a `[default]` profile pointing to a real AWS account** in
+  `~/.aws/credentials`. If env vars are missing or not exported, the SDK silently
+  picks `[default]` and you get a 403 from Scaleway (rejected signature).
+- **No stale `AWS_SESSION_TOKEN`.** Scaleway has no concept of session tokens —
+  a leftover one from a previous `aws sso login` makes every request fail.
+- **One shell, one source.** `source .envrc` only affects the current shell;
+  each new terminal needs its own load (or direnv).
+
+Sanity check, in the same shell where you run Terraform:
+
+```sh
+env | grep -E '^AWS_'                           # expect exactly the two vars
+aws s3 ls s3://bim-tfstate/ \
+  --endpoint-url=https://s3.fr-par.scw.cloud \
+  --region=fr-par                               # should list state objects
+```
 
 ## Deployment Workflow
 
@@ -366,6 +474,7 @@ echo "DATABASE_URL=$(terraform output -raw database_url)"
 | Secret (`terraform.tfvars`) | Where to get it / how to generate |
 |-----------------------------|-----------------------------------|
 | Scaleway API Key (`SCW_ACCESS_KEY`/`SCW_SECRET_KEY` env) | Scaleway Console > Profile > API Keys |
+| S3 backend key (`AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` env) | `bim-tfstate-rw` — see [Remote Backend & Credentials](#remote-backend--credentials) |
 | `db_password` | Generate (e.g. `openssl rand -base64 32`) — used by Terraform to create the DB user |
 | `avnu_api_key` | https://portal.avnu.fi (remember to add credits) |
 | `dna_token` | https://www.apibara.com |
