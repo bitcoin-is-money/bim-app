@@ -35,60 +35,54 @@
       100%  { opacity: 1; }
     }
 
-    /* ---------- CUBE LEFT : dice-throw arc, 0s → 1.3s = 0% → 32.5% ---------- */
+    /* ---------- CUBE LEFT : rolls in linearly from left screen edge, 0s → 0.75s = 0% → 15% ---------- */
     @keyframes arc-left {
-      0%     { opacity: 0; transform: translate(-1500px, -280px); animation-timing-function: cubic-bezier(0, 0, 0.3, 1); }
-      16.25% { transform: translate(-700px, 0); animation-timing-function: cubic-bezier(0, 0, 0.3, 1); }
-      20%    { opacity: 0; animation-timing-function: linear; }
-      22.75% { opacity: 0; transform: translate(-360px, -90px); animation-timing-function: cubic-bezier(0, 0, 0.3, 1); }
-      25%    { opacity: 1; }
-      27%    { opacity: 1; transform: translate(-100px, 0); animation-timing-function: cubic-bezier(0, 0, 0.2, 1); }
-      32.5%  { opacity: 1; transform: translate(0, 0); animation-timing-function: step-end; }
+      0%     { opacity: 0; transform: translate(-350px, 0); }
+      6%     { opacity: 1; }
+      15%    { opacity: 1; transform: translate(0, 0); animation-timing-function: step-end; }
       100%   { opacity: 1; transform: translate(0, 0); }
     }
     @keyframes spin-left {
       0%     { transform: rotate(0deg); animation-timing-function: linear; }
-      16.25% { transform: rotate(360deg); animation-timing-function: cubic-bezier(0.2, 0.5, 0.3, 1); }
-      32.5%  { transform: rotate(540deg); animation-timing-function: step-end; }
-      100%   { transform: rotate(540deg); }
+      15%    { transform: rotate(180deg); animation-timing-function: step-end; }
+      100%   { transform: rotate(180deg); }
     }
     @keyframes tilt-left {
       0%     { transform: rotate(0deg); }
-      30%    { transform: rotate(0deg); animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1); }
-      33.5%  { transform: rotate(4deg); animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1); }
-      37.5%  { transform: rotate(0deg); animation-timing-function: step-end; }
+      10%    { transform: rotate(0deg);  }
+      16%    { transform: rotate(15deg); animation-timing-function: cubic-bezier(0.1, 0, 0.95, 0.1); }
+      20%    { transform: rotate(0deg); animation-timing-function: step-end; }
       100%   { transform: rotate(0deg); }
     }
 
-    /* ---------- CUBE RIGHT : rolls in at ground level, 0.3s → 2.1s = 7.5% → 52.5% ---------- */
+    /* ---------- CUBE RIGHT : rolls in at ground level, 0.05s → 2.3s = 1% → 46% ---------- */
     @keyframes slide-right {
-      0%     { opacity: 0; transform: translateX(1500px); }
-      15%    { opacity: 0; transform: translateX(1500px); animation-timing-function: cubic-bezier(0.1, 0.2, 0.2, 1); }
-      35%    { opacity: 0; }
-      40%    { opacity: 1; }
-      60%    { opacity: 1; transform: translateX(0); animation-timing-function: step-end; }
+      0%     { opacity: 0; transform: translateX(1500px); animation-timing-function: cubic-bezier(0.1, 0.2, 0.2, 1); }
+      21%    { opacity: 0; }
+      26%    { opacity: 1; }
+      46%    { opacity: 1; transform: translateX(0); animation-timing-function: step-end; }
       100%   { opacity: 1; transform: translateX(0); }
     }
     @keyframes spin-right {
       0%     { transform: rotate(0deg); }
-      15%    { transform: rotate(0deg); animation-timing-function: cubic-bezier(0.15, 0.3, 0.25, 1); }
-      60%    { transform: rotate(-900deg); animation-timing-function: step-end; }
+      1%     { transform: rotate(0deg); animation-timing-function: cubic-bezier(0.15, 0.3, 0.25, 1); }
+      46%    { transform: rotate(-900deg); animation-timing-function: step-end; }
       100%   { transform: rotate(-900deg); }
     }
 
-    /* ---------- CUBE TOP : drop from far above, 1.3s → 2.1s = 32.5% → 52.5%, tilt 2.1s → 2.6s = 52.5% → 65% ---------- */
+    /* ---------- CUBE TOP : drop from far above, 1.05s → 2.05s = 21% → 41%, tilt 2.05s → 2.675s = 41% → 53.5% ---------- */
     @keyframes drop-top {
       0%     { opacity: 0; transform: translateY(-800px); }
-      35%    { opacity: 0; transform: translateY(-800px); animation-timing-function: cubic-bezier(0.5, 0, 0.9, 1); }
-      50%    { opacity: 0; }
-      55%    { opacity: 1; transform: translateY(0); animation-timing-function: step-end; }
+      21%    { opacity: 0; transform: translateY(-800px); animation-timing-function: cubic-bezier(0.5, 0, 0.9, 1); }
+      36%    { opacity: 0; }
+      41%    { opacity: 1; transform: translateY(0); animation-timing-function: step-end; }
       100%   { opacity: 1; transform: translateY(0); }
     }
     @keyframes tilt-top {
       0%     { transform: rotate(0deg); }
-      55%    { transform: rotate(0deg); animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1); }
-      60%    { transform: rotate(-7deg); animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1); }
-      67.5%  { transform: rotate(0deg); animation-timing-function: step-end; }
+      41%    { transform: rotate(0deg); animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1); }
+      46%    { transform: rotate(-7deg); animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1); }
+      53.5%  { transform: rotate(0deg); animation-timing-function: step-end; }
       100%   { transform: rotate(0deg); }
     }
   </style>
