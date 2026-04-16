@@ -75,8 +75,8 @@ export async function createApp(options: CreateAppOptions = {}): Promise<AppInst
 
   app.use('*', createSecurityHeadersMiddleware());
   app.use('*', createRequestLoggerMiddleware(context.logger, {
-    apiOnly: true,
-    silencedPaths: [
+    apiOnly: !config.logAllRequests,
+    silencedPaths: config.logAllRequests ? [] : [
       '/api/auth',
       '/api/user/settings',
       '/api/currency/prices'

@@ -116,6 +116,7 @@ resource "scaleway_container" "api" {
       NODE_ENV                          = "production"
       WEBAUTHN_AUTHENTICATOR_ATTACHMENT = var.webauthn_authenticator_attachment
       LOG_LEVEL                         = var.api_log_level
+      LOG_ALL_REQUESTS                  = tostring(var.api_log_all_requests)
       LOG_TIMESTAMP                     = "false"
       AVNU_SPONSOR_ACTIVITY_URL         = var.avnu_sponsor_activity_url
     },

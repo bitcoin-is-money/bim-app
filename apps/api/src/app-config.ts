@@ -50,6 +50,7 @@ export namespace AppConfig {
     cron: CronConfig | undefined;
     healthCheck: HealthCheckConfig;
     logLevel: string;
+    logAllRequests: boolean;
   }
 
   /**
@@ -135,6 +136,7 @@ export namespace AppConfig {
         startupTimeoutMs: Number.parseInt(optional('HEALTH_CHECK_STARTUP_TIMEOUT_MS', '10000')),
       },
       logLevel: optional('LOG_LEVEL', 'debug'),
+      logAllRequests: optional('LOG_ALL_REQUESTS', 'false') === 'true',
     };
   }
 

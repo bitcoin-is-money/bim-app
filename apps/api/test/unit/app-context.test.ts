@@ -61,6 +61,7 @@ function createMockConfig(): AppConfig.Config {
     cron: undefined,
     healthCheck: {startupTimeoutMs: 10_000},
     logLevel: 'silent',
+    logAllRequests: false,
   };
 }
 

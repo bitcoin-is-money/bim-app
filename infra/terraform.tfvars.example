@@ -9,9 +9,10 @@ network = "mainnet"
 # ------------------------------------------------------------------------------
 # Server
 # ------------------------------------------------------------------------------
-api_domain = "app.bitcoinismoney.app"
-api_log_level = "info"
-indexer_log_level = "info"
+api_domain           = "app.bitcoinismoney.app"
+api_log_level        = "info"
+api_log_all_requests = false
+indexer_log_level    = "info"
 
 # ------------------------------------------------------------------------------
 # WebAuthn

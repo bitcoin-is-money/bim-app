@@ -58,6 +58,12 @@ variable "api_log_level" {
   default     = "info"
 }
 
+variable "api_log_all_requests" {
+  description = "Log every HTTP request (including static files). Default: only /api/* routes."
+  type        = bool
+  default     = false
+}
+
 variable "webauthn_authenticator_attachment" {
   description = "WebAuthn authenticator attachment mode ('platform' for built-in biometrics, 'cross-platform' for roaming keys like USB)"
   type        = string
