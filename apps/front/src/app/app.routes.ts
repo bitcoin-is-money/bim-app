@@ -74,11 +74,6 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
-    path: 'swaps',
-    loadComponent: () => import('./pages/swaps/swaps.page').then(m => m.SwapsPage),
-    canActivate: [authGuard],
-  },
-  {
     path: 'receive',
     loadComponent: () => import('./pages/receive/receive.page').then(m => m.ReceivePage),
     canActivate: [authGuard],

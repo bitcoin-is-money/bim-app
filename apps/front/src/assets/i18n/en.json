@@ -101,7 +101,6 @@
     "faq": "FAQ",
     "about": "About",
     "advanced": "Advanced",
-    "swaps": "Swaps",
     "gasTank": "Gas Tank",
     "logout": "Logout"
   },
@@ -132,29 +131,6 @@
   },
   "faq": {
     "title": "FAQ"
-  },
-  "swaps": {
-    "title": "Swaps",
-    "noSwaps": "No swaps yet",
-    "swapsWillAppear": "Swaps will appear here when you send or receive payments via Lightning or Bitcoin networks.",
-    "refreshAll": "Refresh All",
-    "refreshing": "Refreshing...",
-    "clearAll": "Clear All",
-    "direction": {
-      "lightningReceive": "Lightning Receive",
-      "lightningPay": "Lightning Send",
-      "bitcoinReceive": "Bitcoin Receive",
-      "bitcoinPay": "Bitcoin Send"
-    },
-    "status": {
-      "pending": "Pending",
-      "paid": "Paid",
-      "completed": "Completed",
-      "expired": "Expired",
-      "refunded": "Refunded",
-      "failed": "Failed",
-      "lost": "Lost"
-    }
   },
   "gasTank": {
     "title": "Gas Tank",

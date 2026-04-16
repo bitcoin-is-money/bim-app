@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest';
-import {formatSwapDirection, getSwapTypeFromDirection, isTerminalStatus} from './swap';
+import {isTerminalStatus} from './swap';
 
 describe('isTerminalStatus', () => {
   it('treats completed/expired/refunded/failed/lost as terminal', () => {
@@ -25,26 +25,5 @@ describe('isTerminalStatus', () => {
     expect(isTerminalStatus('expired', 'lightning_to_starknet')).toBe(true);
     expect(isTerminalStatus('expired', 'starknet_to_lightning')).toBe(true);
     expect(isTerminalStatus('expired', 'starknet_to_bitcoin')).toBe(true);
-  });
-});
-
-describe('formatSwapDirection', () => {
-  it('formats every direction', () => {
-    expect(formatSwapDirection('lightning_to_starknet')).toBe('Lightning Receive');
-    expect(formatSwapDirection('bitcoin_to_starknet')).toBe('Bitcoin Receive');
-    expect(formatSwapDirection('starknet_to_lightning')).toBe('Lightning Send');
-    expect(formatSwapDirection('starknet_to_bitcoin')).toBe('Bitcoin Send');
-  });
-});
-
-describe('getSwapTypeFromDirection', () => {
-  it('classifies *_to_starknet as receive', () => {
-    expect(getSwapTypeFromDirection('lightning_to_starknet')).toBe('receive');
-    expect(getSwapTypeFromDirection('bitcoin_to_starknet')).toBe('receive');
-  });
-
-  it('classifies starknet_to_* as send', () => {
-    expect(getSwapTypeFromDirection('starknet_to_lightning')).toBe('send');
-    expect(getSwapTypeFromDirection('starknet_to_bitcoin')).toBe('send');
   });
 });

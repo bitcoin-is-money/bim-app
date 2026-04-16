@@ -48,18 +48,3 @@ export function isTerminalStatus(status: SwapStatus, direction?: SwapDirection):
   }
   return ['completed', 'expired', 'refunded', 'failed', 'lost'].includes(status);
 }
-
-export function formatSwapDirection(direction: SwapDirection): string {
-  const map: Record<SwapDirection, string> = {
-    lightning_to_starknet: 'Lightning Receive',
-    bitcoin_to_starknet: 'Bitcoin Receive',
-    starknet_to_lightning: 'Lightning Send',
-    starknet_to_bitcoin: 'Bitcoin Send',
-  };
-  // eslint-disable-next-line security/detect-object-injection -- key is SwapDirection union type
-  return map[direction];
-}
-
-export function getSwapTypeFromDirection(direction: SwapDirection): SwapType {
-  return direction.endsWith('_to_starknet') ? 'receive' : 'send';
-}

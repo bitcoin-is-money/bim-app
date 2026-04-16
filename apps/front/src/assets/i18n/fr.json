@@ -101,7 +101,6 @@
     "faq": "FAQ",
     "about": "À propos",
     "advanced": "Avancé",
-    "swaps": "Échanges",
     "gasTank": "Réserve Gas",
     "logout": "Déconnexion"
   },
@@ -132,29 +131,6 @@
   },
   "faq": {
     "title": "FAQ"
-  },
-  "swaps": {
-    "title": "Échanges",
-    "noSwaps": "Aucun échange",
-    "swapsWillAppear": "Les échanges apparaîtront ici lorsque vous enverrez ou recevrez des paiements via les réseaux Lightning ou Bitcoin.",
-    "refreshAll": "Tout rafraîchir",
-    "refreshing": "Rafraîchissement...",
-    "clearAll": "Tout supprimer",
-    "direction": {
-      "lightningReceive": "Réception Lightning",
-      "lightningPay": "Envoi Lightning",
-      "bitcoinReceive": "Réception Bitcoin",
-      "bitcoinPay": "Envoi Bitcoin"
-    },
-    "status": {
-      "pending": "En attente",
-      "paid": "Payé",
-      "completed": "Terminé",
-      "expired": "Expiré",
-      "refunded": "Remboursé",
-      "failed": "Échoué",
-      "lost": "Perdu"
-    }
   },
   "gasTank": {
     "title": "Réserve Gas",
