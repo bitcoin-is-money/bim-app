@@ -21,21 +21,36 @@ const NO_CACHE_PATHS: ReadonlySet<string> = new Set([
 ]);
 
 /**
- * Forces Cache-Control: no-cache on the handful of files that drive PWA
- * updates and the SPA entry point. All other static assets retain their
- * default caching (they are hash-named and immutable by Angular's build).
- *
- * Any request whose path is not in NO_CACHE_PATHS passes through
+ * Files that change rarely and whose frequent refetch would otherwise
+ * keep the serverless container warm. Chromium internally re-requests
+ * robots.txt and sitemap.xml on a short cycle; without an explicit
+ * Cache-Control, the browser re-validates them repeatedly.
+ */
+const LONG_CACHE_PATHS: ReadonlySet<string> = new Set([
+  '/robots.txt',
+  '/sitemap.xml',
+]);
+
+// 10 days in seconds
+const LONG_CACHE_MAX_AGE_SECONDS = 10 * 24 * 60 * 60;
+
+/**
+ * Sets explicit Cache-Control headers for PWA-critical files (no-cache)
+ * and for rarely-changing discoverability files (long public cache).
+ * Any request whose path falls outside both sets passes through
  * untouched, so the static serving layer remains in full control of
  * hashed asset caching.
  */
 export function createPwaCacheHeadersMiddleware(): MiddlewareHandler {
   return async (c, next) => {
     await next();
-    if (NO_CACHE_PATHS.has(c.req.path)) {
+    const {path} = c.req;
+    if (NO_CACHE_PATHS.has(path)) {
       c.header('Cache-Control', 'no-cache, no-store, must-revalidate');
       c.header('Pragma', 'no-cache');
       c.header('Expires', '0');
+    } else if (LONG_CACHE_PATHS.has(path)) {
+      c.header('Cache-Control', `public, max-age=${LONG_CACHE_MAX_AGE_SECONDS}`);
     }
   };
 }
