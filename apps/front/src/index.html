@@ -28,9 +28,9 @@
   </style>
   <script>
     // Splash gate: ping backend ASAP and decide if the splash needs to be revealed.
-    // - If /api/health/live answers within 20ms → splash stays hidden, app boots normally.
-    // - Otherwise → reveal splash; appInitializer (Angular) waits for the animation to
-    //   finish (and the ping to settle) before rendering the first route.
+    // - If /api/health/live answers OK within 150ms → splash stays hidden, app boots normally.
+    // - Otherwise (slow, network failure, or non-ok status) → reveal splash; appInitializer
+    //   (Angular) waits for the animation to finish (and the ping to settle) before rendering.
     (function () {
       const TIMEOUT_MS = 150;
       const pingPromise = fetch('/api/health/live').catch(function () { return null; });
@@ -38,7 +38,9 @@
       globalThis.__splashCtx = ctx;
 
       Promise.race([
-        pingPromise.then(function () { return 'fast'; }),
+        // Only count as "fast" on an OK response; on failure or non-ok, return a promise
+        // that never resolves so the timer wins the race and the splash is revealed.
+        pingPromise.then(function (r) { return r && r.ok ? 'fast' : new Promise(function () {}); }),
         new Promise(function (resolve) { setTimeout(function () { resolve('slow'); }, TIMEOUT_MS); })
       ]).then(function (result) {
         ctx.result = result;
