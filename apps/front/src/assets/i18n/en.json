@@ -100,8 +100,6 @@
     "settings": "Settings",
     "faq": "FAQ",
     "about": "About",
-    "advanced": "Advanced",
-    "gasTank": "Gas Tank",
     "logout": "Logout"
   },
   "myAccount": {
@@ -131,11 +129,6 @@
   },
   "faq": {
     "title": "FAQ"
-  },
-  "gasTank": {
-    "title": "Gas Tank",
-    "description": "Bitcoin receive operations require a small STRK deposit as collateral. This deposit is automatically returned when the operation completes or expires. The STRK shown here is your operational reserve — it is never spent, only temporarily locked.",
-    "empty": "No STRK balance. STRK will be provisioned automatically when needed for Bitcoin receive operations."
   },
   "transactions": {
     "empty": {

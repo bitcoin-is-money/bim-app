@@ -100,8 +100,6 @@
     "settings": "Paramètres",
     "faq": "FAQ",
     "about": "À propos",
-    "advanced": "Avancé",
-    "gasTank": "Réserve Gas",
     "logout": "Déconnexion"
   },
   "myAccount": {
@@ -131,11 +129,6 @@
   },
   "faq": {
     "title": "FAQ"
-  },
-  "gasTank": {
-    "title": "Réserve Gas",
-    "description": "Les opérations de réception Bitcoin nécessitent un petit dépôt en STRK comme garantie. Ce dépôt est automatiquement restitué lorsque l'opération se termine ou expire. Le STRK affiché ici est votre réserve opérationnelle — il n'est jamais dépensé, seulement temporairement verrouillé.",
-    "empty": "Pas de solde STRK. Le STRK sera provisionné automatiquement lorsque nécessaire pour les opérations de réception Bitcoin."
   },
   "transactions": {
     "empty": {
