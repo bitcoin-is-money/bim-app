@@ -1,7 +1,7 @@
 import {readFileSync} from 'node:fs';
 import {dirname, join} from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {formatTokenAmount} from '@bim/lib/token';
+import {formatSats, formatStrk} from '@bim/lib/token';
 import type {Logger} from 'pino';
 import type {Prices} from './e2e-rpc.js';
 import type {UserReportSummary} from './e2e-user.js';
@@ -60,7 +60,7 @@ export interface FailReportData {
 
 export function formatAvnuCredits(wei: bigint | undefined): string {
   if (wei === undefined) return 'N/A';
-  return formatTokenAmount(wei, 18, {fractionDigits: 6});
+  return formatStrk(wei);
 }
 
 function pad(label: string, value: string, width: number): string {
@@ -83,14 +83,6 @@ function row3(
   const trailing = 2;
   const labelWidth = inner - col1Width - col2Width - trailing;
   return `│  ${label.padEnd(labelWidth)}${col1.padStart(col1Width)}${col2.padStart(col2Width)}${' '.repeat(trailing)}  │`;
-}
-
-function formatStrk(wei: bigint): string {
-  return formatTokenAmount(wei, 18, {fractionDigits: 6});
-}
-
-function formatSats(sats: bigint): string {
-  return `${sats.toString()} sats`;
 }
 
 /**
@@ -206,10 +198,10 @@ export function buildTransferReport(data: TransferReportData): string {
 
   // Fees section
   const bimCheckIcon = data.bimFeeCheckPassed ? '✓' : '✗';
-  const bimExpected = formatSats(data.bimFeeExpectedSats);
-  const bimGot = formatSats(data.bimFeeGotSats);
-  const lpFee = formatSats(data.lpFeeSats);
-  const totalFee = formatSats(data.totalFeeSats);
+  const bimExpected = formatSats(data.bimFeeExpectedSats, true);
+  const bimGot = formatSats(data.bimFeeGotSats, true);
+  const lpFee = formatSats(data.lpFeeSats, true);
+  const totalFee = formatSats(data.totalFeeSats, true);
 
   // Custom BIM fee row: the check icon goes into the trailing margin so that
   // "sats" of bimGot aligns with "sats" of the other fee rows (LP, total, etc.).

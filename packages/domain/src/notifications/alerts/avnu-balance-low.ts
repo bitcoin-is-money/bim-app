@@ -1,5 +1,5 @@
+import {formatStrk} from '@bim/lib/token';
 import type {NotificationMessage} from '../../ports';
-import {formatStrk} from '../format';
 
 const AVNU_PORTAL = 'https://portal.avnu.fi';
 
@@ -17,8 +17,8 @@ export class AvnuBalanceLow {
 
     const fields = new Map<string, string>([
       ['Network', params.network],
-      ['Remaining credits', `${formatStrk(params.currentBalance)} STRK`],
-      ['Threshold', `${formatStrk(params.threshold)} STRK`],
+      ['Remaining credits', formatStrk(params.currentBalance, true)],
+      ['Threshold', formatStrk(params.threshold, true)],
     ]);
 
     return {

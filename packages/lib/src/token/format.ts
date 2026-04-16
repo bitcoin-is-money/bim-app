@@ -10,6 +10,11 @@ export interface FormatTokenAmountOptions {
    * (e.g. `"66.40"` stays `"66.40"`). Defaults to `false`.
    */
   omitZeroFraction?: boolean;
+  /**
+   * When set, the unit symbol is appended as ` {displayUnit}` at the end
+   * (e.g. `"1.000000 STRK"`). Defaults to no unit.
+   */
+  displayUnit?: string;
 }
 
 /**
@@ -22,13 +27,60 @@ export function formatTokenAmount(
   decimals: number,
   options: FormatTokenAmountOptions = {},
 ): string {
-  const {fractionDigits = decimals, omitZeroFraction = false} = options;
+  const {fractionDigits = decimals, omitZeroFraction = false, displayUnit} = options;
   const raw = typeof rawAmount === 'bigint' ? rawAmount : BigInt(rawAmount);
   const divisor = 10n ** BigInt(decimals);
   const whole = (raw / divisor).toString();
+  const number = computeFormattedNumber(raw, divisor, decimals, whole, fractionDigits, omitZeroFraction);
+  return displayUnit ? `${number} ${displayUnit}` : number;
+}
+
+function computeFormattedNumber(
+  raw: bigint,
+  divisor: bigint,
+  decimals: number,
+  whole: string,
+  fractionDigits: number,
+  omitZeroFraction: boolean,
+): string {
   if (fractionDigits <= 0) return whole;
   const fractionStr = (raw % divisor).toString().padStart(decimals, '0');
   const displayed = fractionStr.slice(0, fractionDigits).padEnd(fractionDigits, '0');
   if (omitZeroFraction && /^0+$/.test(displayed)) return whole;
   return `${whole}.${displayed}`;
+}
+
+const STRK_DECIMALS = 18;
+const WBTC_DECIMALS = 8;
+
+/**
+ * Formats a STRK amount (wei, 18 decimals) to a 6-fraction-digit string.
+ * Pass `withUnit = true` to append ` STRK`.
+ */
+export function formatStrk(wei: bigint, withUnit = false): string {
+  return formatTokenAmount(wei, STRK_DECIMALS, {
+    fractionDigits: 6,
+    ...(withUnit && {displayUnit: 'STRK'}),
+  });
+}
+
+/**
+ * Formats a WBTC amount (sats, 8 decimals) to a full 8-fraction-digit string.
+ * Pass `withUnit = true` to append ` WBTC`.
+ */
+export function formatWbtc(sats: bigint, withUnit = false): string {
+  return formatTokenAmount(sats, WBTC_DECIMALS, {
+    fractionDigits: 8,
+    ...(withUnit && {displayUnit: 'WBTC'}),
+  });
+}
+
+/**
+ * Formats a satoshi amount as a plain integer string.
+ * Pass `withUnit = true` to append ` sats`.
+ */
+export function formatSats(sats: bigint, withUnit = false): string {
+  return formatTokenAmount(sats, 0, {
+    ...(withUnit && {displayUnit: 'sats'}),
+  });
 }

@@ -2,12 +2,12 @@ import {StarknetAddress} from '@bim/domain/account';
 import {AvnuCreditsRecharged} from '@bim/domain/notifications';
 import type {NotificationGateway} from '@bim/domain/ports';
 import {createLogger} from '@bim/lib/logger';
+import {formatSats, formatStrk} from '@bim/lib/token';
 import {SlackNotificationGateway} from '@bim/slack';
 import {createInterface} from 'node:readline';
 import {RPC_URLS, STRK_DECIMALS} from '../config/constants.js';
 import {loadSecrets, requireAvnu, requireTreasury} from '../config/secrets.js';
 import {AvnuPaymaster, createCliGateways, Treasury} from '../core';
-import {formatStrk, formatWbtc} from '../lib/format.js';
 
 const DEFAULT_AMOUNT_STRK = 10n;
 const CREDITS_POLL_INTERVAL_MS = 3_000;
@@ -62,24 +62,24 @@ export async function run(args: string[]): Promise<void> {
   const balance = await treasury.getBalance();
 
   if (args[0]) {
-    console.log(`Refunding AVNU paymaster with ${formatStrk(amountWei)}`);
+    console.log(`Refunding AVNU paymaster with ${formatStrk(amountWei, true)}`);
   } else {
-    console.log(`Refunding AVNU paymaster with ${formatStrk(amountWei)} (default)`);
+    console.log(`Refunding AVNU paymaster with ${formatStrk(amountWei, true)} (default)`);
   }
 
   console.log();
   console.log('-- BIM Treasury --');
   console.log(`Address:  ${balance.address}`);
-  console.log(`STRK:     ${formatStrk(balance.strk)}`);
-  console.log(`WBTC:     ${formatWbtc(balance.wbtc)}`);
+  console.log(`STRK:     ${formatStrk(balance.strk, true)}`);
+  console.log(`WBTC:     ${formatSats(balance.wbtc, true)}`);
 
   if (balance.strk < amountWei) {
     throw new Error(
-      `Insufficient STRK balance. Need ${formatStrk(amountWei)}, have ${formatStrk(balance.strk)}.`,
+      `Insufficient STRK balance. Need ${formatStrk(amountWei, true)}, have ${formatStrk(balance.strk, true)}.`,
     );
   }
 
-  const confirmed = await confirm(`\nSend ${formatStrk(amountWei)} to AVNU paymaster?`);
+  const confirmed = await confirm(`\nSend ${formatStrk(amountWei, true)} to AVNU paymaster?`);
   if (!confirmed) {
     console.log('Aborted.');
     return;
@@ -104,7 +104,7 @@ export async function run(args: string[]): Promise<void> {
     avnuSecrets,
   );
   console.log(`Tx hash: ${txHash}`);
-  console.log(`Done. ${formatStrk(amountWei)} credited to AVNU paymaster.`);
+  console.log(`Done. ${formatStrk(amountWei, true)} credited to AVNU paymaster.`);
 
   try {
     if (previousBalance === undefined) {

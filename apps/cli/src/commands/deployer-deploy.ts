@@ -1,6 +1,6 @@
+import {formatStrk} from '@bim/lib/token';
 import {CallData} from 'starknet';
 import {loadSecrets, requireDeployer} from '../config/secrets.js';
-import {formatStrk} from '../lib/format.js';
 import {createAccount, createProvider, getStrkBalance} from '../lib/starknet.js';
 
 export async function run(_args: string[]): Promise<void> {
@@ -17,7 +17,7 @@ export async function run(_args: string[]): Promise<void> {
     console.error('  Address:', deployer.address);
     process.exit(1);
   }
-  console.log('STRK balance:', formatStrk(balance), '\n');
+  console.log('STRK balance:', formatStrk(balance, true), '\n');
 
   console.log('Deploying account...');
   const account = createAccount(provider, deployer);

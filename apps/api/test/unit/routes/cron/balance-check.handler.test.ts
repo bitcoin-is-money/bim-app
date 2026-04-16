@@ -8,15 +8,28 @@ import {BalanceMonitoring, type BalanceMonitoringConfig} from '../../../../src/m
 const TREASURY_ADDRESS = StarknetAddress.of('0x0000000000000000000000000000000000000000000000000000000000000bbb');
 const STRK_TOKEN = '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d';
 
-// Default thresholds: 15 STRK for AVNU, 200 STRK for treasury
+// Default thresholds: 15 STRK for AVNU, 100 STRK + 10_000 sats for treasury
 const ABOVE_AVNU_THRESHOLD = 20_000_000_000_000_000_000n;
 const BELOW_AVNU_THRESHOLD = 1_000_000_000_000_000_000n;
-const ABOVE_TREASURY_THRESHOLD = 300_000_000_000_000_000_000n;
-const BELOW_TREASURY_THRESHOLD = 50_000_000_000_000_000_000n;
+const ABOVE_TREASURY_STRK_THRESHOLD = 300_000_000_000_000_000_000n;
+const BELOW_TREASURY_STRK_THRESHOLD = 50_000_000_000_000_000_000n;
+const ABOVE_TREASURY_WBTC_THRESHOLD = 100_000n;
+const BELOW_TREASURY_WBTC_THRESHOLD = 1_000n;
 
-function createMockStarknetGateway(): StarknetGateway {
+interface MockedBalances {
+  strk: bigint;
+  wbtc: bigint;
+}
+
+function createMockStarknetGateway(balances: MockedBalances = {
+  strk: ABOVE_TREASURY_STRK_THRESHOLD,
+  wbtc: ABOVE_TREASURY_WBTC_THRESHOLD,
+}): StarknetGateway {
+  const getBalance = vi.fn(
+    ({token}: {token: string}) => Promise.resolve(token === 'STRK' ? balances.strk : balances.wbtc),
+  );
   return {
-    getBalance: vi.fn().mockResolvedValue(ABOVE_TREASURY_THRESHOLD),
+    getBalance,
     calculateAccountAddress: vi.fn(),
     buildDeployTransaction: vi.fn(),
     waitForTransaction: vi.fn(),
@@ -26,6 +39,13 @@ function createMockStarknetGateway(): StarknetGateway {
     buildCalls: vi.fn(),
     executeSignedCalls: vi.fn(),
   } as unknown as StarknetGateway;
+}
+
+function mockBalances(gateway: StarknetGateway, balances: MockedBalances): void {
+  vi.mocked(gateway.getBalance).mockImplementation(
+    ({token}: {address: StarknetAddress; token: string}) =>
+      Promise.resolve(token === 'STRK' ? balances.strk : balances.wbtc),
+  );
 }
 
 function createMockPaymasterGateway(): PaymasterGateway {
@@ -85,7 +105,7 @@ describe('BalanceMonitoring', () => {
 
   it('does not send alerts when balances are above thresholds', async () => {
     vi.mocked(paymasterGateway.getRemainingCredits).mockResolvedValue(ABOVE_AVNU_THRESHOLD);
-    vi.mocked(starknetGateway.getBalance).mockResolvedValue(ABOVE_TREASURY_THRESHOLD);
+    mockBalances(starknetGateway, {strk: ABOVE_TREASURY_STRK_THRESHOLD, wbtc: ABOVE_TREASURY_WBTC_THRESHOLD});
 
     await monitoring.run();
 
@@ -94,7 +114,7 @@ describe('BalanceMonitoring', () => {
 
   it('sends AVNU alert when credits are below threshold', async () => {
     vi.mocked(paymasterGateway.getRemainingCredits).mockResolvedValue(BELOW_AVNU_THRESHOLD);
-    vi.mocked(starknetGateway.getBalance).mockResolvedValue(ABOVE_TREASURY_THRESHOLD);
+    mockBalances(starknetGateway, {strk: ABOVE_TREASURY_STRK_THRESHOLD, wbtc: ABOVE_TREASURY_WBTC_THRESHOLD});
 
     await monitoring.run();
 
@@ -104,9 +124,9 @@ describe('BalanceMonitoring', () => {
     expect(message.severity).toBe('alert');
   });
 
-  it('sends treasury alert when balance is below threshold', async () => {
+  it('sends treasury alert when STRK balance is below threshold', async () => {
     vi.mocked(paymasterGateway.getRemainingCredits).mockResolvedValue(ABOVE_AVNU_THRESHOLD);
-    vi.mocked(starknetGateway.getBalance).mockResolvedValue(BELOW_TREASURY_THRESHOLD);
+    mockBalances(starknetGateway, {strk: BELOW_TREASURY_STRK_THRESHOLD, wbtc: ABOVE_TREASURY_WBTC_THRESHOLD});
 
     await monitoring.run();
 
@@ -114,11 +134,25 @@ describe('BalanceMonitoring', () => {
     const message = vi.mocked(notificationGateway.send).mock.calls[0]![0];
     expect(message.title).toBe('Treasury Balance Low');
     expect(message.severity).toBe('alert');
+    expect(message.description).toContain('STRK');
+    expect(message.description).not.toContain('WBTC');
   });
 
-  it('sends both alerts when both balances are below thresholds', async () => {
+  it('sends treasury alert when WBTC balance is below threshold', async () => {
+    vi.mocked(paymasterGateway.getRemainingCredits).mockResolvedValue(ABOVE_AVNU_THRESHOLD);
+    mockBalances(starknetGateway, {strk: ABOVE_TREASURY_STRK_THRESHOLD, wbtc: BELOW_TREASURY_WBTC_THRESHOLD});
+
+    await monitoring.run();
+
+    expect(notificationGateway.send).toHaveBeenCalledOnce();
+    const message = vi.mocked(notificationGateway.send).mock.calls[0]![0];
+    expect(message.title).toBe('Treasury Balance Low');
+    expect(message.description).toContain('WBTC');
+  });
+
+  it('sends both alerts when AVNU and treasury are below thresholds', async () => {
     vi.mocked(paymasterGateway.getRemainingCredits).mockResolvedValue(BELOW_AVNU_THRESHOLD);
-    vi.mocked(starknetGateway.getBalance).mockResolvedValue(BELOW_TREASURY_THRESHOLD);
+    mockBalances(starknetGateway, {strk: BELOW_TREASURY_STRK_THRESHOLD, wbtc: BELOW_TREASURY_WBTC_THRESHOLD});
 
     await monitoring.run();
 
@@ -131,7 +165,7 @@ describe('BalanceMonitoring', () => {
 
   it('continues with treasury check when AVNU check fails', async () => {
     vi.mocked(paymasterGateway.getRemainingCredits).mockRejectedValue(new Error('AVNU API timeout'));
-    vi.mocked(starknetGateway.getBalance).mockResolvedValue(BELOW_TREASURY_THRESHOLD);
+    mockBalances(starknetGateway, {strk: BELOW_TREASURY_STRK_THRESHOLD, wbtc: ABOVE_TREASURY_WBTC_THRESHOLD});
 
     await monitoring.run();
 
@@ -140,7 +174,23 @@ describe('BalanceMonitoring', () => {
     expect(message.title).toBe('Treasury Balance Low');
   });
 
-  it('handles treasury check failure gracefully', async () => {
+  it('still alerts on STRK when WBTC balance fetch fails', async () => {
+    vi.mocked(paymasterGateway.getRemainingCredits).mockResolvedValue(ABOVE_AVNU_THRESHOLD);
+    vi.mocked(starknetGateway.getBalance).mockImplementation(
+      ({token}: {address: StarknetAddress; token: string}) =>
+        token === 'STRK'
+          ? Promise.resolve(BELOW_TREASURY_STRK_THRESHOLD)
+          : Promise.reject(new Error('RPC timeout')),
+    );
+
+    await monitoring.run();
+
+    expect(notificationGateway.send).toHaveBeenCalledOnce();
+    const message = vi.mocked(notificationGateway.send).mock.calls[0]![0];
+    expect(message.title).toBe('Treasury Balance Low');
+  });
+
+  it('handles treasury STRK check failure gracefully', async () => {
     vi.mocked(paymasterGateway.getRemainingCredits).mockResolvedValue(BELOW_AVNU_THRESHOLD);
     vi.mocked(starknetGateway.getBalance).mockRejectedValue(new Error('RPC timeout'));
 

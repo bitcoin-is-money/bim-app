@@ -98,13 +98,15 @@ const TEST_MESSAGES: readonly TestMessageBuilder[] = [
   },
   {
     key: 'treasury-balance-low',
-    description: 'BIM treasury STRK balance below threshold',
+    description: 'BIM treasury STRK/WBTC balance below threshold',
     build: () => required(
       TreasuryBalanceLow.evaluate({
         address: FAKE_ADDRESS,
         network: 'mainnet',
-        currentBalance: 500_000_000_000_000_000n,
-        threshold: 2_000_000_000_000_000_000n,
+        strkBalance: 500_000_000_000_000_000n,
+        wbtcBalance: 5_000n,
+        strkThreshold: 100n * 10n ** 18n,
+        wbtcThreshold: 10_000n,
       }),
       'treasury-balance-low',
     ),

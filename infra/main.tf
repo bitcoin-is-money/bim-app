@@ -137,9 +137,10 @@ resource "scaleway_container" "api" {
       CRON_SECRET          = var.cron_secret
     },
     var.enable_alerting ? {
-      ALERTING_SLACK_BOT_TOKEN         = var.alerting_slack_bot_token
-      ALERTING_AVNU_THRESHOLD_STRK     = tostring(var.alerting_avnu_threshold_strk)
-      ALERTING_TREASURY_THRESHOLD_STRK = tostring(var.alerting_treasury_threshold_strk)
+      ALERTING_SLACK_BOT_TOKEN              = var.alerting_slack_bot_token
+      ALERTING_AVNU_THRESHOLD_STRK          = tostring(var.alerting_avnu_threshold_strk)
+      ALERTING_TREASURY_THRESHOLD_STRK      = tostring(var.alerting_treasury_threshold_strk)
+      ALERTING_TREASURY_THRESHOLD_WBTC_SATS = tostring(var.alerting_treasury_threshold_wbtc_sats)
     } : {}
   )
 

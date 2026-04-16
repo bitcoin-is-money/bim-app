@@ -1,6 +1,7 @@
+import {formatStrk} from '@bim/lib/token';
 import type {NotificationMessage} from '../../ports';
 import type {StarknetAddress} from '../../shared';
-import {formatStrk, starkscanUrl, truncateAddress} from '../format';
+import {starkscanUrl, truncateAddress} from '../format';
 
 export class AvnuCreditsRecharged {
   static readonly name = 'avnu-credits-recharged';
@@ -18,8 +19,8 @@ export class AvnuCreditsRecharged {
 
     const fields = new Map<string, string>([
       ['Account', `\`${truncateAddress(params.address)}\``],
-      ['Previous Balance', `${formatStrk(params.previousBalance)} STRK`],
-      ['New Balance', `${formatStrk(params.currentBalance)} STRK`],
+      ['Previous Balance', formatStrk(params.previousBalance, true)],
+      ['New Balance', formatStrk(params.currentBalance, true)],
     ]);
 
     return {

@@ -1,7 +1,7 @@
+import {formatStrk} from '@bim/lib/token';
 import {CallData} from 'starknet';
 import type {Network} from '../config/constants.js';
 import {loadSecrets, requireTreasury} from '../config/secrets.js';
-import {formatStrk} from '../lib/format.js';
 import {createAccount, createProvider, getStrkBalance} from '../lib/starknet.js';
 
 function parseNetwork(args: string[]): Network {
@@ -26,7 +26,7 @@ export async function run(args: string[]): Promise<void> {
     await provider.getNonceForAddress(treasury.address);
     const balance = await getStrkBalance(provider, treasury.address);
     console.log(`Already deployed on ${network}.`);
-    console.log(`Balance: ${formatStrk(balance)}`);
+    console.log(`Balance: ${formatStrk(balance, true)}`);
     console.log('Nothing to do.');
     return;
   } catch {
@@ -44,7 +44,7 @@ export async function run(args: string[]): Promise<void> {
   }
 
   console.log(`Deploying treasury account on ${network}...`);
-  console.log('STRK balance:', formatStrk(balance), '\n');
+  console.log('STRK balance:', formatStrk(balance, true), '\n');
 
   const account = createAccount(provider, treasury);
   const constructorCallData = CallData.compile({publicKey: treasury.publicKey});

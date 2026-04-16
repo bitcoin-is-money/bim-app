@@ -4,13 +4,15 @@ import type {StarknetConfig} from '@bim/domain/shared';
 import type {Logger} from 'pino';
 
 export const DEFAULT_AVNU_THRESHOLD_STRK = 15n;
-export const DEFAULT_TREASURY_THRESHOLD_STRK = 200n;
+export const DEFAULT_TREASURY_THRESHOLD_STRK = 100n;
+export const DEFAULT_TREASURY_THRESHOLD_WBTC_SATS = 10_000n;
 
 const STRK_DECIMALS = 10n ** 18n;
 
 export interface BalanceMonitoringConfig {
   readonly avnuThresholdStrk?: bigint;
   readonly treasuryThresholdStrk?: bigint;
+  readonly treasuryThresholdWbtcSats?: bigint;
 }
 
 export class BalanceMonitoring {
@@ -61,20 +63,44 @@ export class BalanceMonitoring {
 
   private async checkTreasuryBalance(): Promise<void> {
     const address = this.starknetConfig.feeTreasuryAddress;
-    const token = 'STRK';
-    const currentBalance = await this.starknetGateway.getBalance({address, token});
-    const threshold = (this.config.treasuryThresholdStrk ?? DEFAULT_TREASURY_THRESHOLD_STRK) * STRK_DECIMALS;
+    const strkThreshold = (this.config.treasuryThresholdStrk ?? DEFAULT_TREASURY_THRESHOLD_STRK) * STRK_DECIMALS;
+    const wbtcThreshold = this.config.treasuryThresholdWbtcSats ?? DEFAULT_TREASURY_THRESHOLD_WBTC_SATS;
 
-    this.log.info({address: address.toString(), balance: currentBalance.toString(), threshold: threshold.toString()}, 'Treasury balance check');
+    const [strkBalance, wbtcBalance] = await Promise.all([
+      this.starknetGateway.getBalance({address, token: 'STRK'}),
+      this.fetchWbtcBalanceOrZero(address),
+    ]);
+
+    this.log.info(
+      {
+        address: address.toString(),
+        strkBalance: strkBalance.toString(),
+        wbtcBalance: wbtcBalance.toString(),
+        strkThreshold: strkThreshold.toString(),
+        wbtcThreshold: wbtcThreshold.toString(),
+      },
+      'Treasury balance check',
+    );
 
     const alertMsg = TreasuryBalanceLow.evaluate({
       address,
       network: this.starknetConfig.network,
-      currentBalance,
-      threshold,
+      strkBalance,
+      wbtcBalance,
+      strkThreshold,
+      wbtcThreshold,
     });
     if (alertMsg) {
       await this.notificationGateway.send(alertMsg);
+    }
+  }
+
+  private async fetchWbtcBalanceOrZero(address: StarknetConfig['feeTreasuryAddress']): Promise<bigint> {
+    try {
+      return await this.starknetGateway.getBalance({address, token: 'WBTC'});
+    } catch (err: unknown) {
+      this.log.warn({cause: err instanceof Error ? err.message : String(err)}, 'Treasury WBTC balance fetch failed');
+      return 0n;
     }
   }
 }

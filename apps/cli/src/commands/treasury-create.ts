@@ -1,7 +1,7 @@
+import {formatStrk} from '@bim/lib/token';
 import {CallData, ec, hash, stark} from 'starknet';
 import {type Network, OZ_ACCOUNT_CLASS_HASH, STARKNET_FAUCET_URL} from '../config/constants.js';
 import {loadSecrets, saveSecrets} from '../config/secrets.js';
-import {formatStrk} from "../lib/format";
 import {createProvider, getStrkBalance} from '../lib/starknet.js';
 
 function parseNetwork(args: string[]): Network {
@@ -27,7 +27,7 @@ export async function run(args: string[]): Promise<void> {
     if (isDeployed) {
       console.log(`Treasury account already exists and is funded on ${network}.`);
       console.log(`Address: ${existing.address}`);
-      console.log(`Balance: ${formatStrk(balance)}`);
+      console.log(`Balance: ${formatStrk(balance, true)}`);
       console.log('Nothing to do.');
       return;
     }

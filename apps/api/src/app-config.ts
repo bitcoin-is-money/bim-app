@@ -156,7 +156,8 @@ export namespace AppConfig {
       secret,
       balanceMonitoring: {
         avnuThresholdStrk: BigInt(optional('ALERTING_AVNU_THRESHOLD_STRK', '15')),
-        treasuryThresholdStrk: BigInt(optional('ALERTING_TREASURY_THRESHOLD_STRK', '200')),
+        treasuryThresholdStrk: BigInt(optional('ALERTING_TREASURY_THRESHOLD_STRK', '100')),
+        treasuryThresholdWbtcSats: BigInt(optional('ALERTING_TREASURY_THRESHOLD_WBTC_SATS', '10000')),
       },
     };
   }

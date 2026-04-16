@@ -1,9 +1,9 @@
 import {StarknetAddress} from '@bim/domain/account';
+import {formatSats} from '@bim/lib/token';
 import {createInterface} from 'node:readline';
 import {RPC_URLS} from '../config/constants.js';
 import {loadSecrets, requireE2e, requireTreasury} from '../config/secrets.js';
 import {createCliGateways, Treasury} from '../core';
-import {formatWbtc} from '../lib/format.js';
 
 const DEFAULT_AMOUNT_SATS = 10_000n;
 
@@ -42,38 +42,38 @@ export async function run(args: string[]): Promise<void> {
   const targetLabel = target === 'a' ? 'Account A' : 'Account B';
 
   if (args[1]) {
-    console.log(`Crediting ${targetLabel} with ${formatWbtc(amount)}`);
+    console.log(`Crediting ${targetLabel} with ${formatSats(amount, true)}`);
   } else {
-    console.log(`Crediting ${targetLabel} with ${formatWbtc(amount)} (default)`);
+    console.log(`Crediting ${targetLabel} with ${formatSats(amount, true)} (default)`);
   }
 
   const balance = await treasury.getBalance();
   const targetAddr = StarknetAddress.of(targetAccount.starknetAddress);
   const targetBalance = await starknet.getBalance({address: targetAddr, token: 'WBTC'});
 
-  console.log(`\nTreasury:    ${formatWbtc(balance.wbtc)}`);
-  console.log(`${targetLabel}: ${formatWbtc(targetBalance)} (${targetAccount.username})`);
+  console.log(`\nTreasury:    ${formatSats(balance.wbtc, true)}`);
+  console.log(`${targetLabel}: ${formatSats(targetBalance, true)} (${targetAccount.username})`);
 
   if (balance.wbtc < amount) {
     throw new Error(
-      `Insufficient treasury balance. Need ${formatWbtc(amount)}, have ${formatWbtc(balance.wbtc)}.`,
+      `Insufficient treasury balance. Need ${formatSats(amount, true)}, have ${formatSats(balance.wbtc, true)}.`,
     );
   }
 
-  const confirmed = await confirm(`\nSend ${formatWbtc(amount)} to ${targetLabel}?`);
+  const confirmed = await confirm(`\nSend ${formatSats(amount, true)} to ${targetLabel}?`);
   if (!confirmed) {
     console.log('Aborted.');
     return;
   }
 
-  console.log(`\nTransferring ${formatWbtc(amount)}...`);
+  console.log(`\nTransferring ${formatSats(amount, true)}...`);
   const txHash = await treasury.fund(targetAddr, amount);
   console.log(`Tx hash: ${txHash}`);
 
   const balanceAfter = await starknet.getBalance({address: targetAddr, token: 'WBTC'});
-  console.log(`${targetLabel} balance after: ${formatWbtc(balanceAfter)}`);
+  console.log(`${targetLabel} balance after: ${formatSats(balanceAfter, true)}`);
 
   const treasuryAfter = await treasury.getBalance();
-  console.log(`Treasury balance after: ${formatWbtc(treasuryAfter.wbtc)}`);
+  console.log(`Treasury balance after: ${formatSats(treasuryAfter.wbtc, true)}`);
   console.log('Done.');
 }

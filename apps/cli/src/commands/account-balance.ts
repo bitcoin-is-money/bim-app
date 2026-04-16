@@ -1,10 +1,11 @@
 import {StarknetAddress} from '@bim/domain/account';
+import {formatSats, formatStrk} from '@bim/lib/token';
 import type {StarknetRpcGateway} from '@bim/starknet';
 import {getRpcUrl, type Network} from '../config/constants.js';
 import type {E2eAccountSecrets} from '../config/secrets.js';
 import {loadSecrets, requireTreasury} from '../config/secrets.js';
 import {AvnuPaymaster, createCliGateways, Treasury} from '../core';
-import {bigintReplacer, formatStrk, formatUsd, formatWbtc} from '../lib/format.js';
+import {bigintReplacer, formatUsd} from '../lib/format.js';
 
 interface AccountBalanceInfo {
   readonly label: string;
@@ -79,13 +80,13 @@ async function fetchE2eBalances(
 }
 
 function formatStrkWithUsd(wei: bigint, prices: Prices | undefined): string {
-  const base = formatStrk(wei);
+  const base = formatStrk(wei, true);
   if (!prices) return base;
   return `${base} (${formatUsd(strkToUsd(wei, prices.strkUsd))})`;
 }
 
 function formatWbtcWithUsd(sats: bigint, prices: Prices | undefined): string {
-  const base = formatWbtc(sats);
+  const base = formatSats(sats, true);
   if (!prices) return base;
   return `${base} (${formatUsd(wbtcToUsd(sats, prices.btcUsd))})`;
 }
@@ -113,7 +114,7 @@ function printHuman(
 
   if (avnu) {
     console.log('-- AVNU Paymaster Credits --');
-    const creditsLabel = credits === undefined ? '(unable to fetch — check API key)' : formatStrk(credits);
+    const creditsLabel = credits === undefined ? '(unable to fetch — check API key)' : formatStrk(credits, true);
     console.log(`Credits:  ${creditsLabel}`);
   } else {
     console.log('-- AVNU --');

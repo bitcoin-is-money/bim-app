@@ -61,10 +61,11 @@ alerting_slack_bot_token = "xoxb-..."
 # ------------------------------------------------------------------------------
 # Alerting (optional - Slack notifications on #alerting)
 # ------------------------------------------------------------------------------
-enable_alerting          = true
-alerting_balance_cron             = "0 8 * * *"
-alerting_avnu_threshold_strk      = 0
-alerting_treasury_threshold_strk  = 0
+enable_alerting                       = true
+alerting_balance_cron                 = "0 8 * * *"
+alerting_avnu_threshold_strk          = 15
+alerting_treasury_threshold_strk      = 100
+alerting_treasury_threshold_wbtc_sats = 10000
 
 # ------------------------------------------------------------------------------
 # Reporting (optional - Slack notifications on #reporting)

@@ -6,7 +6,7 @@ import {
   SwapClaimFailed,
   TreasuryBalanceLow,
 } from '@bim/domain/notifications';
-import {formatStrk, starkscanUrl, truncateAddress} from '../../src/notifications/format';
+import {starkscanUrl, truncateAddress} from '../../src/notifications/format';
 import {SwapId} from '@bim/domain/swap';
 import {createLogger} from '@bim/lib/logger';
 import {describe, expect, it} from 'vitest';
@@ -18,12 +18,6 @@ const logger = createLogger('silent');
 describe('notifications/format', () => {
   it('truncates addresses to 8...4 layout', () => {
     expect(truncateAddress('0x1234567890abcdef')).toBe('0x123456...cdef');
-  });
-
-  it('formats strk wei to 6 decimals', () => {
-    expect(formatStrk(1_000_000_000_000_000_000n)).toBe('1.000000');
-    expect(formatStrk(123_456_789_012_345_678n)).toBe('0.123456');
-    expect(formatStrk(0n)).toBe('0.000000');
   });
 
   it('points to mainnet starkscan when network is mainnet', () => {
@@ -83,25 +77,62 @@ describe('AvnuCreditsRecharged', () => {
 });
 
 describe('TreasuryBalanceLow', () => {
-  it('returns alert when balance below threshold', () => {
+  const STRK_THRESHOLD = 10n * 10n ** 18n;
+  const WBTC_THRESHOLD = 10_000n;
+
+  it('returns alert when STRK balance is below threshold', () => {
     const msg = TreasuryBalanceLow.evaluate({
       address: ADDRESS,
       network: 'mainnet',
-      currentBalance: 1n * 10n ** 18n,
-      threshold: 10n * 10n ** 18n,
+      strkBalance: 1n * 10n ** 18n,
+      wbtcBalance: 1_000_000n,
+      strkThreshold: STRK_THRESHOLD,
+      wbtcThreshold: WBTC_THRESHOLD,
     });
     expect(msg).toBeDefined();
     expect(msg?.severity).toBe('alert');
     expect(msg?.title).toBe('Treasury Balance Low');
+    expect(msg?.fields.get('STRK Balance')).toBe('1.000000 STRK');
+    expect(msg?.fields.get('WBTC Balance')).toBe('1000000 sats');
+    expect(msg?.description).toContain('STRK');
+    expect(msg?.description).not.toContain('WBTC');
   });
 
-  it('returns undefined when balance above threshold', () => {
+  it('returns alert when WBTC balance is below threshold', () => {
+    const msg = TreasuryBalanceLow.evaluate({
+      address: ADDRESS,
+      network: 'mainnet',
+      strkBalance: 1_000n * 10n ** 18n,
+      wbtcBalance: 500n,
+      strkThreshold: STRK_THRESHOLD,
+      wbtcThreshold: WBTC_THRESHOLD,
+    });
+    expect(msg).toBeDefined();
+    expect(msg?.description).toContain('WBTC');
+    expect(msg?.description).not.toContain('STRK');
+  });
+
+  it('mentions both assets in description when both are below threshold', () => {
+    const msg = TreasuryBalanceLow.evaluate({
+      address: ADDRESS,
+      network: 'mainnet',
+      strkBalance: 1n * 10n ** 18n,
+      wbtcBalance: 500n,
+      strkThreshold: STRK_THRESHOLD,
+      wbtcThreshold: WBTC_THRESHOLD,
+    });
+    expect(msg?.description).toContain('STRK and WBTC');
+  });
+
+  it('returns undefined when both balances are above their thresholds', () => {
     expect(
       TreasuryBalanceLow.evaluate({
         address: ADDRESS,
         network: 'mainnet',
-        currentBalance: 100n * 10n ** 18n,
-        threshold: 10n * 10n ** 18n,
+        strkBalance: 100n * 10n ** 18n,
+        wbtcBalance: 1_000_000n,
+        strkThreshold: STRK_THRESHOLD,
+        wbtcThreshold: WBTC_THRESHOLD,
       }),
     ).toBeUndefined();
   });

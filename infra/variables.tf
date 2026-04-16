@@ -151,9 +151,15 @@ variable "alerting_avnu_threshold_strk" {
 }
 
 variable "alerting_treasury_threshold_strk" {
-  description = "Treasury balance alert threshold in STRK (default: 200)"
+  description = "Treasury balance alert threshold in STRK (default: 100)"
   type        = number
-  default     = 200
+  default     = 100
+}
+
+variable "alerting_treasury_threshold_wbtc_sats" {
+  description = "Treasury balance alert threshold in WBTC sats (default: 10000 = 0.0001 BTC)"
+  type        = number
+  default     = 10000
 }
 
 # ---------- Reporting (weekly BIM activity snapshot via Scaleway cron → API) ----------
