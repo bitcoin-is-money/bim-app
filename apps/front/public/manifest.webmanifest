@@ -25,7 +25,7 @@
   "related_applications": [
     {
       "platform": "webapp",
-      "url": "/manifest.webmanifest"
+      "url": "https://app.bitcoinismoney.app/manifest.webmanifest"
     }
   ],
   "prefer_related_applications": false

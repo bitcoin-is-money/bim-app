@@ -1,33 +1,22 @@
 <section class="pwa-info">
   @if (isInstalled()) {
-    <h3 class="pwa-info__title">{{ 'pwa.install.info.installedTitle' | translate }}</h3>
-    <p class="pwa-info__text">{{ 'pwa.install.info.installedDescription' | translate }}</p>
-    <p class="pwa-info__text pwa-info__text--hint">
-      @switch (platform()) {
-        @case ('ios') {
-          {{ 'pwa.install.info.uninstallIos' | translate }}
-        }
-        @case ('android') {
-          {{ 'pwa.install.info.uninstallAndroid' | translate }}
-        }
-        @default {
-          {{ 'pwa.install.info.uninstallDesktop' | translate }}
-        }
-      }
-    </p>
+    <h3 class="pwa-info__title">{{ 'pwa.install.installed.title' | translate }}</h3>
+    <p class="pwa-info__text">{{ 'pwa.install.installed.description' | translate }}</p>
+    <p class="pwa-info__text pwa-info__text--hint">{{ uninstallKey() | translate }}</p>
   } @else {
-    <h3 class="pwa-info__title">{{ 'pwa.install.info.notInstalledTitle' | translate }}</h3>
-    <p class="pwa-info__text">{{ 'pwa.install.info.notInstalledDescription' | translate }}</p>
+    <h3 class="pwa-info__title">{{ 'pwa.install.title' | translate }}</h3>
+    <p class="pwa-info__text">{{ 'pwa.install.description' | translate }}</p>
     @if (canInstall()) {
       <div class="pwa-info__actions">
         <app-button colorVariant="gold" variant="primary" (click)="onInstall()">
-          {{ 'pwa.install.info.installButton' | translate }}
+          {{ 'pwa.install.installButton' | translate }}
         </app-button>
       </div>
-    } @else if (platform() === 'ios') {
-      <p class="pwa-info__text pwa-info__text--hint">{{ 'pwa.install.info.iosInstructions' | translate }}</p>
     } @else {
-      <p class="pwa-info__text pwa-info__text--hint">{{ 'pwa.install.info.unsupportedBrowser' | translate }}</p>
+      <p class="pwa-info__text pwa-info__text--hint">
+        <strong>{{ 'pwa.install.manualHeading' | translate }}</strong><br>
+        {{ manualKey() | translate }}
+      </p>
     }
   }
 </section>

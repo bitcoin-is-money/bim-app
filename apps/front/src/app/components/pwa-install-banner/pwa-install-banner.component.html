@@ -1,22 +1,25 @@
 @if (visible()) {
-  <section class="pwa-install-banner" aria-live="polite" [attr.aria-label]="'pwa.install.banner.title' | translate">
+  <section class="pwa-install-banner" aria-live="polite" [attr.aria-label]="'pwa.install.title' | translate">
     <div class="pwa-install-banner__content">
-      <h3 class="pwa-install-banner__title">{{ 'pwa.install.banner.title' | translate }}</h3>
-      @if (canPrompt()) {
-        <p class="pwa-install-banner__text">{{ 'pwa.install.banner.description' | translate }}</p>
-      } @else if (isIos()) {
-        <p class="pwa-install-banner__text">{{ 'pwa.install.banner.iosInstructions' | translate }}</p>
+      <h3 class="pwa-install-banner__title">{{ 'pwa.install.title' | translate }}</h3>
+      <p class="pwa-install-banner__text">{{ 'pwa.install.description' | translate }}</p>
+      @if (!canPrompt()) {
+        <p class="pwa-install-banner__text">{{ manualKey() | translate }}</p>
       }
     </div>
     <div class="pwa-install-banner__actions">
       @if (canPrompt()) {
         <app-button colorVariant="gold" variant="primary" (click)="onInstall()">
-          {{ 'pwa.install.banner.install' | translate }}
+          {{ 'pwa.install.installButton' | translate }}
+        </app-button>
+        <app-button colorVariant="black" variant="secondary" (click)="onDismiss()">
+          {{ 'pwa.install.laterButton' | translate }}
+        </app-button>
+      } @else {
+        <app-button colorVariant="gold" variant="primary" (click)="onDismiss()">
+          {{ 'pwa.install.okButton' | translate }}
         </app-button>
       }
-      <app-button colorVariant="black" variant="secondary" (click)="onDismiss()">
-        {{ 'pwa.install.banner.dismiss' | translate }}
-      </app-button>
     </div>
   </section>
 }

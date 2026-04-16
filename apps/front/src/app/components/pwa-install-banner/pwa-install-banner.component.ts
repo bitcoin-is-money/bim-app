@@ -16,18 +16,9 @@ export class PwaInstallBannerComponent {
 
   private readonly dismissed = signal(false);
 
-  readonly canPrompt = computed(() => this.pwa.canInstall());
-  readonly isIos = computed(() => this.pwa.platform() === 'ios');
-
-  readonly visible = computed(() => {
-    if (this.dismissed()) {
-      return false;
-    }
-    if (this.pwa.isInstalled()) {
-      return false;
-    }
-    return this.canPrompt() || this.isIos();
-  });
+  readonly canPrompt = this.pwa.canInstall;
+  readonly manualKey = computed(() => `pwa.install.manual.${this.pwa.platform()}`);
+  readonly visible = computed(() => !this.dismissed() && !this.pwa.isInstalled());
 
   async onInstall(): Promise<void> {
     const outcome = await this.pwa.promptInstall();

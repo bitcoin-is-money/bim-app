@@ -1,5 +1,5 @@
 import {isPlatformBrowser} from '@angular/common';
-import {computed, inject, Injectable, NgZone, PLATFORM_ID, signal} from '@angular/core';
+import {computed, inject, Injectable, PLATFORM_ID, signal} from '@angular/core';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -17,41 +17,39 @@ interface NavigatorWithRelatedApps extends Navigator {
   getInstalledRelatedApps?(): Promise<RelatedApplication[]>;
 }
 
-export type PwaPlatform = 'ios' | 'android' | 'chromium-desktop' | 'firefox' | 'other';
+export type PwaPlatform = 'ios' | 'android' | 'desktop' | 'other';
 
 export type PwaPromptOutcome = 'accepted' | 'dismissed' | 'unavailable';
 
 /**
  * Tracks PWA install state and exposes an imperative install prompt.
  *
- * - `isStandalone` is true when the app currently runs from an installed
- *   icon (display-mode: standalone, or iOS `navigator.standalone`).
- * - `installedRemotely` is true when the Chromium-only
- *   `navigator.getInstalledRelatedApps()` API reports our PWA as
- *   installed somewhere on the device, even if the current tab is a
- *   regular browser tab. Used to detect installation from outside the
- *   standalone window.
- * - `isInstalled` is the union: either running standalone, or known to
- *   be installed somewhere on the device.
- * - `canInstall` is true only on Chromium-based browsers that fired a
- *   `beforeinstallprompt` event we captured for later use.
- * - `platform` is a coarse UA classification used to pick the right copy
- *   (Android/Chromium can prompt natively, iOS needs an instructions hint,
- *   Firefox desktop has no install story at all).
+ * - `isStandalone` — app currently runs from an installed icon
+ *   (display-mode: standalone, or iOS `navigator.standalone`).
+ * - `installedRemotely` — Chromium-only `navigator.getInstalledRelatedApps()`
+ *   reports our PWA as installed somewhere on the device, even when the
+ *   current tab is a regular browser tab.
+ * - `isInstalled` — union: standalone OR known installed remotely.
+ * - `canInstall` — a `beforeinstallprompt` event was captured; calling
+ *   `promptInstall()` will show the native install dialog.
+ * - `platform` — coarse OS classification only (`ios | android | desktop
+ *   | other`). No assumptions about which browser supports what: if
+ *   `canInstall` is false, UI falls back to generic per-OS instructions.
  */
 @Injectable({providedIn: 'root'})
 export class PwaInstallService {
 
-  private readonly zone = inject(NgZone);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
-  private readonly standalone = signal(this.detectStandalone());
+  private readonly standalone = signal(false);
   private readonly installedRemotely = signal(false);
+  private readonly canInstallSignal = signal(false);
+  private readonly platformSignal = signal<PwaPlatform>(this.detectPlatform());
   private deferredPrompt: BeforeInstallPromptEvent | undefined = undefined;
 
   readonly isStandalone = this.standalone.asReadonly();
-  readonly canInstall = signal(false);
-  readonly platform = signal<PwaPlatform>(this.detectPlatform());
+  readonly canInstall = this.canInstallSignal.asReadonly();
+  readonly platform = this.platformSignal.asReadonly();
   readonly isInstalled = computed(() => this.standalone() || this.installedRemotely());
 
   constructor() {
@@ -59,56 +57,29 @@ export class PwaInstallService {
       return;
     }
 
-    const mq = globalThis.matchMedia('(display-mode: standalone)');
-    mq.addEventListener('change', (event) => {
-      this.zone.run(() => { this.standalone.set(event.matches || this.iosStandalone()); });
-    });
+    const standaloneMediaQuery = globalThis.matchMedia('(display-mode: standalone)');
+    const syncStandalone = (): void => {
+      this.standalone.set(standaloneMediaQuery.matches || this.iosStandalone());
+    };
+    syncStandalone();
+    standaloneMediaQuery.addEventListener('change', syncStandalone);
 
     globalThis.addEventListener('beforeinstallprompt', (event) => {
       event.preventDefault();
-      this.zone.run(() => {
-        this.deferredPrompt = event as BeforeInstallPromptEvent;
-        this.canInstall.set(true);
-      });
+      this.deferredPrompt = event as BeforeInstallPromptEvent;
+      this.canInstallSignal.set(true);
     });
 
     globalThis.addEventListener('appinstalled', () => {
-      this.zone.run(() => {
-        this.deferredPrompt = undefined;
-        this.canInstall.set(false);
-        this.standalone.set(true);
-      });
+      this.deferredPrompt = undefined;
+      this.canInstallSignal.set(false);
+      this.standalone.set(true);
     });
   }
 
-  /**
-   * Async initialization. Wired via `provideAppInitializer` in app.config.ts —
-   * kept out of the constructor so it can be awaited at boot time and to
-   * satisfy "no async work in constructor" lint rule.
-   */
   async init(): Promise<void> {
     if (!this.isBrowser) return;
     await this.checkRelatedApps();
-  }
-
-  /**
-   * Uses the Chromium `getInstalledRelatedApps` API to detect whether
-   * our own PWA is already installed on this device, even when the
-   * current page runs in a regular browser tab (not standalone).
-   *
-   * Silently no-ops on browsers without the API (Firefox, Safari).
-   */
-  private async checkRelatedApps(): Promise<void> {
-    const nav = globalThis.navigator as NavigatorWithRelatedApps | undefined;
-    if (nav?.getInstalledRelatedApps === undefined) {
-      return;
-    }
-    try {
-      const apps = await nav.getInstalledRelatedApps();
-      this.zone.run(() => { this.installedRemotely.set(apps.length > 0); });
-    } catch (error) {
-      console.error('getInstalledRelatedApps failed', error);
-    }
   }
 
   async promptInstall(): Promise<PwaPromptOutcome> {
@@ -120,7 +91,7 @@ export class PwaInstallService {
       await event.prompt();
       const result = await event.userChoice;
       this.deferredPrompt = undefined;
-      this.canInstall.set(false);
+      this.canInstallSignal.set(false);
       return result.outcome;
     } catch (error) {
       console.error('PWA install prompt failed', error);
@@ -128,17 +99,20 @@ export class PwaInstallService {
     }
   }
 
-  private detectStandalone(): boolean {
-    if (!this.isBrowser) {
-      return false;
+  private async checkRelatedApps(): Promise<void> {
+    const nav = globalThis.navigator as NavigatorWithRelatedApps;
+    if (nav.getInstalledRelatedApps === undefined) {
+      return;
     }
-    return globalThis.matchMedia('(display-mode: standalone)').matches || this.iosStandalone();
+    try {
+      const apps = await nav.getInstalledRelatedApps();
+      this.installedRemotely.set(apps.length > 0);
+    } catch (error) {
+      console.error('getInstalledRelatedApps failed', error);
+    }
   }
 
   private iosStandalone(): boolean {
-    if (!this.isBrowser) {
-      return false;
-    }
     const nav = globalThis.navigator as Navigator & {standalone?: boolean};
     return nav.standalone === true;
   }
@@ -154,11 +128,8 @@ export class PwaInstallService {
     if (ua.includes('android')) {
       return 'android';
     }
-    if (ua.includes('firefox')) {
-      return 'firefox';
-    }
-    if (/chrome|chromium|edg/.test(ua)) {
-      return 'chromium-desktop';
+    if (/windows|macintosh|linux|cros/.test(ua)) {
+      return 'desktop';
     }
     return 'other';
   }
