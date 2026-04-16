@@ -1,10 +1,8 @@
 import {inject, Injectable} from '@angular/core';
 import {SwUpdate} from '@angular/service-worker';
 import pTimeout, {TimeoutError} from 'p-timeout';
-import {firstValueFrom, timeout} from 'rxjs';
 
 import {BUILD_TIMESTAMP} from '../../environments/build-version';
-import {SwapHttpService} from './swap.http.service';
 
 /**
  * Upper bound for the download step on the /updating page. Covers slow
@@ -61,7 +59,6 @@ const DOWNLOAD_TIMEOUT_MS = 30_000;
 export class PwaUpdateService {
 
   private readonly swUpdate = inject(SwUpdate);
-  private readonly swapHttp = inject(SwapHttpService);
 
   /**
    * Returns true when the server-side `/version.json` timestamp differs
@@ -113,22 +110,6 @@ export class PwaUpdateService {
     } catch (error) {
       console.error('hasUpdate check failed', error);
       return null;
-    }
-  }
-
-  /**
-   * Queries the backend for active swaps within the given budget. Any failure
-   * (network, timeout, server error) is treated conservatively as "not safe"
-   * to protect in-flight payments.
-   */
-  async isSafeToReload(budgetMs: number): Promise<boolean> {
-    try {
-      const response = await firstValueFrom(
-        this.swapHttp.getActive().pipe(timeout({first: budgetMs})),
-      );
-      return !response.active;
-    } catch {
-      return false;
     }
   }
 

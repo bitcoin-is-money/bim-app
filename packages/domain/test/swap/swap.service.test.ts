@@ -134,61 +134,6 @@ describe('SwapService', () => {
   });
 
   // =========================================================================
-  // countActiveForAccount
-  // =========================================================================
-
-  describe('countActiveForAccount', () => {
-    const OTHER_ACCOUNT_ID = '11111111-2222-3333-4444-555555555555';
-
-    function createLightningSwapForAccount(id: string, accountId: string): Swap {
-      return Swap.createLightningToStarknet({
-        id: SwapId.of(id),
-        amount: Amount.ofSatoshi(50_000n),
-        destinationAddress: DESTINATION_ADDRESS,
-        invoice: VALID_INVOICE,
-        expiresAt: new Date(Date.now() + 30 * 60 * 1000),
-        description: 'Received',
-        accountId,
-      });
-    }
-
-    it('returns 0 when repository has no active swaps', async () => {
-      vi.mocked(repository.findActive).mockResolvedValue([]);
-
-      const count = await service.countActiveForAccount(ACCOUNT_ID);
-
-      expect(count).toBe(0);
-    });
-
-    it('returns 0 when no active swap belongs to the account', async () => {
-      vi.mocked(repository.findActive).mockResolvedValue([
-        createLightningSwapForAccount('s1', OTHER_ACCOUNT_ID),
-        createLightningSwapForAccount('s2', OTHER_ACCOUNT_ID),
-      ]);
-
-      const count = await service.countActiveForAccount(ACCOUNT_ID);
-
-      expect(count).toBe(0);
-    });
-
-    it('counts only swaps belonging to the account', async () => {
-      vi.mocked(repository.findActive).mockResolvedValue([
-        createLightningSwapForAccount('s1', ACCOUNT_ID),
-        createLightningSwapForAccount('s2', OTHER_ACCOUNT_ID),
-        createLightningSwapForAccount('s3', ACCOUNT_ID),
-      ]);
-
-      const count = await service.countActiveForAccount(ACCOUNT_ID);
-
-      expect(count).toBe(2);
-    });
-
-    it('throws when given an invalid account id', async () => {
-      await expect(service.countActiveForAccount('not-a-uuid')).rejects.toThrow();
-    });
-  });
-
-  // =========================================================================
   // fetchStatus — Bitcoin deposit edge case
   // =========================================================================
 

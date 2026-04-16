@@ -1,5 +1,4 @@
 import {Component, inject, type OnInit, signal} from '@angular/core';
-import {Router} from '@angular/router';
 import {TranslateModule} from '@ngx-translate/core';
 
 import {SpinnerComponent} from '../../components/spinner/spinner.component';
@@ -19,16 +18,9 @@ const MINIMUM_DISPLAY_MS = 4900;
 const STATUS_REVEAL_DELAY_MS = 3000;
 
 /**
- * Safety-check budget: how long we wait for the backend to answer whether
- * the account has any active swaps before considering the reload unsafe.
- */
-const SAFETY_CHECK_BUDGET_MS = 5000;
-
-/**
  * Full-screen page displayed by AuthService after sign-in when a pending
- * PWA update has been detected. Stays black during the safety check, then
- * either reveals the animated logo and applies the update, or navigates
- * silently to /home if the update is deemed unsafe (active swap in flight).
+ * PWA update has been detected. Reveals the animated logo and applies the
+ * update after a minimum display time so the splash is always perceptible.
  */
 @Component({
   selector: 'app-updating',
@@ -40,9 +32,7 @@ const SAFETY_CHECK_BUDGET_MS = 5000;
 export class UpdatingPage implements OnInit {
 
   private readonly pwaUpdate = inject(PwaUpdateService);
-  private readonly router = inject(Router);
 
-  readonly showContent = signal(false);
   readonly showStatus = signal(false);
 
   ngOnInit(): void {
@@ -50,20 +40,9 @@ export class UpdatingPage implements OnInit {
   }
 
   private async runUpdateFlow(): Promise<void> {
-    const arrivedAt = Date.now();
-
-    const safe = await this.pwaUpdate.isSafeToReload(SAFETY_CHECK_BUDGET_MS);
-    if (!safe) {
-      await this.router.navigate(['/home']);
-      return;
-    }
-
-    this.showContent.set(true);
     setTimeout(() => { this.showStatus.set(true); }, STATUS_REVEAL_DELAY_MS);
 
-    const elapsed = Date.now() - arrivedAt;
-    const remainingDisplay = Math.max(0, MINIMUM_DISPLAY_MS - elapsed);
-    const minDisplay = new Promise<void>(resolve => setTimeout(resolve, remainingDisplay));
+    const minDisplay = new Promise<void>(resolve => setTimeout(resolve, MINIMUM_DISPLAY_MS));
 
     // Defer the heavy SW download until after the browser has painted at
     // least one frame of the animated splash. Without this hop, the download

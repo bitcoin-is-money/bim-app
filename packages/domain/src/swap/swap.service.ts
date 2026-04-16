@@ -524,18 +524,6 @@ export class SwapService {
     return this.deps.swapRepository.findActive();
   }
 
-  /**
-   * Counts non-terminal swaps belonging to the given account.
-   * Used by the PWA update flow to decide whether it is safe to apply
-   * a pending client update (we never reload the app while the user has
-   * in-flight swaps).
-   */
-  async countActiveForAccount(accountId: string): Promise<number> {
-    const id = AccountId.of(accountId);
-    const active = await this.deps.swapRepository.findActive();
-    return active.filter((swap) => swap.data.accountId === id).length;
-  }
-
   // ===========================================================================
   // Private Helpers
   // ===========================================================================

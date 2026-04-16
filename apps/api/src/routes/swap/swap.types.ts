@@ -32,15 +32,3 @@ export interface SwapStatusResponse {
   destinationAddress: string;
   expiresAt: string;
 }
-
-/**
- * API response from GET /api/swap/active.
- *
- * Returns a minimal shape so the PWA update flow can decide whether it is
- * safe to reload the client. No personal data is leaked — only "are there
- * in-flight swaps for this account, yes or no".
- */
-export interface ActiveSwapsResponse {
-  active: boolean;
-  count: number;
-}

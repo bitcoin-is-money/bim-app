@@ -2,7 +2,7 @@ import {HttpClient, HttpContext} from '@angular/common/http';
 import {inject, Injectable} from '@angular/core';
 import type {Observable} from 'rxjs';
 import {SUPPRESS_ERROR_NOTIFICATION} from '../interceptor/http-notification.interceptor';
-import type {ActiveSwapsResponse, SwapStatusResponse} from '../model';
+import type {SwapStatusResponse} from '../model';
 
 @Injectable({
   providedIn: 'root',
@@ -19,11 +19,5 @@ export class SwapHttpService {
       });
     }
     return this.http.get<SwapStatusResponse>(url);
-  }
-
-  getActive(): Observable<ActiveSwapsResponse> {
-    return this.http.get<ActiveSwapsResponse>(`${this.apiUrl}/active`, {
-      context: new HttpContext().set(SUPPRESS_ERROR_NOTIFICATION, true),
-    });
   }
 }
