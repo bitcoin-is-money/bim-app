@@ -34,7 +34,7 @@ Pour alimenter votre compte :
 3. Une fois votre solde BIM positif, vous pouvez commencer à payer.
 
 ### Y a-t-il un montant minimum pour recevoir ?
-Uniquement pour les paiements Lightning : **1 000 sats** minimum.
+Sur Starknet, il n'y a aucun minimum. Les paiements Lightning nécessitent un minimum de **1 000 sats**, et les paiements Bitcoin on-chain un minimum variable (généralement autour de **10 000 sats**) pour couvrir les frais de swap et de réseau.
 
 ### Quelle est la confidentialité de mes paiements sur BIM ?
 Les paiements sont pseudonymes : nous ne savons pas qui vous êtes, mais les transferts sont enregistrés en clair sur la blockchain. Nous étudions activement des pistes pour améliorer cet aspect.

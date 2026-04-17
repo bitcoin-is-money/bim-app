@@ -34,7 +34,7 @@ To top up:
 3. Once your BIM balance is positive, you can start making payments.
 
 ### Is there a minimum receiving amount?
-Only when receiving over Lightning: **1,000 sats** minimum.
+On Starknet, there is no minimum. Lightning payments require a **1,000 sats** minimum, and on-chain Bitcoin payments require a variable minimum (typically around **10,000 sats**) to cover swap and network fees.
 
 ### How private are my payments on BIM?
 Payments are pseudonymous: we don't know who you are, but transfers are recorded in clear on the blockchain. We are actively looking into ways to improve this.
