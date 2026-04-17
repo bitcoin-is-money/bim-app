@@ -32,6 +32,10 @@ export class MenuPage {
     void this.router.navigate(['/faq']);
   }
 
+  navigateToSupport(): void {
+    void this.router.navigate(['/support']);
+  }
+
   logout(): void {
     void this.authService.signOut();
   }

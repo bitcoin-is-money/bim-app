@@ -10,6 +10,8 @@ export * from './currency/currency.types';
 export * from './health/health.routes';
 export * from './health/health.types';
 export * from './payment/payment.routes';
+export * from './payment/donation/donation.routes';
+export * from './payment/donation/donation.types';
 export * from './payment/pay/pay.routes';
 export * from './payment/pay/pay.types';
 export * from './payment/receive/receive.routes';

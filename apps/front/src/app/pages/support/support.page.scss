@@ -1,0 +1,37 @@
+@reference "tailwindcss";
+
+.support-page {
+  @apply h-full flex flex-col;
+
+  .support-main {
+    @apply flex-1 p-4 overflow-y-auto;
+
+    .support-content {
+      @apply max-w-2xl mx-auto flex flex-col gap-4;
+
+      .support-intro {
+        @apply text-neutral-300 leading-relaxed text-sm;
+      }
+
+      .quick-picks {
+        @apply flex gap-2 justify-center;
+
+        .quick-pick {
+          @apply px-4 py-2 rounded-full text-sm font-medium;
+          @apply bg-neutral-800 text-neutral-200;
+          @apply hover:bg-neutral-700 active:bg-neutral-600;
+          @apply border border-neutral-700 cursor-pointer;
+          @apply transition-colors;
+        }
+      }
+
+      .insufficient-balance {
+        @apply text-red-400 text-sm text-center;
+      }
+
+      .send-button {
+        @apply mt-2;
+      }
+    }
+  }
+}

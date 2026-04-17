@@ -100,6 +100,7 @@
     "settings": "Settings",
     "faq": "FAQ",
     "about": "About",
+    "support": "Support us",
     "logout": "Logout"
   },
   "myAccount": {
@@ -129,6 +130,24 @@
   },
   "faq": {
     "title": "FAQ"
+  },
+  "support": {
+    "title": "Support BIM",
+    "intro": "BIM is free and open-source, but it isn't free to run. Servers, domains, third-party APIs and infrastructure all cost real money, and the project is currently funded out of pocket. If BIM is useful to you and you'd like to help keep the lights on, a tip goes a long way.",
+    "insufficientBalance": "Insufficient balance",
+    "button": {
+      "default": "Buy us a coffee",
+      "sending": "Sending...",
+      "tiers": {
+        "espresso": "Espresso",
+        "cappuccino": "Cappuccino",
+        "cappuccinoDeluxe": "Cappuccino Deluxe",
+        "grandCru": "Grand Cru"
+      }
+    },
+    "notifications": {
+      "thanks": "Thanks for the coffee!"
+    }
   },
   "transactions": {
     "empty": {

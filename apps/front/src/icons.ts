@@ -6,6 +6,7 @@ import {
   faClock,
   faCoins,
   faLocationArrow,
+  faMugHot,
   faPaste,
   faPen,
   faQrcode,
@@ -27,6 +28,7 @@ export function registerIcons(library: FaIconLibrary): void {
     faArrowLeft,      // back: 'fas', 'arrow-left'
     faSyncAlt,        // refresh, 'fas', 'sync-alt'
     faClock,          // Payment in progress: 'fas', 'clock'
-    faTrash           // Delete: 'fas', 'trash'
+    faTrash,          // Delete: 'fas', 'trash'
+    faMugHot          // Support/donation: 'fas', 'mug-hot'
   );
 }
