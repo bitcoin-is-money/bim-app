@@ -1,31 +1,33 @@
 import {Component, inject, type OnInit, signal} from '@angular/core';
 import {TranslateModule} from '@ngx-translate/core';
 
-import {SpinnerComponent} from '../../components/spinner/spinner.component';
 import {FullPageLayoutComponent} from '../../layout';
 import {PwaUpdateService} from '../../services/pwa-update.service';
 
 /**
- * Minimum time the page stays visible once the animated logo is revealed,
- * to prevent an imperceptible flash when SW activation is near-instant.
+ * Duration of the animated splash logo. The status banner is held back
+ * until at least this much time has elapsed, so the logo animation plays
+ * fully even when the SW download resolves almost instantly.
  */
-const MINIMUM_DISPLAY_MS = 4900;
+const LOGO_ANIMATION_MS = 5000;
 
 /**
- * Delay before revealing the "updating" status (spinner + text) once the
- * logo is on screen, so the message only appears if the update lingers.
+ * How long the "Up to date" status stays on screen after it appears,
+ * before we force the reload. Gives the user time to see the animated
+ * checkmark draw itself.
  */
-const STATUS_REVEAL_DELAY_MS = 3000;
+const POST_UPDATE_DWELL_MS = 1500;
 
 /**
  * Full-screen page displayed by AuthService after sign-in when a pending
- * PWA update has been detected. Reveals the animated logo and applies the
- * update after a minimum display time so the splash is always perceptible.
+ * PWA update has been detected. Reveals the animated logo, waits for both
+ * the SW download and the logo animation to finish, then shows a brief
+ * confirmation before reloading into the new version.
  */
 @Component({
   selector: 'app-updating',
   standalone: true,
-  imports: [TranslateModule, FullPageLayoutComponent, SpinnerComponent],
+  imports: [TranslateModule, FullPageLayoutComponent],
   templateUrl: './updating.page.html',
   styleUrl: './updating.page.scss',
 })
@@ -40,21 +42,17 @@ export class UpdatingPage implements OnInit {
   }
 
   private async runUpdateFlow(): Promise<void> {
-    setTimeout(() => { this.showStatus.set(true); }, STATUS_REVEAL_DELAY_MS);
-
-    const minDisplay = new Promise<void>(resolve => setTimeout(resolve, MINIMUM_DISPLAY_MS));
-
     // Defer the heavy SW download until after the browser has painted at
     // least one frame of the animated splash. Without this hop, the download
     // can start on the same frame the logo is revealed and the user sees
     // nothing during the first hundreds of ms on slow devices.
-    const downloaded = new Promise<void>(resolve => {
-      requestAnimationFrame(() => {
-        void this.pwaUpdate.download().then(resolve);
-      });
-    });
+    await new Promise<void>(resolve => { requestAnimationFrame(() => { resolve(); }); });
 
-    await Promise.all([downloaded, minDisplay]);
+    const logoAnimation = new Promise<void>(resolve => setTimeout(resolve, LOGO_ANIMATION_MS));
+    await Promise.all([this.pwaUpdate.download(), logoAnimation]);
+
+    this.showStatus.set(true);
+    await new Promise<void>(resolve => setTimeout(resolve, POST_UPDATE_DWELL_MS));
     this.pwaUpdate.reload();
   }
 }

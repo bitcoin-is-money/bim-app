@@ -8,7 +8,7 @@
     "useDeviceSecurity": "Use your device security to access your wallet"
   },
   "pwa": {
-    "updating": "Updating…",
+    "upToDate": "Up to date",
     "install": {
       "title": "Install BIM",
       "description": "Install the app for a better native experience.",
