@@ -4,7 +4,7 @@ import {AuthService, type SessionConfig, SessionService} from "@bim/domain/auth"
 import {CurrencyService} from "@bim/domain/currency";
 import {type ComponentName, HealthRegistry, type HealthTransitionEvent} from "@bim/domain/health";
 import {ServiceHealthChange} from "@bim/domain/notifications";
-import {Erc20CallFactory, FeeConfig, ParseService, PayService, ReceiveService,} from "@bim/domain/payment";
+import {Erc20CallFactory, FeeConfig, ParseService, PaymentBuildCache, PayService, ReceiveService} from "@bim/domain/payment";
 import type {
   AccountRepository,
   AtomiqGateway,
@@ -81,6 +81,7 @@ export interface AppContext {
     receive: ReceiveService;
     currency: CurrencyService;
   };
+  paymentBuildCache: PaymentBuildCache;
   sessionConfig: SessionConfig;
   starknetConfig: StarknetConfig;
   webauthn: {
@@ -278,9 +279,12 @@ export namespace AppContext {
       logger: rootLogger,
     });
 
+    const paymentBuildCache = new PaymentBuildCache();
+
     return {
       repositories,
       gateways,
+      paymentBuildCache,
       services: {
         account: accountService,
         auth: authService,

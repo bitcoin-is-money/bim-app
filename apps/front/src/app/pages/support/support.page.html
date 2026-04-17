@@ -1,0 +1,39 @@
+<app-full-page-layout [showFooter]="true">
+  <div class="support-page">
+    <app-go-back-header [title]="'support.title' | translate"></app-go-back-header>
+
+    <main class="support-main">
+      <div class="support-content">
+        <p class="support-intro">{{ 'support.intro' | translate }}</p>
+
+        <div class="quick-picks">
+          <button class="quick-pick" (click)="setQuickAmount(100)">100 sat</button>
+          <button class="quick-pick" (click)="setQuickAmount(1000)">1k sat</button>
+          <button class="quick-pick" (click)="setQuickAmount(10000)">10k sat</button>
+        </div>
+
+        <app-amount-field
+          [(amount)]="amount"
+          [editable]="true"
+          [currencyToggle]="true"
+        />
+
+        @if (insufficientBalance()) {
+          <p class="insufficient-balance">{{ 'support.insufficientBalance' | translate }}</p>
+        }
+
+        <app-button
+          class="send-button"
+          colorVariant="gold"
+          variant="primary"
+          [icon]="['fas', 'mug-hot']"
+          [loading]="isSending()"
+          [disabled]="!canSend()"
+          (click)="send()"
+        >
+          {{ buttonLabel() }}
+        </app-button>
+      </div>
+    </main>
+  </div>
+</app-full-page-layout>

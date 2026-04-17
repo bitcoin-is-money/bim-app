@@ -2,6 +2,7 @@ export * from './fee';
 export * from './types';
 export * from './errors';
 export * from './pay.types';
+export * from './payment-build.cache';
 export * from './receive.types';
 export * from './erc20-call.factory';
 export * from './parse.service';

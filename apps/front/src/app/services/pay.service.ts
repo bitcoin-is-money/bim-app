@@ -6,6 +6,7 @@ import type { Subscription} from 'rxjs';
 import {firstValueFrom} from 'rxjs';
 import {Amount, ParsedPayment, type StoredSwap} from '../model';
 import {AccountService} from './account.service';
+import {DonationHttpService} from './donation.http.service';
 import {I18nService} from './i18n.service';
 import {NotificationService} from './notification.service';
 import {
@@ -29,6 +30,7 @@ const SENT_KEYS: Record<PaymentNetwork, string> = {
 })
 export class PayService {
   private readonly httpService = inject(PayHttpService);
+  private readonly donationHttpService = inject(DonationHttpService);
   private readonly router = inject(Router);
   private readonly accountService = inject(AccountService);
   private readonly transactionService = inject(TransactionService);
@@ -178,6 +180,41 @@ export class PayService {
     } finally {
       this.isProcessing.set(false);
     }
+  }
+
+  /**
+   * Sends a donation to the BIM treasury without navigating away.
+   * The backend knows the treasury address — the frontend only sends the amount.
+   * Returns true on success, false if the user cancelled WebAuthn.
+   * HTTP errors are left unhandled (the interceptor shows toasts).
+   */
+  async sendDonation(amountSats: number): Promise<boolean> {
+    const buildResponse = await firstValueFrom(this.donationHttpService.build(amountSats));
+
+    const challenge = Hex.decode(buildResponse.messageHash).buffer as ArrayBuffer;
+    const credentialIdBytes = Base64Url.decode(buildResponse.credentialId).buffer as ArrayBuffer;
+    const credential = (await navigator.credentials.get({
+      publicKey: {
+        challenge,
+        allowCredentials: [{id: credentialIdBytes, type: 'public-key'}],
+        userVerification: 'required',
+        timeout: 60000,
+      },
+    })) as PublicKeyCredential | null;
+
+    if (!credential) return false;
+
+    const assertionResponse = credential.response as AuthenticatorAssertionResponse;
+    const assertion = {
+      authenticatorData: Base64Url.encode(assertionResponse.authenticatorData),
+      clientDataJSON: Base64Url.encode(assertionResponse.clientDataJSON),
+      signature: Base64Url.encode(assertionResponse.signature),
+    };
+
+    await firstValueFrom(this.httpService.executeSigned(buildResponse.buildId, assertion));
+    this.transactionService.waitForNew();
+    this.accountService.loadBalance();
+    return true;
   }
 
   private handleSuccess(response: ExecutePaymentResponse): void {

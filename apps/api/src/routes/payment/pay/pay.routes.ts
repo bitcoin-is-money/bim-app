@@ -1,3 +1,4 @@
+import {DonationReceived} from '@bim/domain/notifications';
 import type {PaymentResult, PreparedCalls, PreparedPaymentData} from '@bim/domain/payment';
 import type {Amount} from '@bim/domain/shared';
 import type {TypedResponse} from 'hono';
@@ -18,8 +19,6 @@ import type {
   PreparedPaymentResponse,
 } from './pay.types';
 import {BuildPaymentSchema, ExecuteSignedPaymentSchema, ParsePaymentSchema} from './pay.types';
-import {PaymentBuildCache} from './payment-build.cache';
-
 // =============================================================================
 // Routes
 // =============================================================================
@@ -31,7 +30,7 @@ export function createPayRoutes(
   const log = appContext.logger.child({name: 'pay.routes.ts'});
   const app: AuthenticatedHono = new Hono();
   const { payService, parseService } = appContext.services;
-  const buildCache = new PaymentBuildCache();
+  const buildCache = appContext.paymentBuildCache;
   const signatureProcessor = new WebAuthnSignatureProcessor({
     origin: appContext.webauthn.origin,
     rpId: appContext.webauthn.rpId,
@@ -167,7 +166,20 @@ export function createPayRoutes(
         }
       }
 
-      // 7. Build response from cached prepared calls
+      // 7. Notify Slack for donations
+      if (build.isDonation) {
+        const message = DonationReceived.build({
+          username: account.username,
+          senderAddress: build.senderAddress.toString(),
+          amountSats: build.preparedCalls.amount.getSat(),
+          network: appContext.starknetConfig.network,
+        });
+        appContext.gateways.notification.send(message).catch((err: unknown) => {
+          log.warn({cause: err instanceof Error ? err.message : String(err)}, 'Failed to send donation notification');
+        });
+      }
+
+      // 8. Build response from cached prepared calls
       const result = buildPaymentResult(txHash, build.preparedCalls);
 
       return honoCtx.json<PaymentResultResponse>(serializePaymentResult(result));

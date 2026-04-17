@@ -1,5 +1,5 @@
-import type {StarknetAddress} from '@bim/domain/account';
-import type {PreparedCalls} from '@bim/domain/payment';
+import type {StarknetAddress} from '../shared';
+import type {PreparedCalls} from './pay.types';
 
 /**
  * Data stored for a pending payment build (between /build and /execute).
@@ -17,6 +17,8 @@ export interface PaymentBuildData {
   description: string;
   /** When this build was created */
   createdAt: number;
+  /** When true, a Slack notification is sent after successful execution */
+  isDonation?: boolean;
 }
 
 /**
