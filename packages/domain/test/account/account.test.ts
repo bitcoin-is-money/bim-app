@@ -47,12 +47,18 @@ describe('Account', () => {
       expect(account.getDeploymentTxHash()).toBe('0xtxhash');
     });
 
-    it('throws when not in pending status', () => {
+    it('throws InvalidStateTransitionError with from/to when not in pending status', () => {
       const account = createTestAccount();
       account.markAsDeploying(TEST_STARKNET_ADDRESS, '0xtx1');
 
-      expect(() => { account.markAsDeploying(TEST_STARKNET_ADDRESS, '0xtx2'); })
-        .toThrow(InvalidStateTransitionError);
+      let caught: InvalidStateTransitionError | undefined;
+      try {
+        account.markAsDeploying(TEST_STARKNET_ADDRESS, '0xtx2');
+      } catch (err: unknown) {
+        caught = err as InvalidStateTransitionError;
+      }
+      expect(caught).toBeInstanceOf(InvalidStateTransitionError);
+      expect(caught!.args).toEqual({from: 'deploying', to: 'deploying'});
     });
   });
 

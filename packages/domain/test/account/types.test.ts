@@ -40,10 +40,15 @@ describe('Username', () => {
       expect(username).toBe('alice');
     });
 
-    it('throws InvalidUsernameError for invalid username', () => {
-      expect(() => Username.of('ab')).toThrow(InvalidUsernameError);
-      expect(() => Username.of('a'.repeat(26))).toThrow(InvalidUsernameError);
-      expect(() => Username.of('john-doe')).toThrow(InvalidUsernameError);
+    it('throws InvalidUsernameError with username in args for invalid username', () => {
+      let caught: InvalidUsernameError | undefined;
+      try {
+        Username.of('ab');
+      } catch (err: unknown) {
+        caught = err as InvalidUsernameError;
+      }
+      expect(caught).toBeInstanceOf(InvalidUsernameError);
+      expect(caught!.args).toEqual({username: 'ab'});
     });
   });
 

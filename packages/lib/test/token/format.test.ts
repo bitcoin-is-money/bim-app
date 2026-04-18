@@ -74,6 +74,37 @@ describe('formatTokenAmount', () => {
       expect(formatTokenAmount(0n, 18, {fractionDigits: 2})).toBe('0.00');
     });
   });
+
+  describe('trimTrailingZeros option', () => {
+    it('removes trailing zeros from the fraction', () => {
+      expect(formatTokenAmount(4_140_000_000_000_000_000n, 18, {trimTrailingZeros: true}))
+        .toBe('4.14');
+    });
+
+    it('removes the dot when all fraction digits are zero', () => {
+      expect(formatTokenAmount(3_000_000_000_000_000_000n, 18, {trimTrailingZeros: true}))
+        .toBe('3');
+    });
+
+    it('preserves leading zeros in the fraction', () => {
+      expect(formatTokenAmount(1_001_000_000_000_000_000n, 18, {trimTrailingZeros: true}))
+        .toBe('1.001');
+    });
+
+    it('returns "0" for a zero input', () => {
+      expect(formatTokenAmount(0n, 18, {trimTrailingZeros: true})).toBe('0');
+    });
+
+    it('combines with fractionDigits', () => {
+      expect(formatTokenAmount(1_200_000_000_000_000_000n, 18, {fractionDigits: 6, trimTrailingZeros: true}))
+        .toBe('1.2');
+    });
+
+    it('combines with displayUnit', () => {
+      expect(formatTokenAmount(4_140_000_000_000_000_000n, 18, {trimTrailingZeros: true, displayUnit: 'STRK'}))
+        .toBe('4.14 STRK');
+    });
+  });
 });
 
 describe('formatStrk', () => {

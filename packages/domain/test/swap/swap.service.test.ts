@@ -1,7 +1,7 @@
 import {StarknetAddress} from '@bim/domain/account';
 import type {AtomiqGateway, SwapRepository, TransactionRepository} from '@bim/domain/ports';
 import {Amount} from '@bim/domain/shared';
-import {BitcoinAddress, Swap, SwapCreationError, SwapId, SwapNotFoundError, SwapService} from '@bim/domain/swap';
+import {BitcoinAddress, Swap, SwapAmountError, SwapCreationError, SwapId, SwapNotFoundError, SwapOwnershipError, SwapService} from '@bim/domain/swap';
 import {createLogger} from '@bim/lib/logger';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
@@ -365,6 +365,17 @@ describe('SwapService', () => {
       expect(repository.save).toHaveBeenCalled();
     });
 
+    it('throws SwapOwnershipError when swap belongs to another account', async () => {
+      const swap = createPendingLightningSwap();
+      vi.mocked(repository.findById).mockResolvedValue(swap);
+      const otherAccountId = '660e8400-e29b-41d4-a716-446655440099';
+
+      const error = await service.fetchStatus({swapId: swap.data.id, accountId: otherAccountId})
+        .catch((err: unknown) => err);
+
+      expect(error).toBeInstanceOf(SwapOwnershipError);
+    });
+
     it('does not mark refundable swap as completed', async () => {
       const swap = createPendingStarknetToBitcoinSwap();
       vi.mocked(repository.findById).mockResolvedValue(swap);
@@ -446,12 +457,14 @@ describe('SwapService', () => {
       expect(repository.save).toHaveBeenCalledWith(committedSwap);
     });
 
-    it('throws SwapNotFoundError if swap does not exist', async () => {
+    it('throws SwapNotFoundError with swapId when swap does not exist', async () => {
       vi.mocked(repository.findById).mockResolvedValue(undefined);
 
-      await expect(
-        service.completeBitcoinToStarknet({swapId: 'nonexistent'}),
-      ).rejects.toThrow(SwapNotFoundError);
+      const error = await service.completeBitcoinToStarknet({swapId: 'nonexistent'})
+        .catch((err: unknown) => err);
+
+      expect(error).toBeInstanceOf(SwapNotFoundError);
+      expect((error as SwapNotFoundError).args).toEqual({swapId: 'nonexistent'});
     });
 
     it('throws SwapCreationError if deposit address is missing', async () => {
@@ -530,21 +543,22 @@ describe('SwapService', () => {
       expect(repository.save).toHaveBeenCalledOnce();
     });
 
-    it('throws SwapAmountError if amount below limits', async () => {
+    it('throws SwapAmountError with correct limits when amount is below minimum', async () => {
       vi.mocked(gateway.getLightningToStarknetLimits).mockResolvedValue(limits);
 
-      await expect(
-        service.createLightningToStarknet({
-          amount: Amount.ofSatoshi(500n), // below min
-          destinationAddress: DESTINATION_ADDRESS,
-          description: 'test',
-          accountId: ACCOUNT_ID,
-        }),
-      ).rejects.toThrow(); // SwapAmountError
+      const error = await service.createLightningToStarknet({
+        amount: Amount.ofSatoshi(500n),
+        destinationAddress: DESTINATION_ADDRESS,
+        description: 'test',
+        accountId: ACCOUNT_ID,
+      }).catch((err: unknown) => err);
+
+      expect(error).toBeInstanceOf(SwapAmountError);
+      expect((error as SwapAmountError).args).toEqual({amount: 500, min: 1000, max: 1_000_000, unit: 'sats'});
       expect(gateway.createLightningToStarknetSwap).not.toHaveBeenCalled();
     });
 
-    it('throws SwapCreationError if invoice is missing', async () => {
+    it('throws SwapCreationError with reason when invoice is missing', async () => {
       vi.mocked(gateway.getLightningToStarknetLimits).mockResolvedValue(limits);
       vi.mocked(gateway.createLightningToStarknetSwap).mockResolvedValue({
         swapId: SWAP_ID,
@@ -552,14 +566,15 @@ describe('SwapService', () => {
         expiresAt: new Date(),
       });
 
-      await expect(
-        service.createLightningToStarknet({
-          amount: Amount.ofSatoshi(50_000n),
-          destinationAddress: DESTINATION_ADDRESS,
-          description: 'test',
-          accountId: ACCOUNT_ID,
-        }),
-      ).rejects.toThrow(SwapCreationError);
+      const error = await service.createLightningToStarknet({
+        amount: Amount.ofSatoshi(50_000n),
+        destinationAddress: DESTINATION_ADDRESS,
+        description: 'test',
+        accountId: ACCOUNT_ID,
+      }).catch((err: unknown) => err);
+
+      expect(error).toBeInstanceOf(SwapCreationError);
+      expect((error as SwapCreationError).args).toHaveProperty('reason');
     });
   });
 
@@ -593,17 +608,18 @@ describe('SwapService', () => {
       expect(repository.save).not.toHaveBeenCalled(); // persisted later via saveBitcoinCommit
     });
 
-    it('throws SwapAmountError if amount above limits', async () => {
+    it('throws SwapAmountError with correct limits when amount is above maximum', async () => {
       vi.mocked(gateway.getBitcoinToStarknetLimits).mockResolvedValue(limits);
 
-      await expect(
-        service.prepareBitcoinToStarknet({
-          amount: Amount.ofSatoshi(50_000_000n), // above max
-          destinationAddress: DESTINATION_ADDRESS,
-          description: 'test',
-          accountId: ACCOUNT_ID,
-        }),
-      ).rejects.toThrow(); // SwapAmountError
+      const error = await service.prepareBitcoinToStarknet({
+        amount: Amount.ofSatoshi(50_000_000n),
+        destinationAddress: DESTINATION_ADDRESS,
+        description: 'test',
+        accountId: ACCOUNT_ID,
+      }).catch((err: unknown) => err);
+
+      expect(error).toBeInstanceOf(SwapAmountError);
+      expect((error as SwapAmountError).args).toEqual({amount: 50_000_000, min: 10_000, max: 10_000_000, unit: 'sats'});
     });
   });
 

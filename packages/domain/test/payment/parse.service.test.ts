@@ -168,8 +168,15 @@ describe('ParseService', () => {
       }
     });
 
-    it('throws UnsupportedNetworkError for unrecognized data', () => {
-      expect(() => service.parse('not-a-valid-address')).toThrow(UnsupportedNetworkError);
+    it('throws UnsupportedNetworkError without args for unrecognized data', () => {
+      let caught: UnsupportedNetworkError | undefined;
+      try {
+        service.parse('not-a-valid-address');
+      } catch (err: unknown) {
+        caught = err as UnsupportedNetworkError;
+      }
+      expect(caught).toBeInstanceOf(UnsupportedNetworkError);
+      expect(caught!.args).toBeUndefined();
     });
 
     it('throws UnsupportedNetworkError for short hex strings', () => {
@@ -180,13 +187,14 @@ describe('ParseService', () => {
     // Unsupported network detection
     // =========================================================================
 
-    it('extracts network name from unsupported URI scheme', () => {
+    it('extracts network name from unsupported URI scheme with args for i18n', () => {
       try {
         service.parse('solana:7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU');
         expect.fail('should have thrown');
       } catch (err: unknown) {
         expect(err).toBeInstanceOf(UnsupportedNetworkError);
         expect((err as UnsupportedNetworkError).detectedNetwork).toBe('solana');
+        expect((err as UnsupportedNetworkError).args).toEqual({network: 'solana'});
       }
     });
 
@@ -520,24 +528,40 @@ describe('ParseService', () => {
   // ===========================================================================
 
   describe('bitcoin address network mismatch', () => {
-    it('throws BitcoinAddressNetworkMismatchError for testnet address on mainnet', () => {
+    it('throws BitcoinAddressNetworkMismatchError with network details for testnet address on mainnet', () => {
       const mainnetService = new ParseService({
         lightningDecoder: createMockDecoder(),
         starknetConfig: testStarknetConfig(),
         logger,
       });
-      expect(() => mainnetService.parse('bitcoin:tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx?amount=0.001'))
-        .toThrow(BitcoinAddressNetworkMismatchError);
+
+      let caught: BitcoinAddressNetworkMismatchError | undefined;
+      try {
+        mainnetService.parse('bitcoin:tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx?amount=0.001');
+      } catch (err: unknown) {
+        caught = err as BitcoinAddressNetworkMismatchError;
+      }
+
+      expect(caught).toBeInstanceOf(BitcoinAddressNetworkMismatchError);
+      expect(caught!.args).toEqual({expectedNetwork: 'mainnet', actualNetwork: 'testnet'});
     });
 
-    it('throws BitcoinAddressNetworkMismatchError for mainnet address on testnet', () => {
+    it('throws BitcoinAddressNetworkMismatchError with network details for mainnet address on testnet', () => {
       const testnetService = new ParseService({
         lightningDecoder: createMockDecoder(),
         starknetConfig: testStarknetConfig({network: 'testnet', bitcoinNetwork: 'testnet'}),
         logger,
       });
-      expect(() => testnetService.parse(`bitcoin:${BTC_BECH32}?amount=0.001`))
-        .toThrow(BitcoinAddressNetworkMismatchError);
+
+      let caught: BitcoinAddressNetworkMismatchError | undefined;
+      try {
+        testnetService.parse(`bitcoin:${BTC_BECH32}?amount=0.001`);
+      } catch (err: unknown) {
+        caught = err as BitcoinAddressNetworkMismatchError;
+      }
+
+      expect(caught).toBeInstanceOf(BitcoinAddressNetworkMismatchError);
+      expect(caught!.args).toHaveProperty('expectedNetwork', 'testnet');
     });
 
     it('accepts testnet address on testnet config', () => {
