@@ -115,9 +115,15 @@ describe('FiatCurrency', () => {
       }
     });
 
-    it('throws UnsupportedCurrencyError for unsupported currency', () => {
-      expect(() => FiatCurrency.of('BTC')).toThrow(UnsupportedCurrencyError);
-      expect(() => FiatCurrency.of('XYZ')).toThrow(UnsupportedCurrencyError);
+    it('throws UnsupportedCurrencyError with currency in args for unsupported currency', () => {
+      let caught: UnsupportedCurrencyError | undefined;
+      try {
+        FiatCurrency.of('BTC');
+      } catch (err: unknown) {
+        caught = err as UnsupportedCurrencyError;
+      }
+      expect(caught).toBeInstanceOf(UnsupportedCurrencyError);
+      expect(caught!.args).toEqual({currency: 'BTC'});
     });
   });
 

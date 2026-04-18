@@ -62,17 +62,18 @@ describe('AccountService', () => {
       expect(mockAccountRepo.save).toHaveBeenCalled();
     });
 
-    it('throws if username already exists', async () => {
+    it('throws AccountAlreadyExistsError with username when username is taken', async () => {
       vi.mocked(mockAccountRepo.existsByUsername).mockResolvedValue(true);
 
-      await expect(
-        service.create({
-          accountId,
-          username: 'testUser',
-          credentialId: 'credential123',
-          publicKey: '0x' + '1'.repeat(64),
-        }),
-      ).rejects.toThrow(AccountAlreadyExistsError);
+      const error = await service.create({
+        accountId,
+        username: 'testUser',
+        credentialId: 'credential123',
+        publicKey: '0x' + '1'.repeat(64),
+      }).catch((err: unknown) => err);
+
+      expect(error).toBeInstanceOf(AccountAlreadyExistsError);
+      expect((error as AccountAlreadyExistsError).args).toEqual({username: 'testUser'});
     });
   });
 
@@ -102,13 +103,14 @@ describe('AccountService', () => {
       ).rejects.toThrow(AccountNotFoundError);
     });
 
-    it('throws if account not in pending status', async () => {
+    it('throws InvalidAccountStateError with status and action when not in pending', async () => {
       const account = createAccount('deployed');
       vi.mocked(mockAccountRepo.findById).mockResolvedValue(account);
 
-      await expect(
-        service.deploy({accountId}),
-      ).rejects.toThrow(InvalidAccountStateError);
+      const error = await service.deploy({accountId}).catch((err: unknown) => err);
+
+      expect(error).toBeInstanceOf(InvalidAccountStateError);
+      expect((error as InvalidAccountStateError).args).toEqual({status: 'deployed', action: 'deploy'});
     });
 
     it('throws if concurrent deployment wins the atomic lock', async () => {

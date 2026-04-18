@@ -167,7 +167,7 @@ describe('PayService', () => {
       expect(result.calls).toHaveLength(1);
     });
 
-    it('throws InvalidPaymentAmountError when parsed amount is 0', async () => {
+    it('throws InvalidPaymentAmountError with network and amount when parsed amount is 0', async () => {
       const zeroParsed: ParsedPaymentData = {
         network: 'starknet',
         address: RECIPIENT_ADDRESS,
@@ -177,9 +177,11 @@ describe('PayService', () => {
         description: '',
       };
 
-      await expect(
-        service.prepareCalls(zeroParsed, SENDER_ADDRESS, ACCOUNT_ID, 'Sent'),
-      ).rejects.toThrow(InvalidPaymentAmountError);
+      const error = await service.prepareCalls(zeroParsed, SENDER_ADDRESS, ACCOUNT_ID, 'Sent')
+        .catch((err: unknown) => err);
+
+      expect(error).toBeInstanceOf(InvalidPaymentAmountError);
+      expect((error as InvalidPaymentAmountError).args).toEqual({network: 'starknet', amount: 0, unit: 'sats'});
     });
 
     it('throws SameAddressPaymentError when sender equals recipient', async () => {

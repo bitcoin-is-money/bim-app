@@ -11,6 +11,13 @@ export interface FormatTokenAmountOptions {
    */
   omitZeroFraction?: boolean;
   /**
+   * Remove trailing zeros from the fraction part.
+   * When all fraction digits are zero, the dot is also removed.
+   * E.g. `"4.140000"` becomes `"4.14"`, `"3.000000"` becomes `"3"`.
+   * Defaults to `false`.
+   */
+  trimTrailingZeros?: boolean;
+  /**
    * When set, the unit symbol is appended as ` {displayUnit}` at the end
    * (e.g. `"1.000000 STRK"`). Defaults to no unit.
    */
@@ -27,11 +34,11 @@ export function formatTokenAmount(
   decimals: number,
   options: FormatTokenAmountOptions = {},
 ): string {
-  const {fractionDigits = decimals, omitZeroFraction = false, displayUnit} = options;
+  const {fractionDigits = decimals, omitZeroFraction = false, trimTrailingZeros = false, displayUnit} = options;
   const raw = typeof rawAmount === 'bigint' ? rawAmount : BigInt(rawAmount);
   const divisor = 10n ** BigInt(decimals);
   const whole = (raw / divisor).toString();
-  const number = computeFormattedNumber(raw, divisor, decimals, whole, fractionDigits, omitZeroFraction);
+  const number = computeFormattedNumber(raw, divisor, decimals, whole, fractionDigits, omitZeroFraction, trimTrailingZeros);
   return displayUnit ? `${number} ${displayUnit}` : number;
 }
 
@@ -42,11 +49,16 @@ function computeFormattedNumber(
   whole: string,
   fractionDigits: number,
   omitZeroFraction: boolean,
+  trimTrailingZeros: boolean,
 ): string {
   if (fractionDigits <= 0) return whole;
   const fractionStr = (raw % divisor).toString().padStart(decimals, '0');
   const displayed = fractionStr.slice(0, fractionDigits).padEnd(fractionDigits, '0');
-  if (omitZeroFraction && /^0+$/.test(displayed)) return whole;
+  if ((omitZeroFraction || trimTrailingZeros) && /^0+$/.test(displayed)) return whole;
+  if (trimTrailingZeros) {
+    const trimmed = displayed.replace(/0+$/, '');
+    return `${whole}.${trimmed}`;
+  }
   return `${whole}.${displayed}`;
 }
 
