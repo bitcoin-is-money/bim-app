@@ -7,6 +7,7 @@ import {UserSettingsHttpService} from './user-settings-http.service';
 
 const SUPPORTED_LANGS: readonly Language[] = ['en', 'fr'] as const;
 const DEFAULT_LANG: Language = 'en';
+const LANG_STORAGE_KEY = 'bim_lang';
 
 const LANG_TO_LOCALE: Record<Language, string> = {
   en: 'en-US',
@@ -57,6 +58,11 @@ export class I18nService {
    * Useful for unauthenticated pages.
    */
   async initFromBrowser(): Promise<void> {
+    const cached = this.getCachedLang();
+    if (cached) {
+      await this.applyLang(cached);
+      return;
+    }
     const browserLang = this.translate.getBrowserLang() as Language | undefined;
     const lang = browserLang && SUPPORTED_LANGS.includes(browserLang) ? browserLang : DEFAULT_LANG;
     await this.applyLang(lang);
@@ -102,8 +108,17 @@ export class I18nService {
     return translated === key ? error.message : translated;
   }
 
+  private getCachedLang(): Language | undefined {
+    const cached = localStorage.getItem(LANG_STORAGE_KEY);
+    if (cached && SUPPORTED_LANGS.includes(cached as Language)) {
+      return cached as Language;
+    }
+    return undefined;
+  }
+
   private async applyLang(lang: Language): Promise<void> {
     await firstValueFrom(this.translate.use(lang));
     this._currentLang.set(lang);
+    localStorage.setItem(LANG_STORAGE_KEY, lang);
   }
 }
