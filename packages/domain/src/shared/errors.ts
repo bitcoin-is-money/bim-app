@@ -1,3 +1,4 @@
+import {formatTokenAmount} from '@bim/lib/token';
 import {ErrorCode} from './error-codes';
 
 /**
@@ -142,13 +143,13 @@ export class InsufficientBalanceError extends DomainError {
     if (reason === 'security_deposit') {
       const symbol = tokenSymbol ?? 'STRK';
       if (requiredAmount !== undefined) {
-        const formatted = formatTokenAmount(requiredAmount, tokenDecimals ?? 18);
+        const formatted = formatTokenAmount(requiredAmount, tokenDecimals ?? 18, {trimTrailingZeros: true});
         return `Insufficient balance to cover the security deposit (~${formatted} ${symbol}). Fund your account before retrying.`;
       }
       return 'Insufficient balance to cover the security deposit. Fund your account before retrying.';
     }
     if (requiredAmount !== undefined) {
-      const formatted = formatTokenAmount(requiredAmount, 18);
+      const formatted = formatTokenAmount(requiredAmount, 18, {trimTrailingZeros: true});
       return `Insufficient balance. This operation requires ~${formatted} STRK.`;
     }
     return 'Insufficient balance for this operation';
@@ -159,12 +160,12 @@ export class InsufficientBalanceError extends DomainError {
       const decimals = this.tokenDecimals ?? 18;
       const symbol = this.tokenSymbol ?? 'STRK';
       if (this.requiredAmount !== undefined) {
-        return {amount: formatTokenAmount(this.requiredAmount, decimals), token: symbol};
+        return {amount: formatTokenAmount(this.requiredAmount, decimals, {trimTrailingZeros: true}), token: symbol};
       }
       return undefined;
     }
     if (this.requiredAmount !== undefined) {
-      return {amount: formatTokenAmount(this.requiredAmount, 18)};
+      return {amount: formatTokenAmount(this.requiredAmount, 18, {trimTrailingZeros: true})};
     }
     return undefined;
   }
@@ -221,17 +222,4 @@ export class UnsafeExternalCallError extends DomainError {
   override get args(): Record<string, string> {
     return {service: this.service};
   }
-}
-
-/**
- * Format a raw token amount (in wei) to a human-readable string.
- * E.g. 4_140_000_000_000_000_000n with 18 decimals -> "4.14"
- */
-function formatTokenAmount(amount: bigint, decimals: number): string {
-  const divisor = 10n ** BigInt(decimals);
-  const whole = amount / divisor;
-  const remainder = amount % divisor;
-  if (remainder === 0n) return whole.toString();
-  const fracStr = remainder.toString().padStart(decimals, '0').replaceAll(/0{1,18}$/g, '');
-  return `${whole}.${fracStr}`;
 }
