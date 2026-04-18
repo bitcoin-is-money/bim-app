@@ -1,5 +1,6 @@
 import {serializeError} from '@bim/lib/error';
-import {DonationReceived} from '@bim/domain/notifications';
+import {DonationReceived, InvalidOwnerSignature} from '@bim/domain/notifications';
+import {ExternalServiceError} from '@bim/domain/shared';
 import type {PaymentResult, PreparedCalls, PreparedPaymentData} from '@bim/domain/payment';
 import type {Amount} from '@bim/domain/shared';
 import type {TypedResponse} from 'hono';
@@ -140,11 +141,30 @@ export function createPayRoutes(
       const signature = signatureProcessor.process(input.assertion, account.publicKey);
 
       // 4. Execute via AVNU paymaster
-      const {txHash} = await appContext.gateways.starknet.executeSignedCalls({
-        senderAddress: build.senderAddress,
-        typedData: build.typedData,
-        signature,
-      });
+      let txHash: string;
+      try {
+        ({txHash} = await appContext.gateways.starknet.executeSignedCalls({
+          senderAddress: build.senderAddress,
+          typedData: build.typedData,
+          signature,
+        }));
+      } catch (executeError) {
+        if (executeError instanceof ExternalServiceError
+            && executeError.message.includes('invalid-owner-sig')) {
+          const alertMessage = InvalidOwnerSignature.build({
+            senderAddress: build.senderAddress,
+            publicKey: account.publicKey,
+            typedData: build.typedData,
+            signature,
+            error: executeError.message,
+            network: appContext.starknetConfig.network,
+          });
+          appContext.gateways.notification.send(alertMessage).catch((err: unknown) => {
+            log.warn({cause: serializeError(err)}, 'Failed to send invalid-owner-sig alert');
+          });
+        }
+        throw executeError;
+      }
 
       // 5. Save description for the sender's transaction
       await payService.savePaymentResult({

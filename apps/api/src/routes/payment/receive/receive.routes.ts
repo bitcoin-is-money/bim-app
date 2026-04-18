@@ -1,8 +1,10 @@
 import {AccountId, type StarknetAddress} from '@bim/domain/account';
+import {InvalidOwnerSignature} from '@bim/domain/notifications';
 import type {BitcoinReceiveResult, ReceiveResult} from '@bim/domain/payment';
 import type {StarknetCall} from '@bim/domain/ports';
-import {Amount, InsufficientBalanceError} from '@bim/domain/shared';
+import {Amount, ExternalServiceError, InsufficientBalanceError} from '@bim/domain/shared';
 import {TransactionHash} from '@bim/domain/user';
+import {serializeError} from '@bim/lib/error';
 import type {TypedResponse} from 'hono';
 import {Hono} from 'hono';
 import {randomUUID} from 'node:crypto';
@@ -120,11 +122,30 @@ export function createReceiveRoutes(
       const signature = signatureProcessor.process(input.assertion, account.publicKey);
 
       // 4. Execute commit transaction via AVNU paymaster
-      const {txHash} = await appContext.gateways.starknet.executeSignedCalls({
-        senderAddress: build.senderAddress,
-        typedData: build.typedData,
-        signature,
-      });
+      let txHash: string;
+      try {
+        ({txHash} = await appContext.gateways.starknet.executeSignedCalls({
+          senderAddress: build.senderAddress,
+          typedData: build.typedData,
+          signature,
+        }));
+      } catch (executeError) {
+        if (executeError instanceof ExternalServiceError
+            && executeError.message.includes('invalid-owner-sig')) {
+          const alertMessage = InvalidOwnerSignature.build({
+            senderAddress: build.senderAddress,
+            publicKey: account.publicKey,
+            typedData: build.typedData,
+            signature,
+            error: executeError.message,
+            network: appContext.starknetConfig.network,
+          });
+          appContext.gateways.notification.send(alertMessage).catch((err: unknown) => {
+            log.warn({cause: serializeError(err)}, 'Failed to send invalid-owner-sig alert');
+          });
+        }
+        throw executeError;
+      }
 
       log.info({swapId: build.swapId, txHash}, 'Bitcoin receive commit transaction submitted');
 

@@ -8,7 +8,7 @@ import {run as deployerCreate} from './commands/deployer-create.js';
 import {run as deployerDeploy} from './commands/deployer-deploy.js';
 import {run as e2eFund} from './commands/e2e-fund.js';
 import {run as e2eInit} from './commands/e2e-init.js';
-import {run as slackTest} from './commands/slack-test.js';
+import {run as slackTest, TEST_MESSAGES as slackTestMessages} from './commands/slack-test.js';
 import {run as treasuryCreate} from './commands/treasury-create.js';
 import {run as treasuryDeploy} from './commands/treasury-deploy.js';
 
@@ -46,6 +46,10 @@ function printHelp(): void {
   console.log('Commands:');
   for (const [name, cmd] of COMMANDS) {
     console.log(`  ${name.padEnd(20)} ${cmd.help}`);
+    if (name === 'slack:test') {
+      const keys = slackTestMessages.map(m => m.key).join(', ');
+      console.log(`  ${''.padEnd(20)} Keys: ${keys}`);
+    }
   }
   console.log();
 }
