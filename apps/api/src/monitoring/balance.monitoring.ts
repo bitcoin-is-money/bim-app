@@ -1,3 +1,4 @@
+import {serializeError} from '@bim/lib/error';
 import {AvnuBalanceLow, TreasuryBalanceLow} from '@bim/domain/notifications';
 import type {NotificationGateway, PaymasterGateway, StarknetGateway} from '@bim/domain/ports';
 import type {StarknetConfig} from '@bim/domain/shared';
@@ -35,13 +36,13 @@ export class BalanceMonitoring {
     try {
       await this.checkAvnuCredits();
     } catch (err: unknown) {
-      this.log.error({cause: err instanceof Error ? err.message : String(err)}, 'AVNU credits check failed');
+      this.log.error({cause: serializeError(err)}, 'AVNU credits check failed');
     }
 
     try {
       await this.checkTreasuryBalance();
     } catch (err: unknown) {
-      this.log.error({cause: err instanceof Error ? err.message : String(err)}, 'Treasury balance check failed');
+      this.log.error({cause: serializeError(err)}, 'Treasury balance check failed');
     }
   }
 
@@ -99,7 +100,7 @@ export class BalanceMonitoring {
     try {
       return await this.starknetGateway.getBalance({address, token: 'WBTC'});
     } catch (err: unknown) {
-      this.log.warn({cause: err instanceof Error ? err.message : String(err)}, 'Treasury WBTC balance fetch failed');
+      this.log.warn({cause: serializeError(err)}, 'Treasury WBTC balance fetch failed');
       return 0n;
     }
   }

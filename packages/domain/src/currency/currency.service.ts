@@ -1,3 +1,4 @@
+import {serializeError} from '@bim/lib/error';
 import type {Logger} from 'pino';
 import type {PriceGateway} from '../ports';
 import {FiatCurrency} from './fiat-currency';
@@ -44,7 +45,7 @@ export class CurrencyService {
         await this.refreshCache();
       } catch (error) {
         this.log.warn(
-          {error: error instanceof Error ? error.message : String(error)},
+          {error: serializeError(error)},
           'Failed to refresh BTC prices',
         );
       }

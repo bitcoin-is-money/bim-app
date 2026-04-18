@@ -1,3 +1,4 @@
+import {serializeError} from '@bim/lib/error';
 import type {StarknetAddress} from '@bim/domain/account';
 import type {
   DeployTransaction,
@@ -256,7 +257,7 @@ export class DevnetPaymasterGateway implements PaymasterGateway {
     } catch (error) {
       throw new ExternalServiceError(
         'DevnetPaymaster',
-        `Execute failed: ${error instanceof Error ? error.message : String(error)}`
+        `Execute failed: ${serializeError(error)}`
       );
     }
   }
@@ -408,7 +409,7 @@ export class DevnetPaymasterGateway implements PaymasterGateway {
     } catch (error) {
       throw new ExternalServiceError(
         'DevnetPaymaster',
-        `Invoke execute failed: ${error instanceof Error ? error.message : String(error)}`
+        `Invoke execute failed: ${serializeError(error)}`
       );
     }
   }

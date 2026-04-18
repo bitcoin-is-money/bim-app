@@ -1,23 +1,6 @@
-import type {SanitizedError} from '@bim/domain/shared';
+import {SanitizedError, serializeError} from '@bim/lib/error';
 
 const MAX_SUMMARY_LENGTH = 200;
-
-/**
- * Subset of SanitizedError kinds that represent a confirmed infrastructure
- * failure (network layer, reverse proxy, DNS, etc.) — as opposed to a
- * functional error from the SDK or an unrecognized shape. Only these kinds
- * should flip the HealthRegistry into `down` and trigger a Slack alert.
- */
-const INFRA_FAILURE_KINDS = new Set([
-  'cloudflare_tunnel',
-  'html_response',
-  'network',
-  'timeout',
-]);
-
-export function isInfraFailure(error: SanitizedError): boolean {
-  return INFRA_FAILURE_KINDS.has(error.kind);
-}
 
 /**
  * Turns an arbitrary error thrown by the Atomiq SDK into a compact,
@@ -28,62 +11,47 @@ export function isInfraFailure(error: SanitizedError): boolean {
  * that is currently down, that body is a multi-kilobyte HTML error page
  * that floods the logs if printed verbatim. This helper detects common
  * failure shapes and returns a short summary instead.
+ *
+ * Only Atomiq-specific patterns (Cloudflare tunnel, HTML pages, httpCode
+ * extraction) are handled here. Generic timeout/network detection is
+ * delegated to {@link SanitizedError.sanitize}.
  */
 export function sanitizeAtomiqError(err: unknown): SanitizedError {
   if (!(err instanceof Error)) {
-    return {
-      kind: 'unknown',
-      summary: truncate(String(err)),
-    };
+    return {kind: 'unknown', summary: truncate(serializeError(err))};
   }
 
   const originalName = err.name;
   const httpCode = extractHttpCode(err);
   const rawMessage = err.message;
-  const looksLikeHtml = isHtmlBody(rawMessage);
 
-  if (looksLikeHtml && /cloudflare\s+tunnel\s+error/i.test(rawMessage)) {
-    const httpCodeDetails = httpCode === undefined ? '' : `, HTTP ${httpCode}`;
-    return {
-      kind: 'cloudflare_tunnel',
-      ...(httpCode !== undefined && {httpCode}),
-      summary: `Atomiq intermediary unreachable (Cloudflare Tunnel error${httpCodeDetails})`,
-      originalName,
-    };
+  if (isHtmlBody(rawMessage)) {
+    return sanitizeHtmlError(rawMessage, httpCode, originalName);
   }
 
-  if (looksLikeHtml) {
-    const httpCodeDetails = httpCode === undefined ? '' : `, HTTP ${httpCode}`;
-    return {
-      kind: 'html_response',
-      ...(httpCode !== undefined && {httpCode}),
-      summary: `Atomiq intermediary returned an HTML error page${httpCodeDetails}`,
-      originalName,
-    };
-  }
-
-  if (/timeout|timed out/i.test(rawMessage)) {
-    return {
-      kind: 'timeout',
-      ...(httpCode !== undefined && {httpCode}),
-      summary: truncate(rawMessage),
-      originalName,
-    };
-  }
-
-  if (/network|ECONN|ENOTFOUND|fetch failed|socket/i.test(rawMessage)) {
-    return {
-      kind: 'network',
-      ...(httpCode !== undefined && {httpCode}),
-      summary: truncate(rawMessage),
-      originalName,
-    };
-  }
-
+  // Delegate generic timeout/network detection to the shared sanitizer
+  const base = SanitizedError.sanitize('Atomiq', err);
   return {
-    kind: 'unknown',
+    ...base,
     ...(httpCode !== undefined && {httpCode}),
-    summary: truncate(rawMessage),
+    summary: truncate(base.summary),
+    originalName,
+  };
+}
+
+function sanitizeHtmlError(
+  rawMessage: string,
+  httpCode: number | undefined,
+  originalName: string,
+): SanitizedError {
+  const httpCodeDetails = httpCode === undefined ? '' : `, HTTP ${httpCode}`;
+  const isCloudflare = /cloudflare\s+tunnel\s+error/i.test(rawMessage);
+  return {
+    kind: isCloudflare ? 'cloudflare_tunnel' : 'html_response',
+    ...(httpCode !== undefined && {httpCode}),
+    summary: isCloudflare
+      ? `Atomiq intermediary unreachable (Cloudflare Tunnel error${httpCodeDetails})`
+      : `Atomiq intermediary returned an HTML error page${httpCodeDetails}`,
     originalName,
   };
 }

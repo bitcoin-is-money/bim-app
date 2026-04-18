@@ -73,14 +73,17 @@ In `<context>.types.ts`. Plain interfaces, `string | null` for optional fields, 
 
 ## Error Handling
 
-Centralized in `apps/api/src/errors/error-handler.ts`:
+Centralized in `apps/api/src/errors/error-handler.ts`. Each `DomainError` carries its own `errorCode` and `args`. The handler uses a `Map<ErrorCode, ErrorStatus>` for HTTP mapping — no instanceof cascade.
 
 ```typescript
-export function handleDomainError(ctx: Context, error: unknown, logger: Logger): TypedResponse<ApiErrorResponse> {
-  if (error instanceof ZodError) return createErrorResponse(ctx, 400, ErrorCode.VALIDATION_ERROR, ...);
-  if (error instanceof AccountNotFoundError) return createErrorResponse(ctx, 404, ErrorCode.ACCOUNT_NOT_FOUND, ...);
-  return createErrorResponse(ctx, 500, ErrorCode.INTERNAL_ERROR, 'Internal server error');
-}
+// To add a new error: just define errorCode on your DomainError subclass.
+// Only add to HTTP_STATUS map if the status is NOT 400 (the default).
+const HTTP_STATUS: ReadonlyMap<ErrorCode, ErrorStatus> = new Map([
+  [ErrorCode.ACCOUNT_NOT_FOUND, 404],
+  [ErrorCode.UNAUTHORIZED, 401],
+  // ... non-400 mappings only
+]);
+```
 ```
 
 Direct error responses for non-domain errors:
@@ -150,6 +153,6 @@ export class DrizzleAccountRepository implements AccountRepository {
 1. Response interface in `<context>.types.ts`
 2. Zod schema in `<context>.schemas.ts`
 3. Handler in `<context>.routes.ts` (try/catch + handleDomainError)
-4. Map new domain errors in `error-handler.ts`
+4. If HTTP status is not 400, add ErrorCode to `HTTP_STATUS` map in `error-handler.ts`
 5. Mount with auth middleware if needed
 6. Integration test in `apps/api/test/integration/`

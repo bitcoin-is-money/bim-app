@@ -8,7 +8,8 @@ import type {
   StarknetTransaction,
   TransactionReceipt,
 } from "@bim/domain/ports";
-import {DomainError, ExternalServiceError, SanitizedError} from "@bim/domain/shared";
+import {SanitizedError, serializeError} from '@bim/lib/error';
+import {DomainError, ExternalServiceError} from "@bim/domain/shared";
 import {ETransactionType} from '@starknet-io/starknet-types-010';
 
 import pTimeout from 'p-timeout';
@@ -85,7 +86,7 @@ export class StarknetRpcGateway implements StarknetGateway {
     } catch (error) {
       throw new ExternalServiceError(
         'Starknet',
-        `Failed to calculate address: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to calculate address: ${serializeError(error)}`,
       );
     }
   }
@@ -144,7 +145,7 @@ export class StarknetRpcGateway implements StarknetGateway {
     } catch (error) {
       throw new ExternalServiceError(
         'Starknet',
-        `Transaction ${txHash} failed: ${error instanceof Error ? error.message : String(error)}`,
+        `Transaction ${txHash} failed: ${serializeError(error)}`,
       );
     }
   }
@@ -166,7 +167,7 @@ export class StarknetRpcGateway implements StarknetGateway {
     } catch (error) {
       throw new ExternalServiceError(
         'Starknet',
-        `Failed to get nonce: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to get nonce: ${serializeError(error)}`,
       );
     }
   }
@@ -199,7 +200,7 @@ export class StarknetRpcGateway implements StarknetGateway {
     } catch (error) {
       throw new ExternalServiceError(
         'Starknet',
-        `Failed to get balance: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to get balance: ${serializeError(error)}`,
       );
     }
   }
@@ -227,7 +228,7 @@ export class StarknetRpcGateway implements StarknetGateway {
     } catch (error) {
       throw new ExternalServiceError(
         'Starknet',
-        `Failed to estimate fee: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to estimate fee: ${serializeError(error)}`,
       );
     }
   }
@@ -266,7 +267,7 @@ export class StarknetRpcGateway implements StarknetGateway {
       if (error instanceof DomainError) throw error;
       throw new ExternalServiceError(
         'Starknet',
-        `Failed to build calls: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to build calls: ${serializeError(error)}`,
       );
     }
   }
@@ -303,7 +304,7 @@ export class StarknetRpcGateway implements StarknetGateway {
       if (error instanceof DomainError) throw error;
       throw new ExternalServiceError(
         'Starknet',
-        `Failed to execute signed calls: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to execute signed calls: ${serializeError(error)}`,
       );
     }
   }

@@ -1,3 +1,4 @@
+import {serializeError} from '@bim/lib/error';
 import accountBalance from './commands/account-balance.js';
 import {run as apiHealth} from './commands/api-health.js';
 import {run as avnuRefund} from './commands/avnu-refund.js';
@@ -71,6 +72,6 @@ if (!command) {
 try {
   await command.run(commandArgs);
 } catch (err: unknown) {
-  console.error('Failed:', err instanceof Error ? err.message : String(err));
+  console.error('Failed:', serializeError(err));
   process.exit(1);
 }

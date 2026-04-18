@@ -1,3 +1,4 @@
+import {serializeError} from '@bim/lib/error';
 import {RpcProvider} from 'starknet';
 import {BIM_CLASS_HASH, RPC_URLS} from '../config/constants.js';
 
@@ -13,7 +14,7 @@ async function checkNetwork(
     console.log(`[${label}] OK - Declared`);
     return true;
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
+    const message = serializeError(err);
     if (message.includes('not found') || message.includes('CLASS_HASH_NOT_FOUND')) {
       console.log(`[${label}] NOT FOUND - Class hash is not declared`);
     } else {

@@ -1,4 +1,5 @@
-import {isInfraFailure, sanitizeAtomiqError} from '@bim/atomiq';
+import {sanitizeAtomiqError} from '@bim/atomiq';
+import {SanitizedError} from '@bim/lib/error';
 import {describe, expect, it} from 'vitest';
 
 const CLOUDFLARE_530_HTML = `<!doctype html>
@@ -58,19 +59,19 @@ describe('sanitizeAtomiqError', () => {
   it('handles non-Error throwables', () => {
     const result = sanitizeAtomiqError('something bad');
     expect(result.kind).toBe('unknown');
-    expect(result.summary).toBe('something bad');
+    expect(result.summary).toContain('something bad');
   });
 });
 
-describe('isInfraFailure', () => {
+describe('SanitizedError.isInfraFailure', () => {
   it('returns true for recognized infrastructure failure kinds', () => {
-    expect(isInfraFailure({kind: 'cloudflare_tunnel', summary: ''})).toBe(true);
-    expect(isInfraFailure({kind: 'html_response', summary: ''})).toBe(true);
-    expect(isInfraFailure({kind: 'network', summary: ''})).toBe(true);
-    expect(isInfraFailure({kind: 'timeout', summary: ''})).toBe(true);
+    expect(SanitizedError.isInfraFailure({kind: 'cloudflare_tunnel', summary: ''})).toBe(true);
+    expect(SanitizedError.isInfraFailure({kind: 'html_response', summary: ''})).toBe(true);
+    expect(SanitizedError.isInfraFailure({kind: 'network', summary: ''})).toBe(true);
+    expect(SanitizedError.isInfraFailure({kind: 'timeout', summary: ''})).toBe(true);
   });
 
   it('returns false for unknown errors (likely SDK/functional bugs, not outages)', () => {
-    expect(isInfraFailure({kind: 'unknown', summary: ''})).toBe(false);
+    expect(SanitizedError.isInfraFailure({kind: 'unknown', summary: ''})).toBe(false);
   });
 });

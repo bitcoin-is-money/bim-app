@@ -81,15 +81,23 @@ Swap `mark*` methods are pure state setters (Atomiq is source of truth).
 
 ## Domain Errors
 
-All extend abstract `DomainError`. Context-specific errors in `<context>/types.ts`, shared in `shared/errors.ts`.
+All extend abstract `DomainError`. Context-specific errors in `<context>/errors.ts`, shared in `shared/errors.ts`. `ErrorCode` lives in `packages/domain/src/shared/error-codes.ts`.
+
+Each error must declare `errorCode` and optionally override `get args()` for i18n interpolation:
 
 ```typescript
 export class SwapNotFoundError extends DomainError {
+  readonly errorCode = ErrorCode.SWAP_NOT_FOUND;
+
   constructor(readonly swapId: SwapId | string) {
     super(`Swap not found: ${swapId}`);
   }
+
+  override get args() { return {swapId: String(this.swapId)}; }
 }
 ```
+
+Use native `cause` chaining (`super(msg, {cause})`) when wrapping external errors, not a `readonly cause` field.
 
 ## Domain Services
 

@@ -1,5 +1,5 @@
 import type {Context, TypedResponse} from 'hono';
-import type {ErrorCode} from './error-codes';
+import type {ErrorCode} from '@bim/domain/shared';
 
 /**
  * API error body structure.
