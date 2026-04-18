@@ -1,5 +1,6 @@
+import {SanitizedError} from '@bim/lib/error';
 import {describe, expect, it} from 'vitest';
-import {isInfraFailure, sanitizeAtomiqError} from '../src';
+import {sanitizeAtomiqError} from '../src';
 
 describe('sanitizeAtomiqError', () => {
   it('handles non-Error inputs (strings, null, undefined)', () => {
@@ -45,7 +46,7 @@ describe('sanitizeAtomiqError', () => {
     err.name = 'BusinessError';
     const result = sanitizeAtomiqError(err);
     expect(result.kind).toBe('unknown');
-    expect(result.summary).toBe('some business logic error');
+    expect(result.summary).toContain('some business logic error');
     expect(result.originalName).toBe('BusinessError');
   });
 
@@ -58,7 +59,7 @@ describe('sanitizeAtomiqError', () => {
 
   it('collapses whitespace in summaries', () => {
     const result = sanitizeAtomiqError(new Error('line1\n\n  line2\t\ttabbed'));
-    expect(result.summary).toBe('line1 line2 tabbed');
+    expect(result.summary).toContain('line1 line2 tabbed');
   });
 
   it('preserves httpCode when provided', () => {
@@ -74,15 +75,15 @@ describe('sanitizeAtomiqError', () => {
   });
 });
 
-describe('isInfraFailure', () => {
+describe('SanitizedError.isInfraFailure', () => {
   it('returns true for infra failure kinds', () => {
-    expect(isInfraFailure({kind: 'cloudflare_tunnel', summary: 'x'})).toBe(true);
-    expect(isInfraFailure({kind: 'html_response', summary: 'x'})).toBe(true);
-    expect(isInfraFailure({kind: 'network', summary: 'x'})).toBe(true);
-    expect(isInfraFailure({kind: 'timeout', summary: 'x'})).toBe(true);
+    expect(SanitizedError.isInfraFailure({kind: 'cloudflare_tunnel', summary: 'x'})).toBe(true);
+    expect(SanitizedError.isInfraFailure({kind: 'html_response', summary: 'x'})).toBe(true);
+    expect(SanitizedError.isInfraFailure({kind: 'network', summary: 'x'})).toBe(true);
+    expect(SanitizedError.isInfraFailure({kind: 'timeout', summary: 'x'})).toBe(true);
   });
 
   it('returns false for non-infra kinds', () => {
-    expect(isInfraFailure({kind: 'unknown', summary: 'x'})).toBe(false);
+    expect(SanitizedError.isInfraFailure({kind: 'unknown', summary: 'x'})).toBe(false);
   });
 });

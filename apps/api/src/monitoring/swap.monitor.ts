@@ -1,3 +1,4 @@
+import {serializeError} from '@bim/lib/error';
 import type {AtomiqGateway} from '@bim/domain/ports';
 import type {Swap, SwapId, SwapService} from '@bim/domain/swap';
 
@@ -130,7 +131,7 @@ export class SwapMonitor {
       }
     } catch (err) {
       this.log.error(
-        {cause: err instanceof Error ? err.message : String(err)},
+        {cause: serializeError(err)},
         'SwapMonitor iteration error',
       );
     } finally {
@@ -185,7 +186,7 @@ export class SwapMonitor {
       // Individual swap errors are non-fatal — continue with the next swap
       this.log.warn({
         swapId: swap.data.id,
-        cause: err instanceof Error ? err.message : String(err),
+        cause: serializeError(err),
       }, 'Unexpected behavior processing swap, skipping');
     }
   }
@@ -211,7 +212,7 @@ export class SwapMonitor {
       await fetch(url, {signal: AbortSignal.timeout(5000)});
     } catch (err) {
       this.log.warn(
-        {url, cause: err instanceof Error ? err.message : String(err)},
+        {url, cause: serializeError(err)},
         'Keepalive request failed',
       );
     }
@@ -254,7 +255,7 @@ export class SwapMonitor {
     } catch (err) {
       this.log.error({
         swapId,
-        cause: err instanceof Error ? err.message : String(err),
+        cause: serializeError(err),
       }, 'Failed to claim forward swap');
     }
   }

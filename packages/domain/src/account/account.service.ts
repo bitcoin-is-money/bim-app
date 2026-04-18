@@ -1,3 +1,4 @@
+import {serializeError} from '@bim/lib/error';
 import type {Logger} from 'pino';
 import type {AccountRepository, PaymasterGateway, StarknetGateway} from '../ports';
 import {Account} from './account';
@@ -189,7 +190,7 @@ export class AccountService {
       try {
         return await this.deps.starknetGateway.getBalance({address, token});
       } catch (err) {
-        this.log.warn({address, token}, `Failed to fetch balance (${err instanceof Error ? err.message : String(err)})`);
+        this.log.warn({address, token}, `Failed to fetch balance (${serializeError(err)})`);
         return 0n;
       }
     };

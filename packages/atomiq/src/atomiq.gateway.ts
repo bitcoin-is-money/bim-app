@@ -1,3 +1,4 @@
+import {SanitizedError, serializeError} from '@bim/lib/error';
 import {type StarknetChainType, StarknetInitializer, type StarknetInitializerType} from '@atomiqlabs/chain-starknet';
 import type {FromBTCSwap, TypedSwapper, TypedSwapperOptions} from '@atomiqlabs/sdk';
 import {BitcoinNetwork, SwapperFactory, SwapType} from '@atomiqlabs/sdk';
@@ -19,7 +20,6 @@ import {
   Amount,
   type BitcoinNetwork as DomainBitcoinNetwork,
   ExternalServiceError,
-  type SanitizedError,
   validateExternalCalls
 } from "@bim/domain/shared";
 import type {
@@ -34,7 +34,7 @@ import {LightningInvoiceExpiredError, SwapAmountError} from "@bim/domain/swap";
 import type pg from 'pg';
 import type {Logger} from "pino";
 import {Account as StarknetAccount, BlockTag, RpcProvider, Signer as StarknetSigner} from 'starknet';
-import {isInfraFailure, sanitizeAtomiqError} from './atomiq-error';
+import {sanitizeAtomiqError} from './atomiq-error';
 import {mapAtomiqStateToStatus} from './atomiq-state-mapping';
 
 /* eslint-disable
@@ -106,7 +106,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     // more likely a functional/SDK bug than an Atomiq outage, so we keep the
     // component's current health state to avoid false `BIM: atomiq is down`
     // alerts on Slack.
-    if (isInfraFailure(sanitized)) {
+    if (SanitizedError.isInfraFailure(sanitized)) {
       this.healthRegistry.reportDown('atomiq', sanitized);
     }
     this.log.error({atomiqError: sanitized, context}, 'Atomiq call failed');
@@ -346,7 +346,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         expiresAt: new Date(quoteExpiry),
       };
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = serializeError(error);
       if (message.includes('pr - expired') || message.includes('pr -expired')) {
         this.markAtomiqHealthy();
         throw new LightningInvoiceExpiredError();
@@ -837,7 +837,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       return normalizedSender === normalizedBackend;
     } catch (error) {
       this.log.warn(
-        {claimTxHash, cause: error instanceof Error ? error.message : String(error)},
+        {claimTxHash, cause: serializeError(error)},
         'Failed to verify claim tx sender, assuming backend',
       );
       return true;
@@ -861,7 +861,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       this.log.warn({swapId}, 'Diagnostic: txsClaim succeeded — the claim tx was likely submitted but lost the race to the watchtower');
     } catch (error) {
       this.log.error(
-        {swapId, cause: error instanceof Error ? error.message : String(error)},
+        {swapId, cause: serializeError(error)},
         'Diagnostic: txsClaim failed — this is likely why our backend cannot claim',
       );
     }
@@ -900,7 +900,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         swapId,
         userAddress,
         bountyAmount: bountyAmount.toString(),
-        cause: error instanceof Error ? error.message : String(error),
+        cause: serializeError(error),
       }, 'CRITICAL: Failed to refund bounty to user — manual refund required');
       return undefined;
     }

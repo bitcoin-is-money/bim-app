@@ -1,5 +1,5 @@
 import type {Logger} from 'pino';
-import type {SanitizedError} from '../shared';
+import {serializeError, type SanitizedError} from '@bim/lib/error';
 
 /**
  * Known components whose health is tracked in the registry.
@@ -179,7 +179,7 @@ export class HealthRegistry {
       this.onTransition(event);
     } catch (err: unknown) {
       this.log.warn(
-        {component: event.component, cause: err instanceof Error ? err.message : String(err)},
+        {component: event.component, cause: serializeError(err)},
         'HealthRegistry transition listener threw; ignoring',
       );
     }

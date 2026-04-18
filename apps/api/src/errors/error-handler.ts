@@ -1,91 +1,58 @@
-import {
-  AccountAlreadyExistsError,
-  AccountDeploymentError,
-  AccountNotFoundError,
-  InvalidAccountStateError,
-  InvalidStarknetAddressError,
-  InvalidUsernameError,
-} from '@bim/domain/account';
-import {
-  AuthenticationFailedError,
-  ChallengeAlreadyUsedError,
-  ChallengeExpiredError,
-  ChallengeNotFoundError,
-  InvalidChallengeError,
-  RegistrationFailedError,
-  SessionExpiredError,
-  SessionNotFoundError,
-} from '@bim/domain/auth';
-import {UnsupportedCurrencyError} from '@bim/domain/currency';
-import {
-  InvalidPaymentAddressError,
-  InvalidPaymentAmountError,
-  PaymentParsingError,
-  SameAddressPaymentError,
-  UnsupportedNetworkError,
-  UnsupportedTokenError,
-} from '@bim/domain/payment';
-import {
-  ExternalServiceError,
-  InsufficientBalanceError,
-  InvalidStateTransitionError,
-  PaymasterServiceError,
-  TimeoutError,
-  UnauthorizedError,
-  UnsafeExternalCallError,
-  ValidationError,
-} from '@bim/domain/shared';
-import {
-  BitcoinAddressNetworkMismatchError,
-  InvalidBitcoinAddressError,
-  InvalidLightningInvoiceError,
-  InvalidSwapStateError,
-  LightningInvoiceExpiredError,
-  SwapAmountError,
-  SwapCreationError,
-  SwapExpiredError,
-  SwapNotFoundError,
-  SwapOwnershipError,
-} from '@bim/domain/swap';
-import {UserSettingsNotFoundError} from '@bim/domain/user';
+import {DomainError, ErrorCode, type ErrorCode as ErrorCodeType} from '@bim/domain/shared';
+import {SwapNotFoundError} from '@bim/domain/swap';
 import type {Context, TypedResponse} from 'hono';
 import type {Logger} from 'pino';
 import {ZodError} from 'zod';
-import {type ApiErrorResponse, createErrorResponse} from './api-error';
-
-import {ErrorCode} from './error-codes';
+import {type ApiErrorResponse, createErrorResponse, type ErrorStatus} from './api-error';
 
 type ApiResponse = TypedResponse<ApiErrorResponse>;
+
+/**
+ * Maps error codes to HTTP status codes.
+ * Errors not listed here default to 400 (Bad Request).
+ */
+const HTTP_STATUS: ReadonlyMap<ErrorCodeType, ErrorStatus> = new Map([
+  [ErrorCode.INTERNAL_ERROR, 500],
+  [ErrorCode.ACCOUNT_NOT_FOUND, 404],
+  [ErrorCode.ACCOUNT_ALREADY_EXISTS, 409],
+  [ErrorCode.SWAP_NOT_FOUND, 404],
+  [ErrorCode.USER_SETTINGS_NOT_FOUND, 404],
+  [ErrorCode.UNAUTHORIZED, 401],
+  [ErrorCode.AUTHENTICATION_FAILED, 401],
+  [ErrorCode.SESSION_NOT_FOUND, 401],
+  [ErrorCode.SESSION_EXPIRED, 401],
+  [ErrorCode.FORBIDDEN, 403],
+  [ErrorCode.ACCOUNT_DEPLOYMENT_FAILED, 500],
+  [ErrorCode.SWAP_CREATION_FAILED, 500],
+  [ErrorCode.EXTERNAL_SERVICE_ERROR, 502],
+  [ErrorCode.PAYMASTER_SERVICE_ERROR, 502],
+  [ErrorCode.TIMEOUT_ERROR, 504],
+  [ErrorCode.RATE_LIMITED, 429],
+]);
 
 /**
  * Centralized error handler that maps domain errors to API responses.
  * All routes should use this function to handle errors consistently.
  */
 export function handleDomainError(ctx: Context, error: unknown, logger: Logger): ApiResponse {
-  // Swap not found is expected (e.g. polling after container restart) — warn only, no stack trace
-  if (error instanceof SwapNotFoundError) {
-    logger.warn(`Swap not found: ${error.swapId}`);
-    return createErrorResponse(ctx, 404, ErrorCode.SWAP_NOT_FOUND, 'Swap not found', {
-      swapId: error.swapId,
-    });
-  }
-
-  logger.error(error, 'API error');
-
   if (error instanceof ZodError) {
     return handleZodError(ctx, error);
   }
 
-  return (
-    handleAccountError(ctx, error) ??
-    handleAuthError(ctx, error) ??
-    handleSwapError(ctx, error) ??
-    handlePaymentError(ctx, error) ??
-    handleUserError(ctx, error) ??
-    handleBalanceError(ctx, error) ??
-    handleSharedError(ctx, error, logger) ??
-    createErrorResponse(ctx, 500, ErrorCode.INTERNAL_ERROR, 'Internal server error')
-  );
+  if (!(error instanceof DomainError)) {
+    logger.error(error, 'Unhandled error');
+    return createErrorResponse(ctx, 500, ErrorCode.INTERNAL_ERROR, 'Internal server error');
+  }
+
+  // Swap not found is expected (e.g. polling after container restart) — warn only
+  if (error instanceof SwapNotFoundError) {
+    logger.warn(error, error.message);
+  } else {
+    logger.error(error, error.message);
+  }
+
+  const status = HTTP_STATUS.get(error.errorCode) ?? 400;
+  return createErrorResponse(ctx, status, error.errorCode, error.message, error.args);
 }
 
 function handleZodError(ctx: Context, error: ZodError): ApiResponse {
@@ -95,237 +62,4 @@ function handleZodError(ctx: Context, error: ZodError): ApiResponse {
   return createErrorResponse(ctx, 400, ErrorCode.VALIDATION_ERROR, `Invalid ${field}: ${firstError?.message}`, {
     field,
   });
-}
-
-function handleAccountError(ctx: Context, error: unknown): ApiResponse | undefined {
-  if (error instanceof AccountNotFoundError) {
-    return createErrorResponse(ctx, 404, ErrorCode.ACCOUNT_NOT_FOUND, 'Account not found');
-  }
-  if (error instanceof AccountAlreadyExistsError) {
-    return createErrorResponse(ctx, 409, ErrorCode.ACCOUNT_ALREADY_EXISTS, 'Username already taken', {
-      username: error.username,
-    });
-  }
-  if (error instanceof InvalidUsernameError) {
-    return createErrorResponse(ctx, 400, ErrorCode.INVALID_USERNAME, 'Invalid username format', {
-      username: error.value,
-    });
-  }
-  if (error instanceof InvalidAccountStateError) {
-    return createErrorResponse(ctx, 400, ErrorCode.INVALID_ACCOUNT_STATE, error.message, {
-      status: error.currentStatus,
-      action: error.attemptedAction,
-    });
-  }
-  if (error instanceof AccountDeploymentError) {
-    return createErrorResponse(ctx, 500, ErrorCode.ACCOUNT_DEPLOYMENT_FAILED, 'Account deployment failed');
-  }
-  if (error instanceof InvalidStarknetAddressError) {
-    return createErrorResponse(ctx, 400, ErrorCode.INVALID_STARKNET_ADDRESS, 'Invalid Starknet address');
-  }
-  return undefined;
-}
-
-function handleAuthError(ctx: Context, error: unknown): ApiResponse | undefined {
-  if (error instanceof ChallengeNotFoundError) {
-    return createErrorResponse(ctx, 400, ErrorCode.CHALLENGE_NOT_FOUND, 'Challenge not found');
-  }
-  if (error instanceof ChallengeExpiredError) {
-    return createErrorResponse(ctx, 400, ErrorCode.CHALLENGE_EXPIRED, 'Challenge expired');
-  }
-  if (error instanceof ChallengeAlreadyUsedError) {
-    return createErrorResponse(ctx, 400, ErrorCode.CHALLENGE_ALREADY_USED, 'Challenge already used');
-  }
-  if (error instanceof InvalidChallengeError) {
-    return createErrorResponse(ctx, 400, ErrorCode.INVALID_CHALLENGE, error.message);
-  }
-  if (error instanceof AuthenticationFailedError) {
-    return createErrorResponse(ctx, 401, ErrorCode.AUTHENTICATION_FAILED, 'Authentication failed');
-  }
-  if (error instanceof RegistrationFailedError) {
-    return createErrorResponse(ctx, 400, ErrorCode.REGISTRATION_FAILED, error.message, {
-      reason: error.reason,
-    });
-  }
-  if (error instanceof SessionNotFoundError) {
-    return createErrorResponse(ctx, 401, ErrorCode.SESSION_NOT_FOUND, 'Session not found');
-  }
-  if (error instanceof SessionExpiredError) {
-    return createErrorResponse(ctx, 401, ErrorCode.SESSION_EXPIRED, 'Session expired');
-  }
-  return undefined;
-}
-
-function handleSwapError(ctx: Context, error: unknown): ApiResponse | undefined {
-  if (error instanceof SwapExpiredError) {
-    return createErrorResponse(ctx, 400, ErrorCode.SWAP_EXPIRED, 'Swap expired', {
-      swapId: error.swapId,
-    });
-  }
-  if (error instanceof SwapAmountError) {
-    return createErrorResponse(ctx, 400, ErrorCode.SWAP_AMOUNT_OUT_OF_RANGE, error.message, {
-      amount: Number(error.amount.getSat()),
-      min: Number(error.min.getSat()),
-      max: Number(error.max.getSat()),
-      unit: 'sats',
-    });
-  }
-  if (error instanceof SwapCreationError) {
-    return createErrorResponse(ctx, 500, ErrorCode.SWAP_CREATION_FAILED, error.message, {
-      reason: error.reason,
-    });
-  }
-  if (error instanceof InvalidSwapStateError) {
-    return createErrorResponse(ctx, 400, ErrorCode.INVALID_SWAP_STATE, error.message, {
-      status: error.currentStatus,
-      action: error.attemptedAction,
-    });
-  }
-  if (error instanceof SwapOwnershipError) {
-    return createErrorResponse(ctx, 403, ErrorCode.FORBIDDEN, 'Swap does not belong to this account');
-  }
-  return undefined;
-}
-
-function handlePaymentError(ctx: Context, error: unknown): ApiResponse | undefined {
-  if (error instanceof PaymentParsingError) {
-    return createErrorResponse(ctx, 400, ErrorCode.PAYMENT_PARSING_ERROR, 'Failed to parse payment data');
-  }
-  if (error instanceof InvalidPaymentAmountError) {
-    return createErrorResponse(ctx, 400, ErrorCode.INVALID_PAYMENT_AMOUNT, error.message, {
-      network: error.network,
-      amount: Number(error.amount),
-      unit: 'sats',
-    });
-  }
-  if (error instanceof SameAddressPaymentError) {
-    return createErrorResponse(ctx, 400, ErrorCode.SAME_ADDRESS_PAYMENT, 'Cannot send to your own address');
-  }
-  if (error instanceof UnsupportedNetworkError) {
-    return handleUnsupportedNetwork(ctx, error);
-  }
-  if (error instanceof UnsupportedTokenError) {
-    return createErrorResponse(ctx, 400, ErrorCode.UNSUPPORTED_TOKEN, 'Unsupported token', {
-      token: error.tokenAddress,
-    });
-  }
-  if (error instanceof InvalidLightningInvoiceError) {
-    return createErrorResponse(ctx, 400, ErrorCode.INVALID_LIGHTNING_INVOICE, 'Invalid Lightning invoice');
-  }
-  if (error instanceof LightningInvoiceExpiredError) {
-    return createErrorResponse(ctx, 400, ErrorCode.LIGHTNING_INVOICE_EXPIRED, 'Lightning invoice has expired');
-  }
-  if (error instanceof BitcoinAddressNetworkMismatchError) {
-    return createErrorResponse(ctx, 400, ErrorCode.BITCOIN_ADDRESS_NETWORK_MISMATCH,
-      `Bitcoin address is for ${error.actualNetwork}, expected ${error.expectedNetwork}`,
-      {expectedNetwork: error.expectedNetwork, actualNetwork: error.actualNetwork});
-  }
-  if (error instanceof InvalidBitcoinAddressError) {
-    return createErrorResponse(ctx, 400, ErrorCode.INVALID_BITCOIN_ADDRESS, 'Invalid Bitcoin address');
-  }
-  if (error instanceof InvalidPaymentAddressError) {
-    return createErrorResponse(ctx, 400, ErrorCode.INVALID_PAYMENT_ADDRESS, 'Invalid payment address');
-  }
-  return undefined;
-}
-
-function handleUnsupportedNetwork(ctx: Context, error: UnsupportedNetworkError): ApiResponse {
-  const detected = error.detectedNetwork;
-  if (detected !== undefined) {
-    return createErrorResponse(ctx, 400, ErrorCode.UNSUPPORTED_NETWORK, `Unsupported network or format: ${detected}`, {
-      network: detected,
-    });
-  }
-  return createErrorResponse(ctx, 400, ErrorCode.UNSUPPORTED_NETWORK, 'Unsupported network or format');
-}
-
-function handleUserError(ctx: Context, error: unknown): ApiResponse | undefined {
-  if (error instanceof UserSettingsNotFoundError) {
-    return createErrorResponse(ctx, 404, ErrorCode.USER_SETTINGS_NOT_FOUND, 'User settings not found');
-  }
-  if (error instanceof UnsupportedCurrencyError) {
-    return createErrorResponse(ctx, 400, ErrorCode.UNSUPPORTED_CURRENCY, 'Unsupported currency', {
-      currency: error.currency,
-    });
-  }
-  return undefined;
-}
-
-function handleBalanceError(ctx: Context, error: unknown): ApiResponse | undefined {
-  if (!(error instanceof InsufficientBalanceError)) return undefined;
-
-  if (error.reason === 'security_deposit') {
-    const args: Record<string, string> = {};
-    const decimals = error.tokenDecimals ?? 18;
-    const symbol = error.tokenSymbol ?? 'STRK';
-    if (error.requiredAmount !== undefined) {
-      args.amount = formatTokenAmount(error.requiredAmount, decimals);
-      args.token = symbol;
-    }
-    return createErrorResponse(ctx, 400, ErrorCode.INSUFFICIENT_BALANCE_SECURITY_DEPOSIT,
-      args.amount
-        ? `Insufficient balance to cover the security deposit (~${args.amount} ${symbol}). Fund your account before retrying.`
-        : 'Insufficient balance to cover the security deposit. Fund your account before retrying.',
-      args);
-  }
-  if (error.requiredAmount !== undefined) {
-    const formatted = formatTokenAmount(error.requiredAmount, 18);
-    return createErrorResponse(ctx, 400, ErrorCode.INSUFFICIENT_BALANCE_WITH_AMOUNT,
-      `Insufficient balance. This operation requires ~${formatted} STRK.`,
-      {amount: formatted});
-  }
-  return createErrorResponse(ctx, 400, ErrorCode.INSUFFICIENT_BALANCE, 'Insufficient balance for this operation');
-}
-
-function handleSharedError(ctx: Context, error: unknown, logger: Logger): ApiResponse | undefined {
-  if (error instanceof ValidationError) {
-    return createErrorResponse(ctx, 400, ErrorCode.VALIDATION_ERROR, error.message, {
-      field: error.field,
-      reason: error.reason,
-    });
-  }
-  if (error instanceof UnauthorizedError) {
-    return createErrorResponse(ctx, 401, ErrorCode.UNAUTHORIZED, error.message);
-  }
-  if (error instanceof InvalidStateTransitionError) {
-    return createErrorResponse(ctx, 400, ErrorCode.INVALID_ACCOUNT_STATE, error.message, {
-      from: error.from,
-      to: error.to,
-    });
-  }
-  if (error instanceof PaymasterServiceError) {
-    return createErrorResponse(ctx, 502, ErrorCode.PAYMASTER_SERVICE_ERROR, 'Paymaster service error', {
-      reason: error.reason,
-    });
-  }
-  if (error instanceof UnsafeExternalCallError) {
-    logger.error({service: error.service, reason: error.reason}, 'Unsafe external call detected');
-    return createErrorResponse(ctx, 502, ErrorCode.EXTERNAL_SERVICE_ERROR, 'External service returned unsafe data', {
-      service: error.service,
-    });
-  }
-  if (error instanceof ExternalServiceError) {
-    return createErrorResponse(ctx, 502, ErrorCode.EXTERNAL_SERVICE_ERROR, 'External service error', {
-      service: error.service,
-    });
-  }
-  if (error instanceof TimeoutError) {
-    return createErrorResponse(ctx, 504, ErrorCode.TIMEOUT_ERROR, 'Operation timed out', {
-      operation: error.operation,
-    });
-  }
-  return undefined;
-}
-
-/**
- * Format a raw token amount (in wei) to a human-readable string.
- * E.g. 4140000000000000000n with 18 decimals → "4.14"
- */
-function formatTokenAmount(amount: bigint, decimals: number): string {
-  const divisor = 10n ** BigInt(decimals);
-  const whole = amount / divisor;
-  const remainder = amount % divisor;
-  if (remainder === 0n) return whole.toString();
-  const fracStr = remainder.toString().padStart(decimals, '0').replace(/0{1,18}$/, '');
-  return `${whole}.${fracStr}`;
 }

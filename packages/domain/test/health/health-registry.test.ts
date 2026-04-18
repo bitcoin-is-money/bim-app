@@ -1,7 +1,7 @@
 import {createLogger} from '@bim/lib/logger';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {HealthRegistry, type HealthTransitionEvent} from '../../src/health';
-import type {SanitizedError} from '../../src/shared';
+import type {SanitizedError} from '@bim/lib/error';
 
 const silentLogger = createLogger('silent');
 

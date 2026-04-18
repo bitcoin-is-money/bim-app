@@ -1,3 +1,4 @@
+import {serializeError} from '@bim/lib/error';
 import {ActivityReport} from '@bim/domain/notifications';
 import type {AccountRepository, CountOptions, NotificationGateway, TransactionRepository} from '@bim/domain/ports';
 import type {StarknetConfig} from '@bim/domain/shared';
@@ -51,7 +52,7 @@ export class ActivityMonitoring {
       await this.notificationGateway.send(message);
     } catch (err: unknown) {
       this.log.error(
-        {cause: err instanceof Error ? err.message : String(err)},
+        {cause: serializeError(err)},
         'Activity report failed',
       );
     }

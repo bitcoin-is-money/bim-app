@@ -1,3 +1,5 @@
+import {serializeError} from './serialize-error';
+
 /**
  * Structured, log-safe representation of an error from an external service.
  *
@@ -23,9 +25,22 @@ export type SanitizedErrorKind =
   | 'timeout'
   | 'unknown';
 
+/**
+ * Subset of SanitizedError kinds that represent a confirmed infrastructure
+ * failure (network layer, reverse proxy, DNS, etc.) — as opposed to a
+ * functional error from the SDK or an unrecognized shape. Only these kinds
+ * should flip the HealthRegistry into `down` and trigger a Slack alert.
+ */
+const INFRA_FAILURE_KINDS: ReadonlySet<SanitizedErrorKind> = new Set([
+  'cloudflare_tunnel',
+  'html_response',
+  'network',
+  'timeout',
+]);
+
 export namespace SanitizedError {
   const TIMEOUT_KEYWORDS: readonly string[] = ['timed out', 'timeout', 'aborted'];
-  const NETWORK_KEYWORDS: readonly string[] = ['fetch', 'network', 'econnrefused', 'enotfound'];
+  const NETWORK_KEYWORDS: readonly string[] = ['fetch', 'network', 'econn', 'enotfound', 'socket'];
 
   /**
    * Generic error sanitizer for calls to external services.
@@ -43,7 +58,7 @@ export namespace SanitizedError {
    * to this helper for the generic fallback.
    */
   export function sanitize(service: string, err: unknown): SanitizedError {
-    const message = err instanceof Error ? err.message : String(err);
+    const message = serializeError(err);
     const lower = message.toLowerCase();
     if (TIMEOUT_KEYWORDS.some(kw => lower.includes(kw))) {
       return {kind: 'timeout', summary: `${service} timeout: ${message}`};
@@ -52,5 +67,9 @@ export namespace SanitizedError {
       return {kind: 'network', summary: `${service} unreachable: ${message}`};
     }
     return {kind: 'unknown', summary: `${service} error: ${message}`};
+  }
+
+  export function isInfraFailure(error: SanitizedError): boolean {
+    return INFRA_FAILURE_KINDS.has(error.kind);
   }
 }

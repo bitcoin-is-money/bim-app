@@ -1,6 +1,6 @@
 /**
- * API Error codes for i18n support.
- * Frontend uses these codes to look up translated messages.
+ * Domain error codes.
+ * Used for i18n lookup on the frontend and for structured API error responses.
  */
 export const ErrorCode = {
   // Generic

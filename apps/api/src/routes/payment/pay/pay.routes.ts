@@ -1,3 +1,4 @@
+import {serializeError} from '@bim/lib/error';
 import {DonationReceived} from '@bim/domain/notifications';
 import type {PaymentResult, PreparedCalls, PreparedPaymentData} from '@bim/domain/payment';
 import type {Amount} from '@bim/domain/shared';
@@ -175,7 +176,7 @@ export function createPayRoutes(
           network: appContext.starknetConfig.network,
         });
         appContext.gateways.notification.send(message).catch((err: unknown) => {
-          log.warn({cause: err instanceof Error ? err.message : String(err)}, 'Failed to send donation notification');
+          log.warn({cause: serializeError(err)}, 'Failed to send donation notification');
         });
       }
 

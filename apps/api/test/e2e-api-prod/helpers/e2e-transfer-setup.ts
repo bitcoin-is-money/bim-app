@@ -1,3 +1,4 @@
+import {serializeError} from '@bim/lib/error';
 import type {Logger} from 'pino';
 import {afterAll, afterEach, beforeAll, expect, it} from 'vitest';
 import {type E2eSecretFile, loadAndLoginAccounts, type SenderStrategy, type TransferPair} from './e2e-accounts.js';
@@ -147,14 +148,14 @@ export function setupTransferTest(
       try {
         await ctx.pair.sender.refreshSwapStatus();
       } catch (err) {
-        log.warn({cause: err instanceof Error ? err.message : String(err)}, 'Sender swap status refresh failed');
+        log.warn({cause: serializeError(err)}, 'Sender swap status refresh failed');
       }
     }
     if (ctx.pair?.receiver?.getSwapId() !== undefined) {
       try {
         await ctx.pair.receiver.refreshSwapStatus();
       } catch (err) {
-        log.warn({cause: err instanceof Error ? err.message : String(err)}, 'Receiver swap status refresh failed');
+        log.warn({cause: serializeError(err)}, 'Receiver swap status refresh failed');
       }
     }
 

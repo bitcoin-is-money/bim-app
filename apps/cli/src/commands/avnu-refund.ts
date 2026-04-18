@@ -1,3 +1,4 @@
+import {serializeError} from '@bim/lib/error';
 import {StarknetAddress} from '@bim/domain/account';
 import {AvnuCreditsRecharged} from '@bim/domain/notifications';
 import type {NotificationGateway} from '@bim/domain/ports';
@@ -37,7 +38,7 @@ async function waitForCreditsIncrease(
     } catch (err: unknown) {
       console.warn(
         'getCredits() failed during poll:',
-        err instanceof Error ? err.message : String(err),
+        serializeError(err),
       );
     }
     const elapsedSec = Math.floor((CREDITS_POLL_TIMEOUT_MS - (deadline - Date.now())) / 1000);
@@ -91,7 +92,7 @@ export async function run(args: string[]): Promise<void> {
   } catch (err: unknown) {
     console.warn(
       'Could not read AVNU credits before refund:',
-      err instanceof Error ? err.message : String(err),
+      serializeError(err),
     );
   }
 
@@ -137,7 +138,7 @@ export async function run(args: string[]): Promise<void> {
   } catch (err: unknown) {
     console.warn(
       'Failed to send recharge notification:',
-      err instanceof Error ? err.message : String(err),
+      serializeError(err),
     );
   }
 }

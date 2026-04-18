@@ -94,19 +94,21 @@ No other comment styles (`/* */`, single-line `/** */`, bare multi-line without 
 ## Error Handling
 
 ```typescript
-// Domain errors
+// Domain errors carry their own ErrorCode and i18n args
 export class FooNotFoundError extends DomainError {
+  readonly errorCode = ErrorCode.FOO_NOT_FOUND;
   constructor(readonly fooId: FooId) { super(`Foo not found: ${fooId}`); }
+  override get args() { return {fooId: this.fooId}; }
 }
 
-// Typed catch
+// Serialize unknown errors safely (never use String(err))
+import {serializeError} from '@bim/lib/error';
 catch (err: unknown) {
-  if (err instanceof DomainError) { /* handle */ }
-  throw err;
+  logger.warn({cause: serializeError(err)}, 'Operation failed');
 }
 ```
 
-Route errors via `handleDomainError()` in `apps/api/src/errors/error-handler.ts`.
+Route errors via `handleDomainError()` in `apps/api/src/errors/error-handler.ts`. The handler uses a `Map<ErrorCode, ErrorStatus>` — add new error codes there, not instanceof checks.
 
 ## Accepted Patterns
 
@@ -148,7 +150,7 @@ Patterns that repeatedly trip the lint config. Write the good form from the star
 | Test-only methods in prod code | Test helpers in `test/helpers/` |
 | `process.env.X!` non-null assertion | `const x = process.env.X; if (!x) throw new Error('X is required');` |
 | `Record<K,V>` indexed with a variable | `Map<K,V>` **or** literal-branch helper (`network === 'mainnet' ? X.mainnet : X.testnet`) — avoids `security/detect-object-injection` |
-| `String(unknown)` in template literal | Narrow first: `typeof v === 'string' ? v : JSON.stringify(v)` |
+| `String(unknown)` or `err instanceof Error ? err.message : String(err)` | Use `serializeError(err)` from `@bim/lib/error` |
 | `async` without `await` | Drop `async`, return `Promise.resolve()` if the type requires a Promise |
 | `Function` type / `& Function` | `NonNullable<NonNullable<T['k']>['sub']>` or a precise signature |
 | Pass-through subclass constructor | Delete it — let the parent constructor be inherited (make parent `public`) |

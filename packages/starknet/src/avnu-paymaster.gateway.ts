@@ -8,11 +8,11 @@ import type {
   StarknetCall,
   StarknetTransaction
 } from "@bim/domain/ports";
+import {SanitizedError, serializeError} from '@bim/lib/error';
 import {
   ExternalServiceError,
   InsufficientBalanceError,
   PaymasterServiceError,
-  SanitizedError
 } from "@bim/domain/shared";
 import type {WALLET_API} from '@starknet-io/starknet-types-010';
 
@@ -213,9 +213,7 @@ export class AvnuPaymasterGateway implements PaymasterGateway {
       if (err instanceof ExternalServiceError || err instanceof PaymasterServiceError) {
         throw err;
       }
-      const message = err instanceof Error
-        ? err.message
-        : String(err);
+      const message = serializeError(err);
       if (this.isPaymasterApiKeyError(message)) {
         throw new PaymasterServiceError(message);
       }
@@ -279,9 +277,7 @@ export class AvnuPaymasterGateway implements PaymasterGateway {
       if (err instanceof ExternalServiceError || err instanceof PaymasterServiceError) {
         throw err;
       }
-      const message = err instanceof Error
-        ? err.message
-        : String(err);
+      const message = serializeError(err);
       if (this.isPaymasterApiKeyError(message)) {
         throw new PaymasterServiceError(message);
       }
@@ -391,7 +387,7 @@ export class AvnuPaymasterGateway implements PaymasterGateway {
       }
       throw new ExternalServiceError(
         'AVNU Paymaster',
-        `SNIP-29 deploy failed: ${err instanceof Error ? err.message : String(err)}`,
+        `SNIP-29 deploy failed: ${serializeError(err)}`,
       );
     }
   }
@@ -430,7 +426,7 @@ export class AvnuPaymasterGateway implements PaymasterGateway {
       }
       throw new ExternalServiceError(
         'AVNU Paymaster',
-        `Build failed: ${error instanceof Error ? error.message : String(error)}`,
+        `Build failed: ${serializeError(error)}`,
       );
     }
   }
@@ -501,7 +497,7 @@ export class AvnuPaymasterGateway implements PaymasterGateway {
       }
       throw new ExternalServiceError(
         'AVNU Paymaster',
-        `sponsor-activity failed: ${err instanceof Error ? err.message : String(err)}`,
+        `sponsor-activity failed: ${serializeError(err)}`,
       );
     }
   }
@@ -532,7 +528,7 @@ export class AvnuPaymasterGateway implements PaymasterGateway {
 }
 
 function sanitizeAvnuError(err: unknown): SanitizedError {
-  const message = err instanceof Error ? err.message : String(err);
+  const message = serializeError(err);
   const lower = message.toLowerCase();
   // AVNU-specific: error 163 returned when API key is invalid or credits are exhausted.
   if (lower.includes('163') && lower.includes('api-key')) {

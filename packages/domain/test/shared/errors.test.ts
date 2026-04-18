@@ -1,6 +1,7 @@
 import {
   AlreadyExistsError,
   DomainError,
+  ErrorCode,
   ExternalServiceError,
   InvalidStateTransitionError,
   NotFoundError,
@@ -13,6 +14,7 @@ import {describe, expect, it} from 'vitest';
 describe('DomainError', () => {
   it('should be Error', () => {
     class SampleError extends DomainError {
+      readonly errorCode = ErrorCode.INTERNAL_ERROR;
       constructor() {
         super('sample');
       }

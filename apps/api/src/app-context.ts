@@ -1,3 +1,4 @@
+import {serializeError} from '@bim/lib/error';
 import type {Database} from "@bim/db/database";
 import {AccountService} from "@bim/domain/account";
 import {AuthService, type SessionConfig, SessionService} from "@bim/domain/auth";
@@ -152,7 +153,7 @@ export namespace AppContext {
         const message = ServiceHealthChange.fromEvent(event);
         notificationGateway.send(message).catch((err: unknown) => {
           log.warn(
-            {component: event.component, cause: err instanceof Error ? err.message : String(err)},
+            {component: event.component, cause: serializeError(err)},
             'Failed to send health change notification',
           );
         });

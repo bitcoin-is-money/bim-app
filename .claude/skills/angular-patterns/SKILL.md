@@ -119,7 +119,7 @@ Suppress per-request: `new HttpContext().set(SUPPRESS_ERROR_NOTIFICATION, true)`
 
 - Interfaces for API response shapes (sync with backend types)
 - Classes only for value objects with behavior (`Amount`)
-- `ErrorCode` mirrors `apps/api/src/errors/error-codes.ts`
+- `ErrorCode` mirrors `packages/domain/src/shared/error-codes.ts` (source of truth)
 
 ## Mock Backend
 
