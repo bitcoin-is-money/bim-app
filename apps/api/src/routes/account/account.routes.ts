@@ -1,10 +1,9 @@
 import type {Account} from '@bim/domain/account';
-import {AccountId} from '@bim/domain/account';
 import type {TypedResponse} from 'hono';
 import {Hono} from 'hono';
 
 import type {AppContext} from '../../app-context';
-import {type ApiErrorResponse, createErrorResponse, ErrorCode, handleDomainError} from '../../errors';
+import {type ApiErrorResponse, handleDomainError} from '../../errors';
 import {createAuthMiddleware} from '../../middleware/auth.middleware';
 import type {AuthenticatedHono} from '../../types.js';
 import type {
@@ -24,8 +23,7 @@ export function createAccountRoutes(appCtx: AppContext): AuthenticatedHono {
 
   app.use('*', createAuthMiddleware(appCtx));
 
-  // Service from AppContext (initialized once at startup)
-  const {account: accountService} = appCtx.services;
+  const {deployAccount, getBalance, getDeploymentStatus} = appCtx.useCases;
 
   // ---------------------------------------------------------------------------
   // Get Current Account
@@ -52,8 +50,8 @@ export function createAccountRoutes(appCtx: AppContext): AuthenticatedHono {
     try {
       const account: Account = honoCtx.get('account');
 
-      const result = await accountService.deploy({
-        accountId: AccountId.of(account.id),
+      const result = await deployAccount.deploy({
+        accountId: account.id,
       });
 
       return honoCtx.json<DeployAccountResponse>({
@@ -71,29 +69,26 @@ export function createAccountRoutes(appCtx: AppContext): AuthenticatedHono {
   // ---------------------------------------------------------------------------
 
   app.get('/deployment-status', async (honoCtx): Promise<TypedResponse<GetDeploymentStatusResponse | ApiErrorResponse>> => {
-    const account: Account = honoCtx.get('account');
+    try {
+      const account: Account = honoCtx.get('account');
 
-    // Reload account to get the latest status
-    const freshAccount: Account | undefined = await appCtx.repositories.account.findById(
-      AccountId.of(account.id),
-    );
+      const result = await getDeploymentStatus.getDeploymentStatus({accountId: account.id});
 
-    if (!freshAccount) {
-      return createErrorResponse(honoCtx, 404, ErrorCode.ACCOUNT_NOT_FOUND, 'Account not found');
+      return honoCtx.json<GetDeploymentStatusResponse>({
+        status: result.status,
+        txHash: result.txHash ?? null,
+        isDeployed: result.isDeployed,
+      });
+    } catch (error) {
+      return handleDomainError(honoCtx, error, log);
     }
-
-    return honoCtx.json<GetDeploymentStatusResponse>({
-      status: freshAccount.getStatus(),
-      txHash: freshAccount.getDeploymentTxHash() ?? null,
-      isDeployed: freshAccount.isDeployed(),
-    });
   });
 
   app.get('/balance', async (honoCtx): Promise<TypedResponse<GetBalanceResponse | ApiErrorResponse>> => {
     try {
       const account: Account = honoCtx.get('account');
 
-      const result = await accountService.getBalance({accountId: account.id});
+      const result = await getBalance.getBalance({accountId: account.id});
 
       return honoCtx.json<GetBalanceResponse>(result);
     } catch (error) {

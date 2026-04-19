@@ -24,7 +24,7 @@ export function getSessionId(
  * Also refreshes the session cookie on each request (sliding session).
  */
 export function createAuthMiddleware(appContext: AppContext) {
-  const {session: sessionService} = appContext.services;
+  const {validateSession} = appContext.useCases;
   const maxAgeSec = Math.floor(appContext.sessionConfig.durationMs / 1000);
 
   return async (
@@ -37,7 +37,7 @@ export function createAuthMiddleware(appContext: AppContext) {
     }
 
     try {
-      const result = await sessionService.validate({sessionId});
+      const result = await validateSession.validate({sessionId});
       ctx.set('account', result.account);
       ctx.set('session', result.session);
 

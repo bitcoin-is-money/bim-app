@@ -1,11 +1,11 @@
 import {serializeError} from '@bim/lib/error';
 import type {Database} from "@bim/db/database";
-import {AccountService} from "@bim/domain/account";
-import {AuthService, type SessionConfig, SessionService} from "@bim/domain/auth";
-import {CurrencyService} from "@bim/domain/currency";
+import {AccountService, type DeployAccountUseCase, type GetBalanceUseCase, type GetDeploymentStatusUseCase} from "@bim/domain/account";
+import {AuthService, type BeginLoginUseCase, type BeginRegistrationUseCase, type CompleteLoginUseCase, type CompleteRegistrationUseCase, type InvalidateSessionUseCase, type SessionConfig, SessionService, type ValidateSessionUseCase} from "@bim/domain/auth";
+import {CurrencyService, type GetPricesUseCase} from "@bim/domain/currency";
 import {type ComponentName, HealthRegistry, type HealthTransitionEvent} from "@bim/domain/health";
 import {ServiceHealthChange} from "@bim/domain/notifications";
-import {Erc20CallFactory, FeeConfig, ParseService, PaymentBuildCache, PayService, ReceiveService} from "@bim/domain/payment";
+import {BitcoinReceiveService, type BuildDonationUseCase, type BuildPaymentUseCase, type CommitReceiveUseCase, Erc20CallFactory, type ExecutePaymentUseCase, FeeConfig, ParseService, PaymentBuildCache, PaymentBuilderService, PaymentExecutionService, PayService, type PreparePaymentUseCase, ReceiveBuildCache, type ReceivePaymentUseCase, ReceiveService} from "@bim/domain/payment";
 import type {
   AccountRepository,
   AtomiqGateway,
@@ -15,6 +15,7 @@ import type {
   PaymasterGateway,
   PriceGateway,
   SessionRepository,
+  SignatureProcessor,
   StarknetGateway,
   SwapGateway,
   SwapRepository,
@@ -23,8 +24,8 @@ import type {
   WebAuthnGateway,
 } from "@bim/domain/ports";
 import type {StarknetConfig} from "@bim/domain/shared";
-import {SwapService,} from "@bim/domain/swap";
-import {TransactionService, UserSettingsService} from "@bim/domain/user";
+import {type FetchSwapLimitsUseCase, type FetchSwapStatusUseCase, SwapService} from "@bim/domain/swap";
+import {type DeleteTransactionDescriptionUseCase, type FetchSettingsUseCase, type FetchTransactionsUseCase, type SetTransactionDescriptionUseCase, TransactionService, type UpdateSettingsUseCase, UserSettingsService} from "@bim/domain/user";
 import type pg from 'pg';
 import type {Logger} from "pino";
 import {
@@ -44,6 +45,7 @@ import {
   SimpleWebAuthnGateway,
   SlackNotificationGateway,
   StarknetRpcGateway,
+  WebAuthnSignatureProcessor,
 } from "./adapters";
 import type {AppConfig} from "./app-config";
 
@@ -68,6 +70,7 @@ export interface AppContext {
     lightningDecoder: LightningDecoder;
     price: PriceGateway;
     notification: NotificationGateway;
+    signatureProcessor: SignatureProcessor;
   };
   healthRegistry: HealthRegistry;
   services: {
@@ -81,6 +84,37 @@ export interface AppContext {
     payService: PayService;
     receive: ReceiveService;
     currency: CurrencyService;
+  };
+  useCases: {
+    // Account
+    deployAccount: DeployAccountUseCase;
+    getBalance: GetBalanceUseCase;
+    getDeploymentStatus: GetDeploymentStatusUseCase;
+    // Auth
+    beginRegistration: BeginRegistrationUseCase;
+    completeRegistration: CompleteRegistrationUseCase;
+    beginLogin: BeginLoginUseCase;
+    completeLogin: CompleteLoginUseCase;
+    validateSession: ValidateSessionUseCase;
+    invalidateSession: InvalidateSessionUseCase;
+    // User
+    fetchSettings: FetchSettingsUseCase;
+    updateSettings: UpdateSettingsUseCase;
+    fetchTransactions: FetchTransactionsUseCase;
+    setTransactionDescription: SetTransactionDescriptionUseCase;
+    deleteTransactionDescription: DeleteTransactionDescriptionUseCase;
+    // Currency
+    getPrices: GetPricesUseCase;
+    // Swap
+    fetchSwapLimits: FetchSwapLimitsUseCase;
+    fetchSwapStatus: FetchSwapStatusUseCase;
+    // Payment
+    preparePayment: PreparePaymentUseCase;
+    buildPayment: BuildPaymentUseCase;
+    executePayment: ExecutePaymentUseCase;
+    receivePayment: ReceivePaymentUseCase;
+    commitReceive: CommitReceiveUseCase;
+    buildDonation: BuildDonationUseCase;
   };
   paymentBuildCache: PaymentBuildCache;
   sessionConfig: SessionConfig;
@@ -188,6 +222,10 @@ export namespace AppContext {
       lightningDecoder: new Bolt11LightningDecoder(),
       price: new CoinGeckoPriceGateway(rootLogger, healthRegistry),
       notification: notificationGateway,
+      signatureProcessor: new WebAuthnSignatureProcessor({
+        origin: config.webauthn.origin,
+        rpId: config.webauthn.rpId,
+      }, rootLogger),
       ...overrides?.gateways,
     };
 
@@ -281,10 +319,78 @@ export namespace AppContext {
     });
 
     const paymentBuildCache = new PaymentBuildCache();
+    const receiveBuildCache = new ReceiveBuildCache();
+
+    const bitcoinReceiveService = new BitcoinReceiveService({
+      receiveService,
+      swapService,
+      starknetGateway: gateways.starknet,
+      dexGateway: gateways.dex,
+      signatureProcessor: gateways.signatureProcessor,
+      receiveBuildCache,
+      transactionRepository: repositories.transaction,
+      notificationGateway: gateways.notification,
+      starknetConfig,
+      logger: rootLogger,
+    });
+    receiveService.setBitcoinReceiveService(bitcoinReceiveService);
+
+    const paymentBuilderService = new PaymentBuilderService({
+      payService,
+      parseService,
+      starknetGateway: gateways.starknet,
+      paymentBuildCache,
+      starknetConfig,
+      logger: rootLogger,
+    });
+
+    const paymentExecutionService = new PaymentExecutionService({
+      payService,
+      starknetGateway: gateways.starknet,
+      signatureProcessor: gateways.signatureProcessor,
+      paymentBuildCache,
+      accountRepository: repositories.account,
+      notificationGateway: gateways.notification,
+      starknetConfig,
+      logger: rootLogger,
+    });
+
+    const useCases: AppContext['useCases'] = {
+      // Account
+      deployAccount: accountService,
+      getBalance: accountService,
+      getDeploymentStatus: accountService,
+      // Auth
+      beginRegistration: authService,
+      completeRegistration: authService,
+      beginLogin: authService,
+      completeLogin: authService,
+      validateSession: sessionService,
+      invalidateSession: sessionService,
+      // User
+      fetchSettings: userSettingsService,
+      updateSettings: userSettingsService,
+      fetchTransactions: transactionService,
+      setTransactionDescription: transactionService,
+      deleteTransactionDescription: transactionService,
+      // Currency
+      getPrices: currencyService,
+      // Swap
+      fetchSwapLimits: swapService,
+      fetchSwapStatus: swapService,
+      // Payment
+      preparePayment: payService,
+      buildPayment: paymentBuilderService,
+      executePayment: paymentExecutionService,
+      receivePayment: receiveService,
+      commitReceive: receiveService,
+      buildDonation: paymentBuilderService,
+    };
 
     return {
       repositories,
       gateways,
+      useCases,
       paymentBuildCache,
       services: {
         account: accountService,
