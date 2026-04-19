@@ -1,9 +1,8 @@
 import {StarknetAddress} from '@bim/domain/account';
-import {InvalidPaymentAmountError, ReceiveService} from '@bim/domain/payment';
+import {type BitcoinReceiveService, InvalidPaymentAmountError, ReceiveService} from '@bim/domain/payment';
 import type {StarknetCall} from '@bim/domain/ports';
 import {Amount} from '@bim/domain/shared';
 import {
-  BitcoinAddress,
   LightningInvoice,
   Swap,
   SwapAmountError,
@@ -69,6 +68,7 @@ function createMockBitcoinReceiveSwap(): Swap {
 describe('ReceiveService', () => {
   let service: ReceiveService;
   let mockSwapService: SwapService;
+  let mockBitcoinReceiveService: BitcoinReceiveService;
 
   beforeEach(() => {
     mockSwapService = {
@@ -83,11 +83,6 @@ describe('ReceiveService', () => {
         expiresAt: new Date(Date.now() + 60 * 60 * 1000),
       }),
       saveBitcoinCommit: vi.fn().mockResolvedValue(createMockBitcoinReceiveSwap()),
-      completeBitcoinToStarknet: vi.fn().mockResolvedValue({
-        swap: createMockBitcoinReceiveSwap(),
-        depositAddress: BTC_DEPOSIT_ADDRESS,
-        bip21Uri: `bitcoin:${BTC_DEPOSIT_ADDRESS}?amount=0.002`,
-      }),
       createStarknetToLightning: vi.fn(),
       createStarknetToBitcoin: vi.fn(),
       fetchStatus: vi.fn(),
@@ -95,8 +90,11 @@ describe('ReceiveService', () => {
       claim: vi.fn(),
     } as unknown as SwapService;
 
+    mockBitcoinReceiveService = {} as unknown as BitcoinReceiveService;
+
     service = new ReceiveService({
       swapService: mockSwapService,
+      bitcoinReceiveService: mockBitcoinReceiveService,
       starknetConfig: {network: 'mainnet', bitcoinNetwork: 'mainnet', rpcUrl: 'http://localhost:5050', accountClassHash: '0x123', wbtcTokenAddress: WBTC_TOKEN_ADDRESS, strkTokenAddress: STRK_TOKEN_ADDRESS, feeTreasuryAddress: FEE_TREASURY_ADDRESS},
       logger: logger,
     });
@@ -352,58 +350,4 @@ describe('ReceiveService', () => {
     });
   });
 
-  // ===========================================================================
-  // Bitcoin receive — Phase 2 (complete)
-  // ===========================================================================
-
-  describe('completeBitcoinReceive', () => {
-    it('delegates to swapService.completeBitcoinToStarknet and returns deposit address', async () => {
-      const result = await service.completeBitcoinReceive({
-        swapId: 'recv-btc-002',
-        useUriPrefix: true,
-      });
-
-      expect(mockSwapService.completeBitcoinToStarknet).toHaveBeenCalledWith({
-        swapId: 'recv-btc-002',
-      });
-
-      expect(result.network).toBe('bitcoin');
-      expect(result.swapId).toBe(SwapId.of('recv-btc-002'));
-      expect(result.depositAddress).toBe(BitcoinAddress.of(BTC_DEPOSIT_ADDRESS));
-      expect(result.bip21Uri).toBe(`bitcoin:${BTC_DEPOSIT_ADDRESS}?amount=0.002`);
-      expect(result.amount.getSat()).toBe(200_000n);
-      expect(result.expiresAt).toBeInstanceOf(Date);
-    });
-
-    it('omits the bitcoin: prefix when useUriPrefix is false', async () => {
-      const result = await service.completeBitcoinReceive({
-        swapId: 'recv-btc-002',
-        useUriPrefix: false,
-      });
-
-      expect(result.bip21Uri).toBe(`${BTC_DEPOSIT_ADDRESS}?amount=0.002`);
-    });
-
-    it('includes the bitcoin: prefix when useUriPrefix is true', async () => {
-      const result = await service.completeBitcoinReceive({
-        swapId: 'recv-btc-002',
-        useUriPrefix: true,
-      });
-
-      expect(result.bip21Uri).toBe(`bitcoin:${BTC_DEPOSIT_ADDRESS}?amount=0.002`);
-    });
-
-    it('propagates errors from swap service', async () => {
-      vi.mocked(mockSwapService.completeBitcoinToStarknet).mockRejectedValue(
-        new SwapCreationError('Failed to retrieve deposit address'),
-      );
-
-      await expect(
-        service.completeBitcoinReceive({
-          swapId: 'recv-btc-002',
-          useUriPrefix: true,
-        }),
-      ).rejects.toThrow(SwapCreationError);
-    });
-  });
 });

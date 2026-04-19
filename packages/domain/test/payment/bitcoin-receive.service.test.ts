@@ -3,10 +3,9 @@ import {
   BitcoinReceiveService,
   ReceiveBuildCache,
 } from '@bim/domain/payment';
-import type {ReceiveService} from '@bim/domain/payment';
 import type {NotificationGateway, SignatureProcessor, StarknetCall, StarknetGateway, SwapGateway, TransactionRepository} from '@bim/domain/ports';
 import {Amount, BuildExpiredError, ExternalServiceError, ForbiddenError, InsufficientBalanceError} from '@bim/domain/shared';
-import {BitcoinAddress, SwapId} from '@bim/domain/swap';
+import {BitcoinAddress, Swap, SwapId} from '@bim/domain/swap';
 import type {SwapService} from '@bim/domain/swap';
 import {createLogger} from '@bim/lib/logger';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
@@ -33,13 +32,24 @@ function createStrkApproveCall(amount: bigint): StarknetCall {
   };
 }
 
+function createMockBitcoinReceiveSwap(): Swap {
+  return Swap.createBitcoinToStarknet({
+    id: SwapId.of('swap-btc-1'),
+    amount: Amount.ofSatoshi(200_000n),
+    destinationAddress: StarknetAddress.of('0x0' + '1'.repeat(63)),
+    depositAddress: BTC_DEPOSIT_ADDRESS,
+    expiresAt: new Date('2030-01-01'),
+    description: 'Received',
+    accountId: 'account-001',
+  });
+}
+
 describe('BitcoinReceiveService', () => {
   let service: BitcoinReceiveService;
   let receiveBuildCache: ReceiveBuildCache;
   let mockStarknetGateway: StarknetGateway;
   let mockDexGateway: SwapGateway;
   let mockSignatureProcessor: SignatureProcessor;
-  let mockReceiveService: ReceiveService;
   let mockSwapService: SwapService;
   let mockTransactionRepo: TransactionRepository;
   let mockNotificationGateway: NotificationGateway;
@@ -66,19 +76,13 @@ describe('BitcoinReceiveService', () => {
       process: vi.fn().mockReturnValue(['0xsig']),
     };
 
-    mockReceiveService = {
-      completeBitcoinReceive: vi.fn().mockResolvedValue({
-        network: 'bitcoin',
-        swapId: SwapId.of('swap-btc-1'),
-        depositAddress: BitcoinAddress.of(BTC_DEPOSIT_ADDRESS),
-        bip21Uri: `bitcoin:${BTC_DEPOSIT_ADDRESS}?amount=0.002`,
-        amount: Amount.ofSatoshi(200_000n),
-        expiresAt: new Date('2030-01-01'),
-      }),
-    } as unknown as ReceiveService;
-
     mockSwapService = {
       saveBitcoinCommit: vi.fn().mockResolvedValue(undefined),
+      completeBitcoinToStarknet: vi.fn().mockResolvedValue({
+        swap: createMockBitcoinReceiveSwap(),
+        depositAddress: BTC_DEPOSIT_ADDRESS,
+        bip21Uri: `bitcoin:${BTC_DEPOSIT_ADDRESS}?amount=0.002`,
+      }),
     } as unknown as SwapService;
 
     mockTransactionRepo = {
@@ -90,7 +94,6 @@ describe('BitcoinReceiveService', () => {
     } as unknown as NotificationGateway;
 
     service = new BitcoinReceiveService({
-      receiveService: mockReceiveService,
       swapService: mockSwapService,
       starknetGateway: mockStarknetGateway,
       dexGateway: mockDexGateway,
@@ -99,8 +102,8 @@ describe('BitcoinReceiveService', () => {
       transactionRepository: mockTransactionRepo,
       notificationGateway: mockNotificationGateway,
       starknetConfig: {
-        network: 'testnet',
-        bitcoinNetwork: 'testnet',
+        network: 'mainnet',
+        bitcoinNetwork: 'mainnet',
         rpcUrl: 'http://localhost:5050',
         accountClassHash: '0x123',
         wbtcTokenAddress: WBTC_TOKEN_ADDRESS,
@@ -283,9 +286,45 @@ describe('BitcoinReceiveService', () => {
       expect(mockSwapService.saveBitcoinCommit).toHaveBeenCalledWith(
         expect.objectContaining({swapId: 'swap-btc-1', commitTxHash: '0x' + 'ab'.repeat(32)}),
       );
+      expect(mockSwapService.completeBitcoinToStarknet).toHaveBeenCalledWith({swapId: 'swap-btc-1'});
       expect(mockTransactionRepo.saveDescription).toHaveBeenCalled();
       expect(result.depositAddress).toBe(BitcoinAddress.of(BTC_DEPOSIT_ADDRESS));
-      expect(result.bip21Uri).toContain(BTC_DEPOSIT_ADDRESS);
+      expect(result.bip21Uri).toBe(`bitcoin:${BTC_DEPOSIT_ADDRESS}?amount=0.002`);
+    });
+
+    it('omits the bitcoin: prefix when build.useUriPrefix is false', async () => {
+      const account = createAccount('deployed');
+      receiveBuildCache.set('test-build', {
+        swapId: 'swap-btc-1',
+        typedData: {mock: true},
+        senderAddress: account.requireStarknetAddress(),
+        accountId: account.id,
+        amount: Amount.ofSatoshi(200_000n),
+        expiresAt: new Date('2030-01-01'),
+        description: 'Received',
+        useUriPrefix: false,
+        createdAt: Date.now(),
+      });
+
+      const result = await service.commitAndComplete({
+        buildId: 'test-build',
+        assertion: MOCK_ASSERTION,
+        account,
+      });
+
+      expect(result.bip21Uri).toBe(`${BTC_DEPOSIT_ADDRESS}?amount=0.002`);
+    });
+
+    it('propagates errors from swapService.completeBitcoinToStarknet', async () => {
+      const account = createAccount('deployed');
+      seedBuild(account);
+      vi.mocked(mockSwapService.completeBitcoinToStarknet).mockRejectedValue(
+        new Error('atomiq unavailable'),
+      );
+
+      await expect(
+        service.commitAndComplete({buildId: 'test-build', assertion: MOCK_ASSERTION, account}),
+      ).rejects.toThrow('atomiq unavailable');
     });
 
     it('sends alert on invalid-owner-sig error', async () => {
