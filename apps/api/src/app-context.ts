@@ -305,12 +305,6 @@ export namespace AppContext {
       logger: rootLogger,
     });
 
-    const receiveService = new ReceiveService({
-      swapService,
-      starknetConfig,
-      logger: rootLogger,
-    });
-
     const currencyService = new CurrencyService({
       priceGateway: gateways.price,
       logger: rootLogger,
@@ -320,7 +314,6 @@ export namespace AppContext {
     const receiveBuildCache = new ReceiveBuildCache();
 
     const bitcoinReceiveService = new BitcoinReceiveService({
-      receiveService,
       swapService,
       starknetGateway: gateways.starknet,
       dexGateway: gateways.dex,
@@ -331,7 +324,13 @@ export namespace AppContext {
       starknetConfig,
       logger: rootLogger,
     });
-    receiveService.setBitcoinReceiveService(bitcoinReceiveService);
+
+    const receiveService = new ReceiveService({
+      swapService,
+      bitcoinReceiveService,
+      starknetConfig,
+      logger: rootLogger,
+    });
 
     const paymentBuilderService = new PaymentBuilderService({
       payService,

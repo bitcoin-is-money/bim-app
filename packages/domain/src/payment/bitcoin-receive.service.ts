@@ -5,11 +5,10 @@ import {AccountId} from '../account';
 import type {Account} from '../account';
 import {InvalidOwnerSignature} from '../notifications';
 import type {NotificationGateway, SignatureProcessor, StarknetCall, StarknetGateway, SwapGateway, TransactionRepository} from '../ports';
-import {type Amount, BuildExpiredError, ExternalServiceError, ForbiddenError, InsufficientBalanceError, type StarknetAddress, type StarknetConfig} from '../shared';
+import {type Amount, BitcoinAddress, BuildExpiredError, ExternalServiceError, ForbiddenError, InsufficientBalanceError, type StarknetAddress, type StarknetConfig} from '../shared';
 import type {SwapService} from '../swap';
 import {TransactionHash} from '../user/types';
 import type {ReceiveBuildCache} from './receive-build.cache';
-import type {ReceiveService} from './receive.service';
 import type {BitcoinReceiveResult} from './receive.types';
 import type {WebAuthnAssertion} from './types';
 
@@ -18,7 +17,6 @@ import type {WebAuthnAssertion} from './types';
 // =============================================================================
 
 export interface BitcoinReceiveServiceDeps {
-  receiveService: ReceiveService;
   swapService: SwapService;
   starknetGateway: StarknetGateway;
   dexGateway: SwapGateway;
@@ -152,10 +150,22 @@ export class BitcoinReceiveService {
       this.log.warn({txHash, err: descErr}, 'Failed to save security deposit description (non-fatal)');
     }
 
-    return this.deps.receiveService.completeBitcoinReceive({
+    const completeResult = await this.deps.swapService.completeBitcoinToStarknet({
       swapId: build.swapId,
-      useUriPrefix: build.useUriPrefix,
     });
+
+    const bip21Uri = build.useUriPrefix
+      ? completeResult.bip21Uri
+      : completeResult.bip21Uri.replace(/^bitcoin:/i, '');
+
+    return {
+      network: 'bitcoin',
+      swapId: completeResult.swap.data.id,
+      depositAddress: BitcoinAddress.of(completeResult.depositAddress, this.deps.starknetConfig.bitcoinNetwork),
+      bip21Uri,
+      amount: completeResult.swap.data.amount,
+      expiresAt: completeResult.swap.data.expiresAt,
+    };
   }
 
   // ===========================================================================

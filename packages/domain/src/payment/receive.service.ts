@@ -1,9 +1,9 @@
 import type {Logger} from 'pino';
-import {AccountNotDeployedError, Amount, BitcoinAddress, type StarknetAddress, type StarknetConfig} from '../shared';
+import {AccountNotDeployedError, Amount, type StarknetAddress, type StarknetConfig} from '../shared';
 import {LightningInvoice, type SwapService} from '../swap';
 import type {BitcoinReceiveService} from './bitcoin-receive.service';
 import {InvalidPaymentAmountError} from './errors';
-import type {BitcoinReceiveResult, ReceivePaymentInput as DomainReceiveInput, ReceiveResult} from './receive.types';
+import type {ReceivePaymentInput as DomainReceiveInput, ReceiveResult} from './receive.types';
 import type {CommitReceiveInput, CommitReceiveOutput, CommitReceiveUseCase} from './use-case/commit-receive.use-case';
 import type {BitcoinPendingCommitOutput, ReceivePaymentInput, ReceivePaymentOutput, ReceivePaymentUseCase} from './use-case/receive-payment.use-case';
 
@@ -13,6 +13,7 @@ import type {BitcoinPendingCommitOutput, ReceivePaymentInput, ReceivePaymentOutp
 
 export interface ReceiveServiceDeps {
   swapService: SwapService;
+  bitcoinReceiveService: BitcoinReceiveService;
   starknetConfig: StarknetConfig;
   logger: Logger;
 }
@@ -29,17 +30,9 @@ export interface ReceiveServiceDeps {
  */
 export class ReceiveService implements ReceivePaymentUseCase, CommitReceiveUseCase {
   private readonly log: Logger;
-  private bitcoinReceiveService?: BitcoinReceiveService;
 
   constructor(private readonly deps: ReceiveServiceDeps) {
     this.log = deps.logger.child({name: 'receive.service.ts'});
-  }
-
-  /**
-   * Injects the BitcoinReceiveService after construction (avoids circular dep).
-   */
-  setBitcoinReceiveService(service: BitcoinReceiveService): void {
-    this.bitcoinReceiveService = service;
   }
 
   // ===========================================================================
@@ -70,11 +63,7 @@ export class ReceiveService implements ReceivePaymentUseCase, CommitReceiveUseCa
     // Bitcoin pending commit: delegate to BitcoinReceiveService
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive
     if (result.network === 'bitcoin' && 'status' in result && result.status === 'pending_commit') {
-      if (!this.bitcoinReceiveService) {
-        throw new Error('BitcoinReceiveService not initialized');
-      }
-
-      const {buildId, messageHash} = await this.bitcoinReceiveService.handlePendingCommit({
+      const {buildId, messageHash} = await this.deps.bitcoinReceiveService.handlePendingCommit({
         swapId: result.swapId,
         commitCalls: result.commitCalls,
         amount: result.amount,
@@ -106,11 +95,7 @@ export class ReceiveService implements ReceivePaymentUseCase, CommitReceiveUseCa
   // ===========================================================================
 
   async commitReceive(input: CommitReceiveInput): Promise<CommitReceiveOutput> {
-    if (!this.bitcoinReceiveService) {
-      throw new Error('BitcoinReceiveService not initialized');
-    }
-
-    const result = await this.bitcoinReceiveService.commitAndComplete({
+    const result = await this.deps.bitcoinReceiveService.commitAndComplete({
       buildId: input.buildId,
       assertion: input.assertion,
       account: input.account,
@@ -157,32 +142,6 @@ export class ReceiveService implements ReceivePaymentUseCase, CommitReceiveUseCa
           ...(await this.prepareBitcoinReceive(input.destinationAddress, input.amount!, input.accountId, description))};
       }
     }
-  }
-
-  // ===========================================================================
-  // Bitcoin Phase 2: Complete (after commit is on-chain, returns deposit address)
-  // ===========================================================================
-
-  async completeBitcoinReceive(params: {
-    swapId: string;
-    useUriPrefix: boolean;
-  }): Promise<{network: 'bitcoin'} & BitcoinReceiveResult> {
-    const result = await this.deps.swapService.completeBitcoinToStarknet({
-      swapId: params.swapId,
-    });
-
-    const bip21Uri = params.useUriPrefix
-      ? result.bip21Uri
-      : result.bip21Uri.replace(/^bitcoin:/i, '');
-
-    return {
-      network: 'bitcoin',
-      swapId: result.swap.data.id,
-      depositAddress: BitcoinAddress.of(result.depositAddress, this.deps.starknetConfig.bitcoinNetwork),
-      bip21Uri,
-      amount: result.swap.data.amount,
-      expiresAt: result.swap.data.expiresAt,
-    };
   }
 
   // ===========================================================================
