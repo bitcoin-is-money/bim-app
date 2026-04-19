@@ -1,9 +1,6 @@
 import {AccountId} from '../account';
 import type {TransactionRepository} from '../ports';
-import {TransactionHash} from './types';
-import type {DeleteDescriptionInput, DeleteTransactionDescriptionUseCase} from './use-case/delete-transaction-description.use-case';
 import type {FetchTransactionsInput, FetchTransactionsOutput, FetchTransactionsUseCase} from './use-case/fetch-transactions.use-case';
-import type {SetDescriptionInput, SetTransactionDescriptionUseCase} from './use-case/set-transaction-description.use-case';
 
 // =============================================================================
 // Dependencies
@@ -15,8 +12,6 @@ export interface TransactionServiceDeps {
 
 // Re-export UseCase types for backward compatibility
 export type {FetchTransactionsInput, FetchTransactionsOutput} from './use-case/fetch-transactions.use-case';
-export type {SetDescriptionInput} from './use-case/set-transaction-description.use-case';
-export type {DeleteDescriptionInput} from './use-case/delete-transaction-description.use-case';
 
 // =============================================================================
 // Service Class
@@ -25,7 +20,7 @@ export type {DeleteDescriptionInput} from './use-case/delete-transaction-descrip
 /**
  * Service for transaction retrieval.
  */
-export class TransactionService implements FetchTransactionsUseCase, SetTransactionDescriptionUseCase, DeleteTransactionDescriptionUseCase {
+export class TransactionService implements FetchTransactionsUseCase {
   constructor(private readonly deps: TransactionServiceDeps) {}
 
   /**
@@ -42,23 +37,5 @@ export class TransactionService implements FetchTransactionsUseCase, SetTransact
     ]);
 
     return {transactions, total};
-  }
-
-  /**
-   * Sets a description on a transaction.
-   */
-  async setDescription(input: SetDescriptionInput): Promise<void> {
-    const accountId = AccountId.of(input.accountId);
-    const transactionHash = TransactionHash.of(input.transactionHash);
-    await this.deps.transactionRepository.saveDescription(transactionHash, accountId, input.description);
-  }
-
-  /**
-   * Deletes a description from a transaction.
-   */
-  async deleteDescription(input: DeleteDescriptionInput): Promise<void> {
-    const accountId = AccountId.of(input.accountId);
-    const transactionHash = TransactionHash.of(input.transactionHash);
-    await this.deps.transactionRepository.deleteDescription(transactionHash, accountId);
   }
 }

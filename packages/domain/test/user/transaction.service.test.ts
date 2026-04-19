@@ -21,7 +21,6 @@ describe('TransactionService', () => {
       countCreatedSince: vi.fn(),
       existsByHash: vi.fn(),
       saveDescription: vi.fn(),
-      deleteDescription: vi.fn(),
     };
     service = new TransactionService({
       transactionRepository: mockTransactionRepo,
@@ -92,36 +91,6 @@ describe('TransactionService', () => {
       expect(mockTransactionRepo.findByAccountId).toHaveBeenCalledWith(
         accountId,
         {limit: 10, offset: 0},
-      );
-    });
-  });
-
-  describe('setDescription', () => {
-    it('calls saveDescription on repository with validated inputs', async () => {
-      await service.setDescription({
-        accountId: accountId,
-        transactionHash: '0xabc123',
-        description: 'Coffee',
-      });
-
-      expect(mockTransactionRepo.saveDescription).toHaveBeenCalledWith(
-        TransactionHash.of('0xabc123'),
-        accountId,
-        'Coffee',
-      );
-    });
-  });
-
-  describe('deleteDescription', () => {
-    it('calls deleteDescription on repository with validated inputs', async () => {
-      await service.deleteDescription({
-        accountId: accountId,
-        transactionHash: '0xabc123',
-      });
-
-      expect(mockTransactionRepo.deleteDescription).toHaveBeenCalledWith(
-        TransactionHash.of('0xabc123'),
-        accountId,
       );
     });
   });

@@ -8,5 +8,3 @@ export {TransactionService, type TransactionServiceDeps} from './transaction.ser
 export type {FetchSettingsUseCase} from './use-case/fetch-settings.use-case';
 export type {UpdateSettingsUseCase} from './use-case/update-settings.use-case';
 export type {FetchTransactionsUseCase} from './use-case/fetch-transactions.use-case';
-export type {SetTransactionDescriptionUseCase} from './use-case/set-transaction-description.use-case';
-export type {DeleteTransactionDescriptionUseCase} from './use-case/delete-transaction-description.use-case';
