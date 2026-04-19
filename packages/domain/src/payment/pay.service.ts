@@ -10,6 +10,7 @@ import {type FeeConfig, FeeCalculator} from './fee';
 import type {ParseService} from './parse.service';
 import type {PreparedCalls, PreparedPaymentData} from './pay.types';
 import type {ParsedPaymentData} from './types';
+import type {PreparePaymentUseCase} from './use-case/prepare-payment.use-case';
 
 // =============================================================================
 // Dependencies
@@ -38,7 +39,7 @@ export interface PayServiceDeps {
  * - `prepareCalls()`: parse + create Starknet calls (for SNIP-29 build step)
  * - `savePaymentResult()`: persist transaction metadata after execution
  */
-export class PayService {
+export class PayService implements PreparePaymentUseCase {
   private readonly log: Logger;
 
   constructor(private readonly deps: PayServiceDeps) {

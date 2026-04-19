@@ -1,7 +1,9 @@
 import {AccountId} from '../account';
 import type {TransactionRepository} from '../ports';
-import type {Transaction} from './transaction';
 import {TransactionHash} from './types';
+import type {DeleteDescriptionInput, DeleteTransactionDescriptionUseCase} from './use-case/delete-transaction-description.use-case';
+import type {FetchTransactionsInput, FetchTransactionsOutput, FetchTransactionsUseCase} from './use-case/fetch-transactions.use-case';
+import type {SetDescriptionInput, SetTransactionDescriptionUseCase} from './use-case/set-transaction-description.use-case';
 
 // =============================================================================
 // Dependencies
@@ -11,31 +13,10 @@ export interface TransactionServiceDeps {
   transactionRepository: TransactionRepository;
 }
 
-// =============================================================================
-// Input/Output Types
-// =============================================================================
-
-export interface FetchTransactionsInput {
-  accountId: string;
-  limit?: number;
-  offset?: number;
-}
-
-export interface FetchTransactionsOutput {
-  transactions: Transaction[];
-  total: number;
-}
-
-export interface SetDescriptionInput {
-  accountId: string;
-  transactionHash: string;
-  description: string;
-}
-
-export interface DeleteDescriptionInput {
-  accountId: string;
-  transactionHash: string;
-}
+// Re-export UseCase types for backward compatibility
+export type {FetchTransactionsInput, FetchTransactionsOutput} from './use-case/fetch-transactions.use-case';
+export type {SetDescriptionInput} from './use-case/set-transaction-description.use-case';
+export type {DeleteDescriptionInput} from './use-case/delete-transaction-description.use-case';
 
 // =============================================================================
 // Service Class
@@ -44,7 +25,7 @@ export interface DeleteDescriptionInput {
 /**
  * Service for transaction retrieval.
  */
-export class TransactionService {
+export class TransactionService implements FetchTransactionsUseCase, SetTransactionDescriptionUseCase, DeleteTransactionDescriptionUseCase {
   constructor(private readonly deps: TransactionServiceDeps) {}
 
   /**

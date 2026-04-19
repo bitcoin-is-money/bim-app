@@ -18,8 +18,7 @@ export function createSettingsRoutes(appContext: AppContext): AuthenticatedHono 
   const log = appContext.logger.child({name: 'settings.routes.ts'});
   const app: AuthenticatedHono = new Hono();
 
-  // Service from AppContext (initialized once at startup)
-  const {userSettings: userSettingsService} = appContext.services;
+  const {fetchSettings, updateSettings} = appContext.useCases;
 
   // ---------------------------------------------------------------------------
   // Get User Settings
@@ -29,7 +28,7 @@ export function createSettingsRoutes(appContext: AppContext): AuthenticatedHono 
     try {
       const account: Account = honoCtx.get('account');
 
-      const result = await userSettingsService.fetch({accountId: account.id});
+      const result = await fetchSettings.fetch({accountId: account.id});
 
       return honoCtx.json<GetSettingsResponse>({
         language: result.settings.getLanguage(),
@@ -50,7 +49,7 @@ export function createSettingsRoutes(appContext: AppContext): AuthenticatedHono 
       const account: Account = honoCtx.get('account');
       const body: UpdateSettingsBody = UpdateSettingsSchema.parse(await honoCtx.req.json());
 
-      const result = await userSettingsService.update({
+      const result = await updateSettings.update({
         accountId: account.id,
         ...(body.language !== undefined && {
           language: Language.of(body.language)

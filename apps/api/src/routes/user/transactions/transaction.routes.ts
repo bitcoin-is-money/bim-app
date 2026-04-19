@@ -22,8 +22,7 @@ export function createTransactionRoutes(appContext: AppContext): AuthenticatedHo
   const log = appContext.logger.child({name: 'transaction.routes.ts'});
   const app: AuthenticatedHono = new Hono();
 
-  // Service from AppContext (initialized once at startup)
-  const {transaction: transactionService} = appContext.services;
+  const {fetchTransactions, setTransactionDescription, deleteTransactionDescription} = appContext.useCases;
 
   // ---------------------------------------------------------------------------
   // Get Transactions
@@ -38,7 +37,7 @@ export function createTransactionRoutes(appContext: AppContext): AuthenticatedHo
         offset: honoCtx.req.query('offset'),
       });
 
-      const result = await transactionService.fetchForAccount({
+      const result = await fetchTransactions.fetchForAccount({
         accountId: account.id,
         limit,
         offset,
@@ -77,7 +76,7 @@ export function createTransactionRoutes(appContext: AppContext): AuthenticatedHo
       const transactionHash = honoCtx.req.param('transactionHash');
       const {description}: SetDescriptionBody = SetDescriptionSchema.parse(await honoCtx.req.json());
 
-      await transactionService.setDescription({
+      await setTransactionDescription.setDescription({
         accountId: account.id,
         transactionHash,
         description,
@@ -98,7 +97,7 @@ export function createTransactionRoutes(appContext: AppContext): AuthenticatedHo
       const account: Account = honoCtx.get('account');
       const transactionHash = honoCtx.req.param('transactionHash');
 
-      await transactionService.deleteDescription({
+      await deleteTransactionDescription.deleteDescription({
         accountId: account.id,
         transactionHash,
       });

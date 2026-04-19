@@ -5,3 +5,8 @@ export * from './user-settings';
 export * from './transaction';
 export {UserSettingsService, type UserSettingsServiceDeps} from './user-settings.service';
 export {TransactionService, type TransactionServiceDeps} from './transaction.service';
+export type {FetchSettingsUseCase} from './use-case/fetch-settings.use-case';
+export type {UpdateSettingsUseCase} from './use-case/update-settings.use-case';
+export type {FetchTransactionsUseCase} from './use-case/fetch-transactions.use-case';
+export type {SetTransactionDescriptionUseCase} from './use-case/set-transaction-description.use-case';
+export type {DeleteTransactionDescriptionUseCase} from './use-case/delete-transaction-description.use-case';

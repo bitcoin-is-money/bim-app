@@ -172,6 +172,39 @@ export class InsufficientBalanceError extends DomainError {
 }
 
 /**
+ * Error thrown when an operation requires a deployed account but the account is not deployed.
+ */
+export class AccountNotDeployedError extends DomainError {
+  readonly errorCode = ErrorCode.ACCOUNT_NOT_DEPLOYED;
+
+  constructor() {
+    super('Account not deployed');
+  }
+}
+
+/**
+ * Error thrown when a cached build has expired or was not found.
+ */
+export class BuildExpiredError extends DomainError {
+  readonly errorCode = ErrorCode.BUILD_EXPIRED;
+
+  constructor() {
+    super('Build expired or not found');
+  }
+}
+
+/**
+ * Error thrown when a resource does not belong to the requesting account.
+ */
+export class ForbiddenError extends DomainError {
+  readonly errorCode = ErrorCode.FORBIDDEN;
+
+  constructor(message = 'Access denied') {
+    super(message);
+  }
+}
+
+/**
  * Error thrown when an external service fails.
  */
 export class ExternalServiceError extends DomainError {

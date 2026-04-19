@@ -4,9 +4,11 @@ import type {AtomiqGateway, StarknetCall, SwapRepository, TransactionRepository}
 import {Amount, BitcoinAddress, type BitcoinNetwork, StarknetAddress} from '../shared';
 import {TransactionHash} from '../user/types';
 import {SwapAmountError, SwapCreationError, SwapNotFoundError, SwapOwnershipError} from './errors';
+import type {FetchSwapLimitsInput, FetchSwapLimitsOutput, FetchSwapLimitsUseCase} from './use-case/fetch-swap-limits.use-case';
+import type {FetchSwapStatusInput, FetchSwapStatusOutput, FetchSwapStatusUseCase} from './use-case/fetch-swap-status.use-case';
 import {LightningInvoice} from './lightning-invoice';
 import {Swap} from './swap';
-import {type SwapDirection, SwapId, type SwapLimits, type SwapStatus} from './types';
+import {SwapId, type SwapLimits} from './types';
 
 // =============================================================================
 // Dependencies
@@ -113,25 +115,9 @@ export interface CreateStarknetToBitcoinOutput {
 // Input/Output Types - Status & Limits & Claim
 // =============================================================================
 
-export interface FetchSwapStatusInput {
-  swapId: string;
-  accountId: string;
-}
-
-export interface FetchSwapStatusOutput {
-  swap: Swap;
-  status: SwapStatus;
-  progress: number;
-  txHash?: string;
-}
-
-export interface FetchSwapLimitsInput {
-  direction: SwapDirection;
-}
-
-export interface FetchSwapLimitsOutput {
-  limits: SwapLimits;
-}
+// Re-export UseCase types for backward compatibility
+export type {FetchSwapStatusInput, FetchSwapStatusOutput} from './use-case/fetch-swap-status.use-case';
+export type {FetchSwapLimitsInput, FetchSwapLimitsOutput} from './use-case/fetch-swap-limits.use-case';
 
 // =============================================================================
 // Service Class
@@ -141,7 +127,7 @@ export interface FetchSwapLimitsOutput {
  * Service for cross-chain swap operations.
  * Supports Lightning ↔ Starknet and Bitcoin ↔ Starknet swaps.
  */
-export class SwapService {
+export class SwapService implements FetchSwapLimitsUseCase, FetchSwapStatusUseCase {
   private readonly log: Logger;
 
   constructor(private readonly deps: SwapServiceDeps) {
