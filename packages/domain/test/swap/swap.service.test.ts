@@ -92,7 +92,6 @@ function createMockTransactionRepository(): TransactionRepository {
     countCreatedSince: vi.fn(),
     existsByHash: vi.fn(),
     saveDescription: vi.fn(),
-    deleteDescription: vi.fn(),
   };
 }
 

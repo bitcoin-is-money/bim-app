@@ -25,7 +25,7 @@ import type {
 } from "@bim/domain/ports";
 import type {StarknetConfig} from "@bim/domain/shared";
 import {type FetchSwapLimitsUseCase, type FetchSwapStatusUseCase, SwapService} from "@bim/domain/swap";
-import {type DeleteTransactionDescriptionUseCase, type FetchSettingsUseCase, type FetchTransactionsUseCase, type SetTransactionDescriptionUseCase, TransactionService, type UpdateSettingsUseCase, UserSettingsService} from "@bim/domain/user";
+import {type FetchSettingsUseCase, type FetchTransactionsUseCase, TransactionService, type UpdateSettingsUseCase, UserSettingsService} from "@bim/domain/user";
 import type pg from 'pg';
 import type {Logger} from "pino";
 import {
@@ -101,8 +101,6 @@ export interface AppContext {
     fetchSettings: FetchSettingsUseCase;
     updateSettings: UpdateSettingsUseCase;
     fetchTransactions: FetchTransactionsUseCase;
-    setTransactionDescription: SetTransactionDescriptionUseCase;
-    deleteTransactionDescription: DeleteTransactionDescriptionUseCase;
     // Currency
     getPrices: GetPricesUseCase;
     // Swap
@@ -371,8 +369,6 @@ export namespace AppContext {
       fetchSettings: userSettingsService,
       updateSettings: userSettingsService,
       fetchTransactions: transactionService,
-      setTransactionDescription: transactionService,
-      deleteTransactionDescription: transactionService,
       // Currency
       getPrices: currencyService,
       // Swap
