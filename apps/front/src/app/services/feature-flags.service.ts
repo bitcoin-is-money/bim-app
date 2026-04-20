@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import { Injectable } from '@angular/core';
 
 export type FeatureFlagKey = 'uriPrefixOptionToggle';
 
@@ -6,7 +6,7 @@ const FLAGS: ReadonlyMap<FeatureFlagKey, boolean> = new Map<FeatureFlagKey, bool
   ['uriPrefixOptionToggle', false],
 ]);
 
-@Injectable({providedIn: 'root'})
+@Injectable({ providedIn: 'root' })
 export class FeatureFlagsService {
   isEnabled(key: FeatureFlagKey): boolean {
     return FLAGS.get(key) ?? false;

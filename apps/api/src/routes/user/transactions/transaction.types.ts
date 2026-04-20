@@ -5,14 +5,8 @@ export const GetTransactionsQuerySchema = z.object({
   offset: z.coerce.number().int().min(0).default(0),
 });
 
-export const SetDescriptionSchema = z.object({
-  description: z.string().min(1).max(100),
-});
-
 /** Validated query params for GET /api/user/transactions */
 export type GetTransactionsQuery = z.infer<typeof GetTransactionsQuerySchema>;
-/** Validated body for PUT /api/user/transactions/:hash/description */
-export type SetDescriptionBody = z.infer<typeof SetDescriptionSchema>;
 
 /** Single transaction in the API response. */
 export interface TransactionResponse {
@@ -35,15 +29,4 @@ export interface GetTransactionsResponse {
   total: number;
   limit: number;
   offset: number;
-}
-
-/** API response from PUT /api/user/transactions/:hash/description */
-export interface SetDescriptionResponse {
-  transactionHash: string;
-  description: string;
-}
-
-/** API response from DELETE /api/user/transactions/:hash/description */
-export interface DeleteDescriptionResponse {
-  transactionHash: string;
 }

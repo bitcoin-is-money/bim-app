@@ -1,6 +1,6 @@
-import {HttpClient} from '@angular/common/http';
-import {inject, Injectable} from '@angular/core';
-import type {Observable} from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import type { Observable } from 'rxjs';
 
 export type ReceiveNetwork = 'lightning' | 'bitcoin' | 'starknet';
 
@@ -70,12 +70,15 @@ export class ReceiveHttpService {
     return this.http.post<ReceiveResponse>(this.apiUrl, {
       network: request.network,
       amount: String(request.amount),
-      ...(request.description ? {description: request.description} : {}),
-      ...(request.useUriPrefix === undefined ? {} : {useUriPrefix: request.useUriPrefix}),
+      ...(request.description ? { description: request.description } : {}),
+      ...(request.useUriPrefix === undefined ? {} : { useUriPrefix: request.useUriPrefix }),
     });
   }
 
-  commitBitcoinReceive(buildId: string, assertion: WebAuthnAssertion): Observable<BitcoinReceiveCommitResponse> {
+  commitBitcoinReceive(
+    buildId: string,
+    assertion: WebAuthnAssertion,
+  ): Observable<BitcoinReceiveCommitResponse> {
     return this.http.post<BitcoinReceiveCommitResponse>(`${this.apiUrl}/commit`, {
       buildId,
       assertion,

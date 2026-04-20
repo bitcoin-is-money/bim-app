@@ -5,3 +5,6 @@ export {StarknetAddress} from '../shared/starknet-address';
 export * from './account';
 export * from './balance';
 export {AccountService, type AccountServiceDeps} from './account.service';
+export type {DeployAccountUseCase} from './use-case/deploy-account.use-case';
+export type {GetBalanceUseCase} from './use-case/get-balance.use-case';
+export type {GetDeploymentStatusUseCase} from './use-case/get-deployment-status.use-case';

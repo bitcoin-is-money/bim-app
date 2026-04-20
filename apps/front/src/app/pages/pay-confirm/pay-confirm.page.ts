@@ -1,29 +1,38 @@
-import {CommonModule} from '@angular/common';
-import {Component, computed, effect, inject, signal} from '@angular/core';
-import {TranslateModule} from '@ngx-translate/core';
-import {AmountFieldComponent} from '../../components/amount-field/amount-field.component';
-import {AmountHighlightComponent} from '../../components/amount-highlight/amount-highlight.component';
-import {ButtonComponent} from '../../components/button/button.component';
-import {FieldComponent} from '../../components/field/field.component';
-import {GoBackHeaderComponent} from '../../components/go-back-header/go-back-header.component';
-import {NetworkLogoComponent} from '../../components/network-logo/network-logo.component';
-import {FullPageLayoutComponent} from '../../layout';
-import {Amount} from "../../model";
-import {AccountService} from '../../services/account.service';
-import {CurrencyService} from '../../services/currency.service';
-import {I18nService} from '../../services/i18n.service';
-import {NotificationService} from "../../services/notification.service";
-import {PayService} from '../../services/pay.service';
+import { CommonModule } from '@angular/common';
+import { Component, computed, effect, inject, signal } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
+import { AmountFieldComponent } from '../../components/amount-field/amount-field.component';
+import { AmountHighlightComponent } from '../../components/amount-highlight/amount-highlight.component';
+import { ButtonComponent } from '../../components/button/button.component';
+import { FieldComponent } from '../../components/field/field.component';
+import { GoBackHeaderComponent } from '../../components/go-back-header/go-back-header.component';
+import { NetworkLogoComponent } from '../../components/network-logo/network-logo.component';
+import { FullPageLayoutComponent } from '../../layout';
+import { Amount } from '../../model';
+import { AccountService } from '../../services/account.service';
+import { CurrencyService } from '../../services/currency.service';
+import { I18nService } from '../../services/i18n.service';
+import { NotificationService } from '../../services/notification.service';
+import { PayService } from '../../services/pay.service';
 
 @Component({
   selector: 'app-pay-confirm',
   standalone: true,
-  imports: [CommonModule, TranslateModule, ButtonComponent, GoBackHeaderComponent, NetworkLogoComponent, FieldComponent, AmountFieldComponent, AmountHighlightComponent, FullPageLayoutComponent],
+  imports: [
+    CommonModule,
+    TranslateModule,
+    ButtonComponent,
+    GoBackHeaderComponent,
+    NetworkLogoComponent,
+    FieldComponent,
+    AmountFieldComponent,
+    AmountHighlightComponent,
+    FullPageLayoutComponent,
+  ],
   templateUrl: './pay-confirm.page.html',
   styleUrl: './pay-confirm.page.scss',
 })
 export class PayConfirmPage {
-
   private readonly accountService = inject(AccountService);
   private readonly currencyService = inject(CurrencyService);
   private readonly i18n = inject(I18nService);
@@ -86,7 +95,7 @@ export class PayConfirmPage {
 
   confirm(): void {
     if (!this.paymentAvailable()) {
-      this.notificationService.error({message: this.i18n.t('payConfirm.insufficientBalance')});
+      this.notificationService.error({ message: this.i18n.t('payConfirm.insufficientBalance') });
       return;
     }
     void this.paymentService.executeAndNavigate();

@@ -1,14 +1,14 @@
-import {computed, inject, Injectable, signal} from '@angular/core';
-import type {Observable, Subscription} from 'rxjs';
-import {filter, interval, map, switchMap, take, tap} from 'rxjs';
-import type {ConversionRates} from '../model';
-import {Amount, Currency} from '../model';
-import {CurrencyService} from './currency.service';
-import {I18nService} from './i18n.service';
-import type {Transaction} from './transaction.http.service';
-import {TransactionHttpService} from './transaction.http.service';
+import { computed, inject, Injectable, signal } from '@angular/core';
+import type { Observable, Subscription } from 'rxjs';
+import { filter, interval, map, switchMap, take, tap } from 'rxjs';
+import type { ConversionRates } from '../model';
+import { Amount, Currency } from '../model';
+import { CurrencyService } from './currency.service';
+import { I18nService } from './i18n.service';
+import type { Transaction } from './transaction.http.service';
+import { TransactionHttpService } from './transaction.http.service';
 
-export type {Transaction} from './transaction.http.service';
+export type { Transaction } from './transaction.http.service';
 
 export interface DisplayedTransaction {
   original: Transaction;
@@ -28,7 +28,6 @@ const PAGE_SIZE = 10;
   providedIn: 'root',
 })
 export class TransactionService {
-
   private readonly httpService: TransactionHttpService = inject(TransactionHttpService);
   private readonly currencyService: CurrencyService = inject(CurrencyService);
   private readonly i18nService = inject(I18nService);
@@ -51,14 +50,14 @@ export class TransactionService {
     const rates = this.currencyService.rates();
     const locale = this.i18nService.currentLocale();
 
-    return txs.map(tx => this.toDisplayed(tx, currency, rates, locale));
+    return txs.map((tx) => this.toDisplayed(tx, currency, rates, locale));
   });
 
   private toDisplayed(
     tx: Transaction,
     currency: Currency,
     rates: ConversionRates,
-    locale: string
+    locale: string,
   ): DisplayedTransaction {
     const sats = Number(tx.amount);
     const sign = tx.type === 'receipt' ? '+' : '-';
@@ -108,19 +107,22 @@ export class TransactionService {
     const intervalMs = options.intervalMs ?? 2000;
     const maxAttempts = options.maxAttempts ?? 15;
 
-    return this.httpService.getTransactions(1, 0).pipe(
-      switchMap((initial) =>
-        interval(intervalMs).pipe(
-          take(maxAttempts),
-          switchMap(() => this.httpService.getTransactions(1, 0)),
-          filter((result) => result.total > initial.total),
-          take(1),
+    return this.httpService
+      .getTransactions(1, 0)
+      .pipe(
+        switchMap((initial) =>
+          interval(intervalMs).pipe(
+            take(maxAttempts),
+            switchMap(() => this.httpService.getTransactions(1, 0)),
+            filter((result) => result.total > initial.total),
+            take(1),
+          ),
         ),
-      ),
-    ).subscribe(() => {
-      this.loadFirst();
-      options.onDetected?.();
-    });
+      )
+      .subscribe(() => {
+        this.loadFirst();
+        options.onDetected?.();
+      });
   }
 
   loadMore(): void {

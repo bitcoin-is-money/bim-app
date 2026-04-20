@@ -1,8 +1,16 @@
 import {AccountId} from '../account';
-import type {FiatCurrency} from '../currency';
 import type {UserSettingsRepository} from '../ports';
-import type {Language} from './language';
 import {UserSettingsId} from './types';
+import type {
+  FetchSettingsUseCase,
+  FetchUserSettingsInput,
+  FetchUserSettingsOutput
+} from './use-case/fetch-settings.use-case';
+import type {
+  UpdateSettingsUseCase,
+  UpdateUserSettingsInput,
+  UpdateUserSettingsOutput
+} from './use-case/update-settings.use-case';
 import {UserSettings} from './user-settings';
 
 // =============================================================================
@@ -13,31 +21,9 @@ export interface UserSettingsServiceDeps {
   userSettingsRepository: UserSettingsRepository;
 }
 
-// =============================================================================
-// Input/Output Types
-// =============================================================================
-
-export interface FetchUserSettingsInput {
-  accountId: string;
-}
-
-export interface FetchUserSettingsOutput {
-  settings: UserSettings;
-}
-
-export interface UserSettingsUpdate {
-  preferredCurrencies: [FiatCurrency, ...FiatCurrency[]];
-  defaultCurrency: FiatCurrency;
-  language: Language;
-}
-
-export type UpdateUserSettingsInput = {
-  accountId: string;
-} & Partial<UserSettingsUpdate>;
-
-export interface UpdateUserSettingsOutput {
-  settings: UserSettings;
-}
+// Re-export UseCase types for backward compatibility
+export type {FetchUserSettingsInput, FetchUserSettingsOutput} from './use-case/fetch-settings.use-case';
+export type {UpdateUserSettingsInput, UpdateUserSettingsOutput, UserSettingsUpdate} from './use-case/update-settings.use-case';
 
 // =============================================================================
 // Service Class
@@ -46,7 +32,7 @@ export interface UpdateUserSettingsOutput {
 /**
  * Service for user settings management.
  */
-export class UserSettingsService {
+export class UserSettingsService implements FetchSettingsUseCase, UpdateSettingsUseCase {
   constructor(private readonly deps: UserSettingsServiceDeps) {}
 
   /**

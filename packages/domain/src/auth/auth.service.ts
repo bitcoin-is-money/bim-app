@@ -20,7 +20,22 @@ import {
 } from './errors';
 import {Session} from './session';
 import type {SessionConfig} from './session.config';
-import type {WebAuthnAuthenticationOptions, WebAuthnRegistrationOptions} from './webauthn.types';
+import type {BeginAuthenticationOutput, BeginLoginUseCase} from './use-case/begin-login.use-case';
+import type {
+  BeginRegistrationInput,
+  BeginRegistrationOutput,
+  BeginRegistrationUseCase
+} from './use-case/begin-registration.use-case';
+import type {
+  CompleteAuthenticationInput,
+  CompleteAuthenticationOutput,
+  CompleteLoginUseCase
+} from './use-case/complete-login.use-case';
+import type {
+  CompleteRegistrationInput,
+  CompleteRegistrationOutput,
+  CompleteRegistrationUseCase
+} from './use-case/complete-registration.use-case';
 
 // =============================================================================
 // Dependencies
@@ -42,68 +57,11 @@ export interface WebAuthnConfig {
   origin: string;
 }
 
-// =============================================================================
-// Input/Output Types - Registration
-// =============================================================================
-
-export interface BeginRegistrationInput {
-  username: string;
-}
-
-export interface BeginRegistrationOutput {
-  options: WebAuthnRegistrationOptions;
-  challengeId: string;
-  accountId: string;
-}
-
-export interface CompleteRegistrationInput {
-  challengeId: string;
-  accountId: string;
-  username: string;
-  credential: {
-    id: string;
-    rawId: string;
-    response: {
-      clientDataJSON: string;
-      attestationObject: string;
-    };
-    type: 'public-key';
-  };
-}
-
-export interface CompleteRegistrationOutput {
-  account: Account;
-  session: Session;
-}
-
-// =============================================================================
-// Input/Output Types - Authentication
-// =============================================================================
-
-export interface BeginAuthenticationOutput {
-  options: WebAuthnAuthenticationOptions;
-  challengeId: string;
-}
-
-export interface CompleteAuthenticationInput {
-  challengeId: string;
-  credential: {
-    id: string;
-    rawId: string;
-    response: {
-      clientDataJSON: string;
-      authenticatorData: string;
-      signature: string;
-      userHandle?: string;
-    };
-    type: 'public-key';
-  };
-}
-
-export interface CompleteAuthenticationOutput {
-  account: Account;
-  session: Session;
-}
+// Re-export UseCase types for backward compatibility
+export type {BeginRegistrationInput, BeginRegistrationOutput} from './use-case/begin-registration.use-case';
+export type {CompleteRegistrationInput, CompleteRegistrationOutput} from './use-case/complete-registration.use-case';
+export type {BeginAuthenticationOutput} from './use-case/begin-login.use-case';
+export type {CompleteAuthenticationInput, CompleteAuthenticationOutput} from './use-case/complete-login.use-case';
 
 // =============================================================================
 // Service Class
@@ -112,7 +70,7 @@ export interface CompleteAuthenticationOutput {
 /**
  * Service for WebAuthn authentication and registration.
  */
-export class AuthService {
+export class AuthService implements BeginRegistrationUseCase, CompleteRegistrationUseCase, BeginLoginUseCase, CompleteLoginUseCase {
   private readonly log: Logger;
 
   constructor(

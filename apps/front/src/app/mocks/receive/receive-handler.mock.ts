@@ -1,9 +1,9 @@
-import {HttpResponse} from '@angular/common/http';
-import {type ApiErrorResponse, ErrorCode, type SwapDirection} from '../../model';
-import type {ReceiveResponse} from '../../services/receive.http.service';
-import type {DataStoreMock} from '../data-store.mock';
-import {createErrorResponse} from '../mock-error';
-import {scheduleSimulatedStarknetTransaction} from '../user/transaction-handler.mock';
+import { HttpResponse } from '@angular/common/http';
+import { type ApiErrorResponse, ErrorCode, type SwapDirection } from '../../model';
+import type { ReceiveResponse } from '../../services/receive.http.service';
+import type { DataStoreMock } from '../data-store.mock';
+import { createErrorResponse } from '../mock-error';
+import { scheduleSimulatedStarknetTransaction } from '../user/transaction-handler.mock';
 
 // Delay before a simulated incoming Starknet transfer appears after the
 // receive address is shown — emulates the Apibara indexer catch-up time.
@@ -25,14 +25,15 @@ export class ReceiveHandlerMock {
       return createErrorResponse(
         500,
         ErrorCode.SWAP_CREATION_FAILED,
-        'Invoice creation failed: service unavailable'
+        'Invoice creation failed: service unavailable',
       );
     }
 
     const amount = Number(body.amount);
     const session = this.store.getSession();
     const destinationAddress =
-      session?.starknetAddress ?? '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d';
+      session?.starknetAddress ??
+      '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d';
 
     let response: ReceiveResponse;
     switch (body.network) {
@@ -42,8 +43,9 @@ export class ReceiveHandlerMock {
         response = {
           network: 'lightning',
           swapId,
-          invoice: 'lnbc' + String(amount) + 'n1pnxk7aasp5mock0invoice0for0testing0' + String(Date.now()),
-          amount: {value: amount, currency: 'SAT'},
+          invoice:
+            'lnbc' + String(amount) + 'n1pnxk7aasp5mock0invoice0for0testing0' + String(Date.now()),
+          amount: { value: amount, currency: 'SAT' },
           expiresAt,
         };
         // Save swap for status tracking
@@ -65,7 +67,7 @@ export class ReceiveHandlerMock {
           swapId,
           depositAddress: 'bc1qmockaddressfortesting',
           bip21Uri: 'bitcoin:bc1qmockaddressfortesting?amount=' + (amount / 100_000_000).toFixed(8),
-          amount: {value: amount, currency: 'SAT'},
+          amount: { value: amount, currency: 'SAT' },
           expiresAt,
         };
         // Save swap for status tracking

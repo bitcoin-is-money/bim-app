@@ -27,8 +27,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
   const app = new Hono();
   const log = appContext.logger.child({name: 'auth.routes.ts'});
 
-  // Services from AppContext (initialized once at startup)
-  const {auth: authService, session: sessionService} = appContext.services;
+  const {beginRegistration, completeRegistration, beginLogin, completeLogin, validateSession, invalidateSession} = appContext.useCases;
   const maxAgeSec = Math.floor(appContext.sessionConfig.durationMs / 1000);
 
   // ---------------------------------------------------------------------------
@@ -39,7 +38,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
     try {
       const input: BeginRegistrationBody = BeginRegistrationSchema.parse(await honoCtx.req.json());
 
-      const result = await authService.beginRegistration({
+      const result = await beginRegistration.beginRegistration({
         username: input.username,
       });
 
@@ -57,7 +56,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
     try {
       const input: CompleteRegistrationBody = CompleteRegistrationSchema.parse(await honoCtx.req.json());
 
-      const result = await authService.completeRegistration({
+      const result = await completeRegistration.completeRegistration({
         challengeId: input.challengeId,
         accountId: input.accountId,
         username: input.username,
@@ -86,7 +85,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
 
   app.post('/login/begin', async (honoCtx): Promise<TypedResponse<BeginAuthenticationResponse | ApiErrorResponse>> => {
     try {
-      const result = await authService.beginAuthentication();
+      const result = await beginLogin.beginAuthentication();
 
       const response: BeginAuthenticationResponse = {
         options: result.options,
@@ -103,7 +102,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
       const input: CompleteAuthenticationBody = CompleteAuthenticationSchema.parse(await honoCtx.req.json());
 
       const {userHandle, ...response} = input.credential.response;
-      const result = await authService.completeAuthentication({
+      const result = await completeLogin.completeAuthentication({
         challengeId: input.challengeId,
         credential: {
           ...input.credential,
@@ -141,7 +140,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
         return honoCtx.json({authenticated: false});
       }
 
-      const result = await sessionService.validate({sessionId});
+      const result = await validateSession.validate({sessionId});
 
       return honoCtx.json<SessionResponse>({
         authenticated: true,
@@ -169,7 +168,7 @@ export function createAuthRoutes(appContext: AppContext): Hono {
     try {
       const sessionId = getSessionId(honoCtx);
       if (sessionId) {
-        await sessionService.invalidate({sessionId});
+        await invalidateSession.invalidate({sessionId});
       }
 
       clearSessionCookie(honoCtx);

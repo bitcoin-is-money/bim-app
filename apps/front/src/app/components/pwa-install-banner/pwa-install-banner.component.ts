@@ -1,7 +1,7 @@
-import {Component, computed, inject, signal} from '@angular/core';
-import {TranslateModule} from '@ngx-translate/core';
-import {PwaInstallService} from '../../services/pwa-install.service';
-import {ButtonComponent} from '../button/button.component';
+import { Component, computed, inject, signal } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
+import { PwaInstallService } from '../../services/pwa-install.service';
+import { ButtonComponent } from '../button/button.component';
 
 @Component({
   selector: 'app-pwa-install-banner',
@@ -11,7 +11,6 @@ import {ButtonComponent} from '../button/button.component';
   styleUrl: './pwa-install-banner.component.scss',
 })
 export class PwaInstallBannerComponent {
-
   private readonly pwa = inject(PwaInstallService);
 
   private readonly dismissed = signal(false);

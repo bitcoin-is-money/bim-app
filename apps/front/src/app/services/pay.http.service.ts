@@ -1,6 +1,6 @@
-import {HttpClient} from '@angular/common/http';
-import {inject, Injectable} from '@angular/core';
-import type {Observable} from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import type { Observable } from 'rxjs';
 
 export type PaymentNetwork = 'lightning' | 'bitcoin' | 'starknet';
 
@@ -82,17 +82,20 @@ export class PayHttpService {
   private readonly http = inject(HttpClient);
 
   parse(paymentPayload: string): Observable<ParsePaymentResponse> {
-    return this.http.post<ParsePaymentResponse>(`${this.apiUrl}/parse`, {paymentPayload});
+    return this.http.post<ParsePaymentResponse>(`${this.apiUrl}/parse`, { paymentPayload });
   }
 
   build(paymentPayload: string, description?: string): Observable<BuildPaymentResponse> {
     return this.http.post<BuildPaymentResponse>(`${this.apiUrl}/build`, {
       paymentPayload,
-      ...(description ? {description} : {}),
+      ...(description ? { description } : {}),
     });
   }
 
-  executeSigned(buildId: string, assertion: WebAuthnAssertionJson): Observable<ExecutePaymentResponse> {
+  executeSigned(
+    buildId: string,
+    assertion: WebAuthnAssertionJson,
+  ): Observable<ExecutePaymentResponse> {
     return this.http.post<ExecutePaymentResponse>(`${this.apiUrl}/execute`, {
       buildId,
       assertion,

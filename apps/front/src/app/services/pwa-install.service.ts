@@ -1,9 +1,9 @@
-import {isPlatformBrowser} from '@angular/common';
-import {computed, inject, Injectable, PLATFORM_ID, signal} from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { computed, inject, Injectable, PLATFORM_ID, signal } from '@angular/core';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
-  readonly userChoice: Promise<{outcome: 'accepted' | 'dismissed'; platform: string}>;
+  readonly userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
 }
 
 interface RelatedApplication {
@@ -36,9 +36,8 @@ export type PwaPromptOutcome = 'accepted' | 'dismissed' | 'unavailable';
  *   | other`). No assumptions about which browser supports what: if
  *   `canInstall` is false, UI falls back to generic per-OS instructions.
  */
-@Injectable({providedIn: 'root'})
+@Injectable({ providedIn: 'root' })
 export class PwaInstallService {
-
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
   private readonly standalone = signal(false);
@@ -113,7 +112,7 @@ export class PwaInstallService {
   }
 
   private iosStandalone(): boolean {
-    const nav = globalThis.navigator as Navigator & {standalone?: boolean};
+    const nav = globalThis.navigator as Navigator & { standalone?: boolean };
     return nav.standalone === true;
   }
 

@@ -1,8 +1,8 @@
-import {HttpClient, HttpContext} from '@angular/common/http';
-import {inject, Injectable} from '@angular/core';
-import type {Observable} from 'rxjs';
-import {SUPPRESS_ERROR_NOTIFICATION} from '../interceptor/http-notification.interceptor';
-import type {SwapStatusResponse} from '../model';
+import { HttpClient, HttpContext } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import type { Observable } from 'rxjs';
+import { SUPPRESS_ERROR_NOTIFICATION } from '../interceptor/http-notification.interceptor';
+import type { SwapStatusResponse } from '../model';
 
 @Injectable({
   providedIn: 'root',

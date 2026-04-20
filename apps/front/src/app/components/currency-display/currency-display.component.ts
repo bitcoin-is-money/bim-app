@@ -1,6 +1,6 @@
-import {Component, inject, input} from '@angular/core';
-import type {Currency} from '../../model';
-import {CurrencyService} from '../../services/currency.service';
+import { Component, inject, input } from '@angular/core';
+import type { Currency } from '../../model';
+import { CurrencyService } from '../../services/currency.service';
 
 @Component({
   selector: 'app-currency-display',

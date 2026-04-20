@@ -1,6 +1,6 @@
-import {serializeError} from '@bim/lib/error';
 import type {AtomiqGateway} from '@bim/domain/ports';
 import type {Swap, SwapId, SwapService} from '@bim/domain/swap';
+import {serializeError} from '@bim/lib/error';
 
 import type {Logger} from 'pino';
 

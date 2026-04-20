@@ -1,15 +1,15 @@
-import {HttpErrorResponse} from '@angular/common/http';
-import type {OnInit} from '@angular/core';
-import {Component, DestroyRef, inject, signal} from '@angular/core';
-import {Router} from '@angular/router';
-import {TranslateModule} from '@ngx-translate/core';
-import {ButtonComponent} from '../../components/button/button.component';
-import {SpinnerComponent} from '../../components/spinner/spinner.component';
-import {FullPageLayoutComponent} from '../../layout';
-import {AccountService} from '../../services/account.service';
-import {AuthService} from "../../services/auth.service";
-import {I18nService} from '../../services/i18n.service';
-import {NotificationService} from '../../services/notification.service';
+import { HttpErrorResponse } from '@angular/common/http';
+import type { OnInit } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
+import { ButtonComponent } from '../../components/button/button.component';
+import { SpinnerComponent } from '../../components/spinner/spinner.component';
+import { FullPageLayoutComponent } from '../../layout';
+import { AccountService } from '../../services/account.service';
+import { AuthService } from '../../services/auth.service';
+import { I18nService } from '../../services/i18n.service';
+import { NotificationService } from '../../services/notification.service';
 
 const POLL_INTERVAL_MS = 1000;
 
@@ -34,7 +34,9 @@ export class AccountSetupPage implements OnInit {
 
   ngOnInit(): void {
     this.triggerDeployment();
-    this.destroyRef.onDestroy(() => { this.stopPolling(); });
+    this.destroyRef.onDestroy(() => {
+      this.stopPolling();
+    });
   }
 
   private triggerDeployment(): void {
@@ -63,7 +65,9 @@ export class AccountSetupPage implements OnInit {
   }
 
   private startPolling(): void {
-    this.pollTimer = setInterval(() => { this.checkDeploymentStatus(); }, POLL_INTERVAL_MS);
+    this.pollTimer = setInterval(() => {
+      this.checkDeploymentStatus();
+    }, POLL_INTERVAL_MS);
   }
 
   private stopPolling(): void {
@@ -80,7 +84,7 @@ export class AccountSetupPage implements OnInit {
           this.stopPolling();
           this.notifications.success({
             message: this.i18n.t('accountSetup.success'),
-            useConfetti: true
+            useConfetti: true,
           });
           void this.router.navigate(['/home']);
         } else if (response.status === 'failed') {

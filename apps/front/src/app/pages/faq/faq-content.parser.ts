@@ -1,4 +1,4 @@
-import {marked} from 'marked';
+import { marked } from 'marked';
 
 export interface FaqItem {
   question: string;
@@ -41,7 +41,7 @@ export function parseFaqMarkdown(raw: string): FaqSection[] {
 }
 
 function parseSection(chunk: string): FaqSection | undefined {
-  const {head, body} = splitFirstLine(chunk);
+  const { head, body } = splitFirstLine(chunk);
   const title = head.trim();
   if (title === '') return undefined;
   // Drop the first element (any orphan text between the `## ` heading and
@@ -54,11 +54,11 @@ function parseSection(chunk: string): FaqSection | undefined {
       items.push(item);
     }
   }
-  return {title, items};
+  return { title, items };
 }
 
 function parseItem(chunk: string): FaqItem | undefined {
-  const {head, body} = splitFirstLine(chunk);
+  const { head, body } = splitFirstLine(chunk);
   const rawQuestion = head.trim();
   if (rawQuestion === '') return undefined;
   // French typography: a regular space before `?` must be a non-breaking
@@ -67,18 +67,18 @@ function parseItem(chunk: string): FaqItem | undefined {
   const question = rawQuestion.replaceAll(' ?', '\u00A0?');
   const answerMarkdown = body.trim();
   const answerHtml = renderMarkdown(answerMarkdown);
-  return {question, answerHtml};
+  return { question, answerHtml };
 }
 
-function splitFirstLine(chunk: string): {head: string; body: string} {
+function splitFirstLine(chunk: string): { head: string; body: string } {
   const newlineIdx = chunk.indexOf('\n');
   if (newlineIdx === -1) {
-    return {head: chunk, body: ''};
+    return { head: chunk, body: '' };
   }
-  return {head: chunk.slice(0, newlineIdx), body: chunk.slice(newlineIdx + 1)};
+  return { head: chunk.slice(0, newlineIdx), body: chunk.slice(newlineIdx + 1) };
 }
 
 function renderMarkdown(md: string): string {
   if (md === '') return '';
-  return marked.parse(md, {async: false});
+  return marked.parse(md, { async: false });
 }

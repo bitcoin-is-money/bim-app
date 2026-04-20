@@ -28,6 +28,7 @@ vi.mock('../../src/adapters/index.js', () => {
     CoinGeckoPriceGateway: class { name = 'coingecko-price'; },
     SlackNotificationGateway: class { name = 'slack-notification'; async send() { /* noop */ } },
     NoopNotificationGateway: class { name = 'noop-notification'; async send() { /* noop */ } },
+    WebAuthnSignatureProcessor: class { name = 'webauthn-signature-processor'; },
   };
 });
 

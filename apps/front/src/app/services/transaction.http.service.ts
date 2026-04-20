@@ -1,6 +1,6 @@
-import {HttpClient, HttpParams} from '@angular/common/http';
-import {inject, Injectable} from '@angular/core';
-import type {Observable} from 'rxjs';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import type { Observable } from 'rxjs';
 
 export interface Transaction {
   id: string;
@@ -31,9 +31,7 @@ export class TransactionHttpService {
   private readonly http = inject(HttpClient);
 
   getTransactions(limit: number, offset: number): Observable<PaginatedTransactions> {
-    const params = new HttpParams()
-      .set('limit', limit.toString())
-      .set('offset', offset.toString());
-    return this.http.get<PaginatedTransactions>(this.apiUrl, {params});
+    const params = new HttpParams().set('limit', limit.toString()).set('offset', offset.toString());
+    return this.http.get<PaginatedTransactions>(this.apiUrl, { params });
   }
 }

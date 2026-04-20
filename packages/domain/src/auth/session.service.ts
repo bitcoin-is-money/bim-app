@@ -1,9 +1,14 @@
 import type {Logger} from 'pino';
-import type {Account} from '../account';
 import type {AccountRepository, SessionRepository} from '../ports';
 import {SessionNotFoundError} from './errors';
-import {type Session, SessionId} from './session';
+import {SessionId} from './session';
 import type {SessionConfig} from './session.config';
+import type {InvalidateSessionInput, InvalidateSessionUseCase} from './use-case/invalidate-session.use-case';
+import type {
+  ValidateSessionInput,
+  ValidateSessionOutput,
+  ValidateSessionUseCase
+} from './use-case/validate-session.use-case';
 
 // =============================================================================
 // Dependencies
@@ -16,22 +21,9 @@ export interface SessionServiceDeps {
   logger: Logger;
 }
 
-// =============================================================================
-// Input/Output Types
-// =============================================================================
-
-export interface ValidateSessionInput {
-  sessionId: string;
-}
-
-export interface ValidateSessionOutput {
-  session: Session;
-  account: Account;
-}
-
-export interface InvalidateSessionInput {
-  sessionId: string;
-}
+// Re-export UseCase types for backward compatibility
+export type {ValidateSessionInput, ValidateSessionOutput} from './use-case/validate-session.use-case';
+export type {InvalidateSessionInput} from './use-case/invalidate-session.use-case';
 
 // =============================================================================
 // Service Class
@@ -40,7 +32,7 @@ export interface InvalidateSessionInput {
 /**
  * Service for session management (validation and invalidation).
  */
-export class SessionService {
+export class SessionService implements ValidateSessionUseCase, InvalidateSessionUseCase {
   private readonly log: Logger;
 
   constructor(private readonly deps: SessionServiceDeps) {

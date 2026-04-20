@@ -1,7 +1,7 @@
+import {formatSats, formatStrk} from '@bim/lib/token';
 import {readFileSync} from 'node:fs';
 import {dirname, join} from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {formatSats, formatStrk} from '@bim/lib/token';
 import type {Logger} from 'pino';
 import type {Prices} from './e2e-rpc.js';
 import type {UserReportSummary} from './e2e-user.js';

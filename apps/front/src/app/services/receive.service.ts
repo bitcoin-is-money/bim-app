@@ -1,9 +1,9 @@
-import {inject, Injectable, signal} from '@angular/core';
-import {Base64Url, Hex} from '@bim/lib/encoding';
-import {firstValueFrom} from 'rxjs';
-import type {StoredSwap} from '../model';
-import {I18nService} from './i18n.service';
-import {NotificationService} from './notification.service';
+import { inject, Injectable, signal } from '@angular/core';
+import { Base64Url, Hex } from '@bim/lib/encoding';
+import { firstValueFrom } from 'rxjs';
+import type { StoredSwap } from '../model';
+import { I18nService } from './i18n.service';
+import { NotificationService } from './notification.service';
 import {
   type BitcoinReceivePendingCommitResponse,
   type CreateInvoiceRequest,
@@ -11,9 +11,9 @@ import {
   type ReceiveNetwork,
   type ReceiveResponse,
 } from './receive.http.service';
-import {SwapPollingService} from './swap-polling.service';
-import {SwapStorageService} from './swap-storage.service';
-import {TransactionService} from './transaction.service';
+import { SwapPollingService } from './swap-polling.service';
+import { SwapStorageService } from './swap-storage.service';
+import { TransactionService } from './transaction.service';
 
 const I18N_READY_KEYS: Record<ReceiveNetwork, string> = {
   lightning: 'notifications.receive.lightning.ready',
@@ -42,20 +42,24 @@ export class ReceiveService {
   readonly isLoading = signal(false);
   readonly invoice = signal<ReceiveResponse | null>(null);
 
-  createInvoice(network: ReceiveNetwork, amount: number, description?: string, useUriPrefix?: boolean): void {
+  createInvoice(
+    network: ReceiveNetwork,
+    amount: number,
+    description?: string,
+    useUriPrefix?: boolean,
+  ): void {
     this.isLoading.set(true);
     this.invoice.set(null);
     const request: CreateInvoiceRequest = {
       network,
       amount,
-      ...(description ? {description} : {}),
-      ...(useUriPrefix === undefined ? {} : {useUriPrefix})
+      ...(description ? { description } : {}),
+      ...(useUriPrefix === undefined ? {} : { useUriPrefix }),
     };
     this.httpService.createInvoice(request).subscribe({
       next: (response) => {
         // Bitcoin two-phase flow: need WebAuthn signing before deposit address is available
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive: guard against future ReceiveResult variants
-        if (response.network === 'bitcoin' && 'status' in response && response.status === 'pending_commit') {
+        if (response.network === 'bitcoin' && 'status' in response) {
           void this.handleBitcoinCommitFlow(response);
           return;
         }
@@ -80,7 +84,9 @@ export class ReceiveService {
    * 2. Submit signed commit to backend
    * 3. Backend waits for Starknet confirmation, returns deposit address
    */
-  private async handleBitcoinCommitFlow(pendingCommit: BitcoinReceivePendingCommitResponse): Promise<void> {
+  private async handleBitcoinCommitFlow(
+    pendingCommit: BitcoinReceivePendingCommitResponse,
+  ): Promise<void> {
     try {
       // 1. WebAuthn sign (user approves commit with biometrics)
       const challenge = Hex.decode(pendingCommit.messageHash).buffer as ArrayBuffer;
@@ -128,9 +134,9 @@ export class ReceiveService {
   private handleReceiveSuccess(response: ReceiveResponse): void {
     this.invoice.set(response);
     this.isLoading.set(false);
-     
+
     const readyKey = I18N_READY_KEYS[response.network];
-    this.notificationService.success({message: this.i18n.t(readyKey)});
+    this.notificationService.success({ message: this.i18n.t(readyKey) });
 
     if (response.network === 'starknet') {
       // No swap is created for Starknet receives — watch the transactions
@@ -152,7 +158,8 @@ export class ReceiveService {
       const swap: StoredSwap = {
         id: response.swapId,
         type: 'receive',
-        direction: response.network === 'lightning' ? 'lightning_to_starknet' : 'bitcoin_to_starknet',
+        direction:
+          response.network === 'lightning' ? 'lightning_to_starknet' : 'bitcoin_to_starknet',
         amountSats: response.amount.value,
         createdAt: new Date().toISOString(),
         lastKnownStatus: 'pending',

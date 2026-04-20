@@ -1,7 +1,16 @@
 import {StarknetAddress} from '@bim/domain/account';
 import type {AtomiqGateway, SwapRepository, TransactionRepository} from '@bim/domain/ports';
 import {Amount} from '@bim/domain/shared';
-import {BitcoinAddress, Swap, SwapAmountError, SwapCreationError, SwapId, SwapNotFoundError, SwapOwnershipError, SwapService} from '@bim/domain/swap';
+import {
+  BitcoinAddress,
+  Swap,
+  SwapAmountError,
+  SwapCreationError,
+  SwapId,
+  SwapNotFoundError,
+  SwapOwnershipError,
+  SwapService
+} from '@bim/domain/swap';
 import {createLogger} from '@bim/lib/logger';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
@@ -92,7 +101,6 @@ function createMockTransactionRepository(): TransactionRepository {
     countCreatedSince: vi.fn(),
     existsByHash: vi.fn(),
     saveDescription: vi.fn(),
-    deleteDescription: vi.fn(),
   };
 }
 

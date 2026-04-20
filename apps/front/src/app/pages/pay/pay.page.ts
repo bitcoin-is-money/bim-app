@@ -1,26 +1,32 @@
-import {CommonModule} from '@angular/common';
-import type {OnDestroy} from '@angular/core';
-import {Component, inject, signal} from '@angular/core';
-import {FormsModule} from '@angular/forms';
-import {TranslateModule} from '@ngx-translate/core';
-import {Html5Qrcode, Html5QrcodeSupportedFormats} from 'html5-qrcode';
-import {environment} from '../../../environments/environment';
-import {ButtonComponent} from '../../components/button/button.component';
-import {GoBackHeaderComponent} from '../../components/go-back-header/go-back-header.component';
-import {FullPageLayoutComponent} from '../../layout';
-import {I18nService} from '../../services/i18n.service';
-import {NotificationService} from '../../services/notification.service';
-import {PayService} from '../../services/pay.service';
+import { CommonModule } from '@angular/common';
+import type { OnDestroy } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
+import { environment } from '../../../environments/environment';
+import { ButtonComponent } from '../../components/button/button.component';
+import { GoBackHeaderComponent } from '../../components/go-back-header/go-back-header.component';
+import { FullPageLayoutComponent } from '../../layout';
+import { I18nService } from '../../services/i18n.service';
+import { NotificationService } from '../../services/notification.service';
+import { PayService } from '../../services/pay.service';
 
 @Component({
   selector: 'app-pay',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, ButtonComponent, GoBackHeaderComponent, FullPageLayoutComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    TranslateModule,
+    ButtonComponent,
+    GoBackHeaderComponent,
+    FullPageLayoutComponent,
+  ],
   templateUrl: './pay.page.html',
   styleUrl: './pay.page.scss',
 })
 export class PayPage implements OnDestroy {
-
   private readonly paymentService = inject(PayService);
   private readonly i18n = inject(I18nService);
   private readonly notifications = inject(NotificationService);
@@ -49,12 +55,12 @@ export class PayPage implements OnDestroy {
     try {
       const text = await navigator.clipboard.readText();
       if (!text.trim()) {
-        this.notifications.error({message: this.i18n.t('pay.clipboardEmpty')});
+        this.notifications.error({ message: this.i18n.t('pay.clipboardEmpty') });
         return;
       }
       this.paymentService.parseAndNavigate(text.trim());
     } catch {
-      this.notifications.error({message: this.i18n.t('pay.clipboardAccessDenied')});
+      this.notifications.error({ message: this.i18n.t('pay.clipboardAccessDenied') });
     }
   }
 
@@ -70,7 +76,7 @@ export class PayPage implements OnDestroy {
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- runtime check: not all browsers support mediaDevices/getUserMedia
     if (!navigator.mediaDevices?.getUserMedia) {
       this.notifications.error({
-        message: this.i18n.t('pay.cameraNotSupported')
+        message: this.i18n.t('pay.cameraNotSupported'),
       });
       return;
     }
@@ -94,10 +100,11 @@ export class PayPage implements OnDestroy {
 
       await this.scanner.start(
         {
-          facingMode: 'environment'
-        }, {
+          facingMode: 'environment',
+        },
+        {
           fps: 15,
-          qrbox: {width: qrBoxSize, height: qrBoxSize},
+          qrbox: { width: qrBoxSize, height: qrBoxSize },
         },
         (decodedText) => {
           const sanitized = this.stripUrlPrefix(decodedText);

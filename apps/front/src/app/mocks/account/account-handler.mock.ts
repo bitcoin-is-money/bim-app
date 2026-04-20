@@ -1,13 +1,13 @@
-import {HttpResponse} from '@angular/common/http';
-import {type ApiErrorResponse, ErrorCode} from '../../model';
+import { HttpResponse } from '@angular/common/http';
+import { type ApiErrorResponse, ErrorCode } from '../../model';
 import type {
   AccountInfoResponse,
   BalanceResponse,
   DeployAccountResponse,
   DeploymentStatusResponse,
 } from '../../services/account.http.service';
-import type {DataStoreMock} from '../data-store.mock';
-import {createErrorResponse} from '../mock-error';
+import type { DataStoreMock } from '../data-store.mock';
+import { createErrorResponse } from '../mock-error';
 
 const MOCK_DEPLOYMENT_DELAY_MS = 2000;
 
@@ -45,20 +45,30 @@ export class AccountHandlerMock {
     const registrationDate: Date = this.store.getRegistrationDate() ?? new Date();
     const timeToWait = Date.now() - registrationDate.getTime();
     if (timeToWait < MOCK_DEPLOYMENT_DELAY_MS) {
-      return new HttpResponse({status: 200, body: {status: 'deploying', txHash: null, isDeployed: false}});
+      return new HttpResponse({
+        status: 200,
+        body: { status: 'deploying', txHash: null, isDeployed: false },
+      });
     }
 
     if (!this.store.getMockUserProfile().deployAccountSuccess) {
-      return createErrorResponse(500, ErrorCode.ACCOUNT_DEPLOYMENT_FAILED, 'Account deployment failed');
+      return createErrorResponse(
+        500,
+        ErrorCode.ACCOUNT_DEPLOYMENT_FAILED,
+        'Account deployment failed',
+      );
     }
 
     // Deployment complete — update session account status
     const fakeTxHash = '0x' + 'abc123'.repeat(10);
     if (account.status !== 'deployed') {
-      this.store.setSession({...account, status: 'deployed'});
+      this.store.setSession({ ...account, status: 'deployed' });
     }
 
-    return new HttpResponse({status: 200, body: {status: 'deployed', txHash: fakeTxHash, isDeployed: true}});
+    return new HttpResponse({
+      status: 200,
+      body: { status: 'deployed', txHash: fakeTxHash, isDeployed: true },
+    });
   }
 
   // GET /api/account/balance
@@ -95,7 +105,7 @@ export class AccountHandlerMock {
 
     // Update account status to deploying and set the registration date for polling
     const starknetAddress = '0x' + '1'.repeat(64);
-    this.store.setSession({...account, status: 'deploying', starknetAddress});
+    this.store.setSession({ ...account, status: 'deploying', starknetAddress });
     this.store.setRegistrationDate(new Date());
 
     return new HttpResponse({

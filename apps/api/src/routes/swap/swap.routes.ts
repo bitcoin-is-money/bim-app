@@ -6,12 +6,7 @@ import type {AppContext} from '../../app-context';
 import {type ApiErrorResponse, handleDomainError} from '../../errors';
 import {createAuthMiddleware} from '../../middleware/auth.middleware';
 import type {AuthenticatedHono} from '../../types.js';
-import type {
-  SwapDirection,
-  SwapIdParam,
-  SwapLimitsResponse,
-  SwapStatusResponse,
-} from './swap.types';
+import type {SwapDirection, SwapIdParam, SwapLimitsResponse, SwapStatusResponse,} from './swap.types';
 import {SwapDirectionSchema, SwapIdParamSchema} from './swap.types';
 
 // =============================================================================
@@ -24,8 +19,7 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
 
   app.use('*', createAuthMiddleware(appContext));
 
-  // Service from AppContext (initialized once at startup)
-  const {swap: swapService} = appContext.services;
+  const {fetchSwapLimits, fetchSwapStatus} = appContext.useCases;
 
   // ---------------------------------------------------------------------------
   // Get Swap Limits
@@ -35,7 +29,7 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
     try {
       const direction: SwapDirection = SwapDirectionSchema.parse(honoCtx.req.param('direction'));
 
-      const result = await swapService.fetchLimits({direction});
+      const result = await fetchSwapLimits.fetchLimits({direction});
 
       return honoCtx.json<SwapLimitsResponse>({
         minSats: result.limits.minSats.toString(),
@@ -56,7 +50,7 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
       const account: Account = honoCtx.get('account');
       const swapId: SwapIdParam = SwapIdParamSchema.parse(honoCtx.req.param('swapId'));
 
-      const result = await swapService.fetchStatus({swapId, accountId: account.id});
+      const result = await fetchSwapStatus.fetchStatus({swapId, accountId: account.id});
 
       // Map internal 'claimable' to 'paid' for the frontend — the distinction
       // is only relevant for backend orchestration (SwapMonitor claim timing).

@@ -1,5 +1,5 @@
 import {StarknetAddress} from '@bim/domain/account';
-import type {NotificationGateway, NotificationMessage, PaymasterGateway, StarknetGateway} from '@bim/domain/ports';
+import type {NotificationGateway, PaymasterGateway, StarknetGateway} from '@bim/domain/ports';
 import type {StarknetConfig} from '@bim/domain/shared';
 import {createLogger} from '@bim/lib/logger';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
