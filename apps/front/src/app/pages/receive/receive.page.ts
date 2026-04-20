@@ -1,7 +1,9 @@
 import {Component, computed, effect, inject, signal} from '@angular/core';
+import {toSignal} from '@angular/core/rxjs-interop';
 import type {SafeHtml} from '@angular/platform-browser';
 import {DomSanitizer} from '@angular/platform-browser';
 import {TranslateModule} from '@ngx-translate/core';
+import {interval, map, startWith} from 'rxjs';
 import {renderSVG} from 'uqr';
 import {AmountFieldComponent} from '../../components/amount-field/amount-field.component';
 import {ButtonComponent} from '../../components/button/button.component';
@@ -11,6 +13,7 @@ import {GoBackHeaderComponent} from '../../components/go-back-header/go-back-hea
 import {NetworkLogoComponent} from '../../components/network-logo/network-logo.component';
 import {FullPageLayoutComponent} from '../../layout';
 import {Amount} from '../../model';
+import {MmssPipe} from '../../pipes/mmss.pipe';
 import {CurrencyService} from '../../services/currency.service';
 import {FeatureFlagsService} from '../../services/feature-flags.service';
 import {I18nService} from '../../services/i18n.service';
@@ -20,6 +23,7 @@ import {ReceiveService} from '../../services/receive.service';
 type PaymentNetwork = 'starknet' | 'lightning' | 'bitcoin';
 
 const NETWORKS: PaymentNetwork[] = ['starknet', 'lightning', 'bitcoin'];
+const EXPIRY_TICK_MS = 1000;
 
 @Component({
   selector: 'app-receive',
@@ -33,6 +37,7 @@ const NETWORKS: PaymentNetwork[] = ['starknet', 'lightning', 'bitcoin'];
     ButtonComponent,
     CheckboxFieldComponent,
     FullPageLayoutComponent,
+    MmssPipe,
   ],
   templateUrl: './receive.page.html',
   styleUrl: './receive.page.scss',
@@ -56,11 +61,10 @@ export class ReceivePage {
   readonly activeNetworkIndex = signal(0);
 
   readonly qrSvg = signal<SafeHtml | undefined>(undefined);
-
   readonly animationSlideClass = signal('');
 
   readonly selectedNetwork = computed<PaymentNetwork>(() => {
-    return NETWORKS[this.activeNetworkIndex()] ?? 'starknet'
+    return NETWORKS[this.activeNetworkIndex()] ?? 'starknet';
   });
 
   readonly qrData = signal<string | undefined>(undefined);
@@ -77,6 +81,27 @@ export class ReceivePage {
 
   readonly showCreateInvoice = computed(() => {
     return this.qrData() === undefined && this.amount().isPositive();
+  });
+
+  readonly expiresAtMs = computed<number | undefined>(() => {
+    const invoice = this.receiveService.invoice();
+    if (invoice?.network !== 'lightning') return undefined;
+    const parsed = Date.parse(invoice.expiresAt);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  });
+
+  private readonly nowMs = toSignal(
+    interval(EXPIRY_TICK_MS).pipe(
+      startWith(0),
+      map(() => Date.now()),
+    ),
+    {initialValue: Date.now()},
+  );
+
+  readonly secondsLeft = computed(() => {
+    const expires = this.expiresAtMs();
+    if (expires === undefined) return 0;
+    return Math.max(0, Math.floor((expires - this.nowMs()) / 1000));
   });
 
   constructor() {
@@ -107,7 +132,6 @@ export class ReceivePage {
           data = invoice.invoice;
           break;
         case 'bitcoin':
-          // pending_commit is handled by ReceiveService before reaching the invoice signal
           if ('bip21Uri' in invoice) {
             data = invoice.bip21Uri;
           } else {
@@ -119,6 +143,16 @@ export class ReceivePage {
       this.qrData.set(data);
       // @review-accepted: renderSVG from uqr produces pure SVG rectangles, data comes from server response
       this.qrSvg.set(this.sanitizer.bypassSecurityTrustHtml(renderSVG(data))); // NOSONAR S6268 - tracked for refactor to safe template-rendered SVG (uqr.encode + Angular bindings)
+    });
+
+    effect(() => {
+      if (this.selectedNetwork() !== 'lightning') return;
+      if (this.expiresAtMs() === undefined) return;
+      if (this.secondsLeft() === 0 && this.qrData() !== undefined) {
+        this.amount.set(Amount.zero());
+        this.description.set('');
+        this.receiveService.reset();
+      }
     });
   }
 
@@ -182,6 +216,17 @@ export class ReceivePage {
     const satAmount = this.currencyService.convert(this.amount(), 'SAT');
     const desc = this.description() || undefined;
     this.receiveService.createInvoice(network, Math.round(satAmount.value), desc, this.useUriPrefix());
+  }
+
+  async copyInvoice(): Promise<void> {
+    const data = this.qrData();
+    if (!data) return;
+    try {
+      await navigator.clipboard.writeText(data);
+      this.notifications.success({message: this.i18n.t('receive.copied')});
+    } catch {
+      this.notifications.error({message: this.i18n.t('receive.couldNotCopy')});
+    }
   }
 
   async share(): Promise<void> {

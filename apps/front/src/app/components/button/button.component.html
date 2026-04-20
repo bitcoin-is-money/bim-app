@@ -15,6 +15,7 @@
         [class.btn-size-xl]="sizeVariant() === 'xl'"
         [class.btn-size-icon-square]="sizeVariant() === 'icon-square'"
         [class.btn-compact]="compact()"
+        [attr.aria-label]="ariaLabel()"
         [disabled]="disabled()"
 >
     @if (loading()) {

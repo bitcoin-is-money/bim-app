@@ -3,30 +3,30 @@
     <app-go-back-header [title]="'receive.title' | translate"></app-go-back-header>
 
     <main class="receive-main">
-      <!-- Swipeable zone: logo + dots + QR -->
+      <nav class="network-tabs" role="tablist" [attr.aria-label]="'receive.networks' | translate">
+        @for (network of networks; track network; let i = $index) {
+          <button
+            type="button"
+            role="tab"
+            [attr.aria-selected]="activeNetworkIndex() === i"
+            aria-controls="receive-qr"
+            [class.active]="activeNetworkIndex() === i"
+            (click)="scrollToIndex(i)">
+            <span class="net-dot" [attr.data-net]="network"></span>
+            {{ 'receive.network.' + network | translate }}
+          </button>
+        }
+      </nav>
+
       <div class="swipe-zone"
            (touchstart)="onTouchStart($event)"
            (touchend)="onTouchEnd($event)">
 
-        <!-- Logo (animated) -->
         <div [class]="'swipe-content ' + animationSlideClass()">
-          <app-network-logo [network]="selectedNetwork()" style="height:48px"/>
+          <app-network-logo [network]="selectedNetwork()" style="height:40px"/>
         </div>
 
-        <!-- Dots (fixed) -->
-        <div class="carousel-dots">
-          @for (network of networks; track network; let i = $index) {
-            <button
-              class="dot"
-              [class.dot-active]="activeNetworkIndex() === i"
-              (click)="scrollToIndex(i)"
-              [attr.aria-label]="'receive.goToNetwork' | translate: { network: network }">
-            </button>
-          }
-        </div>
-
-        <!-- QR code (animated) -->
-        <div [class]="'swipe-content ' + animationSlideClass()">
+        <div id="receive-qr" [class]="'swipe-content ' + animationSlideClass()">
           <div class="qr-container">
             @if (qrSvg(); as svg) {
               <div class="qr-image" [innerHTML]="svg"></div>
@@ -38,9 +38,15 @@
           </div>
         </div>
 
+        @if (selectedNetwork() === 'lightning' && expiresAtMs() !== undefined) {
+          <div class="ln-expiry mono" [class.expiring]="secondsLeft() < 120">
+            <span class="dot"></span>
+            {{ 'receive.expiresIn' | translate }} {{ secondsLeft() | mmss }}
+          </div>
+        }
+
       </div>
 
-      <!-- Amount & Description -->
       <div class="fields">
         <app-amount-field
           [(amount)]="amount"
@@ -58,8 +64,7 @@
         }
       </div>
 
-      <!-- Action buttons -->
-      <div class="action-buttons">
+      <div class="action-buttons" [class.with-copy]="qrData()">
         @if (showCreateInvoice()) {
           <app-button
             colorVariant="white"
@@ -73,10 +78,16 @@
         }
         @if (qrData()) {
           <app-button
+            colorVariant="black"
+            variant="secondary"
+            sizeVariant="icon-square"
+            [icon]="['fas', 'copy']"
+            [ariaLabel]="'receive.copy' | translate"
+            (click)="copyInvoice()"/>
+          <app-button
             colorVariant="white"
             variant="action"
             [icon]="['fas', 'share-nodes']"
-            [disabled]="!qrData()"
             (click)="share()">
             {{ 'receive.share' | translate }}
           </app-button>

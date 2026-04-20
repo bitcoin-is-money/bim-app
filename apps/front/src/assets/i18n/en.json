@@ -67,6 +67,10 @@
     "couldNotCopy": "Could not copy to clipboard",
     "useUriPrefix": "Standard QR format",
     "goToNetwork": "Go to {{network}}",
+    "networks": "Payment networks",
+    "copy": "Copy",
+    "copied": "Copied",
+    "expiresIn": "Expires in",
     "network": {
       "lightning": "Lightning",
       "bitcoin": "Bitcoin",

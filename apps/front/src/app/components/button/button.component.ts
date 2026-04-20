@@ -20,4 +20,5 @@ export class ButtonComponent {
   readonly disabled = input(false);
   readonly loading = input(false);
   readonly compact = input(false);
+  readonly ariaLabel = input<string | undefined>(undefined);
 }

@@ -5,108 +5,110 @@
 }
 
 .receive-main {
-  @apply flex-1 flex flex-col items-center gap-8 px-4 pt-4 pb-4 overflow-y-auto;
+  @apply flex-1 flex flex-col gap-5 px-4 pt-2 pb-4 overflow-y-auto;
 }
 
-/* ---- Network selector ---- */
+/* ---- Segmented network tabs ---- */
 
-.network-selector {
-  @apply flex flex-col items-center gap-2;
+.network-tabs {
+  @apply mx-0 grid grid-cols-3 p-1 rounded-2xl;
+  background: var(--surface-1);
+
+  button {
+    @apply py-2.5 rounded-xl text-xs font-semibold text-neutral-400
+           flex items-center justify-center gap-1.5 bg-transparent cursor-pointer border-none;
+    min-height: 44px;
+
+    &.active {
+      background: var(--surface-0);
+      @apply text-neutral-100 shadow;
+    }
+  }
+
+  .net-dot { @apply w-2 h-2 rounded-full; }
+  .net-dot[data-net="bitcoin"]   { background: var(--rail-btc); }
+  .net-dot[data-net="lightning"] { background: var(--rail-ln); }
+  .net-dot[data-net="starknet"]  { background: var(--rail-sn); }
 }
+
+/* ---- Swipe zone + QR ---- */
 
 .swipe-zone {
-  @apply w-full flex flex-col items-center overflow-hidden;
+  @apply w-full flex flex-col items-center gap-4 overflow-hidden;
   touch-action: pan-y;
 }
 
 .swipe-content {
-  @apply w-full flex flex-col items-center gap-6;
+  @apply w-full flex flex-col items-center;
 }
 
-/* ---- Slide animations ---- */
+.slide-out-left  { animation: outLeft  150ms ease-in forwards; }
+.slide-out-right { animation: outRight 150ms ease-in forwards; }
+.slide-in-from-right { animation: inFromRight 150ms ease-out forwards; }
+.slide-in-from-left  { animation: inFromLeft  150ms ease-out forwards; }
 
-.slide-out-left {
-  animation: outLeft 150ms ease-in forwards;
+@keyframes outLeft  { from { transform: translateX(0); opacity: 1; } to { transform: translateX(-60px); opacity: 0; } }
+@keyframes outRight { from { transform: translateX(0); opacity: 1; } to { transform: translateX(60px);  opacity: 0; } }
+@keyframes inFromRight { from { transform: translateX(60px);  opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes inFromLeft  { from { transform: translateX(-60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .slide-out-left,
+  .slide-out-right,
+  .slide-in-from-right,
+  .slide-in-from-left {
+    animation: none;
+  }
 }
-
-.slide-out-right {
-  animation: outRight 150ms ease-in forwards;
-}
-
-.slide-in-from-right {
-  animation: inFromRight 150ms ease-out forwards;
-}
-
-.slide-in-from-left {
-  animation: inFromLeft 150ms ease-out forwards;
-}
-
-@keyframes outLeft {
-  from { transform: translateX(0); opacity: 1; }
-  to { transform: translateX(-60px); opacity: 0; }
-}
-
-@keyframes outRight {
-  from { transform: translateX(0); opacity: 1; }
-  to { transform: translateX(60px); opacity: 0; }
-}
-
-@keyframes inFromRight {
-  from { transform: translateX(60px); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
-
-@keyframes inFromLeft {
-  from { transform: translateX(-60px); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
-
-/* ---- Dots ---- */
-
-.carousel-dots {
-  @apply flex justify-center gap-2 my-2;
-}
-
-.dot {
-  @apply w-2 h-2 rounded-full bg-neutral-600 transition-colors cursor-pointer;
-  border: none;
-  padding: 0;
-}
-
-.dot-active {
-  @apply bg-amber-500;
-}
-
-/* ---- QR code ---- */
 
 .qr-container {
-  @apply flex items-center justify-center my-2;
+  @apply flex items-center justify-center my-1;
 
   .qr-image {
     @apply w-56 h-56 rounded-xl overflow-hidden;
+    background: white;
 
-    svg {
-      @apply w-full h-full;
-    }
+    svg { @apply w-full h-full; }
   }
 
   .qr-placeholder {
     @apply w-56 h-56 rounded-xl bg-neutral-800 flex items-center justify-center;
 
-    p {
-      @apply text-neutral-500 text-sm text-center px-4;
-    }
+    p { @apply text-neutral-500 text-sm text-center px-4; }
+  }
+}
+
+/* ---- Lightning expiry chip ---- */
+
+.ln-expiry {
+  @apply inline-flex items-center gap-2 text-xs text-neutral-300 px-2.5 py-1.5 rounded-full;
+  background: color-mix(in srgb, var(--rail-ln) 12%, transparent);
+
+  .dot {
+    @apply w-1.5 h-1.5 rounded-full;
+    background: var(--rail-ln);
+  }
+
+  &.expiring {
+    background: color-mix(in srgb, var(--state-danger) 16%, transparent);
+    color: #fecaca;
+
+    .dot { background: var(--state-danger); }
   }
 }
 
 /* ---- Fields ---- */
 
 .fields {
-  @apply w-full flex flex-col gap-2 px-4;
+  @apply w-full flex flex-col gap-2;
 }
 
 /* ---- Action buttons ---- */
 
 .action-buttons {
-  @apply w-full flex flex-col gap-3 px-4;
+  @apply w-full flex flex-col gap-3 mt-auto pt-3.5;
+
+  &.with-copy {
+    @apply grid grid-cols-[52px_1fr] gap-2;
+  }
 }

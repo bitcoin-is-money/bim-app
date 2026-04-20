@@ -67,6 +67,10 @@
     "couldNotCopy": "Impossible de copier dans le presse-papiers",
     "useUriPrefix": "Format QR standard",
     "goToNetwork": "Aller à {{network}}",
+    "networks": "Réseaux de paiement",
+    "copy": "Copier",
+    "copied": "Copié",
+    "expiresIn": "Expire dans",
     "network": {
       "lightning": "Lightning",
       "bitcoin": "Bitcoin",
