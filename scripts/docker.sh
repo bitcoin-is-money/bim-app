@@ -4,6 +4,9 @@ set -e
 PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 INFRA_DIR="$PROJECT_ROOT/infra"
 
+# Load local environment (secrets not committed to git)
+[ -f "$PROJECT_ROOT/.envrc" ] && . "$PROJECT_ROOT/.envrc"
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -21,6 +24,36 @@ node_version() {
 
 registry() {
   terraform -chdir="$INFRA_DIR" output -raw registry_endpoint
+}
+
+notify_deploy() {
+  local services="${1:-all}"
+  local version="$2"
+  local token="${ALERTING_SLACK_BOT_TOKEN:-}"
+  [ -z "$token" ] && return 0
+
+  local response
+  response=$(curl -s -X POST "https://slack.com/api/chat.postMessage" \
+    -H "Authorization: Bearer $token" \
+    -H "Content-Type: application/json" \
+    -d "{
+      \"channel\": \"#alerts\",
+      \"text\": \":rocket: *Production deployed*\",
+      \"attachments\": [{
+        \"color\": \"#36a64f\",
+        \"fields\": [
+          {\"title\": \"Services\", \"value\": \"${services}\", \"short\": true},
+          {\"title\": \"Version\", \"value\": \"${version}\", \"short\": true},
+          {\"title\": \"By\", \"value\": \"$(git -C "$PROJECT_ROOT" config user.name)\", \"short\": true}
+        ]
+      }]
+    }")
+
+  if echo "$response" | grep -q '"ok":true'; then
+    echo "Slack notification sent"
+  else
+    echo "Warning: Slack notification failed" >&2
+  fi
 }
 
 
@@ -153,6 +186,7 @@ case "${1:-}" in
     "$0" build "${2:-}"
     "$0" push "${2:-}"
     "$0" redeploy "${2:-}"
+    notify_deploy "${2:-all}" "$(app_version)"
     ;;
 
   force-redeploy)
