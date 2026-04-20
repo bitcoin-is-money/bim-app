@@ -23,6 +23,7 @@
       align-items: center;
       justify-content: center;
       z-index: 9999;
+      visibility: hidden;
     }
     #splash svg { width: 90vmin; height: 90vmin; max-width: 100%; }
   </style>
@@ -38,10 +39,10 @@
         new Promise(function (resolve) { setTimeout(function () { resolve('slow'); }, TIMEOUT_MS); })
       ]).then(function (result) {
         ctx.result = result;
-        if (result === 'fast') {
+        if (result === 'slow') {
           var splash = document.getElementById('splash');
           if (splash) {
-            splash.style.display = 'none';
+            splash.style.visibility = 'visible';
           }
         }
       });
