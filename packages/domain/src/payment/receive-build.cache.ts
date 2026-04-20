@@ -1,5 +1,4 @@
-import type {StarknetAddress} from '../shared';
-import type {Amount} from '../shared';
+import type {Amount, StarknetAddress} from '../shared';
 
 /**
  * Data stored for a pending Bitcoin receive build (between POST /receive and POST /receive/commit).

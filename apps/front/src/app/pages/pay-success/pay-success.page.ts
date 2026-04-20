@@ -1,10 +1,10 @@
-import type {OnInit} from '@angular/core';
-import {Component, computed, inject} from '@angular/core';
-import {Router} from '@angular/router';
-import {FaIconComponent} from '@fortawesome/angular-fontawesome';
-import {TranslateModule} from '@ngx-translate/core';
-import {FullPageLayoutComponent} from '../../layout';
-import {PayService} from '../../services/pay.service';
+import type { OnInit } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { TranslateModule } from '@ngx-translate/core';
+import { FullPageLayoutComponent } from '../../layout';
+import { PayService } from '../../services/pay.service';
 
 @Component({
   selector: 'app-pay-success',
@@ -14,7 +14,6 @@ import {PayService} from '../../services/pay.service';
   styleUrl: './pay-success.page.scss',
 })
 export class PaySuccessPage implements OnInit {
-
   private readonly router = inject(Router);
   private readonly payService = inject(PayService);
 

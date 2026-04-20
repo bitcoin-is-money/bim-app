@@ -2,14 +2,7 @@ import {StarknetAddress} from '@bim/domain/account';
 import {type BitcoinReceiveService, InvalidPaymentAmountError, ReceiveService} from '@bim/domain/payment';
 import type {StarknetCall} from '@bim/domain/ports';
 import {Amount} from '@bim/domain/shared';
-import {
-  LightningInvoice,
-  Swap,
-  SwapAmountError,
-  SwapCreationError,
-  SwapId,
-  type SwapService
-} from '@bim/domain/swap';
+import {LightningInvoice, Swap, SwapAmountError, SwapCreationError, SwapId, type SwapService} from '@bim/domain/swap';
 import {createLogger} from '@bim/lib/logger';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 

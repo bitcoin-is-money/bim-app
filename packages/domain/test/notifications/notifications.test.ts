@@ -6,10 +6,10 @@ import {
   SwapClaimFailed,
   TreasuryBalanceLow,
 } from '@bim/domain/notifications';
-import {starkscanUrl, truncateAddress} from '../../src/notifications/format';
 import {SwapId} from '@bim/domain/swap';
 import {createLogger} from '@bim/lib/logger';
 import {describe, expect, it} from 'vitest';
+import {starkscanUrl, truncateAddress} from '../../src/notifications/format';
 
 const ADDRESS = StarknetAddress.of('0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7');
 const SWAP_ID = SwapId.of('660e8400-e29b-41d4-a716-446655440001');

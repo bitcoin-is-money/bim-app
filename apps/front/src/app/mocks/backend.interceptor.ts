@@ -1,17 +1,23 @@
-import type {HttpEvent, HttpHandlerFn, HttpInterceptorFn, HttpRequest, HttpResponse} from '@angular/common/http';
-import {HttpErrorResponse} from '@angular/common/http';
-import type {Observable} from 'rxjs';
-import {of, throwError} from 'rxjs';
-import {delay, mergeMap} from 'rxjs/operators';
-import {AccountHandlerMock} from './account/account-handler.mock';
-import {AuthHandlerMock} from './auth/auth-handler.mock';
-import {PricesHandlerMock} from './currency/prices-handler.mock';
-import {DataStoreMock} from "./data-store.mock";
-import {PaymentHandlerMock} from './payment/payment-handler.mock';
-import {ReceiveHandlerMock} from './receive/receive-handler.mock';
-import {SwapHandlerMock} from './swap/swap-handler.mock';
-import {SettingsHandlerMock} from './user/settings-handler.mock';
-import {TransactionHandlerMock} from './user/transaction-handler.mock';
+import type {
+  HttpEvent,
+  HttpHandlerFn,
+  HttpInterceptorFn,
+  HttpRequest,
+  HttpResponse,
+} from '@angular/common/http';
+import { HttpErrorResponse } from '@angular/common/http';
+import type { Observable } from 'rxjs';
+import { of, throwError } from 'rxjs';
+import { delay, mergeMap } from 'rxjs/operators';
+import { AccountHandlerMock } from './account/account-handler.mock';
+import { AuthHandlerMock } from './auth/auth-handler.mock';
+import { PricesHandlerMock } from './currency/prices-handler.mock';
+import { DataStoreMock } from './data-store.mock';
+import { PaymentHandlerMock } from './payment/payment-handler.mock';
+import { ReceiveHandlerMock } from './receive/receive-handler.mock';
+import { SwapHandlerMock } from './swap/swap-handler.mock';
+import { SettingsHandlerMock } from './user/settings-handler.mock';
+import { TransactionHandlerMock } from './user/transaction-handler.mock';
 
 const store = new DataStoreMock();
 const mockAuthHandler = new AuthHandlerMock(store);
@@ -32,10 +38,11 @@ function randomDelay(): number {
 
 export const backendInterceptor: HttpInterceptorFn = (
   req: HttpRequest<unknown>,
-  next: HttpHandlerFn
-): Observable<HttpEvent<unknown>> => { // NOSONAR S3776 - mock-only dispatcher, not shipped to prod builds
+  next: HttpHandlerFn,
+): Observable<HttpEvent<unknown>> => {
+  // NOSONAR S3776 - mock-only dispatcher, not shipped to prod builds
   const url = req.urlWithParams;
-  const {method, body} = req;
+  const { method, body } = req;
   let httpFakeDelay = randomDelay();
 
   // Only intercept /api/ requests
@@ -50,13 +57,13 @@ export const backendInterceptor: HttpInterceptorFn = (
     response = mockAuthHandler.beginRegister(body as { username: string });
   } else if (url === '/api/auth/register/complete' && method === 'POST') {
     response = mockAuthHandler.completeRegister(
-      body as Parameters<typeof mockAuthHandler.completeRegister>[0]
+      body as Parameters<typeof mockAuthHandler.completeRegister>[0],
     );
   } else if (url === '/api/auth/login/begin' && method === 'POST') {
     response = mockAuthHandler.beginLogin();
   } else if (url === '/api/auth/login/complete' && method === 'POST') {
     response = mockAuthHandler.completeLogin(
-      body as Parameters<typeof mockAuthHandler.completeLogin>[0]
+      body as Parameters<typeof mockAuthHandler.completeLogin>[0],
     );
   } else if (url === '/api/auth/session' && method === 'GET') {
     response = mockAuthHandler.getSession();
@@ -104,7 +111,9 @@ export const backendInterceptor: HttpInterceptorFn = (
     response = mockPaymentHandler.execute(body as { paymentPayload: string });
     httpFakeDelay = payDelay;
   } else if (url === '/api/payment/receive' && method === 'POST') {
-    response = mockReceiveHandler.createInvoice(body as Parameters<typeof mockReceiveHandler.createInvoice>[0]);
+    response = mockReceiveHandler.createInvoice(
+      body as Parameters<typeof mockReceiveHandler.createInvoice>[0],
+    );
     httpFakeDelay = receiveDelay;
   }
 
@@ -115,17 +124,26 @@ export const backendInterceptor: HttpInterceptorFn = (
   }
 
   if (response) {
-    console.log(`[MockBackend] ${method} ${url}`, {body, response: response.body, status: response.status});
+    console.log(`[MockBackend] ${method} ${url}`, {
+      body,
+      response: response.body,
+      status: response.status,
+    });
 
     // Convert error responses (4xx, 5xx) to HttpErrorResponse
     if (response.status >= 400) {
       return of(null).pipe(
         delay(randomDelay()),
-        mergeMap(() => throwError(() => new HttpErrorResponse({
-          error: response.body,
-          status: response.status,
-          url: url,
-        })))
+        mergeMap(() =>
+          throwError(
+            () =>
+              new HttpErrorResponse({
+                error: response.body,
+                status: response.status,
+                url: url,
+              }),
+          ),
+        ),
       );
     }
     return of(response).pipe(delay(httpFakeDelay));

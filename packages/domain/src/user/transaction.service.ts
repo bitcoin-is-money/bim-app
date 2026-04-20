@@ -1,6 +1,10 @@
 import {AccountId} from '../account';
 import type {TransactionRepository} from '../ports';
-import type {FetchTransactionsInput, FetchTransactionsOutput, FetchTransactionsUseCase} from './use-case/fetch-transactions.use-case';
+import type {
+  FetchTransactionsInput,
+  FetchTransactionsOutput,
+  FetchTransactionsUseCase
+} from './use-case/fetch-transactions.use-case';
 
 // =============================================================================
 // Dependencies

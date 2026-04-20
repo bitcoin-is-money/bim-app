@@ -1,7 +1,7 @@
-import {Component, computed, inject} from '@angular/core';
-import {TranslateModule} from '@ngx-translate/core';
-import {PwaInstallService} from '../../services/pwa-install.service';
-import {ButtonComponent} from '../button/button.component';
+import { Component, computed, inject } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
+import { PwaInstallService } from '../../services/pwa-install.service';
+import { ButtonComponent } from '../button/button.component';
 
 @Component({
   selector: 'app-pwa-install-info',
@@ -11,7 +11,6 @@ import {ButtonComponent} from '../button/button.component';
   styleUrl: './pwa-install-info.component.scss',
 })
 export class PwaInstallInfoComponent {
-
   private readonly pwa = inject(PwaInstallService);
 
   readonly isInstalled = this.pwa.isInstalled;

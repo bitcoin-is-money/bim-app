@@ -4,7 +4,11 @@ import {SessionNotFoundError} from './errors';
 import {SessionId} from './session';
 import type {SessionConfig} from './session.config';
 import type {InvalidateSessionInput, InvalidateSessionUseCase} from './use-case/invalidate-session.use-case';
-import type {ValidateSessionInput, ValidateSessionOutput, ValidateSessionUseCase} from './use-case/validate-session.use-case';
+import type {
+  ValidateSessionInput,
+  ValidateSessionOutput,
+  ValidateSessionUseCase
+} from './use-case/validate-session.use-case';
 
 // =============================================================================
 // Dependencies

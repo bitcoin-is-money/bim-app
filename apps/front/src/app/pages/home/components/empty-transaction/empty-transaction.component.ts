@@ -1,5 +1,5 @@
-import {Component} from '@angular/core';
-import {TranslateModule} from '@ngx-translate/core';
+import { Component } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-empty-transaction',

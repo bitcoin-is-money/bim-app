@@ -1,7 +1,7 @@
-import {HttpClient} from '@angular/common/http';
-import {inject, Injectable} from '@angular/core';
-import type {Observable} from 'rxjs';
-import type {Account} from '../model';
+import { HttpClient } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import type { Observable } from 'rxjs';
+import type { Account } from '../model';
 
 export interface AuthResponse {
   account: Account;
@@ -33,7 +33,7 @@ export interface BeginRegisterResponse {
 
 export interface UserSessionResponse {
   authenticated: boolean;
-  account?: Account
+  account?: Account;
 }
 
 @Injectable({
@@ -44,7 +44,7 @@ export class AuthHttpService {
   private readonly http = inject(HttpClient);
 
   beginRegister(username: string): Observable<BeginRegisterResponse> {
-    return this.http.post<BeginRegisterResponse>(`${this.apiUrl}/register/begin`, {username});
+    return this.http.post<BeginRegisterResponse>(`${this.apiUrl}/register/begin`, { username });
   }
 
   completeRegister(body: {
@@ -60,7 +60,7 @@ export class AuthHttpService {
     return this.http.post<BeginAuthResponse>(`${this.apiUrl}/login/begin`, {});
   }
 
-  completeLogin(body: {challengeId: string; credential: unknown}): Observable<AuthResponse> {
+  completeLogin(body: { challengeId: string; credential: unknown }): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/login/complete`, body);
   }
 

@@ -1,5 +1,5 @@
-import {Component, input} from '@angular/core';
-import type {ColorVariant} from "../variant";
+import { Component, input } from '@angular/core';
+import type { ColorVariant } from '../variant';
 
 @Component({
   selector: 'app-spinner',

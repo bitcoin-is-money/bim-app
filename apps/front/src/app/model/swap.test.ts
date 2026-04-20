@@ -1,5 +1,5 @@
-import {describe, expect, it} from 'vitest';
-import {isTerminalStatus} from './swap';
+import { describe, expect, it } from 'vitest';
+import { isTerminalStatus } from './swap';
 
 describe('isTerminalStatus', () => {
   it('treats completed/expired/refunded/failed/lost as terminal', () => {

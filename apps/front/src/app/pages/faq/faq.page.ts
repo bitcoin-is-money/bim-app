@@ -1,8 +1,8 @@
-import {Component, inject} from '@angular/core';
-import {TranslateModule} from '@ngx-translate/core';
-import {GoBackHeaderComponent} from '../../components/go-back-header/go-back-header.component';
-import {FullPageLayoutComponent} from '../../layout';
-import {FaqContentService} from './faq-content.service';
+import { Component, inject } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
+import { GoBackHeaderComponent } from '../../components/go-back-header/go-back-header.component';
+import { FullPageLayoutComponent } from '../../layout';
+import { FaqContentService } from './faq-content.service';
 
 @Component({
   selector: 'app-faq',

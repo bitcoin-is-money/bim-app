@@ -12,7 +12,13 @@ import {
   SessionConfig,
   type WebAuthnConfig,
 } from '@bim/domain/auth';
-import type {AccountRepository, ChallengeRepository, SessionRepository, TransactionManager, WebAuthnGateway} from '@bim/domain/ports';
+import type {
+  AccountRepository,
+  ChallengeRepository,
+  SessionRepository,
+  TransactionManager,
+  WebAuthnGateway
+} from '@bim/domain/ports';
 import {createLogger} from '@bim/lib/logger';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {

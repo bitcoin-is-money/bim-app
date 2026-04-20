@@ -1,7 +1,7 @@
-import {serializeError} from '@bim/lib/error';
 import {StarknetAddress} from '@bim/domain/account';
 import {AvnuCreditsRecharged} from '@bim/domain/notifications';
 import type {NotificationGateway} from '@bim/domain/ports';
+import {serializeError} from '@bim/lib/error';
 import {createLogger} from '@bim/lib/logger';
 import {formatSats, formatStrk} from '@bim/lib/token';
 import {SlackNotificationGateway} from '@bim/slack';

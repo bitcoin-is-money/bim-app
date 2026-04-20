@@ -1,11 +1,42 @@
-import {serializeError} from '@bim/lib/error';
 import type {Database} from "@bim/db/database";
-import {AccountService, type DeployAccountUseCase, type GetBalanceUseCase, type GetDeploymentStatusUseCase} from "@bim/domain/account";
-import {AuthService, type BeginLoginUseCase, type BeginRegistrationUseCase, type CompleteLoginUseCase, type CompleteRegistrationUseCase, type InvalidateSessionUseCase, type SessionConfig, SessionService, type ValidateSessionUseCase} from "@bim/domain/auth";
+import {
+  AccountService,
+  type DeployAccountUseCase,
+  type GetBalanceUseCase,
+  type GetDeploymentStatusUseCase
+} from "@bim/domain/account";
+import {
+  AuthService,
+  type BeginLoginUseCase,
+  type BeginRegistrationUseCase,
+  type CompleteLoginUseCase,
+  type CompleteRegistrationUseCase,
+  type InvalidateSessionUseCase,
+  type SessionConfig,
+  SessionService,
+  type ValidateSessionUseCase
+} from "@bim/domain/auth";
 import {CurrencyService, type GetPricesUseCase} from "@bim/domain/currency";
 import {type ComponentName, HealthRegistry, type HealthTransitionEvent} from "@bim/domain/health";
 import {ServiceHealthChange} from "@bim/domain/notifications";
-import {BitcoinReceiveService, type BuildDonationUseCase, type BuildPaymentUseCase, type CommitReceiveUseCase, Erc20CallFactory, type ExecutePaymentUseCase, FeeConfig, ParseService, PaymentBuildCache, PaymentBuilderService, PaymentExecutionService, PayService, type PreparePaymentUseCase, ReceiveBuildCache, type ReceivePaymentUseCase, ReceiveService} from "@bim/domain/payment";
+import {
+  BitcoinReceiveService,
+  type BuildDonationUseCase,
+  type BuildPaymentUseCase,
+  type CommitReceiveUseCase,
+  Erc20CallFactory,
+  type ExecutePaymentUseCase,
+  FeeConfig,
+  ParseService,
+  PaymentBuildCache,
+  PaymentBuilderService,
+  PaymentExecutionService,
+  PayService,
+  type PreparePaymentUseCase,
+  ReceiveBuildCache,
+  type ReceivePaymentUseCase,
+  ReceiveService
+} from "@bim/domain/payment";
 import type {
   AccountRepository,
   AtomiqGateway,
@@ -25,7 +56,14 @@ import type {
 } from "@bim/domain/ports";
 import type {StarknetConfig} from "@bim/domain/shared";
 import {type FetchSwapLimitsUseCase, type FetchSwapStatusUseCase, SwapService} from "@bim/domain/swap";
-import {type FetchSettingsUseCase, type FetchTransactionsUseCase, TransactionService, type UpdateSettingsUseCase, UserSettingsService} from "@bim/domain/user";
+import {
+  type FetchSettingsUseCase,
+  type FetchTransactionsUseCase,
+  TransactionService,
+  type UpdateSettingsUseCase,
+  UserSettingsService
+} from "@bim/domain/user";
+import {serializeError} from '@bim/lib/error';
 import type pg from 'pg';
 import type {Logger} from "pino";
 import {

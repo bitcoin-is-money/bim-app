@@ -16,7 +16,7 @@
  * this script runs and the two values would never match, causing an
  * infinite redirect loop to /updating.
  */
-import {writeFileSync} from 'node:fs';
+import { writeFileSync } from 'node:fs';
 
 // Relative paths, resolved by Node against the current working directory.
 // npm always invokes scripts with cwd set to the package containing the

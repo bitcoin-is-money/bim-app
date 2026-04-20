@@ -1,21 +1,21 @@
-import {Component, computed, effect, inject, signal} from '@angular/core';
-import type {SafeHtml} from '@angular/platform-browser';
-import {DomSanitizer} from '@angular/platform-browser';
-import {TranslateModule} from '@ngx-translate/core';
-import {renderSVG} from 'uqr';
-import {AmountFieldComponent} from '../../components/amount-field/amount-field.component';
-import {ButtonComponent} from '../../components/button/button.component';
-import {CheckboxFieldComponent} from '../../components/checkbox-field/checkbox-field.component';
-import {FieldComponent} from '../../components/field/field.component';
-import {GoBackHeaderComponent} from '../../components/go-back-header/go-back-header.component';
-import {NetworkLogoComponent} from '../../components/network-logo/network-logo.component';
-import {FullPageLayoutComponent} from '../../layout';
-import {Amount} from '../../model';
-import {CurrencyService} from '../../services/currency.service';
-import {FeatureFlagsService} from '../../services/feature-flags.service';
-import {I18nService} from '../../services/i18n.service';
-import {NotificationService} from '../../services/notification.service';
-import {ReceiveService} from '../../services/receive.service';
+import { Component, computed, effect, inject, signal } from '@angular/core';
+import type { SafeHtml } from '@angular/platform-browser';
+import { DomSanitizer } from '@angular/platform-browser';
+import { TranslateModule } from '@ngx-translate/core';
+import { renderSVG } from 'uqr';
+import { AmountFieldComponent } from '../../components/amount-field/amount-field.component';
+import { ButtonComponent } from '../../components/button/button.component';
+import { CheckboxFieldComponent } from '../../components/checkbox-field/checkbox-field.component';
+import { FieldComponent } from '../../components/field/field.component';
+import { GoBackHeaderComponent } from '../../components/go-back-header/go-back-header.component';
+import { NetworkLogoComponent } from '../../components/network-logo/network-logo.component';
+import { FullPageLayoutComponent } from '../../layout';
+import { Amount } from '../../model';
+import { CurrencyService } from '../../services/currency.service';
+import { FeatureFlagsService } from '../../services/feature-flags.service';
+import { I18nService } from '../../services/i18n.service';
+import { NotificationService } from '../../services/notification.service';
+import { ReceiveService } from '../../services/receive.service';
 
 type PaymentNetwork = 'starknet' | 'lightning' | 'bitcoin';
 
@@ -38,7 +38,6 @@ const NETWORKS: PaymentNetwork[] = ['starknet', 'lightning', 'bitcoin'];
   styleUrl: './receive.page.scss',
 })
 export class ReceivePage {
-
   private readonly sanitizer = inject(DomSanitizer);
   private readonly currencyService = inject(CurrencyService);
   private readonly i18n = inject(I18nService);
@@ -60,7 +59,7 @@ export class ReceivePage {
   readonly animationSlideClass = signal('');
 
   readonly selectedNetwork = computed<PaymentNetwork>(() => {
-    return NETWORKS[this.activeNetworkIndex()] ?? 'starknet'
+    return NETWORKS[this.activeNetworkIndex()] ?? 'starknet';
   });
 
   readonly qrData = signal<string | undefined>(undefined);
@@ -138,10 +137,7 @@ export class ReceivePage {
     this.animateTo(networkIndex, networkIndex > current);
   }
 
-  private animateTo(
-    newIndex: number,
-    goLeft: boolean
-  ): void {
+  private animateTo(newIndex: number, goLeft: boolean): void {
     if (this.animating) return;
     this.animating = true;
 
@@ -181,7 +177,12 @@ export class ReceivePage {
     const network = this.selectedNetwork();
     const satAmount = this.currencyService.convert(this.amount(), 'SAT');
     const desc = this.description() || undefined;
-    this.receiveService.createInvoice(network, Math.round(satAmount.value), desc, this.useUriPrefix());
+    this.receiveService.createInvoice(
+      network,
+      Math.round(satAmount.value),
+      desc,
+      this.useUriPrefix(),
+    );
   }
 
   async share(): Promise<void> {
@@ -191,18 +192,18 @@ export class ReceivePage {
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- runtime check: navigator.share is not available in all browsers
     if (navigator.share) {
       try {
-        await navigator.share({title: 'BIM Receive', text: data});
+        await navigator.share({ title: 'BIM Receive', text: data });
       } catch (error) {
         if (error instanceof Error && error.name !== 'AbortError') {
-          this.notifications.error({message: this.i18n.t('receive.sharingFailed')});
+          this.notifications.error({ message: this.i18n.t('receive.sharingFailed') });
         }
       }
     } else {
       try {
         await navigator.clipboard.writeText(data);
-        this.notifications.success({message: this.i18n.t('receive.copiedToClipboard')});
+        this.notifications.success({ message: this.i18n.t('receive.copiedToClipboard') });
       } catch {
-        this.notifications.error({message: this.i18n.t('receive.couldNotCopy')});
+        this.notifications.error({ message: this.i18n.t('receive.couldNotCopy') });
       }
     }
   }

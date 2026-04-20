@@ -1,7 +1,7 @@
-import {serializeError} from '@bim/lib/error';
 import {ActivityReport} from '@bim/domain/notifications';
 import type {AccountRepository, CountOptions, NotificationGateway, TransactionRepository} from '@bim/domain/ports';
 import type {StarknetConfig} from '@bim/domain/shared';
+import {serializeError} from '@bim/lib/error';
 import type {Logger} from 'pino';
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;

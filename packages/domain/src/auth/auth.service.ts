@@ -21,9 +21,21 @@ import {
 import {Session} from './session';
 import type {SessionConfig} from './session.config';
 import type {BeginAuthenticationOutput, BeginLoginUseCase} from './use-case/begin-login.use-case';
-import type {BeginRegistrationInput, BeginRegistrationOutput, BeginRegistrationUseCase} from './use-case/begin-registration.use-case';
-import type {CompleteAuthenticationInput, CompleteAuthenticationOutput, CompleteLoginUseCase} from './use-case/complete-login.use-case';
-import type {CompleteRegistrationInput, CompleteRegistrationOutput, CompleteRegistrationUseCase} from './use-case/complete-registration.use-case';
+import type {
+  BeginRegistrationInput,
+  BeginRegistrationOutput,
+  BeginRegistrationUseCase
+} from './use-case/begin-registration.use-case';
+import type {
+  CompleteAuthenticationInput,
+  CompleteAuthenticationOutput,
+  CompleteLoginUseCase
+} from './use-case/complete-login.use-case';
+import type {
+  CompleteRegistrationInput,
+  CompleteRegistrationOutput,
+  CompleteRegistrationUseCase
+} from './use-case/complete-registration.use-case';
 
 // =============================================================================
 // Dependencies

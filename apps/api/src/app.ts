@@ -8,8 +8,8 @@ import type {Logger} from 'pino';
 import {AppConfig} from './app-config';
 import {AppContext, type AppContextOverrides} from "./app-context";
 import {runStartupHealthChecks} from './app-startup-health';
-import {installGlobalErrorHandler} from './middleware/global-error-handler';
 import {createApiCacheHeadersMiddleware} from './middleware/api-cache-headers.middleware';
+import {installGlobalErrorHandler} from './middleware/global-error-handler';
 import {createPwaCacheHeadersMiddleware} from './middleware/pwa-cache-headers.middleware';
 import {
   createAuthRateLimit,
