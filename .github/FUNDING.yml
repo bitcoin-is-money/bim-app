@@ -3,7 +3,7 @@
 #
 # Docs: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository
 
-custom: ["https://github.com/bitcoin-is-money/bim#buy-us-a-coffee"]
+custom: ["https://github.com/bitcoin-is-money/bim-app#buy-us-a-coffee"]
 
 #┌──────────────────┬───────────────────────────────────────────┬────────────────────────────────────┐
 #│       key        │                Plateform                  │          Format                    │
