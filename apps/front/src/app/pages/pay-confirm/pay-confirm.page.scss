@@ -2,21 +2,86 @@
 
 .pay-confirm-page {
   @apply h-full flex flex-col overflow-hidden;
+}
 
-  .pay-confirm-main {
-    @apply flex-1 flex flex-col justify-start px-4 pt-8;
+.pay-confirm-main {
+  @apply flex-1 flex flex-col gap-3.5 px-4 pt-2 pb-4;
+}
+
+/* ---- Hero ---- */
+
+.payc-hero { @apply text-center pt-2 pb-1.5; }
+
+.payc-editable {
+  @apply mt-4 flex items-center justify-center;
+}
+
+.net-pill {
+  @apply inline-flex items-center gap-2 py-1.5 px-3 rounded-full text-[11px]
+         font-semibold uppercase tracking-widest;
+
+  &[data-net="bitcoin"] {
+    background: color-mix(in srgb, var(--rail-btc) 12%, transparent);
+    color: var(--rail-btc);
   }
 
-  .payment-details {
-    @apply flex flex-col items-center gap-10;
+  &[data-net="lightning"] {
+    background: color-mix(in srgb, var(--rail-ln) 12%, transparent);
+    color: var(--rail-ln);
   }
 
-  .payment-fields {
-    @apply flex flex-col w-full gap-2 px-4;
+  &[data-net="starknet"] {
+    background: color-mix(in srgb, var(--rail-sn) 12%, transparent);
+    color: var(--rail-sn);
   }
 
-  .confirm-button {
-    @apply w-full;
+  &.loading {
+    @apply bg-neutral-800 text-neutral-500;
+    min-width: 140px;
+    min-height: 22px;
   }
+}
 
+.net-dot { @apply w-2 h-2 rounded-full bg-current; }
+
+.dot-sep { @apply opacity-50 mx-0.5; }
+
+.payc-amount { @apply text-[44px] font-bold tracking-tight mt-3.5 text-white; }
+.payc-ccy    { @apply text-sm font-semibold text-[color:var(--color-amber)] mt-0.5; }
+
+/* ---- Details card ---- */
+
+.payc-card {
+  @apply rounded-2xl mt-2;
+  background: var(--surface-1);
+}
+
+.payc-row {
+  @apply flex items-center justify-between px-4 py-3 border-b;
+  border-color: var(--surface-2);
+
+  &:last-child { border-bottom: 0; }
+
+  .k { @apply text-sm text-neutral-400; }
+  .v { @apply text-sm text-neutral-100 font-medium text-right max-w-[60%] break-all; }
+  .v.mono { @apply text-xs; font-size: 12px; }
+}
+
+/* ---- Fee strip ---- */
+
+.payc-fee {
+  @apply rounded-xl flex items-center justify-between px-3.5 py-3 text-xs;
+  background: color-mix(in srgb, var(--color-amber) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-amber) 20%, transparent);
+
+  .k { @apply text-neutral-300 inline-flex items-center gap-2; }
+  .v { color: var(--color-amber); font-weight: 600; }
+}
+
+.payc-loading {
+  @apply flex flex-col items-center gap-4 pt-10 text-neutral-500;
+}
+
+app-slide-to-confirm {
+  @apply block mt-auto;
 }

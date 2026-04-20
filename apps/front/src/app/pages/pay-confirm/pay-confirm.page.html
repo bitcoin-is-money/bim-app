@@ -1,74 +1,70 @@
 <app-full-page-layout [showFooter]="true">
   <div class="pay-confirm-page">
-    <app-go-back-header [title]="'payConfirm.title' | translate"></app-go-back-header>
+    <app-go-back-header [title]="'payConfirm.title' | translate"/>
 
     <main class="pay-confirm-main">
-      <div class="payment-details">
-        @if (payment(); as p) {
-          <app-network-logo [network]="p.network" style="height:48px"/>
+      @if (payment(); as p) {
+        <header class="payc-hero">
+          <span class="net-pill" [attr.data-net]="p.network">
+            <span class="net-dot"></span>
+            {{ 'payConfirm.via' | translate: { network: p.network } }}
+            <span class="dot-sep">·</span>
+            {{ 'payConfirm.arrivesIn' | translate }} {{ arrivalEstimate() }}
+          </span>
+
           @if (p.amountEditable) {
-            <app-amount-field
-              [amount]="editableAmount()"
-              (amountChange)="onAmountChange($event)"
-              [editable]="true"
-              [currencyToggle]="true"/>
+            <div class="payc-editable">
+              <app-amount-field
+                [amount]="editableAmount()"
+                (amountChange)="onAmountChange($event)"
+                [editable]="true"
+                [currencyToggle]="true"/>
+            </div>
           } @else {
-            <app-amount-highlight [originalAmount]="p.amount"/>
+            <div class="payc-amount tabular">{{ primaryAmount() }}</div>
+            <div class="payc-ccy">
+              {{ currency() }}
+              @if (secondaryAmount(); as sec) {
+                <span class="mono">· ≈ {{ sec }}</span>
+              }
+            </div>
           }
-          <div class="payment-fields">
-            <app-field
-              [label]="'payConfirm.to' | translate"
-              [title]="p.destination"
-              [value]="p.shortDestination"
-              [monospace]="true"
-            />
-            <app-field
-              [editable]="true"
-              [value]="description()"
-              (valueChange)="onDescriptionChange($event)"
-            />
-            <app-amount-field
-              [currencyToggle]="false"
-              [amount]="computedFee()"
-              [label]="'payConfirm.fee' | translate"
-            />
+        </header>
+
+        <section class="payc-card">
+          <div class="payc-row">
+            <span class="k">{{ 'payConfirm.to' | translate }}</span>
+            <span class="v mono">{{ p.shortDestination }}</span>
           </div>
-        } @else {
-          <app-network-logo [loading]="true" style="height:48px"/>
-          <app-amount-highlight/>
-          <div class="payment-fields">
-            <app-field
-              [label]="'payConfirm.to' | translate"
-              value=""
-              [monospace]="true"
-            />
-            <app-field
-              [editable]="true"
-              [value]="description()"
-              (valueChange)="onDescriptionChange($event)"
-            />
-            <app-amount-field
-              [currencyToggle]="false"
-              [label]="'payConfirm.fee' | translate"
-            />
+          @if (description()) {
+            <div class="payc-row">
+              <span class="k">{{ 'payConfirm.memo' | translate }}</span>
+              <span class="v">{{ description() }}</span>
+            </div>
+          }
+          <div class="payc-row">
+            <span class="k">{{ 'payConfirm.arrival' | translate }}</span>
+            <span class="v">{{ arrivalEstimate() }}</span>
+          </div>
+        </section>
+
+        @if (feeFormatted(); as fee) {
+          <div class="payc-fee">
+            <span class="k"><fa-icon [icon]="['fas','circle-info']"/> {{ 'payConfirm.fee' | translate }}</span>
+            <span class="v tabular">{{ fee }} · {{ feePercent() }}</span>
           </div>
         }
-        <app-button
-          class="confirm-button"
-          colorVariant="white"
-          variant="action"
-          [icon]="['fas', 'location-arrow']"
-          [loading]="isProcessing()"
+
+        <app-slide-to-confirm
           [disabled]="!paymentAvailable() || isProcessing()"
-          (click)="confirm()"
-        >
-          @if (isProcessing()) {
-            {{ 'payConfirm.processing' | translate }}
-          } @else {
-            {{ 'payConfirm.pay' | translate }}
-          }
-        </app-button>
-      </div>
+          [loading]="isProcessing()"
+          (confirmed)="confirm()"/>
+      } @else {
+        <div class="payc-loading">
+          <span class="net-pill loading"></span>
+          <div class="payc-amount">—</div>
+        </div>
+      }
     </main>
   </div>
 </app-full-page-layout>
