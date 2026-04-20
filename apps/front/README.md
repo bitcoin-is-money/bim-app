@@ -80,10 +80,10 @@ All toasts go through `NotificationService` (`src/app/services/notification.serv
 | Send Bitcoin    | swap `refunded`           | `info`    | `notifications.send.bitcoin.refunded`      | Payment refunded                 | `swap-polling.service.ts`                    |
 | Send Bitcoin    | swap `failed`             | `error`   | `notifications.send.bitcoin.failed`        | Payment failed                   | `swap-polling.service.ts`                    |
 | Send Bitcoin    | swap `lost`               | `error`   | `notifications.send.bitcoin.lost`          | Payment tracking lost            | `swap-polling.service.ts`                    |
-| Send Starknet   | tx submitted              | `info`    | `notifications.send.starknet.sent`         | Transaction submitted            | `pay.service.ts`                             |
+| Send Starknet   | tx submitted              | (none)    | `notifications.send.starknet.sent`         | Transaction submitted            | (suppressed — success page is shown instead) |
 | Send Starknet   | tx failed                 | (unused)  | `notifications.send.starknet.failed`       | Transaction failed               | (defined in i18n but no caller today)        |
 
-> **Note — Send Starknet has no terminal `success` toast** either. The flow only emits the `info` "Transaction submitted" toast because no swap is created; there is no equivalent of `.completed` with confetti.
+> **Note — Send Starknet has no toast at all.** The success page is displayed immediately after the transaction is submitted, so no separate notification is needed.
 
 ### Auth & registration
 

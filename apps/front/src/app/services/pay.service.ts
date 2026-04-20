@@ -221,8 +221,10 @@ export class PayService {
   private handleSuccess(response: ExecutePaymentResponse): void {
     this.lastPaymentNetwork.set(response.network);
 
-    const sentKey = SENT_KEYS[response.network];
-    this.notificationService.info({ message: this.i18n.t(sentKey) });
+    if (response.network !== 'starknet') {
+      const sentKey = SENT_KEYS[response.network];
+      this.notificationService.info({ message: this.i18n.t(sentKey) });
+    }
 
     if (response.network !== 'starknet' && 'swapId' in response) {
       const swap: StoredSwap = {
