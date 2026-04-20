@@ -1,0 +1,20 @@
+<div class="stc"
+     [class.disabled]="disabled()"
+     [class.hold]="mode() === 'hold'"
+     [class.consumed]="consumed()"
+     #track
+     (pointerdown)="onPointerDown($event)"
+     (pointermove)="onPointerMove($event)"
+     (pointerup)="onPointerUp($event)"
+     (pointercancel)="onPointerUp($event)">
+  <div class="stc-track" [style.--progress]="progress()">
+    {{ (mode() === 'hold' ? 'payConfirm.holdToPay' : labelKey()) | translate }}
+  </div>
+  <div class="stc-thumb" [style.transform]="'translateX(' + thumbX() + 'px)'" #thumb>
+    @if (loading() || consumed()) {
+      <app-spinner/>
+    } @else {
+      <fa-icon [icon]="['fas', 'chevron-right']"/>
+    }
+  </div>
+</div>
