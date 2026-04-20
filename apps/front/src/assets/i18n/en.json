@@ -34,7 +34,11 @@
   "home": {
     "greeting": "Hi {{username}}",
     "receive": "Receive",
-    "pay": "Pay"
+    "pay": "Pay",
+    "totalBalance": "Total balance",
+    "account": "Account",
+    "notifications": "Notifications",
+    "menu": "Menu"
   },
   "receive": {
     "title": "Receive",

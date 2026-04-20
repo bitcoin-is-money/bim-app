@@ -34,7 +34,11 @@
   "home": {
     "greeting": "Bonjour {{username}}",
     "receive": "Recevoir",
-    "pay": "Payer"
+    "pay": "Payer",
+    "totalBalance": "Solde total",
+    "account": "Compte",
+    "notifications": "Notifications",
+    "menu": "Menu"
   },
   "receive": {
     "title": "Recevoir",

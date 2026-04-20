@@ -1,14 +1,14 @@
-<div class="amount-container">
+<section class="balance-card">
+  <div class="bc-label">{{ labelKey() | translate }}</div>
   @if (displayedAmount(); as amount) {
-    <div class="amount-value">{{ amount | formatAmount }}</div>
+    <div class="bc-value">
+      <span class="bc-big tabular">{{ amount | formatAmount }}</span>
+      <span class="bc-ccy">{{ amount.currency }}</span>
+    </div>
+    @if (fxSecondary(); as fx) {
+      <div class="bc-sub mono">≈ {{ fx }}</div>
+    }
   } @else {
-    <div class="amount-value">-</div>
+    <div class="bc-value"><span class="bc-big">—</span></div>
   }
-</div>
-@if (displayedAmount(); as amount) {
-  <app-currency-display
-    [currency]="amount.currency"
-    size="large">
-  </app-currency-display>
-}
-
+</section>

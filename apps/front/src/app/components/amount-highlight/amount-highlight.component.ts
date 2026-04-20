@@ -1,28 +1,48 @@
 import {Component, computed, inject, input} from '@angular/core';
-import type {Amount} from '../../model';
+import {TranslateModule} from '@ngx-translate/core';
+import type {Amount, Currency} from '../../model';
 import {FormatAmountPipe} from '../../pipes/format-amount.pipe';
 import {CurrencyService} from '../../services/currency.service';
-import {CurrencyDisplayComponent} from '../currency-display/currency-display.component';
+import {I18nService} from '../../services/i18n.service';
+
+const CRYPTO_CURRENCIES = new Set<Currency>(['BTC', 'SAT']);
 
 @Component({
   selector: 'app-amount-highlight',
   standalone: true,
-  imports: [CurrencyDisplayComponent, FormatAmountPipe],
+  imports: [FormatAmountPipe, TranslateModule],
   templateUrl: './amount-highlight.component.html',
   styleUrl: './amount-highlight.component.scss',
 })
 export class AmountHighlightComponent {
 
-  private readonly currencyService: CurrencyService = inject(CurrencyService);
+  private readonly currencyService = inject(CurrencyService);
+  private readonly i18nService = inject(I18nService);
 
-  /** Original amount with its currency (undefined while loading) */
   readonly originalAmount = input<Amount | undefined>(undefined);
+  readonly labelKey = input<string>('home.totalBalance');
 
-  /** Amount converted to displayed currency, undefined if the original is undefined */
   readonly displayedAmount = computed(() => {
     const amount = this.originalAmount();
-    if (amount === undefined)
-      return undefined;
+    if (amount === undefined) return undefined;
     return this.currencyService.convert(amount, this.currencyService.currentCurrency());
   });
+
+  readonly fxSecondary = computed(() => {
+    const amount = this.displayedAmount();
+    if (amount === undefined) return undefined;
+    const target = this.secondaryCurrency(amount.currency);
+    if (target === undefined || target === amount.currency) return undefined;
+    const converted = this.currencyService.convert(amount, target);
+    if (converted.value === amount.value && target !== amount.currency) return undefined;
+    return `${converted.format(this.i18nService.currentLocale())} ${target}`;
+  });
+
+  private secondaryCurrency(primary: Currency): Currency | undefined {
+    if (CRYPTO_CURRENCIES.has(primary)) {
+      const fiat = this.currencyService.preferredCurrencies().find(c => !CRYPTO_CURRENCIES.has(c));
+      return fiat;
+    }
+    return 'BTC';
+  }
 }
