@@ -40,7 +40,7 @@ notify_deploy() {
     -H "Authorization: Bearer $token" \
     -H "Content-Type: application/json" \
     -d "{
-      \"channel\": \"#alerts\",
+      \"channel\": \"#alerting\",
       \"text\": \":rocket: *Production deployed*\",
       \"attachments\": [{
         \"color\": \"#36a64f\",
@@ -55,7 +55,7 @@ notify_deploy() {
   if echo "$response" | grep -q '"ok":true'; then
     echo "Slack notification sent"
   else
-    echo "Warning: Slack notification failed" >&2
+    echo "Warning: Slack notification failed: $response" >&2
   fi
 }
 
