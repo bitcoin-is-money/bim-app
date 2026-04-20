@@ -79,28 +79,28 @@
     "@commitlint/cli": "^20.5.0",
     "@commitlint/config-conventional": "^20.5.0",
     "@eslint/js": "^10.0.1",
-    "@secretlint/secretlint-rule-preset-recommend": "^11.7.1",
-    "@vitest/coverage-v8": "^4.0.18",
-    "angular-eslint": "^21.2.0",
+    "@secretlint/secretlint-rule-preset-recommend": "^12.1.0",
+    "@vitest/coverage-v8": "^4.1.4",
+    "angular-eslint": "^21.3.1",
     "better-npm-audit": "^3.11.0",
     "dotenv-cli": "^11.0.0",
-    "esbuild": "^0.27.3",
-    "eslint": "^10.2.0",
+    "esbuild": "^0.28.0",
+    "eslint": "^10.2.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-security": "^4.0.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
     "lockfile-lint": "^5.0.0",
     "patch-package": "^8.0.1",
-    "secretlint": "^11.7.1",
+    "secretlint": "^12.1.0",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3",
+    "typescript": "^6.0.3",
     "typescript-eslint": "^8.58.2",
     "vite-tsconfig-paths": "^6.1.1",
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.4"
   },
   "overrides": {
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.4"
   },
   "dependencies": {
     "@atomiqlabs/base": "^13.2.0"

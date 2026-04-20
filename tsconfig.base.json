@@ -15,17 +15,17 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
-    "baseUrl": ".",
+    "types": ["node"],
     "paths": {
-      "@bim/lib/*": ["packages/lib/src/*"],
-      "@bim/test-toolkit/*": ["packages/test-toolkit/src/*"],
-      "@bim/db": ["packages/db/src/index.ts"],
-      "@bim/db/database": ["packages/db/src/database.ts"],
-      "@bim/domain/*": ["packages/domain/src/*"],
-      "@bim/monitoring": ["packages/monitoring/src/index.ts"],
-      "@bim/starknet": ["packages/starknet/src/index.ts"],
-      "@bim/atomiq": ["packages/atomiq/src/index.ts"],
-      "@bim/slack": ["packages/slack/src/index.ts"]
+      "@bim/lib/*": ["./packages/lib/src/*"],
+      "@bim/test-toolkit/*": ["./packages/test-toolkit/src/*"],
+      "@bim/db": ["./packages/db/src/index.ts"],
+      "@bim/db/database": ["./packages/db/src/database.ts"],
+      "@bim/domain/*": ["./packages/domain/src/*"],
+      "@bim/monitoring": ["./packages/monitoring/src/index.ts"],
+      "@bim/starknet": ["./packages/starknet/src/index.ts"],
+      "@bim/atomiq": ["./packages/atomiq/src/index.ts"],
+      "@bim/slack": ["./packages/slack/src/index.ts"]
     }
   }
 }
