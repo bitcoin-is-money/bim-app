@@ -1,0 +1,9 @@
+@reference "tailwindcss";
+
+.rail-badge {
+  @apply inline-block text-[9.5px] font-semibold tracking-wider uppercase px-[6px] py-[1px] rounded;
+
+  &.btc { background: color-mix(in srgb, var(--rail-btc) 14%, transparent); color: var(--rail-btc); }
+  &.ln  { background: color-mix(in srgb, var(--rail-ln)  14%, transparent); color: var(--rail-ln);  }
+  &.sn  { background: color-mix(in srgb, var(--rail-sn)  14%, transparent); color: var(--rail-sn);  }
+}

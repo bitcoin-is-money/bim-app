@@ -1,0 +1,6 @@
+<span class="rail-badge"
+      [class.btc]="network() === 'bitcoin'"
+      [class.ln]="network() === 'lightning'"
+      [class.sn]="network() === 'starknet'">
+  {{ shortCode() }}
+</span>
