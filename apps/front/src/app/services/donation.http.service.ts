@@ -1,6 +1,6 @@
-import {HttpClient} from '@angular/common/http';
-import {inject, Injectable} from '@angular/core';
-import type {Observable} from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import type { Observable } from 'rxjs';
 
 export interface DonationBuildResponse {
   buildId: string;
@@ -16,6 +16,6 @@ export class DonationHttpService {
   private readonly http = inject(HttpClient);
 
   build(amountSats: number): Observable<DonationBuildResponse> {
-    return this.http.post<DonationBuildResponse>(`${this.apiUrl}/build`, {amountSats});
+    return this.http.post<DonationBuildResponse>(`${this.apiUrl}/build`, { amountSats });
   }
 }

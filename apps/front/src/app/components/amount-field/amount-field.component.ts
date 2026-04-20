@@ -1,10 +1,10 @@
-import {Component, computed, effect, inject, input, model, signal} from '@angular/core';
-import {Amount, Currency} from '../../model';
-import {CurrencyService} from '../../services/currency.service';
-import {I18nService} from '../../services/i18n.service';
-import {CurrencyDisplayComponent} from '../currency-display/currency-display.component';
-import {FieldComponent} from '../field/field.component';
-import {SpinnerComponent} from '../spinner/spinner.component';
+import { Component, computed, effect, inject, input, model, signal } from '@angular/core';
+import { Amount, Currency } from '../../model';
+import { CurrencyService } from '../../services/currency.service';
+import { I18nService } from '../../services/i18n.service';
+import { CurrencyDisplayComponent } from '../currency-display/currency-display.component';
+import { FieldComponent } from '../field/field.component';
+import { SpinnerComponent } from '../spinner/spinner.component';
 
 @Component({
   selector: 'app-amount-field',
@@ -35,7 +35,7 @@ export class AmountFieldComponent {
     const amount = this.amount();
     return this.currencyToggle()
       ? this.currencyService.currentCurrency()
-      : amount?.currency ?? 'SAT';
+      : (amount?.currency ?? 'SAT');
   });
 
   readonly formattedAmount = computed(() => {
@@ -63,10 +63,12 @@ export class AmountFieldComponent {
     } else {
       const dotIndex = sanitized.indexOf('.');
       if (dotIndex !== -1) {
-        sanitized = sanitized.slice(0, dotIndex + 1) + sanitized
-          .slice(dotIndex + 1)
-          .replaceAll('.', '')
-          .slice(0, maxDecimals);
+        sanitized =
+          sanitized.slice(0, dotIndex + 1) +
+          sanitized
+            .slice(dotIndex + 1)
+            .replaceAll('.', '')
+            .slice(0, maxDecimals);
       }
     }
     return sanitized;

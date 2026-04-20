@@ -1,15 +1,15 @@
-import {Component, computed, inject, signal} from '@angular/core';
-import {TranslateModule} from '@ngx-translate/core';
-import {AmountFieldComponent} from '../../components/amount-field/amount-field.component';
-import {ButtonComponent} from '../../components/button/button.component';
-import {GoBackHeaderComponent} from '../../components/go-back-header/go-back-header.component';
-import {FullPageLayoutComponent} from '../../layout';
-import {Amount} from '../../model';
-import {AccountService} from '../../services/account.service';
-import {CurrencyService} from '../../services/currency.service';
-import {I18nService} from '../../services/i18n.service';
-import {NotificationService} from '../../services/notification.service';
-import {PayService} from '../../services/pay.service';
+import { Component, computed, inject, signal } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
+import { AmountFieldComponent } from '../../components/amount-field/amount-field.component';
+import { ButtonComponent } from '../../components/button/button.component';
+import { GoBackHeaderComponent } from '../../components/go-back-header/go-back-header.component';
+import { FullPageLayoutComponent } from '../../layout';
+import { Amount } from '../../model';
+import { AccountService } from '../../services/account.service';
+import { CurrencyService } from '../../services/currency.service';
+import { I18nService } from '../../services/i18n.service';
+import { NotificationService } from '../../services/notification.service';
+import { PayService } from '../../services/pay.service';
 
 @Component({
   selector: 'app-support',

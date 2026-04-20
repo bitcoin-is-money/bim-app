@@ -1,4 +1,3 @@
-import {SanitizedError, serializeError} from '@bim/lib/error';
 import {type StarknetChainType, StarknetInitializer, type StarknetInitializerType} from '@atomiqlabs/chain-starknet';
 import type {FromBTCSwap, TypedSwapper, TypedSwapperOptions} from '@atomiqlabs/sdk';
 import {BitcoinNetwork, SwapperFactory, SwapType} from '@atomiqlabs/sdk';
@@ -31,6 +30,7 @@ import type {
   SwapLimits
 } from "@bim/domain/swap";
 import {LightningInvoiceExpiredError, SwapAmountError} from "@bim/domain/swap";
+import {SanitizedError, serializeError} from '@bim/lib/error';
 import type pg from 'pg';
 import type {Logger} from "pino";
 import {Account as StarknetAccount, BlockTag, RpcProvider, Signer as StarknetSigner} from 'starknet';
@@ -523,7 +523,7 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     const commitTxs = await swap.txsCommit();
     const commitCalls: StarknetCall[] = [];
     for (const tx of commitTxs) {
-       
+
       if (tx && typeof tx === 'object' && 'type' in tx && tx.type === 'INVOKE' && 'tx' in tx) {
         const calls = tx.tx as {contractAddress: string; entrypoint: string; calldata?: string[]}[];
         for (const call of calls) {

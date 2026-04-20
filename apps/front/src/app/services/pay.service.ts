@@ -1,23 +1,23 @@
-import {inject, Injectable, signal} from '@angular/core';
-import {Router} from '@angular/router';
-import {buildBip21Uri} from '@bim/lib/bitcoin';
-import {Base64Url, Hex} from '@bim/lib/encoding';
-import type { Subscription} from 'rxjs';
-import {firstValueFrom} from 'rxjs';
-import {Amount, ParsedPayment, type StoredSwap} from '../model';
-import {AccountService} from './account.service';
-import {DonationHttpService} from './donation.http.service';
-import {I18nService} from './i18n.service';
-import {NotificationService} from './notification.service';
+import { inject, Injectable, signal } from '@angular/core';
+import { Router } from '@angular/router';
+import { buildBip21Uri } from '@bim/lib/bitcoin';
+import { Base64Url, Hex } from '@bim/lib/encoding';
+import type { Subscription } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
+import { Amount, ParsedPayment, type StoredSwap } from '../model';
+import { AccountService } from './account.service';
+import { DonationHttpService } from './donation.http.service';
+import { I18nService } from './i18n.service';
+import { NotificationService } from './notification.service';
 import {
   type BuildPaymentResponse,
   type ExecutePaymentResponse,
   PayHttpService,
-  type PaymentNetwork
+  type PaymentNetwork,
 } from './pay.http.service';
-import {SwapPollingService} from './swap-polling.service';
-import {SwapStorageService} from './swap-storage.service';
-import {TransactionService} from './transaction.service';
+import { SwapPollingService } from './swap-polling.service';
+import { SwapStorageService } from './swap-storage.service';
+import { TransactionService } from './transaction.service';
 
 const SENT_KEYS: Record<PaymentNetwork, string> = {
   lightning: 'notifications.send.lightning.sent',
@@ -97,7 +97,7 @@ export class PayService {
       error: () => {
         this.isLoading.set(false);
         // Navigate back — error notification is shown by the interceptor
-        void this.router.navigate(['/pay'], {replaceUrl: true});
+        void this.router.navigate(['/pay'], { replaceUrl: true });
       },
     });
   }
@@ -108,7 +108,7 @@ export class PayService {
    */
   updatePaymentAmount(destination: string, amountSats: number): void {
     const btcAmount = Amount.satToBtc(amountSats);
-    this.rawData = buildBip21Uri(destination, {amount: btcAmount});
+    this.rawData = buildBip21Uri(destination, { amount: btcAmount });
     this.cachedBuild = null;
   }
 
@@ -132,8 +132,9 @@ export class PayService {
 
     try {
       // 1. Use cached build or re-build (if description changed)
-      const buildResponse = this.cachedBuild
-        ?? await firstValueFrom(this.httpService.build(this.rawData, this.description ?? undefined));
+      const buildResponse =
+        this.cachedBuild ??
+        (await firstValueFrom(this.httpService.build(this.rawData, this.description ?? undefined)));
 
       // 2. WebAuthn sign (user approves with biometrics)
       const challenge = Hex.decode(buildResponse.messageHash).buffer as ArrayBuffer;
@@ -196,7 +197,7 @@ export class PayService {
     const credential = (await navigator.credentials.get({
       publicKey: {
         challenge,
-        allowCredentials: [{id: credentialIdBytes, type: 'public-key'}],
+        allowCredentials: [{ id: credentialIdBytes, type: 'public-key' }],
         userVerification: 'required',
         timeout: 60000,
       },
@@ -220,15 +221,17 @@ export class PayService {
   private handleSuccess(response: ExecutePaymentResponse): void {
     this.lastPaymentNetwork.set(response.network);
 
-     
-    const sentKey = SENT_KEYS[response.network];
-    this.notificationService.info({message: this.i18n.t(sentKey)});
+    if (response.network !== 'starknet') {
+      const sentKey = SENT_KEYS[response.network];
+      this.notificationService.info({ message: this.i18n.t(sentKey) });
+    }
 
     if (response.network !== 'starknet' && 'swapId' in response) {
       const swap: StoredSwap = {
         id: response.swapId,
         type: 'send',
-        direction: response.network === 'lightning' ? 'starknet_to_lightning' : 'starknet_to_bitcoin',
+        direction:
+          response.network === 'lightning' ? 'starknet_to_lightning' : 'starknet_to_bitcoin',
         amountSats: response.amount.value,
         createdAt: new Date().toISOString(),
         lastKnownStatus: 'pending',
@@ -251,4 +254,3 @@ export class PayService {
     });
   }
 }
-

@@ -1,4 +1,4 @@
-import {Component, computed, input} from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 
 const NETWORK_LOGOS: Record<string, string> = {
   lightning: '/network-lightning.png',

@@ -1,5 +1,5 @@
-import type {ParsePaymentResponse, PaymentNetwork} from '../services/pay.http.service';
-import {Amount} from './amount';
+import type { ParsePaymentResponse, PaymentNetwork } from '../services/pay.http.service';
+import { Amount } from './amount';
 
 export class ParsedPayment {
   private constructor(

@@ -177,17 +177,6 @@ export class DrizzleTransactionRepository extends AbstractDrizzleRepository impl
       });
   }
 
-  async deleteDescription(transactionHash: TransactionHash, accountId: AccountId): Promise<void> {
-    await this.resolveDb()
-      .delete(schema.transactionDescriptions)
-      .where(
-        and(
-          eq(schema.transactionDescriptions.transactionHash, transactionHash),
-          eq(schema.transactionDescriptions.accountId, accountId),
-        ),
-      );
-  }
-
   private toTransaction(record: schema.TransactionRecord, description: string | null): Transaction {
     return new Transaction(
       TransactionId.of(record.id),

@@ -269,37 +269,38 @@ POST /api/payment/receive/commit               (receive.routes.ts:184)
 │   )                                             ← non-fatal if it fails
 │       Labels the commit tx as "Security deposit" in the user's tx history.
 │
-├── receiveService.completeBitcoinReceive({swapId, useUriPrefix})
-│   │   (receive.service.ts:147-167)
+├── swapService.completeBitcoinToStarknet({swapId})
+│   │   (swap.service.ts:277-309)         ← called inline by BitcoinReceiveService.commitAndComplete
 │   │
-│   └── swapService.completeBitcoinToStarknet({swapId})
-│       │   (swap.service.ts:277-309)
-│       │
-│       ├── swapRepository.findById(swapId)
-│       │     → throws SwapNotFoundError if missing
-│       │
-│       ├── atomiqGateway.completeBitcoinSwapCommit(swapId)
-│       │   │   (atomiq.gateway.ts:414-446)
-│       │   │
-│       │   ├── swap = swapper.getSwapById(swapId, 'STARKNET')
-│       │   ├── abortController with 90s timeout
-│       │   ├── swap.waitTillCommited(abortSignal)
-│       │   │     Polls Atomiq's on-chain state until the escrow is confirmed
-│       │   │     (transitions to CLAIM_COMMITED). Normally fast because we
-│       │   │     already waited for the tx above, but the SDK has its own
-│       │   │     view and may need a few seconds to pick up the event.
-│       │   ├── depositAddress = swap.getAddress()
-│       │   ├── amount = swap.getInput()?.rawAmount
-│       │   └── return {
-│       │         depositAddress,
-│       │         bip21Uri: `bitcoin:${depositAddress}?amount=${BTC}`
-│       │       }
-│       │
-│       ├── swap.setDepositAddress(depositAddress)
-│       ├── swap.markAsPaid()                   ← transition committed → paid
-│       ├── swapRepository.save(swap)
-│       │
-│       └── return { swap, depositAddress, bip21Uri }
+│   ├── swapRepository.findById(swapId)
+│   │     → throws SwapNotFoundError if missing
+│   │
+│   ├── atomiqGateway.completeBitcoinSwapCommit(swapId)
+│   │   │   (atomiq.gateway.ts:414-446)
+│   │   │
+│   │   ├── swap = swapper.getSwapById(swapId, 'STARKNET')
+│   │   ├── abortController with 90s timeout
+│   │   ├── swap.waitTillCommited(abortSignal)
+│   │   │     Polls Atomiq's on-chain state until the escrow is confirmed
+│   │   │     (transitions to CLAIM_COMMITED). Normally fast because we
+│   │   │     already waited for the tx above, but the SDK has its own
+│   │   │     view and may need a few seconds to pick up the event.
+│   │   ├── depositAddress = swap.getAddress()
+│   │   ├── amount = swap.getInput()?.rawAmount
+│   │   └── return {
+│   │         depositAddress,
+│   │         bip21Uri: `bitcoin:${depositAddress}?amount=${BTC}`
+│   │       }
+│   │
+│   ├── swap.setDepositAddress(depositAddress)
+│   ├── swap.markAsPaid()                   ← transition committed → paid
+│   ├── swapRepository.save(swap)
+│   │
+│   └── return { swap, depositAddress, bip21Uri }
+│
+├── apply useUriPrefix to bip21Uri (strip "bitcoin:" if false)
+│
+├── wrap depositAddress in BitcoinAddress.of(addr, bitcoinNetwork)
 │
 ├── swapMonitor.ensureRunning()
 │       No-op if the monitor is already running from a previous swap;
@@ -333,7 +334,7 @@ address. This is deliberate:
   via the SDK's `_sync(true)` mechanism.
 
 This is a load-bearing invariant. **Never move the `saveBitcoinCommit`
-call below `completeBitcoinReceive`.**
+call below `swapService.completeBitcoinToStarknet`.**
 
 ---
 
@@ -474,8 +475,7 @@ sequenceDiagram
     end
 
     Commit->>Commit: transactionRepository.saveDescription(txHash, "Security deposit")
-    Commit->>Recv: completeBitcoinReceive({swapId, useUriPrefix})
-    Recv->>Swap: completeBitcoinToStarknet({swapId})
+    Commit->>Swap: completeBitcoinToStarknet({swapId})
     Swap->>DB: findById(swapId)
     Swap->>Gw: completeBitcoinSwapCommit(swapId)
     Gw->>SDK: swap.waitTillCommited(signal, timeout=90s)
@@ -485,8 +485,7 @@ sequenceDiagram
     Gw-->>Swap: { depositAddress, bip21Uri }
     Swap->>Swap: swap.setDepositAddress + swap.markAsPaid
     Swap->>DB: UPDATE swap status=paid
-    Swap-->>Recv: { swap, depositAddress, bip21Uri }
-    Recv-->>Commit: { swap, depositAddress, bip21Uri }
+    Swap-->>Commit: { swap, depositAddress, bip21Uri }
     Commit->>Mon: ensureRunning()
     Commit-->>Front: { swapId, depositAddress, bip21Uri, amount, expiresAt }
     Front->>User: Display bitcoin:... QR code
@@ -561,8 +560,8 @@ edge cases where the SDK reported `expired` prematurely.
 - Build cache: `apps/api/src/routes/payment/receive/receive-build.cache.ts`
 
 **Domain:**
-- `ReceiveService.prepareBitcoinReceive`: `packages/domain/src/payment/receive.service.ts:122-141`
-- `ReceiveService.completeBitcoinReceive`: `packages/domain/src/payment/receive.service.ts:147-167`
+- `ReceiveService.prepareBitcoinReceive`: `packages/domain/src/payment/receive.service.ts`
+- `BitcoinReceiveService.commitAndComplete`: `packages/domain/src/payment/bitcoin-receive.service.ts` (inlines the swap completion + bip21Uri formatting)
 - `SwapService.prepareBitcoinToStarknet`: `packages/domain/src/swap/swap.service.ts:212-240`
 - `SwapService.saveBitcoinCommit`: `packages/domain/src/swap/swap.service.ts:249-267`
 - `SwapService.completeBitcoinToStarknet`: `packages/domain/src/swap/swap.service.ts:277-309`

@@ -1,4 +1,4 @@
-import {Component} from '@angular/core';
+import { Component } from '@angular/core';
 
 @Component({
   selector: 'app-logo-footer',
@@ -7,5 +7,4 @@ import {Component} from '@angular/core';
   templateUrl: './logo-footer.component.html',
   styleUrls: ['./logo-footer.component.scss'],
 })
-export class LogoFooterComponent  {
-}
+export class LogoFooterComponent {}

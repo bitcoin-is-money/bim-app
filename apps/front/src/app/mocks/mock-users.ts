@@ -1,6 +1,6 @@
-import type {StoredSwap, SwapStatus} from '../model';
-import type {ParsePaymentResponse} from '../services/pay.http.service';
-import type {Language} from '../services/user-settings-http.service';
+import type { StoredSwap, SwapStatus } from '../model';
+import type { ParsePaymentResponse } from '../services/pay.http.service';
+import type { Language } from '../services/user-settings-http.service';
 
 export interface MockSwapConfig {
   /** Predefined status progression for created swaps: status after N polls */
@@ -42,16 +42,16 @@ export const MOCK_USERS: [MockUserProfile, ...MockUserProfile[]] = [
     receiveInvoiceSuccess: true,
     paymentParseResult: {
       network: 'starknet',
-      amount: {value: 50_000_000, currency: 'SAT'}, // 0.5 BTC
+      amount: { value: 50_000_000, currency: 'SAT' }, // 0.5 BTC
       amountEditable: false,
-      fee: {value: 150_000, currency: 'SAT'}, // 0.3% BIM fee
+      fee: { value: 150_000, currency: 'SAT' }, // 0.3% BIM fee
       description: 'Payment to Starknet account',
       address: '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d',
       tokenAddress: '0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac',
     },
     paymentBuildFee: null, // Starknet: same fee as parse
     existingSwaps: [],
-    swapConfig: {statusProgression: ['pending', 'paid', 'completed']},
+    swapConfig: { statusProgression: ['pending', 'paid', 'completed'] },
     language: 'en',
   },
   {
@@ -67,16 +67,16 @@ export const MOCK_USERS: [MockUserProfile, ...MockUserProfile[]] = [
     receiveInvoiceSuccess: true,
     paymentParseResult: {
       network: 'starknet',
-      amount: {value: 50_000_000, currency: 'SAT'}, // 0.5 BTC
+      amount: { value: 50_000_000, currency: 'SAT' }, // 0.5 BTC
       amountEditable: false,
-      fee: {value: 150_000, currency: 'SAT'}, // 0.3% BIM fee
+      fee: { value: 150_000, currency: 'SAT' }, // 0.3% BIM fee
       description: 'Payment to Starknet account',
       address: '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d',
       tokenAddress: '0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac',
     },
     paymentBuildFee: null, // Starknet: same fee as parse
     existingSwaps: [],
-    swapConfig: {statusProgression: ['pending', 'paid', 'completed']},
+    swapConfig: { statusProgression: ['pending', 'paid', 'completed'] },
     language: 'en',
   },
   {
@@ -92,22 +92,57 @@ export const MOCK_USERS: [MockUserProfile, ...MockUserProfile[]] = [
     receiveInvoiceSuccess: true,
     paymentParseResult: {
       network: 'lightning',
-      amount: {value: 500_000, currency: 'SAT'}, // 0.005 BTC
+      amount: { value: 500_000, currency: 'SAT' }, // 0.005 BTC
       amountEditable: false,
-      fee: {value: 3, currency: 'SAT'}, // estimated percentage fee from parse
+      fee: { value: 3, currency: 'SAT' }, // estimated percentage fee from parse
       description: 'Lightning coffee payment',
       invoice: 'lnbc5m1pnxk7aasp5fake0invoice0for0testing0purposes0only0mock0data0qqqqqqqqqqqqqqqq',
       expiresAt: new Date(Date.now() + 3_600_000).toISOString(),
     },
-    paymentBuildFee: {value: 24, currency: 'SAT'}, // real LP fee from build
+    paymentBuildFee: { value: 24, currency: 'SAT' }, // real LP fee from build
     existingSwaps: [
-      {id: 'swap-bob-completed', type: 'receive', direction: 'lightning_to_starknet', amountSats: 100000, createdAt: new Date(Date.now() - 86400000).toISOString(), lastKnownStatus: 'completed'},
-      {id: 'swap-bob-paid', type: 'receive', direction: 'bitcoin_to_starknet', amountSats: 200000, createdAt: new Date(Date.now() - 1800000).toISOString(), lastKnownStatus: 'paid'},
-      {id: 'swap-bob-pending', type: 'send', direction: 'starknet_to_bitcoin', amountSats: 75000, createdAt: new Date(Date.now() - 600000).toISOString(), lastKnownStatus: 'pending'},
-      {id: 'swap-bob-expired', type: 'receive', direction: 'lightning_to_starknet', amountSats: 30000, createdAt: new Date(Date.now() - 172800000).toISOString(), lastKnownStatus: 'expired'},
-      {id: 'swap-bob-failed', type: 'send', direction: 'starknet_to_lightning', amountSats: 15000, createdAt: new Date(Date.now() - 259200000).toISOString(), lastKnownStatus: 'failed'},
+      {
+        id: 'swap-bob-completed',
+        type: 'receive',
+        direction: 'lightning_to_starknet',
+        amountSats: 100000,
+        createdAt: new Date(Date.now() - 86400000).toISOString(),
+        lastKnownStatus: 'completed',
+      },
+      {
+        id: 'swap-bob-paid',
+        type: 'receive',
+        direction: 'bitcoin_to_starknet',
+        amountSats: 200000,
+        createdAt: new Date(Date.now() - 1800000).toISOString(),
+        lastKnownStatus: 'paid',
+      },
+      {
+        id: 'swap-bob-pending',
+        type: 'send',
+        direction: 'starknet_to_bitcoin',
+        amountSats: 75000,
+        createdAt: new Date(Date.now() - 600000).toISOString(),
+        lastKnownStatus: 'pending',
+      },
+      {
+        id: 'swap-bob-expired',
+        type: 'receive',
+        direction: 'lightning_to_starknet',
+        amountSats: 30000,
+        createdAt: new Date(Date.now() - 172800000).toISOString(),
+        lastKnownStatus: 'expired',
+      },
+      {
+        id: 'swap-bob-failed',
+        type: 'send',
+        direction: 'starknet_to_lightning',
+        amountSats: 15000,
+        createdAt: new Date(Date.now() - 259200000).toISOString(),
+        lastKnownStatus: 'failed',
+      },
     ],
-    swapConfig: {statusProgression: ['pending', 'paid', 'completed']},
+    swapConfig: { statusProgression: ['pending', 'paid', 'completed'] },
     language: 'en',
   },
   {
@@ -123,15 +158,15 @@ export const MOCK_USERS: [MockUserProfile, ...MockUserProfile[]] = [
     receiveInvoiceSuccess: true,
     paymentParseResult: {
       network: 'bitcoin',
-      amount: {value: 10_000, currency: 'SAT'}, // 0.1 BTC
+      amount: { value: 10_000, currency: 'SAT' }, // 0.1 BTC
       amountEditable: false,
-      fee: {value: 5, currency: 'SAT'}, // estimated percentage fee from parse
+      fee: { value: 5, currency: 'SAT' }, // estimated percentage fee from parse
       description: 'Bitcoin on-chain transfer',
       address: 'bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4',
     },
-    paymentBuildFee: {value: 42, currency: 'SAT'}, // real LP fee from build
+    paymentBuildFee: { value: 42, currency: 'SAT' }, // real LP fee from build
     existingSwaps: [],
-    swapConfig: {statusProgression: ['pending', 'paid', 'completed']},
+    swapConfig: { statusProgression: ['pending', 'paid', 'completed'] },
     language: 'en',
   },
   {
@@ -142,21 +177,21 @@ export const MOCK_USERS: [MockUserProfile, ...MockUserProfile[]] = [
     createdAt: '2026-01-20T16:45:00.000Z',
     deployAccountSuccess: true,
     hasTransactions: false,
-    balance: '0',  // sats
+    balance: '0', // sats
     paymentExecuteSuccess: true,
     receiveInvoiceSuccess: true,
     paymentParseResult: {
       network: 'starknet',
-      amount: {value: 1_000, currency: 'SAT'},
+      amount: { value: 1_000, currency: 'SAT' },
       amountEditable: false,
-      fee: {value: 1, currency: 'SAT'},
+      fee: { value: 1, currency: 'SAT' },
       description: 'Zero amount',
       address: '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d',
       tokenAddress: '0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac',
     },
     paymentBuildFee: null,
     existingSwaps: [],
-    swapConfig: {statusProgression: ['pending', 'paid', 'completed']},
+    swapConfig: { statusProgression: ['pending', 'paid', 'completed'] },
     language: 'en',
   },
   {
@@ -167,21 +202,21 @@ export const MOCK_USERS: [MockUserProfile, ...MockUserProfile[]] = [
     createdAt: '2026-02-01T09:00:00.000Z',
     deployAccountSuccess: true,
     hasTransactions: false,
-    balance: '100000',  // sats
+    balance: '100000', // sats
     paymentExecuteSuccess: false,
     receiveInvoiceSuccess: false,
     paymentParseResult: {
       network: 'starknet',
-      amount: {value: 1_000, currency: 'SAT'},
+      amount: { value: 1_000, currency: 'SAT' },
       amountEditable: false,
-      fee: {value: 1, currency: 'SAT'},
+      fee: { value: 1, currency: 'SAT' },
       description: 'Zero amount',
       address: '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d',
       tokenAddress: '0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac',
     },
     paymentBuildFee: null,
     existingSwaps: [],
-    swapConfig: {statusProgression: ['pending', 'failed']},
+    swapConfig: { statusProgression: ['pending', 'failed'] },
     language: 'fr',
   },
   {
@@ -197,22 +232,22 @@ export const MOCK_USERS: [MockUserProfile, ...MockUserProfile[]] = [
     receiveInvoiceSuccess: false,
     paymentParseResult: {
       network: 'starknet',
-      amount: {value: -100_000_000, currency: 'SAT'},
+      amount: { value: -100_000_000, currency: 'SAT' },
       amountEditable: false,
-      fee: {value: 0, currency: 'SAT'},
+      fee: { value: 0, currency: 'SAT' },
       description: 'Negative amount',
       address: '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d',
       tokenAddress: '0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac',
     },
     paymentBuildFee: null,
     existingSwaps: [],
-    swapConfig: {statusProgression: ['pending', 'expired']},
+    swapConfig: { statusProgression: ['pending', 'expired'] },
     language: 'fr',
-  }
+  },
 ];
 
 export const DEFAULT_MOCK_USER: MockUserProfile = MOCK_USERS[0]; // alice
 
 export function getMockUser(username: string): MockUserProfile {
-  return MOCK_USERS.find(u => u.username === username) ?? DEFAULT_MOCK_USER;
+  return MOCK_USERS.find((u) => u.username === username) ?? DEFAULT_MOCK_USER;
 }

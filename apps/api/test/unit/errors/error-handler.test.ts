@@ -1,9 +1,57 @@
-import {AccountAlreadyExistsError, AccountDeploymentError, AccountId, AccountNotFoundError, InvalidAccountStateError, InvalidStarknetAddressError, InvalidUsernameError} from '@bim/domain/account';
-import {AuthenticationFailedError, ChallengeAlreadyUsedError, ChallengeExpiredError, ChallengeId, ChallengeNotFoundError, InvalidChallengeError, RegistrationFailedError, SessionExpiredError, SessionId, SessionNotFoundError} from '@bim/domain/auth';
+import {
+  AccountAlreadyExistsError,
+  AccountDeploymentError,
+  AccountId,
+  AccountNotFoundError,
+  InvalidAccountStateError,
+  InvalidStarknetAddressError,
+  InvalidUsernameError
+} from '@bim/domain/account';
+import {
+  AuthenticationFailedError,
+  ChallengeAlreadyUsedError,
+  ChallengeExpiredError,
+  ChallengeId,
+  ChallengeNotFoundError,
+  InvalidChallengeError,
+  RegistrationFailedError,
+  SessionExpiredError,
+  SessionId,
+  SessionNotFoundError
+} from '@bim/domain/auth';
 import {UnsupportedCurrencyError} from '@bim/domain/currency';
-import {InvalidPaymentAddressError, InvalidPaymentAmountError, PaymentParsingError, SameAddressPaymentError, UnsupportedNetworkError, UnsupportedTokenError} from '@bim/domain/payment';
-import {Amount, ExternalServiceError, InsufficientBalanceError, InvalidStateTransitionError, PaymasterServiceError, TimeoutError, UnauthorizedError, UnsafeExternalCallError, ValidationError} from '@bim/domain/shared';
-import {BitcoinAddressNetworkMismatchError, InvalidBitcoinAddressError, InvalidLightningInvoiceError, InvalidSwapStateError, LightningInvoiceExpiredError, SwapAmountError, SwapCreationError, SwapExpiredError, SwapId, SwapNotFoundError, SwapOwnershipError} from '@bim/domain/swap';
+import {
+  InvalidPaymentAddressError,
+  InvalidPaymentAmountError,
+  PaymentParsingError,
+  SameAddressPaymentError,
+  UnsupportedNetworkError,
+  UnsupportedTokenError
+} from '@bim/domain/payment';
+import {
+  Amount,
+  ExternalServiceError,
+  InsufficientBalanceError,
+  InvalidStateTransitionError,
+  PaymasterServiceError,
+  TimeoutError,
+  UnauthorizedError,
+  UnsafeExternalCallError,
+  ValidationError
+} from '@bim/domain/shared';
+import {
+  BitcoinAddressNetworkMismatchError,
+  InvalidBitcoinAddressError,
+  InvalidLightningInvoiceError,
+  InvalidSwapStateError,
+  LightningInvoiceExpiredError,
+  SwapAmountError,
+  SwapCreationError,
+  SwapExpiredError,
+  SwapId,
+  SwapNotFoundError,
+  SwapOwnershipError
+} from '@bim/domain/swap';
 import {UserSettingsNotFoundError} from '@bim/domain/user';
 import {createLogger} from '@bim/lib/logger';
 import type {Context} from 'hono';

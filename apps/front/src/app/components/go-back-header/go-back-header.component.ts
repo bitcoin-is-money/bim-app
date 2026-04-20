@@ -1,6 +1,6 @@
-import {CommonModule, Location} from '@angular/common';
-import {Component, inject, input} from '@angular/core';
-import {FaIconComponent} from "@fortawesome/angular-fontawesome";
+import { CommonModule, Location } from '@angular/common';
+import { Component, inject, input } from '@angular/core';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 
 @Component({
   selector: 'app-go-back-header',

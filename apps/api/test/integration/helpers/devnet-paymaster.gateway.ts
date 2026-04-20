@@ -1,4 +1,3 @@
-import {serializeError} from '@bim/lib/error';
 import type {StarknetAddress} from '@bim/domain/account';
 import type {
   DeployTransaction,
@@ -9,6 +8,7 @@ import type {
   StarknetTransaction,
 } from '@bim/domain/ports';
 import {ExternalServiceError} from "@bim/domain/shared";
+import {serializeError} from '@bim/lib/error';
 import {Account, CallData, hash, RpcProvider, Signer} from 'starknet';
 import type {StarkSigner} from './crypto/stark-signer';
 

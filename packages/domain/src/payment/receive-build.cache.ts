@@ -1,5 +1,4 @@
-import type {StarknetAddress} from '@bim/domain/account';
-import type {Amount} from '@bim/domain/shared';
+import type {Amount, StarknetAddress} from '../shared';
 
 /**
  * Data stored for a pending Bitcoin receive build (between POST /receive and POST /receive/commit).
@@ -40,14 +39,14 @@ export class ReceiveBuildCache {
     this.cleanup();
   }
 
-  consume(id: string): ReceiveBuildData | null {
+  consume(id: string): ReceiveBuildData | undefined {
     const entry = this.cache.get(id);
-    if (!entry) return null;
+    if (!entry) return undefined;
 
     this.cache.delete(id);
 
     if (Date.now() - entry.createdAt > ReceiveBuildCache.TTL_MS) {
-      return null;
+      return undefined;
     }
 
     return entry;

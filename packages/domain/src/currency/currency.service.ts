@@ -2,6 +2,7 @@ import {serializeError} from '@bim/lib/error';
 import type {Logger} from 'pino';
 import type {PriceGateway} from '../ports';
 import {FiatCurrency} from './fiat-currency';
+import type {GetPricesUseCase} from './use-case/get-prices.use-case';
 
 // =============================================================================
 // Dependencies
@@ -16,7 +17,7 @@ export interface CurrencyServiceDeps {
 // Service Class
 // =============================================================================
 
-export class CurrencyService {
+export class CurrencyService implements GetPricesUseCase {
 
   public static readonly CACHE_TTL_MS = 2 * 3600 * 1000; // 2 hours
 

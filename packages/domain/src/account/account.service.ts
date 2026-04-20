@@ -2,9 +2,16 @@ import {serializeError} from '@bim/lib/error';
 import type {Logger} from 'pino';
 import type {AccountRepository, PaymasterGateway, StarknetGateway} from '../ports';
 import {Account} from './account';
-import {STRKToken, type STRKTokenBalance, Token, WBTCToken, type WBTCTokenBalance} from './balance';
+import {STRKToken, Token, WBTCToken} from './balance';
 import {AccountAlreadyExistsError, AccountNotFoundError, InvalidAccountStateError} from './errors';
 import {AccountId, CredentialId} from './types';
+import type {DeployAccountInput, DeployAccountOutput, DeployAccountUseCase} from './use-case/deploy-account.use-case';
+import type {GetBalanceInput, GetBalanceOutput, GetBalanceUseCase} from './use-case/get-balance.use-case';
+import type {
+  GetDeploymentStatusInput,
+  GetDeploymentStatusOutput,
+  GetDeploymentStatusUseCase
+} from './use-case/get-deployment-status.use-case';
 
 // =============================================================================
 // Dependencies
@@ -29,23 +36,10 @@ export interface CreateAccountInput {
   credentialPublicKey?: string;
 }
 
-export interface DeployAccountInput {
-  accountId: AccountId;
-}
-
-export interface DeployAccountOutput {
-  account: Account;
-  txHash: string;
-}
-
-export interface GetBalanceInput {
-  accountId: string;
-}
-
-export interface GetBalanceOutput {
-  wbtcBalance: WBTCTokenBalance;
-  strkBalance: STRKTokenBalance;
-}
+// Re-export UseCase types for backward compatibility
+export type {DeployAccountInput, DeployAccountOutput} from './use-case/deploy-account.use-case';
+export type {GetBalanceInput, GetBalanceOutput} from './use-case/get-balance.use-case';
+export type {GetDeploymentStatusInput, GetDeploymentStatusOutput} from './use-case/get-deployment-status.use-case';
 
 // =============================================================================
 // Service Class
@@ -54,7 +48,7 @@ export interface GetBalanceOutput {
 /**
  * Service for account management (creation, deployment, balance).
  */
-export class AccountService {
+export class AccountService implements DeployAccountUseCase, GetBalanceUseCase, GetDeploymentStatusUseCase {
   private readonly log: Logger;
 
   constructor(private readonly deps: AccountServiceDeps) {
@@ -211,6 +205,24 @@ export class AccountService {
         amount: strkAmount.toString(),
         decimals: STRKToken.decimals,
       },
+    };
+  }
+
+  /**
+   * Retrieves the current deployment status of an account (fresh from DB).
+   *
+   * @throws AccountNotFoundError if account doesn't exist
+   */
+  async getDeploymentStatus(input: GetDeploymentStatusInput): Promise<GetDeploymentStatusOutput> {
+    const accountId = AccountId.of(input.accountId);
+    const account = await this.deps.accountRepository.findById(accountId);
+    if (!account) {
+      throw new AccountNotFoundError(accountId);
+    }
+    return {
+      status: account.getStatus(),
+      txHash: account.getDeploymentTxHash(),
+      isDeployed: account.isDeployed(),
     };
   }
 

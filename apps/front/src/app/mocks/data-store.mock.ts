@@ -1,6 +1,6 @@
-import type {Account, SwapDirection} from '../model';
-import type {Language} from '../services/user-settings-http.service';
-import {DEFAULT_MOCK_USER, type MockUserProfile} from './mock-users';
+import type { Account, SwapDirection } from '../model';
+import type { Language } from '../services/user-settings-http.service';
+import { DEFAULT_MOCK_USER, type MockUserProfile } from './mock-users';
 
 export interface StoredUserSettings {
   language: Language;
@@ -45,7 +45,6 @@ export interface PendingChallenge {
 }
 
 export class DataStoreMock {
-
   // Credentials
   getCredentials(): Map<string, StoredCredential> {
     const data = localStorage.getItem(STORAGE_KEYS.CREDENTIALS);
@@ -57,10 +56,7 @@ export class DataStoreMock {
   saveCredential(credential: StoredCredential): void {
     const credentials = this.getCredentials();
     credentials.set(credential.credentialId, credential);
-    localStorage.setItem(
-      STORAGE_KEYS.CREDENTIALS,
-      JSON.stringify([...credentials.entries()])
-    );
+    localStorage.setItem(STORAGE_KEYS.CREDENTIALS, JSON.stringify([...credentials.entries()]));
   }
 
   findCredentialByUsername(username: string): StoredCredential | undefined {
@@ -100,7 +96,7 @@ export class DataStoreMock {
     challenges.set(challenge.challengeId, challenge);
     localStorage.setItem(
       STORAGE_KEYS.PENDING_CHALLENGES,
-      JSON.stringify([...challenges.entries()])
+      JSON.stringify([...challenges.entries()]),
     );
   }
 
@@ -111,7 +107,7 @@ export class DataStoreMock {
       challenges.delete(challengeId);
       localStorage.setItem(
         STORAGE_KEYS.PENDING_CHALLENGES,
-        JSON.stringify([...challenges.entries()])
+        JSON.stringify([...challenges.entries()]),
       );
     }
     return challenge;

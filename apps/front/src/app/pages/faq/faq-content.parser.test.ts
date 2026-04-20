@@ -1,5 +1,5 @@
-import {describe, expect, it} from 'vitest';
-import {parseFaqMarkdown} from './faq-content.parser';
+import { describe, expect, it } from 'vitest';
+import { parseFaqMarkdown } from './faq-content.parser';
 
 describe('parseFaqMarkdown', () => {
   it('parses a single section with a single question', () => {
@@ -126,7 +126,7 @@ Real answer.`;
 ### Qu'est-ce que BIM ?
 Une réponse.`;
     const result = parseFaqMarkdown(raw);
-    expect(result[0]?.items[0]?.question).toBe('Qu\'est-ce que BIM\u00A0?');
+    expect(result[0]?.items[0]?.question).toBe("Qu'est-ce que BIM\u00A0?");
   });
 
   it('leaves English questions with no space before `?` unchanged', () => {

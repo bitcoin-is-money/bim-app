@@ -1,21 +1,11 @@
-import {AccountId, type StarknetAddress} from '@bim/domain/account';
-import {InvalidOwnerSignature} from '@bim/domain/notifications';
 import type {BitcoinReceiveResult, ReceiveResult} from '@bim/domain/payment';
-import type {StarknetCall} from '@bim/domain/ports';
-import {Amount, ExternalServiceError, InsufficientBalanceError} from '@bim/domain/shared';
-import {TransactionHash} from '@bim/domain/user';
-import {serializeError} from '@bim/lib/error';
 import type {TypedResponse} from 'hono';
 import {Hono} from 'hono';
-import {randomUUID} from 'node:crypto';
-import type {Logger} from 'pino';
 
-import {WebAuthnSignatureProcessor} from '../../../adapters';
 import type {AppContext} from '../../../app-context';
-import {type ApiErrorResponse, createErrorResponse, ErrorCode, handleDomainError} from '../../../errors';
+import {type ApiErrorResponse, handleDomainError} from '../../../errors';
 import type {SwapMonitor} from '../../../monitoring/swap.monitor';
 import type {AuthenticatedHono} from '../../../types';
-import {ReceiveBuildCache} from './receive-build.cache';
 import type {
   BitcoinReceiveCommitResponse,
   BitcoinReceivePendingCommitResponse,
@@ -36,57 +26,37 @@ export function createReceiveRoutes(
   const log = appContext.logger.child({name: 'receive.routes.ts'});
   const app: AuthenticatedHono = new Hono();
 
-  const {receive: receiveService, swap: swapService} = appContext.services;
-  const buildCache = new ReceiveBuildCache();
-  const signatureProcessor = new WebAuthnSignatureProcessor({
-    origin: appContext.webauthn.origin,
-    rpId: appContext.webauthn.rpId,
-  }, log);
+  const {receivePayment, commitReceive} = appContext.useCases;
 
   // ---------------------------------------------------------------------------
   // Create receive request
-  // For Lightning/Starknet: returns data immediately.
-  // For Bitcoin: returns commit data for WebAuthn signing (two-phase flow).
   // ---------------------------------------------------------------------------
 
   app.post('/', async (honoCtx): Promise<TypedResponse<ReceiveResponse | ApiErrorResponse>> => {
     try {
       const input: ReceiveBody = ReceiveSchema.parse(await honoCtx.req.json());
-
       const account = honoCtx.get('account');
-      const starknetAddress = account.getStarknetAddress();
-      if (!starknetAddress) {
-        return createErrorResponse(honoCtx, 400, ErrorCode.ACCOUNT_NOT_DEPLOYED, 'Account not deployed');
-      }
 
-      const amount = input.amount
-        ? Amount.ofSatoshi(BigInt(input.amount))
-        : undefined;
-      const description = input.description?.trim();
-
-      const result = await receiveService.receive({
+      const result = await receivePayment.receivePayment({
         network: input.network,
-        destinationAddress: starknetAddress,
-        ...(amount !== undefined && {amount}),
-        description,
-        accountId: account.id,
+        amount: input.amount,
+        description: input.description,
         useUriPrefix: input.useUriPrefix,
+        account,
       });
 
-      // Bitcoin two-phase flow: build commit typed data for WebAuthn signing
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive: guard against future ReceiveResult variants
-      if (result.network === 'bitcoin' && 'status' in result && result.status === 'pending_commit') {
-        const response = await handlePendingCommit({
-          appContext,
-          buildCache,
-          log,
-          result,
-          starknetAddress,
-          accountId: account.id,
-          credentialId: account.credentialId,
-          description,
-          useUriPrefix: input.useUriPrefix,
-        });
+      // Bitcoin pending commit — return build data for WebAuthn signing
+      if ('buildId' in result) {
+        const response: BitcoinReceivePendingCommitResponse = {
+          network: 'bitcoin',
+          status: 'pending_commit',
+          buildId: result.buildId,
+          messageHash: result.messageHash,
+          credentialId: result.credentialId,
+          swapId: result.swapId,
+          amount: {value: Number(BigInt(result.amountSats)), currency: 'SAT'},
+          expiresAt: result.expiresAt.toISOString(),
+        };
         return honoCtx.json<BitcoinReceivePendingCommitResponse>(response);
       }
 
@@ -98,97 +68,28 @@ export function createReceiveRoutes(
   });
 
   // ---------------------------------------------------------------------------
-  // Commit Bitcoin receive (phase 2: sign + submit commit + get deposit address)
+  // Commit Bitcoin receive (phase 2)
   // ---------------------------------------------------------------------------
 
   app.post('/commit', async (honoCtx): Promise<TypedResponse<BitcoinReceiveCommitResponse | ApiErrorResponse>> => {
     try {
       const input: ReceiveCommitBody = ReceiveCommitSchema.parse(await honoCtx.req.json());
-
       const account = honoCtx.get('account');
 
-      // 1. Retrieve cached build (single-use)
-      const build = buildCache.consume(input.buildId);
-      if (!build) {
-        return createErrorResponse(honoCtx, 400, ErrorCode.BUILD_EXPIRED, 'Build expired or not found');
-      }
-
-      // 2. Verify the requesting account matches the build's account
-      if (account.id !== build.accountId) {
-        return createErrorResponse(honoCtx, 403, ErrorCode.FORBIDDEN, 'Build does not belong to this account');
-      }
-
-      // 3. Process WebAuthn assertion into Argent signature
-      const signature = signatureProcessor.process(input.assertion, account.publicKey);
-
-      // 4. Execute commit transaction via AVNU paymaster
-      let txHash: string;
-      try {
-        ({txHash} = await appContext.gateways.starknet.executeSignedCalls({
-          senderAddress: build.senderAddress,
-          typedData: build.typedData,
-          signature,
-        }));
-      } catch (executeError) {
-        if (executeError instanceof ExternalServiceError
-            && executeError.message.includes('invalid-owner-sig')) {
-          const alertMessage = InvalidOwnerSignature.build({
-            senderAddress: build.senderAddress,
-            publicKey: account.publicKey,
-            typedData: build.typedData,
-            signature,
-            error: executeError.message,
-            network: appContext.starknetConfig.network,
-          });
-          appContext.gateways.notification.send(alertMessage).catch((err: unknown) => {
-            log.warn({cause: serializeError(err)}, 'Failed to send invalid-owner-sig alert');
-          });
-        }
-        throw executeError;
-      }
-
-      log.info({swapId: build.swapId, txHash}, 'Bitcoin receive commit transaction submitted');
-
-      // 5. Wait for Starknet confirmation
-      await appContext.gateways.starknet.waitForTransaction(txHash);
-
-      // 6. Save swap to DB immediately — ensures SwapMonitor can track it
-      //    even if subsequent steps fail (see doc/flow/receive-bitcoin-swap-commit.md —
-      //    "Why the swap is persisted before completion")
-      const starknetAddress = account.requireStarknetAddress();
-      await swapService.saveBitcoinCommit({
-        swapId: build.swapId,
-        destinationAddress: starknetAddress,
-        amount: build.amount,
-        description: build.description ?? 'Received',
-        accountId: build.accountId,
-        commitTxHash: txHash,
-        expiresAt: build.expiresAt,
-      });
-
-      // 6b. Label the commit transaction as "Security deposit" (non-fatal)
-      try {
-        await appContext.repositories.transaction.saveDescription(
-          TransactionHash.of(txHash), AccountId.of(build.accountId), 'Security deposit',
-        );
-      } catch (descErr) {
-        log.warn({txHash, err: descErr}, 'Failed to save security deposit description (non-fatal)');
-      }
-
-      // 7. Complete the swap (SDK detects on-chain commit, returns deposit address)
-      const completeResult = await receiveService.completeBitcoinReceive({
-        swapId: build.swapId,
-        useUriPrefix: build.useUriPrefix,
+      const result = await commitReceive.commitReceive({
+        buildId: input.buildId,
+        assertion: input.assertion,
+        account,
       });
 
       swapMonitor?.ensureRunning();
       return honoCtx.json<BitcoinReceiveCommitResponse>({
         network: 'bitcoin',
-        swapId: completeResult.swapId,
-        depositAddress: completeResult.depositAddress.toString(),
-        bip21Uri: completeResult.bip21Uri,
-        amount: {value: Number(completeResult.amount.getSat()), currency: 'SAT'},
-        expiresAt: completeResult.expiresAt.toISOString(),
+        swapId: result.swapId,
+        depositAddress: result.depositAddress.toString(),
+        bip21Uri: result.bip21Uri,
+        amount: {value: Number(result.amount.getSat()), currency: 'SAT'},
+        expiresAt: result.expiresAt.toISOString(),
       });
     } catch (error) {
       return handleDomainError(honoCtx, error, log);
@@ -199,184 +100,8 @@ export function createReceiveRoutes(
 }
 
 // =============================================================================
-// Bitcoin two-phase commit preparation
-// =============================================================================
-
-interface PendingCommitResult {
-  readonly network: 'bitcoin';
-  readonly status: 'pending_commit';
-  readonly swapId: string;
-  readonly amount: Amount;
-  readonly expiresAt: Date;
-  readonly commitCalls: readonly StarknetCall[];
-}
-
-interface HandlePendingCommitDeps {
-  appContext: AppContext;
-  buildCache: ReceiveBuildCache;
-  log: Logger;
-  result: PendingCommitResult;
-  starknetAddress: StarknetAddress;
-  accountId: string;
-  credentialId: string;
-  description: string | undefined;
-  useUriPrefix: boolean;
-}
-
-async function handlePendingCommit(deps: HandlePendingCommitDeps): Promise<BitcoinReceivePendingCommitResponse> {
-  const {appContext, buildCache, log, result, starknetAddress, accountId, credentialId, description, useUriPrefix} = deps;
-
-  // Extract approve amount from commitCalls (for error enrichment + auto-swap)
-  const approveInfo = extractApproveAmount(result.commitCalls);
-
-  // Auto-swap WBTC → STRK if the account lacks sufficient STRK for the commit
-  const finalCalls = await maybePrependAutoSwapCalls({appContext, log, result, starknetAddress, approveInfo});
-
-  // Build typed data via AVNU paymaster
-  const {typedData, messageHash} = await buildCommitTypedData(appContext, starknetAddress, finalCalls, approveInfo);
-
-  // Cache for the commit step
-  const buildId = randomUUID();
-  buildCache.set(buildId, {
-    swapId: result.swapId,
-    typedData,
-    senderAddress: starknetAddress,
-    accountId,
-    amount: result.amount,
-    expiresAt: result.expiresAt,
-    description,
-    useUriPrefix,
-    createdAt: Date.now(),
-  });
-
-  return {
-    network: 'bitcoin',
-    status: 'pending_commit',
-    buildId,
-    messageHash,
-    credentialId,
-    swapId: result.swapId,
-    amount: {value: Number(result.amount.getSat()), currency: 'SAT'},
-    expiresAt: result.expiresAt.toISOString(),
-  };
-}
-
-interface MaybeAutoSwapDeps {
-  appContext: AppContext;
-  log: Logger;
-  result: PendingCommitResult;
-  starknetAddress: StarknetAddress;
-  approveInfo: ReturnType<typeof extractApproveAmount>;
-}
-
-async function maybePrependAutoSwapCalls(deps: MaybeAutoSwapDeps): Promise<StarknetCall[]> {
-  const {appContext, log, result, starknetAddress, approveInfo} = deps;
-  const {strkTokenAddress} = appContext.starknetConfig;
-
-  if (approveInfo?.tokenAddress.toLowerCase() !== strkTokenAddress.toLowerCase()) {
-    return [...result.commitCalls];
-  }
-
-  const strkBalance = await appContext.gateways.starknet.getBalance({
-    address: starknetAddress,
-    token: 'STRK',
-  });
-  const rawDeficit = approveInfo.amount - strkBalance;
-  if (rawDeficit <= 0n) {
-    return [...result.commitCalls];
-  }
-
-  // Add 10% buffer, round up to whole STRK, enforce minimum to avoid
-  // DEX "insufficient input amount" errors on tiny swaps.
-  const ONE_STRK = 10n ** 18n;
-  const MIN_SWAP = 50n * ONE_STRK; // 50 STRK — below this, DEX pools round to 0
-  const deficitWithBuffer = (rawDeficit * 110n) / 100n;
-  const rounded = ((deficitWithBuffer + ONE_STRK - 1n) / ONE_STRK) * ONE_STRK;
-  const deficit = rounded < MIN_SWAP ? MIN_SWAP : rounded; // NOSONAR S7766 - Math.max does not support BigInt
-  log.info({
-    requiredStrk: approveInfo.amount.toString(),
-    currentStrk: strkBalance.toString(),
-    deficit: deficit.toString(),
-  }, 'STRK deficit detected, auto-swapping WBTC → STRK');
-
-  const swapResult = await appContext.gateways.dex.getSwapCalls({
-    sellToken: appContext.starknetConfig.wbtcTokenAddress,
-    buyToken: strkTokenAddress,
-    buyAmount: deficit,
-    takerAddress: starknetAddress.toString(),
-  });
-
-  log.info({
-    sellAmount: swapResult.sellAmount.toString(),
-    buyAmount: swapResult.buyAmount.toString(),
-    swapCallCount: swapResult.calls.length,
-  }, 'AVNU swap calls obtained, prepending to commit calls');
-
-  // Pre-check: verify the account has enough WBTC to cover the auto-swap
-  const wbtcBalance = await appContext.gateways.starknet.getBalance({
-    address: starknetAddress,
-    token: 'WBTC',
-  });
-  if (wbtcBalance < swapResult.sellAmount) {
-    log.warn({
-      requiredWbtc: swapResult.sellAmount.toString(),
-      currentWbtc: wbtcBalance.toString(),
-      securityDepositStrk: approveInfo.amount.toString(),
-    }, 'Insufficient WBTC balance to cover security deposit auto-swap');
-    throw new InsufficientBalanceError(
-      swapResult.sellAmount, appContext.starknetConfig.wbtcTokenAddress, 'security_deposit', 'WBTC', 8,
-    );
-  }
-
-  return [...swapResult.calls, ...result.commitCalls];
-}
-
-async function buildCommitTypedData(
-  appContext: AppContext,
-  starknetAddress: StarknetAddress,
-  calls: StarknetCall[],
-  approveInfo: ReturnType<typeof extractApproveAmount>,
-): Promise<{typedData: unknown; messageHash: string}> {
-  try {
-    return await appContext.gateways.starknet.buildCalls({
-      senderAddress: starknetAddress,
-      calls,
-    });
-  } catch (err) {
-    if (err instanceof InsufficientBalanceError && approveInfo) {
-      throw new InsufficientBalanceError(approveInfo.amount, approveInfo.tokenAddress, 'security_deposit', 'STRK', 18);
-    }
-    throw err;
-  }
-}
-
-// =============================================================================
 // Serialization
 // =============================================================================
-
-/**
- * Extracts the approve amount and token address from commitCalls.
- * The approve call has entrypoint 'approve' with calldata [spender, amount_low, amount_high].
- * Amount is u256 = low + high * 2^128.
- */
-function extractApproveAmount(
-  calls: readonly StarknetCall[]
-): {amount: bigint; tokenAddress: string} | undefined {
-  const approveCall = calls.find(c => c.entrypoint === 'approve');
-  if (!approveCall || approveCall.calldata.length < 3) return undefined;
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- length >= 3 checked above, try/catch handles any runtime issue
-    const low = BigInt(approveCall.calldata[1]!);
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const high = BigInt(approveCall.calldata[2]!);
-    return {
-      amount: low + (high << 128n),
-      tokenAddress: approveCall.contractAddress,
-    };
-  } catch {
-    return undefined;
-  }
-}
 
 function serializeReceiveResult(result: ReceiveResult): ReceiveResponse {
   switch (result.network) {
@@ -397,7 +122,6 @@ function serializeReceiveResult(result: ReceiveResult): ReceiveResponse {
     case 'bitcoin': {
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive: guard against future ReceiveResult variants
       if ('status' in result && result.status === 'pending_commit') {
-        // Should not reach here — handled above in the route
         throw new Error('Unexpected pending_commit result in serializeReceiveResult');
       }
       const btcResult = result as {network: 'bitcoin'} & BitcoinReceiveResult;

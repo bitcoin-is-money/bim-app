@@ -1,15 +1,15 @@
-import {HttpResponse} from '@angular/common/http';
-import {WebauthnUserHandleDecoder} from '@bim/lib/auth';
-import {type Account, type ApiErrorResponse, ErrorCode} from '../../model';
+import { HttpResponse } from '@angular/common/http';
+import { WebauthnUserHandleDecoder } from '@bim/lib/auth';
+import { type Account, type ApiErrorResponse, ErrorCode } from '../../model';
 import type {
   AuthResponse,
   BeginAuthResponse,
   BeginRegisterResponse,
   UserSessionResponse,
 } from '../../services/auth.service';
-import type {DataStoreMock, StoredCredential} from '../data-store.mock';
-import {createErrorResponse} from '../mock-error';
-import {getMockUser, type MockUserProfile} from '../mock-users';
+import type { DataStoreMock, StoredCredential } from '../data-store.mock';
+import { createErrorResponse } from '../mock-error';
+import { getMockUser, type MockUserProfile } from '../mock-users';
 
 const SWAPS_STORAGE_KEY = 'bim:swaps';
 
@@ -56,8 +56,10 @@ export class AuthHandlerMock {
   }
 
   // POST /api/auth/register/begin
-  beginRegister(body: {username: string}): HttpResponse<BeginRegisterResponse | ApiErrorResponse> {
-    const {username} = body;
+  beginRegister(body: {
+    username: string;
+  }): HttpResponse<BeginRegisterResponse | ApiErrorResponse> {
+    const { username } = body;
 
     // Error: user already exists
     const existing = this.store.findCredentialByUsername(username);
@@ -102,11 +104,11 @@ export class AuthHandlerMock {
     credential: {
       id: string;
       rawId: string;
-      response: {clientDataJSON: string; attestationObject: string};
+      response: { clientDataJSON: string; attestationObject: string };
       type: string;
     };
   }): HttpResponse<AuthResponse | ApiErrorResponse> {
-    const {challengeId, accountId, username, credential} = body;
+    const { challengeId, accountId, username, credential } = body;
 
     const pendingChallenge = this.store.consumeChallenge(challengeId);
     if (!pendingChallenge) {
@@ -146,7 +148,7 @@ export class AuthHandlerMock {
 
     return new HttpResponse({
       status: 200,
-      body: {account},
+      body: { account },
     });
   }
 
@@ -192,7 +194,7 @@ export class AuthHandlerMock {
       type: string;
     };
   }): HttpResponse<AuthResponse | ApiErrorResponse> {
-    const {challengeId, credential} = body;
+    const { challengeId, credential } = body;
 
     const pendingChallenge = this.store.consumeChallenge(challengeId);
     if (!pendingChallenge) {
@@ -210,7 +212,11 @@ export class AuthHandlerMock {
     // For username-less flow, use userHandle to find the credential
     const userHandle = credential.response.userHandle;
     if (!userHandle) {
-      return createErrorResponse(401, ErrorCode.AUTHENTICATION_FAILED, 'No userHandle in credential response');
+      return createErrorResponse(
+        401,
+        ErrorCode.AUTHENTICATION_FAILED,
+        'No userHandle in credential response',
+      );
     }
 
     const userId = WebauthnUserHandleDecoder.decodeToUuid(userHandle);
@@ -239,20 +245,22 @@ export class AuthHandlerMock {
 
     return new HttpResponse({
       status: 200,
-      body: {account},
+      body: { account },
     });
   }
 
   // GET /api/auth/session
   getSession(): HttpResponse<UserSessionResponse> {
     const account = this.store.getSession();
-    const body: UserSessionResponse = account ? {authenticated: true, account} : {authenticated: false};
-    return new HttpResponse({status: 200, body});
+    const body: UserSessionResponse = account
+      ? { authenticated: true, account }
+      : { authenticated: false };
+    return new HttpResponse({ status: 200, body });
   }
 
   // POST /api/auth/logout
   logout(): HttpResponse<void> {
     this.store.setSession(null);
-    return new HttpResponse({status: 200});
+    return new HttpResponse({ status: 200 });
   }
 }

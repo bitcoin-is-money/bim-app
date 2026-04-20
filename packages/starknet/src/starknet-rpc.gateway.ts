@@ -8,8 +8,8 @@ import type {
   StarknetTransaction,
   TransactionReceipt,
 } from "@bim/domain/ports";
-import {SanitizedError, serializeError} from '@bim/lib/error';
 import {DomainError, ExternalServiceError} from "@bim/domain/shared";
+import {SanitizedError, serializeError} from '@bim/lib/error';
 import {ETransactionType} from '@starknet-io/starknet-types-010';
 
 import pTimeout from 'p-timeout';

@@ -1,7 +1,7 @@
-import type {HttpRequest} from '@angular/common/http';
-import {HttpResponse} from '@angular/common/http';
-import type {PaginatedTransactions, Transaction} from '../../services/transaction.http.service';
-import type {DataStoreMock} from "../data-store.mock";
+import type { HttpRequest } from '@angular/common/http';
+import { HttpResponse } from '@angular/common/http';
+import type { PaginatedTransactions, Transaction } from '../../services/transaction.http.service';
+import type { DataStoreMock } from '../data-store.mock';
 
 const MOCK_STARKNET_ADDRESS = '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d';
 const MOCK_TOKEN_ADDRESS = '0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac';
@@ -63,7 +63,7 @@ function mockTx(
     toAddress: type === 'spent' ? '0x0123456789abcdef' : MOCK_STARKNET_ADDRESS,
     timestamp: date.toISOString(),
     indexedAt: date.toISOString(),
-    ...(description ? {description} : {}),
+    ...(description ? { description } : {}),
   };
 }
 
@@ -75,7 +75,13 @@ const MOCK_TRANSACTIONS: Transaction[] = [
   mockTx('30', 'receipt', '23711', 3, 'Beers after a long run'),
   mockTx('31', 'spent', '15505', 4, 'no desc -'),
   mockTx('1', 'receipt', '5000000', 1, 'Salary'),
-  mockTx('2', 'spent', '2500000', 2, 'Rent looooooooooooooooooooooooooooooooonnnnnnngggggggggggggggggggg and multi line '),
+  mockTx(
+    '2',
+    'spent',
+    '2500000',
+    2,
+    'Rent looooooooooooooooooooooooooooooooonnnnnnngggggggggggggggggggg and multi line ',
+  ),
   mockTx('3', 'receipt', '15000000', 3),
   mockTx('4', 'spent', '750000', 5, 'Coffeeeeeeeeeeeeeeeeeeeeeeeeee shop'),
   mockTx('5', 'receipt', '32000000', 6, 'Freelance gig'),
@@ -102,11 +108,7 @@ const MOCK_TRANSACTIONS: Transaction[] = [
 ];
 
 export class TransactionHandlerMock {
-
-  constructor(
-    private readonly store: DataStoreMock
-  ) {
-  }
+  constructor(private readonly store: DataStoreMock) {}
 
   getTransactions(req: HttpRequest<unknown>): HttpResponse<PaginatedTransactions> {
     const hasHistoricalTxs = this.store.getMockUserProfile().hasTransactions;

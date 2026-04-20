@@ -1,7 +1,7 @@
-import {describe, expect, it} from 'vitest';
-import {ErrorCode, getErrorCode, getErrorMessage, isApiErrorResponse} from './api-error';
+import { describe, expect, it } from 'vitest';
+import { ErrorCode, getErrorCode, getErrorMessage, isApiErrorResponse } from './api-error';
 
-const validApiError = {error: {code: ErrorCode.SWAP_NOT_FOUND, message: 'Swap not found'}};
+const validApiError = { error: { code: ErrorCode.SWAP_NOT_FOUND, message: 'Swap not found' } };
 
 describe('isApiErrorResponse', () => {
   it('accepts a well-formed API error', () => {
@@ -17,9 +17,9 @@ describe('isApiErrorResponse', () => {
 
   it('rejects objects missing required fields', () => {
     expect(isApiErrorResponse({})).toBe(false);
-    expect(isApiErrorResponse({error: 'string'})).toBe(false);
-    expect(isApiErrorResponse({error: {code: 'X'}})).toBe(false);
-    expect(isApiErrorResponse({error: {message: 'X'}})).toBe(false);
+    expect(isApiErrorResponse({ error: 'string' })).toBe(false);
+    expect(isApiErrorResponse({ error: { code: 'X' } })).toBe(false);
+    expect(isApiErrorResponse({ error: { message: 'X' } })).toBe(false);
   });
 });
 

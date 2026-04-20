@@ -44,7 +44,6 @@ const ACCOUNT_ID = '550e8400-e29b-41d4-a716-446655440000';
 function createMockTransactionRepository(): TransactionRepository {
   return {
     saveDescription: vi.fn().mockResolvedValue(undefined),
-    deleteDescription: vi.fn().mockResolvedValue(undefined),
     findByAccountId: vi.fn(),
     findById: vi.fn(),
     findByHash: vi.fn(),

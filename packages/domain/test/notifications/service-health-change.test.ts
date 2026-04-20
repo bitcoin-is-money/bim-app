@@ -1,7 +1,7 @@
+import type {SanitizedError} from '@bim/lib/error';
 import {describe, expect, it} from 'vitest';
 import type {HealthTransitionEvent} from '../../src/health/health-registry';
 import {ServiceHealthChange} from '../../src/notifications/alerts/service-health-change';
-import type {SanitizedError} from '@bim/lib/error';
 
 const atomiqError: SanitizedError = {
   kind: 'cloudflare_tunnel',

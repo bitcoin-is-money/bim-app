@@ -1,6 +1,6 @@
-import {HttpResponse} from '@angular/common/http';
-import type {UserSettings} from '../../model/user-settings';
-import type {DataStoreMock, StoredUserSettings} from '../data-store.mock';
+import { HttpResponse } from '@angular/common/http';
+import type { UserSettings } from '../../model/user-settings';
+import type { DataStoreMock, StoredUserSettings } from '../data-store.mock';
 
 export class SettingsHandlerMock {
   constructor(private readonly store: DataStoreMock) {}
@@ -16,9 +16,11 @@ export class SettingsHandlerMock {
     const current = this.store.getUserSettings();
     const updated: StoredUserSettings = {
       ...current,
-      ...(body.language !== undefined && {language: body.language}),
-      ...(body.preferredCurrencies !== undefined && {preferredCurrencies: body.preferredCurrencies}),
-      ...(body.defaultCurrency !== undefined && {defaultCurrency: body.defaultCurrency}),
+      ...(body.language !== undefined && { language: body.language }),
+      ...(body.preferredCurrencies !== undefined && {
+        preferredCurrencies: body.preferredCurrencies,
+      }),
+      ...(body.defaultCurrency !== undefined && { defaultCurrency: body.defaultCurrency }),
     };
     this.store.setUserSettings(updated);
     return new HttpResponse({
