@@ -1,4 +1,4 @@
-import {type Amount, type BitcoinNetwork, DomainError, ErrorCode} from '../shared';
+import {Amount, type BitcoinNetwork, DomainError, ErrorCode} from '../shared';
 import type {SwapId, SwapStatus} from './types';
 
 export class InvalidBitcoinAddressError extends DomainError {
@@ -81,14 +81,24 @@ export class InvalidSwapStateError extends DomainError {
 }
 
 export class SwapAmountError extends DomainError {
-  readonly errorCode = ErrorCode.SWAP_AMOUNT_OUT_OF_RANGE;
+  private static readonly DEFAULT_MIN = 1_000n;
+  private static readonly DEFAULT_MAX = 2_000_000n;
 
-  constructor(
-    readonly amount: Amount,
-    readonly min: Amount,
-    readonly max: Amount,
-  ) {
-    super(`Amount ${amount.getSat()} sats is outside limits [${min.getSat()}, ${max.getSat()}]`);
+  readonly errorCode = ErrorCode.SWAP_AMOUNT_OUT_OF_RANGE;
+  readonly amount: Amount;
+  readonly min: Amount;
+  readonly max: Amount;
+
+  constructor(amount?: Amount, min?: Amount, max?: Amount) {
+    const resolvedAmount = amount ?? Amount.zero();
+    const resolvedMin = min !== undefined
+      ? Amount.ofSatoshi(min.getSat() > SwapAmountError.DEFAULT_MIN ? min.getSat() : SwapAmountError.DEFAULT_MIN)
+      : Amount.ofSatoshi(SwapAmountError.DEFAULT_MIN);
+    const resolvedMax = max ?? Amount.ofSatoshi(SwapAmountError.DEFAULT_MAX);
+    super(`Amount ${resolvedAmount.getSat()} sats is outside limits [${resolvedMin.getSat()}, ${resolvedMax.getSat()}]`);
+    this.amount = resolvedAmount;
+    this.min = resolvedMin;
+    this.max = resolvedMax;
   }
 
   override get args(): Record<string, string | number> {

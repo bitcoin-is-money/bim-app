@@ -290,9 +290,9 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         expiresAt: new Date(quoteExpiry),
       };
     } catch (error) {
-      if (error instanceof OutOfBoundsError) {
+      if (error instanceof OutOfBoundsError || isFeeRejection(serializeError(error))) {
         this.markAtomiqHealthy();
-        throw new SwapAmountError(Amount.ofSatoshi(params.amountSats), Amount.ofSatoshi(error.min), Amount.ofSatoshi(error.max));
+        throw new SwapAmountError();
       }
       const sanitized = this.handleAtomiqFailure(error, `createLightningToStarknetSwap`);
       throw new ExternalServiceError('Atomiq', `Failed to create ${direction} swap: ${sanitized.summary}`);
@@ -351,9 +351,9 @@ export class AtomiqSdkGateway implements AtomiqGateway {
         this.markAtomiqHealthy();
         throw new LightningInvoiceExpiredError();
       }
-      if (error instanceof OutOfBoundsError) {
+      if (error instanceof OutOfBoundsError || isFeeRejection(message)) {
         this.markAtomiqHealthy();
-        throw new SwapAmountError(Amount.ofSatoshi(0n), Amount.ofSatoshi(error.min), Amount.ofSatoshi(error.max));
+        throw new SwapAmountError();
       }
       const sanitized = this.handleAtomiqFailure(error, 'createStarknetToLightningSwap');
       throw new ExternalServiceError('Atomiq', `Failed to create ${direction} swap: ${sanitized.summary}`);
@@ -415,6 +415,10 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       if (error instanceof OutOfBoundsError) {
         this.markAtomiqHealthy();
         throw new SwapAmountError(Amount.ofSatoshi(0n), Amount.ofSatoshi(error.min), Amount.ofSatoshi(error.max));
+      }
+      if (isFeeRejection(serializeError(error))) {
+        this.markAtomiqHealthy();
+        throw new SwapAmountError();
       }
       const sanitized = this.handleAtomiqFailure(error, 'prepareBitcoinToStarknetSwap');
       throw new ExternalServiceError('Atomiq', `Failed to prepare ${direction} swap: ${sanitized.summary}`);
@@ -509,6 +513,10 @@ export class AtomiqSdkGateway implements AtomiqGateway {
       if (error instanceof OutOfBoundsError) {
         this.markAtomiqHealthy();
         throw new SwapAmountError(Amount.ofSatoshi(params.amountSats), Amount.ofSatoshi(error.min), Amount.ofSatoshi(error.max));
+      }
+      if (isFeeRejection(serializeError(error))) {
+        this.markAtomiqHealthy();
+        throw new SwapAmountError();
       }
       const sanitized = this.handleAtomiqFailure(error, 'createStarknetToBitcoinSwap');
       throw new ExternalServiceError('Atomiq', `Failed to create ${direction} swap: ${sanitized.summary}`);
@@ -918,4 +926,13 @@ export class AtomiqSdkGateway implements AtomiqGateway {
     this.swapperFactory = null;
     this.isInitialized = false;
   }
+}
+
+/**
+ * The Atomiq intermediary rejects swaps whose fee would exceed its threshold
+ * with an `_IntermediaryError: Fee too high` message. This typically means
+ * the requested amount is too small for the swap to be economically viable.
+ */
+function isFeeRejection(message: string): boolean {
+  return message.toLowerCase().includes('fee too high');
 }
