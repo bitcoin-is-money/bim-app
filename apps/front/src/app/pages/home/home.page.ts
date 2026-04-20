@@ -1,18 +1,19 @@
 import {CommonModule} from '@angular/common';
 import type {OnInit} from '@angular/core';
-import {Component, inject} from '@angular/core';
+import {Component, computed, inject} from '@angular/core';
 import {Router} from '@angular/router';
+import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {TranslateModule} from '@ngx-translate/core';
 import {forkJoin} from 'rxjs';
 import {AmountHighlightComponent} from '../../components/amount-highlight/amount-highlight.component';
-import {ButtonComponent} from "../../components/button/button.component";
+import {ButtonComponent} from '../../components/button/button.component';
 import {
   PullRefreshContainerComponent,
   type PullRefreshEvent
 } from '../../components/pull-refresh-container/pull-refresh-container.component';
 import {SpinnerComponent} from '../../components/spinner/spinner.component';
 import {FullPageLayoutComponent} from '../../layout';
-import {AccountService} from "../../services/account.service";
+import {AccountService} from '../../services/account.service';
 import {AuthService} from '../../services/auth.service';
 import {TransactionService} from '../../services/transaction.service';
 import {EmptyTransactionComponent} from './components/empty-transaction/empty-transaction.component';
@@ -21,7 +22,18 @@ import {TransactionListComponent} from './components/transaction-list/transactio
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, TranslateModule, AmountHighlightComponent, TransactionListComponent, EmptyTransactionComponent, SpinnerComponent, ButtonComponent, FullPageLayoutComponent, PullRefreshContainerComponent],
+  imports: [
+    CommonModule,
+    TranslateModule,
+    FaIconComponent,
+    AmountHighlightComponent,
+    TransactionListComponent,
+    EmptyTransactionComponent,
+    SpinnerComponent,
+    ButtonComponent,
+    FullPageLayoutComponent,
+    PullRefreshContainerComponent,
+  ],
   templateUrl: './home.page.html',
   styleUrl: './home.page.scss',
 })
@@ -31,6 +43,12 @@ export class HomePage implements OnInit {
   readonly accountService = inject(AccountService);
   readonly transactionService = inject(TransactionService);
   private readonly router = inject(Router);
+
+  readonly initials = computed(() => {
+    const user = this.authService.currentUser();
+    const name = user?.username ?? '';
+    return name.slice(0, 2).toUpperCase() || '??';
+  });
 
   ngOnInit(): void {
     this.loadData();
@@ -63,16 +81,16 @@ export class HomePage implements OnInit {
     }
   }
 
-  get currentUser() {
-    return this.authService.currentUser();
-  }
-
-  get username(): string {
-    return this.currentUser?.username ?? '';
-  }
-
   openMenu(): void {
     void this.router.navigate(['/menu']);
+  }
+
+  openMyAccount(): void {
+    void this.router.navigate(['/my-account']);
+  }
+
+  openNotifications(): void {
+    void this.router.navigate(['/notifications']);
   }
 
   onReceive(): void {

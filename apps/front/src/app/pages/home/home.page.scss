@@ -2,58 +2,37 @@
 
 .home-page {
   @apply h-full flex flex-col;
+}
 
-  .home-header {
-    @apply p-4 border-b border-neutral-800;
+.home-header {
+  @apply flex items-center justify-between px-4 py-3;
 
-    .header-content {
-      @apply flex justify-between items-center;
-
-      .greeting {
-        @apply text-xl font-semibold text-white;
-      }
-
-      .menu-button {
-        @apply flex flex-col gap-1.5 p-2 cursor-pointer bg-transparent border-none;
-        @apply hover:bg-neutral-800 rounded-lg transition-colors;
-
-        .menu-icon {
-          @apply w-6 h-0.5 bg-white;
-        }
-      }
-    }
+  .avatar {
+    @apply w-9 h-9 rounded-full grid place-items-center text-[13px] font-bold border-none cursor-pointer;
+    background: linear-gradient(135deg, var(--color-amber), var(--color-amber-lo));
+    color: #1a1205;
   }
 
-  .home-main {
-    @apply flex flex-col flex-1 overflow-hidden;
+  .header-actions { @apply flex gap-2.5; }
 
-    app-amount-highlight {
-      @apply p-4;
-    }
-
-    .loading {
-      @apply text-center text-neutral-400 py-8;
-    }
-
-    .transaction-container {
-      @apply flex-1 bg-neutral-800 p-4 overflow-y-auto;
-    }
-
-    .loading-more {
-      @apply flex justify-center py-4 h-12;
-    }
-
+  .icon-btn {
+    @apply w-9 h-9 rounded-full grid place-items-center text-neutral-200 bg-neutral-900 border-none cursor-pointer;
+    @apply hover:bg-neutral-800 transition-colors;
   }
+}
 
-  .home-footer {
-    @apply p-4 border-t border-neutral-800 flex gap-4;
+.home-main {
+  @apply flex flex-col flex-1 overflow-hidden;
+}
 
-    .footer-button {
-      @apply flex-1;
-    }
+.quick-actions {
+  @apply mx-4 mb-3 grid grid-cols-2 gap-2.5;
+}
 
-    .footer-divider {
-      @apply w-px bg-white;
-    }
-  }
+.transaction-container {
+  @apply flex-1 overflow-y-auto;
+}
+
+.loading-more {
+  @apply flex justify-center py-4 h-12;
 }

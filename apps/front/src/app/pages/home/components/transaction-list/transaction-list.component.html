@@ -1,18 +1,21 @@
 <div class="transaction-list">
-  @for (transaction of transactions(); track transaction.original.id) {
-    <div class="transaction-item">
-      <div class="transaction-content">
-        <div class="transaction-bullet"></div>
-        <div class="transaction-info">
-          <div class="transaction-label">{{ transaction.original.description ?? ('transactions.type.' + transaction.original.type | translate) }}</div>
-          <div class="transaction-date">{{ transaction.original.timestamp | date:'short':'':locale() }}</div>
+  @for (t of transactions(); track t.original.id) {
+    <div class="tx-row" [class.tx-in]="t.isCredit" [class.tx-out]="!t.isCredit">
+      <div class="tx-icon">
+        <fa-icon [icon]="iconFor(t)"/>
+      </div>
+      <div class="tx-body">
+        <div class="tx-label">{{ t.original.description ?? ('transactions.type.' + t.original.type | translate) }}</div>
+        <div class="tx-meta">
+          <app-rail-badge [network]="t.network"/>
+          <span>{{ t.original.timestamp | date:'MMM d · h:mm a':'':locale() }}</span>
         </div>
-        <div
-          class="transaction-amount"
-          [class.credit]="transaction.original.type === 'receipt'"
-          [class.debit]="transaction.original.type === 'spent'">
-          {{ transaction.formattedAmount }}
-        </div>
+      </div>
+      <div class="tx-amount tabular">
+        {{ t.formattedAmount }}
+        @if (t.formattedAmountSecondary; as sec) {
+          <small>{{ sec }}</small>
+        }
       </div>
     </div>
   }

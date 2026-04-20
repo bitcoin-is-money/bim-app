@@ -1,6 +1,7 @@
 import {computed, inject, Injectable, signal} from '@angular/core';
 import type {Observable, Subscription} from 'rxjs';
 import {filter, interval, map, switchMap, take, tap} from 'rxjs';
+import type {RailNetwork} from '../components/rail-badge/rail-badge.component';
 import type {ConversionRates} from '../model';
 import {Amount, Currency} from '../model';
 import {CurrencyService} from './currency.service';
@@ -13,7 +14,10 @@ export type {Transaction} from './transaction.http.service';
 export interface DisplayedTransaction {
   original: Transaction;
   formattedAmount: string;
+  formattedAmountSecondary: string | undefined;
   currency: Currency;
+  network: RailNetwork;
+  isCredit: boolean;
 }
 
 export interface WaitForNewOptions {
@@ -61,14 +65,23 @@ export class TransactionService {
     locale: string
   ): DisplayedTransaction {
     const sats = Number(tx.amount);
-    const sign = tx.type === 'receipt' ? '+' : '-';
+    const isCredit = tx.type === 'receipt';
+    const sign = isCredit ? '+' : '-';
     const amount = Amount.of(sats, 'SAT').convert(currency, rates);
     const formattedAmount = `${sign}${amount.format(locale)} ${Currency.symbol(currency)}`;
+    const secondaryCurrency: Currency = currency === 'SAT' || currency === 'BTC' ? 'USD' : 'SAT';
+    const secondaryAmount = Amount.of(sats, 'SAT').convert(secondaryCurrency, rates);
+    const formattedAmountSecondary = secondaryAmount.value !== sats || secondaryCurrency !== 'SAT'
+      ? `${secondaryAmount.format(locale)} ${Currency.symbol(secondaryCurrency)}`
+      : undefined;
 
     return {
       original: tx,
       formattedAmount,
+      formattedAmountSecondary,
       currency,
+      network: 'starknet',
+      isCredit,
     };
   }
 

@@ -1,21 +1,41 @@
 <app-full-page-layout [showFooter]="false">
   <div class="home-page">
     <header class="home-header">
-      <div class="header-content">
-        <h2 class="greeting">{{ 'home.greeting' | translate: { username: username } }}</h2>
-        <button
-          class="menu-button"
-          (click)="openMenu()"
-          aria-label="Menu">
-          <span class="menu-icon"></span>
-          <span class="menu-icon"></span>
-          <span class="menu-icon"></span>
+      <button class="avatar" (click)="openMyAccount()" [attr.aria-label]="'home.account' | translate">
+        {{ initials() }}
+      </button>
+      <div class="header-actions">
+        <button class="icon-btn" (click)="openNotifications()" [attr.aria-label]="'home.notifications' | translate">
+          <fa-icon [icon]="['fas', 'bell']"/>
+        </button>
+        <button class="icon-btn" (click)="openMenu()" [attr.aria-label]="'home.menu' | translate">
+          <fa-icon [icon]="['fas', 'ellipsis']"/>
         </button>
       </div>
     </header>
 
     <main class="home-main">
       <app-amount-highlight [originalAmount]="accountService.balance()" />
+
+      <div class="quick-actions">
+        <app-button
+          colorVariant="black"
+          variant="secondary"
+          [compact]="true"
+          [icon]="['fas', 'qrcode']"
+          (click)="onReceive()">
+          {{ 'home.receive' | translate }}
+        </app-button>
+        <app-button
+          colorVariant="gold"
+          variant="primary"
+          [compact]="true"
+          [icon]="['fas', 'paper-plane']"
+          (click)="onPay()">
+          {{ 'home.pay' | translate }}
+        </app-button>
+      </div>
+
       <app-pull-refresh-container
         class="transaction-container"
         [disabled]="transactionService.displayedTransactions() === undefined"
@@ -34,27 +54,5 @@
         }
       </app-pull-refresh-container>
     </main>
-
-    <footer class="home-footer">
-      <app-button
-        [icon]="['fas', 'qrcode']"
-        class="footer-button"
-        colorVariant="transparent"
-        variant="ghost"
-        (click)="onReceive()"
-      >
-        {{ 'home.receive' | translate }}
-      </app-button>
-      <div class="footer-divider"></div>
-      <app-button
-        [icon]="['fas', 'location-arrow']"
-        class="footer-button"
-        colorVariant="transparent"
-        variant="ghost"
-        (click)="onPay()"
-      >
-        {{ 'home.pay' | translate }}
-      </app-button>
-    </footer>
   </div>
 </app-full-page-layout>
