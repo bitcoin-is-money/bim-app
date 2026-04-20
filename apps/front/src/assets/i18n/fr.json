@@ -1,11 +1,24 @@
 {
   "auth": {
     "tagline": "Payez et recevez en Bitcoin. C'est tout.",
-    "signIn": "Se connecter",
+    "subtagline": "Auto-hébergé. Protégé par votre empreinte. Sans phrase de sauvegarde, sans extension.",
+    "touchSensor": "Touchez le capteur ou utilisez Face ID",
+    "signIn": "Se connecter avec passkey",
     "signUp": "S'inscrire",
     "orCreateAccount": "ou créer un compte",
     "chooseUsername": "Choisissez votre nom d'utilisateur",
+    "createNewWallet": "Créer un nouveau portefeuille",
+    "trustTitle": "Votre clé reste sur cet appareil.",
+    "trustBody": "BIM ne la voit jamais. Code open source audité.",
     "useDeviceSecurity": "Utilisez la sécurité de votre appareil pour accéder à votre portefeuille"
+  },
+  "createAccount": {
+    "title": "Créer un compte",
+    "heading": "Créer un nouveau portefeuille",
+    "subheading": "Choisissez un nom d'utilisateur — c'est ainsi que vous serez identifié. Votre passkey y sera liée.",
+    "usernameLabel": "Nom d'utilisateur",
+    "usernamePlaceholder": "ex. satoshi",
+    "submit": "Créer le portefeuille"
   },
   "pwa": {
     "upToDate": "Mise à jour",

@@ -1,0 +1,38 @@
+<app-full-page-layout [showFooter]="true">
+  <div class="create-account-page">
+    <app-go-back-header [title]="'createAccount.title' | translate"/>
+
+    <main>
+      <div class="intro">
+        <h1>{{ 'createAccount.heading' | translate }}</h1>
+        <p>{{ 'createAccount.subheading' | translate }}</p>
+      </div>
+
+      <form (submit)="$event.preventDefault(); onSubmit()">
+        <label class="field-label" for="username">{{ 'createAccount.usernameLabel' | translate }}</label>
+        <input
+          id="username"
+          type="text"
+          class="username-input mono"
+          autocomplete="username"
+          [placeholder]="'createAccount.usernamePlaceholder' | translate"
+          [value]="username()"
+          (input)="updateUsername($event)"
+          [disabled]="authService.isLoading()"
+        />
+
+        <app-button
+          class="submit"
+          colorVariant="gold"
+          variant="primary"
+          sizeVariant="lg"
+          [icon]="['fas', 'fingerprint']"
+          [loading]="authService.isLoading()"
+          [disabled]="authService.isLoading() || !username()"
+        >
+          {{ 'createAccount.submit' | translate }}
+        </app-button>
+      </form>
+    </main>
+  </div>
+</app-full-page-layout>

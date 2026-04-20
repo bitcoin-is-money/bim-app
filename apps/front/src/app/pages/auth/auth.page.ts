@@ -1,8 +1,9 @@
 import {CommonModule} from '@angular/common';
-import {Component, inject, signal} from '@angular/core';
-import {FormsModule} from '@angular/forms';
+import {Component, inject} from '@angular/core';
+import {Router} from '@angular/router';
+import {FaIconComponent} from '@fortawesome/angular-fontawesome';
 import {TranslateModule} from '@ngx-translate/core';
-import {ButtonComponent} from "../../components/button/button.component";
+import {ButtonComponent} from '../../components/button/button.component';
 import {PwaInstallBannerComponent} from '../../components/pwa-install-banner/pwa-install-banner.component';
 import {FullPageLayoutComponent} from '../../layout';
 import {AuthService} from '../../services/auth.service';
@@ -10,29 +11,19 @@ import {AuthService} from '../../services/auth.service';
 @Component({
   selector: 'app-auth',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, ButtonComponent, FullPageLayoutComponent, PwaInstallBannerComponent],
+  imports: [CommonModule, TranslateModule, FaIconComponent, ButtonComponent, FullPageLayoutComponent, PwaInstallBannerComponent],
   templateUrl: './auth.page.html',
   styleUrl: './auth.page.scss',
 })
 export class AuthPage {
-  readonly authService: AuthService = inject(AuthService);
-
-  username = signal('');
+  readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
 
   onSignIn(): void {
     void this.authService.signIn();
   }
 
-  onSignUp(): void {
-    void this.authService.signUp(this.username());
-  }
-
-  updateUsername(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const sanitized = input.value.replaceAll(/[^\w]/g, '');
-    if (sanitized !== input.value) {
-      input.value = sanitized;
-    }
-    this.username.set(sanitized);
+  openCreateAccount(): void {
+    void this.router.navigate(['/create-account']);
   }
 }

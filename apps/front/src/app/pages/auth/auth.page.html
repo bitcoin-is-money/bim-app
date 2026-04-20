@@ -1,45 +1,44 @@
 <app-full-page-layout [showFooter]="true">
   <div class="auth-page">
     <header>
-      <img src="/logo-baseline.png" alt="Bim_Logo" style="height:48px;"/>
-      <h1 class="welcome-message">{{ 'auth.tagline' | translate }}</h1>
+      <img src="/logo-baseline.png" alt="bim" class="logo"/>
     </header>
+
     <main>
-      <section class="sign-in-section">
-        <h2>{{ 'auth.signIn' | translate }}</h2>
-        <p>{{ 'auth.useDeviceSecurity' | translate }}</p>
+      <div class="hero">
+        <h1>{{ 'auth.tagline' | translate }}</h1>
+        <p class="hero-sub">{{ 'auth.subtagline' | translate }}</p>
+      </div>
+
+      <div class="fp-visual" aria-hidden="true">
+        <fa-icon [icon]="['fas', 'fingerprint']" class="fp-icon"/>
+      </div>
+      <p class="fp-hint">{{ 'auth.touchSensor' | translate }}</p>
+
+      <div class="cta-stack">
         <app-button
-          class="sign-in-button"
           colorVariant="gold"
           variant="primary"
-          (click)="onSignIn()"
+          sizeVariant="lg"
+          [icon]="['fas', 'fingerprint']"
+          [loading]="authService.isLoading()"
           [disabled]="authService.isLoading()"
-        >
+          (click)="onSignIn()">
           {{ 'auth.signIn' | translate }}
         </app-button>
-      </section>
-      <div class="divider">
-        <span>{{ 'auth.orCreateAccount' | translate }}</span>
+
+        <button type="button" class="secondary-link" (click)="openCreateAccount()">
+          {{ 'auth.createNewWallet' | translate }}
+        </button>
       </div>
-      <section class="sign-up-section">
-        <input
-          type="text"
-          class="username-input"
-          [placeholder]="'auth.chooseUsername' | translate"
-          [value]="username()"
-          (input)="updateUsername($event)"
-          [disabled]="authService.isLoading()"
-        />
-        <app-button
-          class="sign-up-button"
-          colorVariant="black"
-          variant="secondary"
-          (click)="onSignUp()"
-          [disabled]="authService.isLoading() || !username()"
-        >
-          {{ 'auth.signUp' | translate }}
-        </app-button>
-      </section>
+
+      <div class="trust-strip">
+        <fa-icon [icon]="['fas', 'shield-halved']"/>
+        <div>
+          <b>{{ 'auth.trustTitle' | translate }}</b>
+          <span>{{ 'auth.trustBody' | translate }}</span>
+        </div>
+      </div>
     </main>
   </div>
 </app-full-page-layout>

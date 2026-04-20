@@ -1,11 +1,24 @@
 {
   "auth": {
     "tagline": "Pay and receive in Bitcoin. That's it.",
-    "signIn": "Sign In",
+    "subtagline": "Self-custodial. Backed by your fingerprint. No seed phrase, no extension.",
+    "touchSensor": "Touch the sensor or use Face ID",
+    "signIn": "Sign in with passkey",
     "signUp": "Sign Up",
     "orCreateAccount": "or create account",
     "chooseUsername": "Choose your username",
+    "createNewWallet": "Create a new wallet",
+    "trustTitle": "Your key stays on this device.",
+    "trustBody": "BIM never sees it. Audited open source.",
     "useDeviceSecurity": "Use your device security to access your wallet"
+  },
+  "createAccount": {
+    "title": "Create account",
+    "heading": "Create a new wallet",
+    "subheading": "Pick a username — this is how you'll be identified. Your passkey will be bound to it.",
+    "usernameLabel": "Username",
+    "usernamePlaceholder": "e.g. satoshi",
+    "submit": "Create wallet"
   },
   "pwa": {
     "upToDate": "Up to date",

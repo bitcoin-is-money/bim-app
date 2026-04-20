@@ -3,60 +3,42 @@
 .auth-page {
   @apply h-full flex flex-col overflow-hidden;
 
-  header {
-    @apply p-4;
+  header { @apply p-4; }
+  header .logo { height: 40px; }
 
-    .logo {
-      @apply text-xl font-bold text-white;
-    }
+  main { @apply flex-1 flex flex-col px-5 pb-24 gap-5; }
+
+  .hero h1      { @apply text-3xl font-semibold leading-tight text-neutral-100; }
+  .hero-sub     { @apply mt-2 text-sm text-neutral-400 leading-relaxed; }
+
+  .fp-visual {
+    @apply relative mx-auto my-2 grid place-items-center w-[120px] h-[120px];
+    background: radial-gradient(circle at 50% 45%,
+                rgba(245,158,11,.18), rgba(245,158,11,0) 70%);
+    border-radius: 50%;
+  }
+  .fp-visual::after {
+    content: "";
+    position: absolute;
+    inset: 18px;
+    border-radius: 50%;
+    border: 1.5px dashed rgba(245,158,11,.4);
   }
 
-  main {
-    @apply flex-1 flex flex-col px-4 pb-30;
+  .fp-icon { font-size: 56px; color: var(--color-amber); z-index: 1; }
+  .fp-hint { @apply text-center text-xs text-neutral-400 -mt-2; }
 
-    .welcome-message {
-      @apply text-2xl font-semibold text-center mb-8 text-neutral-100;
-    }
+  .cta-stack { @apply flex flex-col gap-3 mt-auto; }
 
-    section {
-      @apply flex flex-col;
-
-      &.sign-in-section,
-      &.sign-up-section {
-        @apply bg-neutral-800 flex-1 p-6 rounded-lg;
-      }
-    }
-
-    .sign-in-button,
-    .sign-up-button {
-      @apply max-w-[120px];
-    }
-
-    .divider {
-      @apply flex items-center gap-4 my-4 text-neutral-400 text-base;
-
-      &::before,
-      &::after {
-        content: '';
-        @apply flex-1 h-px bg-neutral-400;
-      }
-
-      span {
-        @apply whitespace-nowrap;
-      }
-    }
-
-    .username-input {
-      @apply mb-5 py-4 rounded-lg bg-neutral-800 text-white placeholder-neutral-400;
-      @apply border-b border-neutral-200 rounded-none focus:outline-none;
-      @apply focus:outline-none focus:border-white transition-colors duration-200;
-      @apply disabled:opacity-50 disabled:cursor-not-allowed;
-    }
-
-    .error-message {
-      @apply mt-4 p-4 rounded-lg bg-red-800 text-red-100 text-sm;
-    }
+  .secondary-link {
+    @apply py-3 text-sm font-medium text-neutral-300 bg-transparent border-none cursor-pointer;
+    min-height: 44px;
   }
 
+  .trust-strip {
+    @apply mt-2 p-3 rounded-xl flex items-start gap-3 text-xs text-neutral-400;
+    background: var(--surface-1);
 
+    b { @apply block text-neutral-200 text-[12.5px] font-semibold; }
+  }
 }
