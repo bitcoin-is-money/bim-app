@@ -32,7 +32,7 @@ flow is a single HTTP round trip until the invoice is created.
 
 | Component | Where | Responsibility |
 |-----------|-------|----------------|
-| Frontend (Angular) | `apps/front` | Collects the amount, shows the QR code, polls status |
+| Frontend (Angular) | `apps/front` | Collects the amount, shows the QR code, polls status. The Receive page exposes Lightning via a segmented network tab; once the invoice is returned, the UI shows a live BOLT-11 expiry countdown (seconds remaining, red below 2 minutes) and auto-resets to the `Create invoice` state when it hits zero |
 | `POST /api/payment/receive/` | `apps/api/src/routes/payment/receive/receive.routes.ts:43` | HTTP route — auth + Zod validation + orchestration |
 | `ReceiveService` | `packages/domain/src/payment/receive.service.ts` | Thin dispatcher: routes lightning → `SwapService.createLightningToStarknet()` |
 | `SwapService` | `packages/domain/src/swap/swap.service.ts` | Domain use case: validates limits, calls gateway, creates the `Swap` entity, saves it |

@@ -320,15 +320,36 @@ Angular 21 PWA. Key characteristics:
 - **Standalone components, signals, zoneless** (modern Angular idioms).
 - **Guards**: `auth` (requires a session) and `guest` (requires no
   session).
-- **Pages**: `auth`, `home`, `account-setup`, `receive`, `pay`, `confirm`,
-  `success`, `menu`, `about`.
+- **Pages**: `auth`, `create-account`, `home`, `account-setup`,
+  `receive`, `pay`, `confirm`, `success`, `menu`, `about`.
 - **Shared components**: amount/currency inputs, buttons, spinner,
-  notifications.
+  notifications, `rail-badge` (network chip used on tx rows and the
+  pay-confirm hero), `slide-to-confirm` (payment commit gesture).
 - **WebAuthn**: the frontend performs the browser-side WebAuthn ceremony
   (`navigator.credentials.create` / `.get`) and submits the credential
   blob + challenge ID to the backend for verification.
 - The built bundle is copied into `apps/api/public/app/` and served by
   the API in production (single process, single port).
+
+### Design tokens
+
+`apps/front/src/styles-colors.scss` is the single source of truth for
+visual tokens:
+
+- **Rails** (`--rail-btc`, `--rail-ln`, `--rail-sn`) — color per payment
+  network. Consumed by `rail-badge`, the Receive tab indicators, and the
+  pay-confirm hero pill.
+- **Semantic states** (`--state-success`, `--state-warn`,
+  `--state-danger`).
+- **Surfaces** (`--surface-0`…`--surface-3`) and **text roles**
+  (`--text-hi`, `--text-med`, `--text-lo`) — reach for these instead of
+  `neutral-800`/`neutral-900` directly.
+- **Motion** (`--motion-enter`, `--motion-exit`, `--motion-press`) —
+  shared easings for entrance, exit, and press feedback.
+
+Two typography utility classes in `styles.scss` pair with the tokens:
+`.tabular` (tabular-nums for amounts) and `.mono` (JetBrains Mono for
+Bitcoin data — addresses, invoices, tx hashes). UI chrome stays Inter.
 
 ## Indexer (apps/indexer)
 

@@ -9,7 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Nothing yet.
+- 2026-04-20: **v1 frontend refresh.** Biometric-first Auth landing with a
+  dedicated `/create-account` page; monogram avatar + notification +
+  overflow header on Home; hero balance card with amber glow and fx
+  secondary line; transaction rows carry rail badges (BTC/LN/SN) and a
+  secondary amount. Home promotes Receive/Pay to compact primary /
+  secondary tiles.
+- 2026-04-20: **Receive page:** segmented network tabs replace carousel
+  dots, an icon-square Copy button ships alongside Share, and Lightning
+  invoices show a live expiry countdown that auto-resets at zero.
+- 2026-04-20: **Pay-confirm:** new rail pill + tabular amount hero,
+  details card, dedicated fee strip, and `slide-to-confirm` gesture
+  (hold-to-confirm fallback under `prefers-reduced-motion`).
+- 2026-04-20: **Design foundation:** new token set (rails, semantic
+  states, layered surfaces, text roles), JetBrains Mono for Bitcoin
+  data, and motion tokens centralised in `styles-colors.scss`.
 
 ## [0.0.1] — Initial public release
 
