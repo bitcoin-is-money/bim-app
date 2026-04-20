@@ -1,6 +1,12 @@
 import {Account, AccountId, type AccountStatus, CredentialId, StarknetAddress} from "@bim/domain/account";
 import {vi} from "vitest";
-import type {AccountRepository, ChallengeRepository, SessionRepository, TransactionManager, WebAuthnGateway} from "../src/ports";
+import type {
+  AccountRepository,
+  ChallengeRepository,
+  SessionRepository,
+  TransactionManager,
+  WebAuthnGateway
+} from "../src/ports";
 
 export function createAccountRepoMock(): AccountRepository {
   return {

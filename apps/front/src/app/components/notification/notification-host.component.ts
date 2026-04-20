@@ -1,7 +1,7 @@
-import {CommonModule} from "@angular/common";
-import type {AfterViewInit, TemplateRef} from '@angular/core';
-import {Component, inject, ViewChild} from '@angular/core';
-import {NotificationService} from "../../services/notification.service";
+import { CommonModule } from '@angular/common';
+import type { AfterViewInit, TemplateRef } from '@angular/core';
+import { Component, inject, ViewChild } from '@angular/core';
+import { NotificationService } from '../../services/notification.service';
 
 @Component({
   selector: 'app-notification-host',
@@ -10,7 +10,6 @@ import {NotificationService} from "../../services/notification.service";
   templateUrl: './notification-host.component.html',
 })
 export class NotificationHostComponent implements AfterViewInit {
-
   @ViewChild('notificationTemplate') notifTemplate!: TemplateRef<unknown>;
 
   private readonly notificationService = inject(NotificationService);
@@ -18,5 +17,4 @@ export class NotificationHostComponent implements AfterViewInit {
   ngAfterViewInit() {
     this.notificationService.registerTemplate(this.notifTemplate);
   }
-
 }

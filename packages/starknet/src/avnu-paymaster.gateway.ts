@@ -8,12 +8,8 @@ import type {
   StarknetCall,
   StarknetTransaction
 } from "@bim/domain/ports";
+import {ExternalServiceError, InsufficientBalanceError, PaymasterServiceError,} from "@bim/domain/shared";
 import {SanitizedError, serializeError} from '@bim/lib/error';
-import {
-  ExternalServiceError,
-  InsufficientBalanceError,
-  PaymasterServiceError,
-} from "@bim/domain/shared";
 import type {WALLET_API} from '@starknet-io/starknet-types-010';
 
 import type {Logger} from "pino";

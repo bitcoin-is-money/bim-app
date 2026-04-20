@@ -1,8 +1,8 @@
 import type {FiatCurrency} from '@bim/domain/currency';
 import type {HealthRegistry} from '@bim/domain/health';
 import type {PriceGateway} from '@bim/domain/ports';
-import {SanitizedError, serializeError} from '@bim/lib/error';
 import {ExternalServiceError} from '@bim/domain/shared';
+import {SanitizedError, serializeError} from '@bim/lib/error';
 import type {Logger} from 'pino';
 
 const COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3/simple/price';

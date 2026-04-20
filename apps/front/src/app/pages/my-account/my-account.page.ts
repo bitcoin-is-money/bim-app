@@ -1,18 +1,24 @@
-import {DatePipe} from '@angular/common';
-import type {OnInit} from '@angular/core';
-import {Component, inject, signal} from '@angular/core';
-import {TranslateModule} from '@ngx-translate/core';
-import {GoBackHeaderComponent} from '../../components/go-back-header/go-back-header.component';
-import {InfoFieldComponent} from '../../components/info-field/info-field.component';
-import {FullPageLayoutComponent} from '../../layout';
-import type {AccountInfoResponse} from '../../services/account.http.service';
-import {AccountService} from '../../services/account.service';
-import {I18nService} from '../../services/i18n.service';
+import { DatePipe } from '@angular/common';
+import type { OnInit } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
+import { GoBackHeaderComponent } from '../../components/go-back-header/go-back-header.component';
+import { InfoFieldComponent } from '../../components/info-field/info-field.component';
+import { FullPageLayoutComponent } from '../../layout';
+import type { AccountInfoResponse } from '../../services/account.http.service';
+import { AccountService } from '../../services/account.service';
+import { I18nService } from '../../services/i18n.service';
 
 @Component({
   selector: 'app-my-account',
   standalone: true,
-  imports: [DatePipe, TranslateModule, GoBackHeaderComponent, InfoFieldComponent, FullPageLayoutComponent],
+  imports: [
+    DatePipe,
+    TranslateModule,
+    GoBackHeaderComponent,
+    InfoFieldComponent,
+    FullPageLayoutComponent,
+  ],
   templateUrl: './my-account.page.html',
   styleUrl: './my-account.page.scss',
 })

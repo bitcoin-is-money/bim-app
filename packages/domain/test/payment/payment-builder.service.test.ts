@@ -1,12 +1,8 @@
 import {StarknetAddress} from '@bim/domain/account';
-import {
-  PaymentBuildCache,
-  PaymentBuilderService,
-} from '@bim/domain/payment';
 import type {ParseService, PayService} from '@bim/domain/payment';
-import {AccountNotDeployedError} from '@bim/domain/shared';
+import {PaymentBuildCache, PaymentBuilderService,} from '@bim/domain/payment';
 import type {StarknetGateway} from '@bim/domain/ports';
-import {Amount} from '@bim/domain/shared';
+import {AccountNotDeployedError, Amount} from '@bim/domain/shared';
 import {createLogger} from '@bim/lib/logger';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {createAccount} from '../helper';

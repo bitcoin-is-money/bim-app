@@ -1,18 +1,28 @@
-import {HttpErrorResponse} from '@angular/common/http';
-import {inject, Injectable, signal} from '@angular/core';
-import {Router} from '@angular/router';
-import {Base64Url, UuidCodec} from "@bim/lib/encoding";
-import type {Observable} from 'rxjs';
-import {catchError, firstValueFrom, map} from 'rxjs';
-import type {Account} from "../model";
-import type {AuthResponse, BeginAuthResponse, BeginRegisterResponse, UserSessionResponse} from './auth.http.service';
-import {AuthHttpService} from './auth.http.service';
-import {CurrencyService} from './currency.service';
-import {I18nService} from './i18n.service';
-import {NotificationService} from './notification.service';
-import {PwaUpdateService} from './pwa-update.service';
+import { HttpErrorResponse } from '@angular/common/http';
+import { inject, Injectable, signal } from '@angular/core';
+import { Router } from '@angular/router';
+import { Base64Url, UuidCodec } from '@bim/lib/encoding';
+import type { Observable } from 'rxjs';
+import { catchError, firstValueFrom, map } from 'rxjs';
+import type { Account } from '../model';
+import type {
+  AuthResponse,
+  BeginAuthResponse,
+  BeginRegisterResponse,
+  UserSessionResponse,
+} from './auth.http.service';
+import { AuthHttpService } from './auth.http.service';
+import { CurrencyService } from './currency.service';
+import { I18nService } from './i18n.service';
+import { NotificationService } from './notification.service';
+import { PwaUpdateService } from './pwa-update.service';
 
-export type {AuthResponse, BeginAuthResponse, BeginRegisterResponse, UserSessionResponse} from './auth.http.service';
+export type {
+  AuthResponse,
+  BeginAuthResponse,
+  BeginRegisterResponse,
+  UserSessionResponse,
+} from './auth.http.service';
 
 /**
  * Budget (ms) for `PwaUpdateService.hasUpdate()` at login / session resume.
@@ -29,7 +39,6 @@ const UPDATE_CHECK_BUDGET_MS = 2000;
   providedIn: 'root',
 })
 export class AuthService {
-
   private readonly httpService = inject(AuthHttpService);
   private readonly router = inject(Router);
   private readonly i18n = inject(I18nService);
@@ -69,19 +78,23 @@ export class AuthService {
       const beginResponse = await firstValueFrom(this.httpService.beginRegister(username));
 
       const options = this.convertRegistrationOptions(beginResponse.options);
-      const credential = await navigator.credentials.create({ publicKey: options }) as PublicKeyCredential | null;
+      const credential = (await navigator.credentials.create({
+        publicKey: options,
+      })) as PublicKeyCredential | null;
 
       if (!credential) {
         this.notifications.error({ message: this.i18n.t('notifications.registrationCancelled') });
         return;
       }
 
-      await firstValueFrom(this.completeRegister(
-        beginResponse.challengeId,
-        beginResponse.accountId,
-        username,
-        credential
-      ));
+      await firstValueFrom(
+        this.completeRegister(
+          beginResponse.challengeId,
+          beginResponse.accountId,
+          username,
+          credential,
+        ),
+      );
 
       this.isNewUser.set(true);
       await this.currency.init();
@@ -90,7 +103,8 @@ export class AuthService {
       // HTTP errors are already handled by the interceptor
       // Only handle non-HTTP errors here
       if (!(error instanceof HttpErrorResponse)) {
-        const message = error instanceof Error ? error.message : this.i18n.t('notifications.registrationFailed');
+        const message =
+          error instanceof Error ? error.message : this.i18n.t('notifications.registrationFailed');
         this.notifications.error({ message });
       }
     } finally {
@@ -116,7 +130,9 @@ export class AuthService {
       const beginResponse = await firstValueFrom(this.httpService.beginLogin());
 
       const options = this.convertAuthOptions(beginResponse.options);
-      const credential = await navigator.credentials.get({ publicKey: options }) as PublicKeyCredential | null;
+      const credential = (await navigator.credentials.get({
+        publicKey: options,
+      })) as PublicKeyCredential | null;
 
       if (!credential) {
         this.notifications.error({ message: this.i18n.t('notifications.authenticationCancelled') });
@@ -138,7 +154,7 @@ export class AuthService {
   }
 
   private async navigateAfterSignIn(): Promise<void> {
-    const route = await this.pwaUpdate.hasUpdate(UPDATE_CHECK_BUDGET_MS) ? '/updating' : '/home';
+    const route = (await this.pwaUpdate.hasUpdate(UPDATE_CHECK_BUDGET_MS)) ? '/updating' : '/home';
     await this.router.navigate([route]);
   }
 
@@ -151,7 +167,8 @@ export class AuthService {
       return;
     }
 
-    const message = error instanceof Error ? error.message : this.i18n.t('notifications.authenticationFailed');
+    const message =
+      error instanceof Error ? error.message : this.i18n.t('notifications.authenticationFailed');
     this.notifications.error({ message });
   }
 
@@ -160,7 +177,7 @@ export class AuthService {
    * Called after account deployment when the address becomes known.
    */
   updateStarknetAddress(address: string): void {
-    this.currentUser.update(user => user ? {...user, starknetAddress: address} : null);
+    this.currentUser.update((user) => (user ? { ...user, starknetAddress: address } : null));
   }
 
   /**
@@ -178,9 +195,9 @@ export class AuthService {
   async loadCurrentUser(): Promise<void> {
     try {
       const response = await firstValueFrom(
-        this.httpService.getSession().pipe(
-          catchError(() => [{ authenticated: false } as UserSessionResponse])
-        )
+        this.httpService
+          .getSession()
+          .pipe(catchError(() => [{ authenticated: false } as UserSessionResponse])),
       );
       if (response.authenticated && response.account) {
         this.currentUser.set(response.account);
@@ -203,41 +220,50 @@ export class AuthService {
   // Private Methods
   // ===========================================================================
 
-  private completeLogin(challengeId: string, credential: PublicKeyCredential): Observable<AuthResponse> {
+  private completeLogin(
+    challengeId: string,
+    credential: PublicKeyCredential,
+  ): Observable<AuthResponse> {
     const credentialJson = this.credentialToJson(credential);
-    return this.httpService.completeLogin({
-      challengeId,
-      credential: credentialJson,
-    }).pipe(
-      map((response) => {
-        this.currentUser.set(response.account);
-        return response;
+    return this.httpService
+      .completeLogin({
+        challengeId,
+        credential: credentialJson,
       })
-    );
+      .pipe(
+        map((response) => {
+          this.currentUser.set(response.account);
+          return response;
+        }),
+      );
   }
 
   private completeRegister(
     challengeId: string,
     accountId: string,
     username: string,
-    credential: PublicKeyCredential
+    credential: PublicKeyCredential,
   ): Observable<AuthResponse> {
     const credentialJson = this.credentialToJson(credential);
-    return this.httpService.completeRegister({
-      challengeId,
-      accountId,
-      username,
-      credential: credentialJson,
-    }).pipe(
-      map((response) => {
-        this.currentUser.set(response.account);
-        return response;
+    return this.httpService
+      .completeRegister({
+        challengeId,
+        accountId,
+        username,
+        credential: credentialJson,
       })
-    );
+      .pipe(
+        map((response) => {
+          this.currentUser.set(response.account);
+          return response;
+        }),
+      );
   }
 
   private credentialToJson(credential: PublicKeyCredential): unknown {
-    const response = credential.response as AuthenticatorAssertionResponse | AuthenticatorAttestationResponse;
+    const response = credential.response as
+      | AuthenticatorAssertionResponse
+      | AuthenticatorAttestationResponse;
 
     if ('attestationObject' in response) {
       // Registration
@@ -266,7 +292,9 @@ export class AuthService {
     }
   }
 
-  private convertAuthOptions(options: BeginAuthResponse['options']): PublicKeyCredentialRequestOptions {
+  private convertAuthOptions(
+    options: BeginAuthResponse['options'],
+  ): PublicKeyCredentialRequestOptions {
     return {
       challenge: Base64Url.decode(options.challenge),
       rpId: options.rpId,
@@ -279,7 +307,9 @@ export class AuthService {
     } as PublicKeyCredentialRequestOptions;
   }
 
-  private convertRegistrationOptions(options: BeginRegisterResponse['options']): PublicKeyCredentialCreationOptions {
+  private convertRegistrationOptions(
+    options: BeginRegisterResponse['options'],
+  ): PublicKeyCredentialCreationOptions {
     return {
       challenge: Base64Url.decode(options.challenge),
       rp: {
@@ -300,7 +330,7 @@ export class AuthService {
       authenticatorSelection: {
         authenticatorAttachment: 'platform',
         userVerification: 'required',
-        residentKey: 'required'
+        residentKey: 'required',
       },
     } as PublicKeyCredentialCreationOptions;
   }

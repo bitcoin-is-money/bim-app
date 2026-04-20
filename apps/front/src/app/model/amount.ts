@@ -1,23 +1,19 @@
-import type {ConversionRates} from './currency';
-import {Currency} from './currency';
+import type { ConversionRates } from './currency';
+import { Currency } from './currency';
 
 const SATS_PER_BTC = 100_000_000;
 
 export class Amount {
-
   private constructor(
     public readonly value: number,
-    public readonly currency: Currency
+    public readonly currency: Currency,
   ) {}
 
   static zero(currency: Currency = 'USD'): Amount {
     return new Amount(0, currency);
   }
 
-  static of(
-    value: number,
-    currency: Currency
-  ): Amount {
+  static of(value: number, currency: Currency): Amount {
     return new Amount(value, currency);
   }
 
@@ -42,10 +38,7 @@ export class Amount {
     return this.value > 0;
   }
 
-  convert(
-    targetCurrency: Currency,
-    rates: ConversionRates
-  ): Amount {
+  convert(targetCurrency: Currency, rates: ConversionRates): Amount {
     if (this.currency === targetCurrency) {
       return this.clone();
     }
@@ -86,7 +79,7 @@ export class Amount {
   private static fromBtc(
     btcAmount: number,
     target: Currency,
-    rates: ConversionRates
+    rates: ConversionRates,
   ): number | undefined {
     switch (target) {
       case 'BTC':
@@ -103,5 +96,4 @@ export class Amount {
       }
     }
   }
-
 }

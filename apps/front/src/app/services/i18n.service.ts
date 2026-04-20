@@ -1,9 +1,9 @@
-import {computed, inject, Injectable, signal} from '@angular/core';
-import {TranslateService} from '@ngx-translate/core';
-import {firstValueFrom} from 'rxjs';
-import type {ApiErrorBody} from '../model';
-import type {Language} from './user-settings-http.service';
-import {UserSettingsHttpService} from './user-settings-http.service';
+import { computed, inject, Injectable, signal } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
+import { firstValueFrom } from 'rxjs';
+import type { ApiErrorBody } from '../model';
+import type { Language } from './user-settings-http.service';
+import { UserSettingsHttpService } from './user-settings-http.service';
 
 const SUPPORTED_LANGS: readonly Language[] = ['en', 'fr'] as const;
 const DEFAULT_LANG: Language = 'en';
@@ -14,7 +14,7 @@ const LANG_TO_LOCALE: Record<Language, string> = {
   fr: 'fr-FR',
 };
 
-@Injectable({providedIn: 'root'})
+@Injectable({ providedIn: 'root' })
 export class I18nService {
   private readonly translate = inject(TranslateService);
   private readonly httpService = inject(UserSettingsHttpService);
@@ -40,7 +40,8 @@ export class I18nService {
     } catch {
       // Use browser language as fallback
       const browserLang = this.translate.getBrowserLang() as Language | undefined;
-      const lang = browserLang && SUPPORTED_LANGS.includes(browserLang) ? browserLang : DEFAULT_LANG;
+      const lang =
+        browserLang && SUPPORTED_LANGS.includes(browserLang) ? browserLang : DEFAULT_LANG;
       await this.applyLang(lang);
     }
   }
@@ -74,7 +75,7 @@ export class I18nService {
   async setLang(lang: Language): Promise<void> {
     await this.applyLang(lang);
     try {
-      await firstValueFrom(this.httpService.updateSettings({language: lang}));
+      await firstValueFrom(this.httpService.updateSettings({ language: lang }));
     } catch {
       // Language is already applied locally, ignore server error
       console.warn('Failed to persist language preference');

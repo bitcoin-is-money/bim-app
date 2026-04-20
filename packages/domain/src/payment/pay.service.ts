@@ -6,7 +6,7 @@ import type {SwapService} from '../swap';
 import {TransactionHash} from '../user/types';
 import type {Erc20CallFactory} from './erc20-call.factory';
 import {InvalidPaymentAmountError, SameAddressPaymentError} from './errors';
-import {type FeeConfig, FeeCalculator} from './fee';
+import {FeeCalculator, type FeeConfig} from './fee';
 import type {ParseService} from './parse.service';
 import type {PreparedCalls, PreparedPaymentData} from './pay.types';
 import type {ParsedPaymentData} from './types';

@@ -1,9 +1,9 @@
-import {Component, inject} from '@angular/core';
-import {Router} from '@angular/router';
-import {TranslateModule} from '@ngx-translate/core';
-import {GoBackHeaderComponent} from '../../components/go-back-header/go-back-header.component';
-import {FullPageLayoutComponent} from '../../layout/full-page-layout/full-page-layout.component';
-import {AuthService} from '../../services/auth.service';
+import { Component, inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
+import { GoBackHeaderComponent } from '../../components/go-back-header/go-back-header.component';
+import { FullPageLayoutComponent } from '../../layout/full-page-layout/full-page-layout.component';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-menu',

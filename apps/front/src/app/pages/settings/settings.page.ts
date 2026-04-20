@@ -1,11 +1,11 @@
-import {Component, computed, inject} from '@angular/core';
-import {FormsModule} from '@angular/forms';
-import {TranslateModule} from '@ngx-translate/core';
-import {GoBackHeaderComponent} from '../../components/go-back-header/go-back-header.component';
-import {FullPageLayoutComponent} from '../../layout';
-import {CurrencyService} from '../../services/currency.service';
-import {I18nService} from '../../services/i18n.service';
-import type {Language} from '../../services/user-settings-http.service';
+import { Component, computed, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
+import { GoBackHeaderComponent } from '../../components/go-back-header/go-back-header.component';
+import { FullPageLayoutComponent } from '../../layout';
+import { CurrencyService } from '../../services/currency.service';
+import { I18nService } from '../../services/i18n.service';
+import type { Language } from '../../services/user-settings-http.service';
 
 interface LanguageOption {
   code: Language;
@@ -14,8 +14,8 @@ interface LanguageOption {
 }
 
 const LANGUAGE_OPTIONS: [LanguageOption, ...LanguageOption[]] = [
-  {code: 'en', flag: '🇬🇧', name: 'English'},
-  {code: 'fr', flag: '🇫🇷', name: 'Français'},
+  { code: 'en', flag: '🇬🇧', name: 'English' },
+  { code: 'fr', flag: '🇫🇷', name: 'Français' },
 ];
 
 @Component({
@@ -33,12 +33,12 @@ export class SettingsPage {
   readonly currentLanguage = this.i18n.currentLang;
   readonly currentFiat = computed(() => {
     const preferred = this.currency.preferredCurrencies();
-    return preferred.find(c => c !== 'BTC' && c !== 'SAT') ?? 'USD';
+    return preferred.find((c) => c !== 'BTC' && c !== 'SAT') ?? 'USD';
   });
   readonly currencyOptions = computed(() => {
     const locale = this.i18n.currentLocale();
-    const displayNames = new Intl.DisplayNames([locale], {type: 'currency'});
-    return this.currency.supportedCurrencies().map(code => ({
+    const displayNames = new Intl.DisplayNames([locale], { type: 'currency' });
+    return this.currency.supportedCurrencies().map((code) => ({
       code,
       label: `${displayNames.of(code)} (${code})`,
     }));
@@ -53,7 +53,6 @@ export class SettingsPage {
   }
 
   getSelectedOption(): LanguageOption {
-    return LANGUAGE_OPTIONS
-      .find(l => l.code === this.currentLanguage()) ?? LANGUAGE_OPTIONS[0];
+    return LANGUAGE_OPTIONS.find((l) => l.code === this.currentLanguage()) ?? LANGUAGE_OPTIONS[0];
   }
 }

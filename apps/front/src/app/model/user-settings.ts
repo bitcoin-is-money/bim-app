@@ -1,4 +1,4 @@
-import type {Language} from "../services/user-settings-http.service";
+import type { Language } from '../services/user-settings-http.service';
 
 export interface UserSettings {
   language: Language;

@@ -7,7 +7,11 @@ import {AccountAlreadyExistsError, AccountNotFoundError, InvalidAccountStateErro
 import {AccountId, CredentialId} from './types';
 import type {DeployAccountInput, DeployAccountOutput, DeployAccountUseCase} from './use-case/deploy-account.use-case';
 import type {GetBalanceInput, GetBalanceOutput, GetBalanceUseCase} from './use-case/get-balance.use-case';
-import type {GetDeploymentStatusInput, GetDeploymentStatusOutput, GetDeploymentStatusUseCase} from './use-case/get-deployment-status.use-case';
+import type {
+  GetDeploymentStatusInput,
+  GetDeploymentStatusOutput,
+  GetDeploymentStatusUseCase
+} from './use-case/get-deployment-status.use-case';
 
 // =============================================================================
 // Dependencies

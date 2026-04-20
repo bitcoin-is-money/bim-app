@@ -1,9 +1,9 @@
-import {describe, expect, it} from 'vitest';
-import type {ParsePaymentResponse} from '../services/pay.http.service';
-import {ParsedPayment} from './parsed-payment';
+import { describe, expect, it } from 'vitest';
+import type { ParsePaymentResponse } from '../services/pay.http.service';
+import { ParsedPayment } from './parsed-payment';
 
-const baseAmount = {value: 50_000, currency: 'SAT' as const};
-const baseFee = {value: 100, currency: 'SAT' as const};
+const baseAmount = { value: 50_000, currency: 'SAT' as const };
+const baseFee = { value: 100, currency: 'SAT' as const };
 
 describe('ParsedPayment.fromResponse', () => {
   it('maps a lightning invoice with expiresAt', () => {

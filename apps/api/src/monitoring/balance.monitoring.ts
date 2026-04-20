@@ -1,7 +1,7 @@
-import {serializeError} from '@bim/lib/error';
 import {AvnuBalanceLow, TreasuryBalanceLow} from '@bim/domain/notifications';
 import type {NotificationGateway, PaymasterGateway, StarknetGateway} from '@bim/domain/ports';
 import type {StarknetConfig} from '@bim/domain/shared';
+import {serializeError} from '@bim/lib/error';
 import type {Logger} from 'pino';
 
 export const DEFAULT_AVNU_THRESHOLD_STRK = 15n;

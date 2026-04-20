@@ -1,20 +1,20 @@
-import type {OnDestroy} from '@angular/core';
-import {inject, Injectable, signal} from '@angular/core';
-import {firstValueFrom} from 'rxjs';
-import type {Amount, ConversionRates, Currency} from "../model";
-import {CurrencyHttpService} from './currency.http.service';
-import {UserSettingsHttpService} from './user-settings-http.service';
+import type { OnDestroy } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
+import type { Amount, ConversionRates, Currency } from '../model';
+import { CurrencyHttpService } from './currency.http.service';
+import { UserSettingsHttpService } from './user-settings-http.service';
 
 const REFRESH_INTERVAL_MS = 6 * 3600 * 1000; // 6 hours
 
 /**
  * Rates and auto-refresh are started in init(), called after authentication
  */
-@Injectable({providedIn: 'root'})
+@Injectable({ providedIn: 'root' })
 export class CurrencyService implements OnDestroy {
   private readonly currencyHttp = inject(CurrencyHttpService);
   private readonly settingsHttp = inject(UserSettingsHttpService);
-  private readonly _rates = signal<ConversionRates>({prices: {}});
+  private readonly _rates = signal<ConversionRates>({ prices: {} });
   private readonly _defaultCurrency = signal<Currency>('BTC');
   private readonly _currentCurrency = signal<Currency>(this._defaultCurrency());
   private readonly _preferredCurrencies = signal<Currency[]>(['BTC', 'SAT', 'USD']);
@@ -69,10 +69,12 @@ export class CurrencyService implements OnDestroy {
   async setPreferredFiat(fiat: string): Promise<void> {
     this.updatePreferredCurrencies([fiat]);
     try {
-      await firstValueFrom(this.settingsHttp.updateSettings({
-        preferredCurrencies: [fiat],
-        defaultCurrency: fiat,
-      }));
+      await firstValueFrom(
+        this.settingsHttp.updateSettings({
+          preferredCurrencies: [fiat],
+          defaultCurrency: fiat,
+        }),
+      );
     } catch {
       console.warn('Failed to persist currency preference');
     }
@@ -85,9 +87,9 @@ export class CurrencyService implements OnDestroy {
   fetchRates(): void {
     this.currencyHttp.fetchRates().subscribe({
       next: (prices) => {
-        this._rates.set({prices});
+        this._rates.set({ prices });
         this._supportedCurrencies.set(Object.keys(prices).sort((a, b) => a.localeCompare(b)));
-      }
+      },
     });
   }
 
@@ -109,5 +111,4 @@ export class CurrencyService implements OnDestroy {
       this.fetchRates();
     }, REFRESH_INTERVAL_MS);
   }
-
 }

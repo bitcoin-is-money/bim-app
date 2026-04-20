@@ -1,11 +1,11 @@
-import {HttpClient} from '@angular/common/http';
-import {inject, Injectable} from '@angular/core';
-import type {Observable} from 'rxjs';
-import type {UserSettings} from "../model/user-settings";
+import { HttpClient } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import type { Observable } from 'rxjs';
+import type { UserSettings } from '../model/user-settings';
 
 export type Language = 'en' | 'fr';
 
-@Injectable({providedIn: 'root'})
+@Injectable({ providedIn: 'root' })
 export class UserSettingsHttpService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = '/api/user/settings';

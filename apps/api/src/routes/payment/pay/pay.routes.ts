@@ -1,5 +1,5 @@
-import type {Amount} from '@bim/domain/shared';
 import type {PaymentResult, PreparedPaymentData} from '@bim/domain/payment';
+import type {Amount} from '@bim/domain/shared';
 import type {TypedResponse} from 'hono';
 import {Hono} from 'hono';
 import type {AppContext} from '../../../app-context';

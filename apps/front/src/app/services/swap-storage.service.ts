@@ -1,5 +1,5 @@
-import {Injectable, signal} from '@angular/core';
-import {isTerminalStatus, type StoredSwap, type SwapStatus} from '../model';
+import { Injectable, signal } from '@angular/core';
+import { isTerminalStatus, type StoredSwap, type SwapStatus } from '../model';
 
 const STORAGE_KEY = 'bim:swaps';
 const MAX_SWAPS = 50;
@@ -26,7 +26,7 @@ export class SwapStorageService {
   updateSwapStatus(swapId: string, status: SwapStatus): void {
     const current = this.swaps();
     const updated = current.map((swap) =>
-      swap.id === swapId ? {...swap, lastKnownStatus: status} : swap
+      swap.id === swapId ? { ...swap, lastKnownStatus: status } : swap,
     );
     this.swaps.set(updated);
     this.persistToStorage(updated);
@@ -71,10 +71,11 @@ export class SwapStorageService {
           /* eslint-disable @typescript-eslint/no-unsafe-member-access -- type guard narrowing from unknown */
           swaps = parsed.filter(
             (item): item is StoredSwap =>
-              typeof item === 'object' && item !== null
-              && typeof item.id === 'string'
-              && typeof item.lastKnownStatus === 'string'
-              && typeof item.createdAt === 'string',
+              typeof item === 'object' &&
+              item !== null &&
+              typeof item.id === 'string' &&
+              typeof item.lastKnownStatus === 'string' &&
+              typeof item.createdAt === 'string',
           );
           /* eslint-enable @typescript-eslint/no-unsafe-member-access */
         }

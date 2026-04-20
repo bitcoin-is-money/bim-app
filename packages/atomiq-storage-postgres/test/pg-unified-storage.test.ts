@@ -1,5 +1,5 @@
 import type {UnifiedStorageCompositeIndexes, UnifiedStorageIndexes, UnifiedStoredObject} from '@atomiqlabs/sdk';
-import {beforeEach, describe, expect, it, vi, type Mock} from 'vitest';
+import {beforeEach, describe, expect, it, type Mock, vi} from 'vitest';
 import {PgUnifiedStorage} from '../src';
 
 const sampleIndexes: UnifiedStorageIndexes = [

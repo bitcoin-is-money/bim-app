@@ -1,7 +1,7 @@
 import type {HealthRegistry} from '@bim/domain/health';
 import type {StarknetCall, SwapGateway} from '@bim/domain/ports';
-import {SanitizedError} from '@bim/lib/error';
 import {ExternalServiceError, type StarknetAddress, validateExternalCalls} from '@bim/domain/shared';
+import {SanitizedError} from '@bim/lib/error';
 import type {Logger} from 'pino';
 
 const HEALTH_CHECK_TIMEOUT_MS = 5_000;

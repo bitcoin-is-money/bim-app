@@ -1,16 +1,16 @@
-import {HttpErrorResponse} from '@angular/common/http';
-import type {OnDestroy} from '@angular/core';
-import {inject, Injectable} from '@angular/core';
-import type {Subscription} from 'rxjs';
-import {catchError, filter, interval, of, switchMap, takeWhile, tap} from 'rxjs';
-import {environment} from '../../environments/environment';
-import {isTerminalStatus, type StoredSwap, type SwapDirection, type SwapStatus} from '../model';
-import {AccountService} from './account.service';
-import {I18nService} from './i18n.service';
-import {NotificationService} from './notification.service';
-import {SwapStorageService} from './swap-storage.service';
-import {SwapHttpService} from './swap.http.service';
-import {TransactionService} from './transaction.service';
+import { HttpErrorResponse } from '@angular/common/http';
+import type { OnDestroy } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
+import type { Subscription } from 'rxjs';
+import { catchError, filter, interval, of, switchMap, takeWhile, tap } from 'rxjs';
+import { environment } from '../../environments/environment';
+import { isTerminalStatus, type StoredSwap, type SwapDirection, type SwapStatus } from '../model';
+import { AccountService } from './account.service';
+import { I18nService } from './i18n.service';
+import { NotificationService } from './notification.service';
+import { SwapStorageService } from './swap-storage.service';
+import { SwapHttpService } from './swap.http.service';
+import { TransactionService } from './transaction.service';
 
 type NotificationKind = 'info' | 'success' | 'error';
 
@@ -28,31 +28,43 @@ interface NotificationEntry {
  */
 const NOTIFICATIONS: Record<SwapDirection, Partial<Record<SwapStatus, NotificationEntry>>> = {
   lightning_to_starknet: {
-    paid:      {key: 'notifications.receive.lightning.paid',      kind: 'info'},
-    completed: {key: 'notifications.receive.lightning.completed', kind: 'success', useConfetti: true},
-    expired:   {key: 'notifications.receive.lightning.expired',   kind: 'error'},
-    failed:    {key: 'notifications.receive.lightning.failed',    kind: 'error'},
-    lost:      {key: 'notifications.receive.lightning.lost',      kind: 'error'},
+    paid: { key: 'notifications.receive.lightning.paid', kind: 'info' },
+    completed: {
+      key: 'notifications.receive.lightning.completed',
+      kind: 'success',
+      useConfetti: true,
+    },
+    expired: { key: 'notifications.receive.lightning.expired', kind: 'error' },
+    failed: { key: 'notifications.receive.lightning.failed', kind: 'error' },
+    lost: { key: 'notifications.receive.lightning.lost', kind: 'error' },
   },
   bitcoin_to_starknet: {
-    paid:      {key: 'notifications.receive.bitcoin.paid',      kind: 'info'},
-    completed: {key: 'notifications.receive.bitcoin.completed', kind: 'success', useConfetti: true},
-    expired:   {key: 'notifications.receive.bitcoin.expired',   kind: 'error'},
-    failed:    {key: 'notifications.receive.bitcoin.failed',    kind: 'error'},
-    lost:      {key: 'notifications.receive.bitcoin.lost',      kind: 'error'},
+    paid: { key: 'notifications.receive.bitcoin.paid', kind: 'info' },
+    completed: {
+      key: 'notifications.receive.bitcoin.completed',
+      kind: 'success',
+      useConfetti: true,
+    },
+    expired: { key: 'notifications.receive.bitcoin.expired', kind: 'error' },
+    failed: { key: 'notifications.receive.bitcoin.failed', kind: 'error' },
+    lost: { key: 'notifications.receive.bitcoin.lost', kind: 'error' },
   },
   starknet_to_lightning: {
-    completed:  {key: 'notifications.send.lightning.completed', kind: 'success', useConfetti: true},
-    refunded:   {key: 'notifications.send.lightning.refunded',  kind: 'info'},
-    failed:     {key: 'notifications.send.lightning.failed',    kind: 'error'},
-    lost:       {key: 'notifications.send.lightning.lost',      kind: 'error'},
+    completed: {
+      key: 'notifications.send.lightning.completed',
+      kind: 'success',
+      useConfetti: true,
+    },
+    refunded: { key: 'notifications.send.lightning.refunded', kind: 'info' },
+    failed: { key: 'notifications.send.lightning.failed', kind: 'error' },
+    lost: { key: 'notifications.send.lightning.lost', kind: 'error' },
   },
   starknet_to_bitcoin: {
-    completed:  {key: 'notifications.send.bitcoin.completed',  kind: 'success', useConfetti: true},
-    refundable: {key: 'notifications.send.bitcoin.refundable', kind: 'error'},
-    refunded:   {key: 'notifications.send.bitcoin.refunded',   kind: 'info'},
-    failed:     {key: 'notifications.send.bitcoin.failed',     kind: 'error'},
-    lost:       {key: 'notifications.send.bitcoin.lost',       kind: 'error'},
+    completed: { key: 'notifications.send.bitcoin.completed', kind: 'success', useConfetti: true },
+    refundable: { key: 'notifications.send.bitcoin.refundable', kind: 'error' },
+    refunded: { key: 'notifications.send.bitcoin.refunded', kind: 'info' },
+    failed: { key: 'notifications.send.bitcoin.failed', kind: 'error' },
+    lost: { key: 'notifications.send.bitcoin.lost', kind: 'error' },
   },
 };
 
@@ -111,7 +123,7 @@ export class SwapPollingService implements OnDestroy {
         takeWhile(() => Date.now() - startedAt < POLL_DURATION_MS),
         filter(() => document.visibilityState === 'visible'),
         switchMap(() =>
-          this.httpService.getStatus(swapId, {silent: true}).pipe(
+          this.httpService.getStatus(swapId, { silent: true }).pipe(
             catchError((err) => {
               this.logSwapError(swapId, err);
               if (err instanceof HttpErrorResponse && err.status === 404) {
@@ -121,8 +133,8 @@ export class SwapPollingService implements OnDestroy {
                 this.incrementErrors(swapId);
               }
               return of(null);
-            })
-          )
+            }),
+          ),
         ),
         tap((response) => {
           if (!response) return;
@@ -146,7 +158,7 @@ export class SwapPollingService implements OnDestroy {
           if (isTerminalStatus(newStatus, storedSwap?.direction)) {
             this.stopPolling(swapId);
           }
-        })
+        }),
       )
       .subscribe();
 
@@ -178,7 +190,7 @@ export class SwapPollingService implements OnDestroy {
   }
 
   fetchStatusOnce(swapId: string): void {
-    this.httpService.getStatus(swapId, {silent: true}).subscribe({
+    this.httpService.getStatus(swapId, { silent: true }).subscribe({
       next: (response) => {
         this.storageService.updateSwapStatus(swapId, response.status as SwapStatus);
       },
@@ -217,16 +229,16 @@ export class SwapPollingService implements OnDestroy {
     const message = this.i18n.t(entry.key);
     switch (entry.kind) {
       case 'info':
-        this.notificationService.info({message});
+        this.notificationService.info({ message });
         break;
       case 'success':
         this.notificationService.success({
           message,
-          ...(entry.useConfetti === true && {useConfetti: true}),
+          ...(entry.useConfetti === true && { useConfetti: true }),
         });
         break;
       case 'error':
-        this.notificationService.error({message});
+        this.notificationService.error({ message });
         break;
     }
   }
@@ -237,7 +249,9 @@ export class SwapPollingService implements OnDestroy {
 
     poll.consecutiveErrors++;
     if (poll.consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
-      console.warn(`Stopping polling for swap ${swapId} after ${poll.consecutiveErrors} consecutive errors`);
+      console.warn(
+        `Stopping polling for swap ${swapId} after ${poll.consecutiveErrors} consecutive errors`,
+      );
       this.stopPolling(swapId);
     }
   }

@@ -1,5 +1,5 @@
-import {HttpResponse} from '@angular/common/http';
-import type {PricesResponse} from '../../services/currency.http.service';
+import { HttpResponse } from '@angular/common/http';
+import type { PricesResponse } from '../../services/currency.http.service';
 
 export class PricesHandlerMock {
   getPrices(): HttpResponse<PricesResponse> {

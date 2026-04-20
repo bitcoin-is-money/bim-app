@@ -1,8 +1,16 @@
 import {AccountId} from '../account';
 import type {UserSettingsRepository} from '../ports';
 import {UserSettingsId} from './types';
-import type {FetchUserSettingsInput, FetchUserSettingsOutput, FetchSettingsUseCase} from './use-case/fetch-settings.use-case';
-import type {UpdateUserSettingsInput, UpdateUserSettingsOutput, UpdateSettingsUseCase} from './use-case/update-settings.use-case';
+import type {
+  FetchSettingsUseCase,
+  FetchUserSettingsInput,
+  FetchUserSettingsOutput
+} from './use-case/fetch-settings.use-case';
+import type {
+  UpdateSettingsUseCase,
+  UpdateUserSettingsInput,
+  UpdateUserSettingsOutput
+} from './use-case/update-settings.use-case';
 import {UserSettings} from './user-settings';
 
 // =============================================================================

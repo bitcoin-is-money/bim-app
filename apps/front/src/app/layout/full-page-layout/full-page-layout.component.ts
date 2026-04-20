@@ -1,5 +1,5 @@
-import {Component, input} from '@angular/core';
-import {LogoFooterComponent} from '../../components/logo-footer/logo-footer.component';
+import { Component, input } from '@angular/core';
+import { LogoFooterComponent } from '../../components/logo-footer/logo-footer.component';
 
 @Component({
   selector: 'app-full-page-layout',

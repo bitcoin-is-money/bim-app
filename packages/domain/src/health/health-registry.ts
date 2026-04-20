@@ -1,5 +1,5 @@
+import {type SanitizedError, serializeError} from '@bim/lib/error';
 import type {Logger} from 'pino';
-import {serializeError, type SanitizedError} from '@bim/lib/error';
 
 /**
  * Known components whose health is tracked in the registry.

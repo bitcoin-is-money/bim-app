@@ -1,12 +1,22 @@
 import {AccountId, StarknetAddress} from '@bim/domain/account';
+import {BitcoinReceiveService, ReceiveBuildCache,} from '@bim/domain/payment';
+import type {
+  NotificationGateway,
+  SignatureProcessor,
+  StarknetCall,
+  StarknetGateway,
+  SwapGateway,
+  TransactionRepository
+} from '@bim/domain/ports';
 import {
-  BitcoinReceiveService,
-  ReceiveBuildCache,
-} from '@bim/domain/payment';
-import type {NotificationGateway, SignatureProcessor, StarknetCall, StarknetGateway, SwapGateway, TransactionRepository} from '@bim/domain/ports';
-import {Amount, BuildExpiredError, ExternalServiceError, ForbiddenError, InsufficientBalanceError} from '@bim/domain/shared';
-import {BitcoinAddress, Swap, SwapId} from '@bim/domain/swap';
+  Amount,
+  BuildExpiredError,
+  ExternalServiceError,
+  ForbiddenError,
+  InsufficientBalanceError
+} from '@bim/domain/shared';
 import type {SwapService} from '@bim/domain/swap';
+import {BitcoinAddress, Swap, SwapId} from '@bim/domain/swap';
 import {createLogger} from '@bim/lib/logger';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {createAccount} from '../helper';

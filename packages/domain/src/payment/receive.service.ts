@@ -5,7 +5,12 @@ import type {BitcoinReceiveService} from './bitcoin-receive.service';
 import {InvalidPaymentAmountError} from './errors';
 import type {ReceivePaymentInput as DomainReceiveInput, ReceiveResult} from './receive.types';
 import type {CommitReceiveInput, CommitReceiveOutput, CommitReceiveUseCase} from './use-case/commit-receive.use-case';
-import type {BitcoinPendingCommitOutput, ReceivePaymentInput, ReceivePaymentOutput, ReceivePaymentUseCase} from './use-case/receive-payment.use-case';
+import type {
+  BitcoinPendingCommitOutput,
+  ReceivePaymentInput,
+  ReceivePaymentOutput,
+  ReceivePaymentUseCase
+} from './use-case/receive-payment.use-case';
 
 // =============================================================================
 // Dependencies
@@ -61,8 +66,7 @@ export class ReceiveService implements ReceivePaymentUseCase, CommitReceiveUseCa
     });
 
     // Bitcoin pending commit: delegate to BitcoinReceiveService
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive
-    if (result.network === 'bitcoin' && 'status' in result && result.status === 'pending_commit') {
+    if (result.network === 'bitcoin' && 'status' in result) {
       const {buildId, messageHash} = await this.deps.bitcoinReceiveService.handlePendingCommit({
         swapId: result.swapId,
         commitCalls: result.commitCalls,

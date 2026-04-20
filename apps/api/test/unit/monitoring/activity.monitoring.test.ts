@@ -1,10 +1,6 @@
-import {createLogger} from '@bim/lib/logger';
-import type {
-  AccountRepository,
-  NotificationGateway,
-  TransactionRepository,
-} from '@bim/domain/ports';
+import type {AccountRepository, NotificationGateway, TransactionRepository,} from '@bim/domain/ports';
 import type {StarknetConfig} from '@bim/domain/shared';
+import {createLogger} from '@bim/lib/logger';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {ActivityMonitoring} from '../../../src/monitoring/activity.monitoring';
 

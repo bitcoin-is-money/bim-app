@@ -4,11 +4,19 @@ import type {AtomiqGateway, StarknetCall, SwapRepository, TransactionRepository}
 import {Amount, BitcoinAddress, type BitcoinNetwork, StarknetAddress} from '../shared';
 import {TransactionHash} from '../user/types';
 import {SwapAmountError, SwapCreationError, SwapNotFoundError, SwapOwnershipError} from './errors';
-import type {FetchSwapLimitsInput, FetchSwapLimitsOutput, FetchSwapLimitsUseCase} from './use-case/fetch-swap-limits.use-case';
-import type {FetchSwapStatusInput, FetchSwapStatusOutput, FetchSwapStatusUseCase} from './use-case/fetch-swap-status.use-case';
 import {LightningInvoice} from './lightning-invoice';
 import {Swap} from './swap';
 import {SwapId, type SwapLimits} from './types';
+import type {
+  FetchSwapLimitsInput,
+  FetchSwapLimitsOutput,
+  FetchSwapLimitsUseCase
+} from './use-case/fetch-swap-limits.use-case';
+import type {
+  FetchSwapStatusInput,
+  FetchSwapStatusOutput,
+  FetchSwapStatusUseCase
+} from './use-case/fetch-swap-status.use-case';
 
 // =============================================================================
 // Dependencies
