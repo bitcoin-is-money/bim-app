@@ -40,6 +40,15 @@ export function handleDomainError(ctx: Context, error: unknown, logger: Logger):
   }
 
   if (!(error instanceof DomainError)) {
+    // Workaround: esbuild may duplicate class identities across packages,
+    // breaking instanceof checks. Fall back to duck-typing on errorCode.
+    const domainLike = asDomainErrorShape(error);
+    if (domainLike !== undefined) {
+      logger.error(error, domainLike.message);
+      const status = HTTP_STATUS.get(domainLike.errorCode) ?? 400;
+      return createErrorResponse(ctx, status, domainLike.errorCode, domainLike.message, domainLike.args);
+    }
+
     logger.error(error, 'Unhandled error');
     return createErrorResponse(ctx, 500, ErrorCode.INTERNAL_ERROR, 'Internal server error');
   }
@@ -53,6 +62,34 @@ export function handleDomainError(ctx: Context, error: unknown, logger: Logger):
 
   const status = HTTP_STATUS.get(error.errorCode) ?? 400;
   return createErrorResponse(ctx, status, error.errorCode, error.message, error.args);
+}
+
+interface DomainErrorShape {
+  errorCode: ErrorCodeType;
+  message: string;
+  args: Record<string, string | number> | undefined;
+}
+
+const ERROR_CODES: ReadonlySet<string> = new Set(Object.values(ErrorCode));
+
+/**
+ * Duck-type check for domain errors whose class identity was lost during
+ * esbuild bundling (duplicated class → instanceof fails).
+ */
+function asDomainErrorShape(error: unknown): DomainErrorShape | undefined {
+  if (!(error instanceof Error)) return undefined;
+  const candidate = error as unknown as Record<string, unknown>;
+  if (typeof candidate.errorCode !== 'string') return undefined;
+  if (!ERROR_CODES.has(candidate.errorCode)) return undefined;
+  const args = candidate.args;
+  const validArgs = args === undefined
+    || (typeof args === 'object' && args !== null && !Array.isArray(args));
+  if (!validArgs) return undefined;
+  return {
+    errorCode: candidate.errorCode as ErrorCodeType,
+    message: error.message,
+    args: args as Record<string, string | number> | undefined,
+  };
 }
 
 function handleZodError(ctx: Context, error: ZodError): ApiResponse {

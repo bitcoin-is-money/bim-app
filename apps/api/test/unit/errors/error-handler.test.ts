@@ -346,6 +346,92 @@ describe('handleDomainError', () => {
   });
 
   // ===========================================================================
+  // Workaround: esbuild may duplicate DomainError class identity, breaking
+  // instanceof. The error handler falls back to duck-typing on errorCode.
+  // These tests simulate the bundling issue by creating plain Error objects
+  // decorated with errorCode/args — they are NOT instanceof DomainError.
+  // ===========================================================================
+  describe('Duck-typed domain errors (esbuild workaround)', () => {
+    function fakeDomainError(
+      errorCode: string,
+      message: string,
+      args?: Record<string, string | number>,
+    ): Error {
+      const err = new Error(message);
+      Object.defineProperty(err, 'errorCode', {value: errorCode, enumerable: true});
+      if (args !== undefined) {
+        Object.defineProperty(err, 'args', {value: args, enumerable: true});
+      }
+      return err;
+    }
+
+    it('detects SwapAmountError by errorCode and returns 400 with args', () => {
+      const error = fakeDomainError(
+        ErrorCode.SWAP_AMOUNT_OUT_OF_RANGE,
+        'Amount 0 sats is outside limits [1000, 2000000]',
+        {amount: 0, min: 1000, max: 2_000_000, unit: 'sats'},
+      );
+      handleDomainError(ctx, error, logger);
+      expect(captured.status).toBe(400);
+      expect(captured.body.error.code).toBe(ErrorCode.SWAP_AMOUNT_OUT_OF_RANGE);
+      expect(captured.body.error.args?.min).toBe(1000);
+      expect(captured.body.error.args?.max).toBe(2_000_000);
+      expect(captured.body.error.args?.unit).toBe('sats');
+    });
+
+    it('detects ExternalServiceError by errorCode and returns 502', () => {
+      const error = fakeDomainError(
+        ErrorCode.EXTERNAL_SERVICE_ERROR,
+        "External service 'Atomiq' failed: timeout",
+        {service: 'Atomiq'},
+      );
+      handleDomainError(ctx, error, logger);
+      expect(captured.status).toBe(502);
+      expect(captured.body.error.code).toBe(ErrorCode.EXTERNAL_SERVICE_ERROR);
+      expect(captured.body.error.args?.service).toBe('Atomiq');
+    });
+
+    it('detects error without args', () => {
+      const error = fakeDomainError(
+        ErrorCode.LIGHTNING_INVOICE_EXPIRED,
+        'Lightning invoice has expired',
+      );
+      handleDomainError(ctx, error, logger);
+      expect(captured.status).toBe(400);
+      expect(captured.body.error.code).toBe(ErrorCode.LIGHTNING_INVOICE_EXPIRED);
+      expect(captured.body.error.args).toBeUndefined();
+    });
+
+    it('rejects non-Error objects', () => {
+      handleDomainError(ctx, {errorCode: ErrorCode.FORBIDDEN, message: 'nope'}, logger);
+      expect(captured.status).toBe(500);
+      expect(captured.body.error.code).toBe(ErrorCode.INTERNAL_ERROR);
+    });
+
+    it('rejects Error without errorCode', () => {
+      handleDomainError(ctx, new Error('plain error'), logger);
+      expect(captured.status).toBe(500);
+      expect(captured.body.error.code).toBe(ErrorCode.INTERNAL_ERROR);
+    });
+
+    it('rejects Error with unknown errorCode', () => {
+      const error = fakeDomainError('NOT_A_REAL_CODE', 'bogus');
+      handleDomainError(ctx, error, logger);
+      expect(captured.status).toBe(500);
+      expect(captured.body.error.code).toBe(ErrorCode.INTERNAL_ERROR);
+    });
+
+    it('rejects Error with args that is an array', () => {
+      const error = new Error('bad args');
+      Object.defineProperty(error, 'errorCode', {value: ErrorCode.FORBIDDEN, enumerable: true});
+      Object.defineProperty(error, 'args', {value: ['not', 'an', 'object'], enumerable: true});
+      handleDomainError(ctx, error, logger);
+      expect(captured.status).toBe(500);
+      expect(captured.body.error.code).toBe(ErrorCode.INTERNAL_ERROR);
+    });
+  });
+
+  // ===========================================================================
   describe('Shared errors', () => {
     it('ValidationError → 400 with field/reason', () => {
       handleDomainError(ctx, new ValidationError('amount', 'must be positive'), logger);
