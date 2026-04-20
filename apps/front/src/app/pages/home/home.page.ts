@@ -90,7 +90,7 @@ export class HomePage implements OnInit {
   }
 
   openNotifications(): void {
-    void this.router.navigate(['/notifications']);
+    void this.router.navigate(['/menu']);
   }
 
   onReceive(): void {
