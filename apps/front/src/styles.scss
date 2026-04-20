@@ -33,6 +33,15 @@ html {
   font-family: 'Inter', sans-serif;
 }
 
+.mono {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
 app-root {
   @apply block h-full w-full overflow-hidden;
 }

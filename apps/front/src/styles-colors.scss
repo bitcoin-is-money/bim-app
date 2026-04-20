@@ -1,7 +1,37 @@
 @reference "tailwindcss";
 
 :root {
-  --color-green: #79bc45;
+  /* Brand */
+  --color-amber: #f59e0b;
+  --color-amber-hi: #fbbf24;
+  --color-amber-lo: #b45309;
+
+  /* Rails — used on tx badges, receive tabs, pay-confirm banner */
+  --rail-btc:  #f59e0b;
+  --rail-ln:   #a855f7;
+  --rail-sn:   #3b82f6;
+
+  /* Semantic states */
+  --state-success: #79bc45;
+  --state-warn:    #f59e0b;
+  --state-danger:  #dc2626;
+
+  /* Neutral surfaces — layered, so stop reaching for neutral-800/900 directly */
+  --surface-0: #0a0a0a;
+  --surface-1: #171717;
+  --surface-2: #262626;
+  --surface-3: #404040;
+
+  /* Text */
+  --text-hi:   #ededed;
+  --text-med:  #a3a3a3;
+  --text-lo:   #737373;
+
+  /* Motion */
+  --motion-enter: 240ms cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-exit:  160ms cubic-bezier(0.5, 0, 0.75, 0);
+  --motion-press: 80ms ease-out;
+
+  /* Legacy alias — keep temporarily to avoid breaking consumers */
+  --color-green: var(--state-success);
 }
-
-

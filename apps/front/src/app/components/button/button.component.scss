@@ -132,3 +132,26 @@
 .btn-size-xl {
   @apply text-xl;
 }
+
+.btn-size-icon-square {
+  @apply w-12 h-12 p-0 rounded-xl;
+
+  .btn-icon { font-size: 18px; }
+  .btn-label { display: none; }
+}
+
+/* ========== Compact (quick-action style) ========== */
+
+.btn-compact {
+  @apply py-3.5 text-sm rounded-2xl gap-2.5;
+  min-height: 56px;
+
+  .btn-icon { font-size: 16px; }
+}
+
+/* ========== Press-down micro-interaction on primary amber ========== */
+
+.btn-color-gold.btn-primary {
+  @apply enabled:active:scale-[0.98];
+  transition: transform 80ms ease-out, background-color 150ms, border-color 150ms;
+}

@@ -19,4 +19,5 @@ export class ButtonComponent {
   readonly icon = input<IconProp | undefined>(undefined);
   readonly disabled = input(false);
   readonly loading = input(false);
+  readonly compact = input(false);
 }

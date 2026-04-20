@@ -13,6 +13,8 @@
         [class.btn-ghost]="variant() === 'ghost'"
         [class.btn-size-lg]="sizeVariant() === 'lg'"
         [class.btn-size-xl]="sizeVariant() === 'xl'"
+        [class.btn-size-icon-square]="sizeVariant() === 'icon-square'"
+        [class.btn-compact]="compact()"
         [disabled]="disabled()"
 >
     @if (loading()) {

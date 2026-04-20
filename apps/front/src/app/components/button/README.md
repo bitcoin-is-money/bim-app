@@ -8,10 +8,11 @@
 |-------|------|----------|---------|-------------|
 | `colorVariant` | `ColorVariant` | Yes | — | Background color |
 | `variant` | `StyleVariant` | No | `'primary'` | Visual style (border, shape, padding) |
-| `sizeVariant` | `SizeVariant` | No | `'base'` | Text size |
+| `sizeVariant` | `SizeVariant` | No | `'base'` | Text size / shape |
 | `icon` | `IconProp` | No | `undefined` | FontAwesome icon |
 | `disabled` | `boolean` | No | `false` | Disables the button |
 | `loading` | `boolean` | No | `false` | Shows a spinner |
+| `compact` | `boolean` | No | `false` | Quick-action style (tall tile, rounded-2xl, gap-2.5) |
 
 ## Color Variants
 
@@ -31,7 +32,7 @@ Controls the border treatment, shape, and padding.
 
 | Value | Border | Shape | Extra | Description |
 |-------|--------|-------|-------|-------------|
-| `primary` | 2px, matches bg color | rounded-md | — | Standard solid button |
+| `primary` | 2px, matches bg color | rounded-md | press-down on gold | Standard solid button |
 | `secondary` | 2px, white (neutral-100) | rounded-md | hover fills white | Outlined button |
 | `action` | 2px, white (neutral-100) | rounded-full | — | Pill-shaped button |
 | `jumbo` | 2px, matches bg color | rounded-md | py-8, icon 150% | Large prominent button |
@@ -44,6 +45,11 @@ Controls the border treatment, shape, and padding.
 | `base` | Default text size |
 | `lg` | `text-lg` |
 | `xl` | `text-xl` |
+| `icon-square` | 48×48, icon-only (label hidden), rounded-xl |
+
+## Call Hierarchy
+
+Use `primary` (gold) for the dominant CTA, `secondary` for the adjacent action, and reserve `ghost` for tertiary / text-only links. Core screen actions on Home (`Receive`, `Pay`) use `[compact]="true"` with `primary`/`secondary` variants rather than `ghost`.
 
 ## Usage Examples
 
@@ -65,6 +71,12 @@ Controls the border treatment, shape, and padding.
 
 <!-- Danger action (clear) -->
 <app-button colorVariant="danger" variant="action" [icon]="['fas', 'trash']">Clear All</app-button>
+
+<!-- Compact Home quick-action -->
+<app-button colorVariant="gold" variant="primary" [compact]="true" [icon]="['fas', 'paper-plane']">Pay</app-button>
+
+<!-- Icon-only square (copy) -->
+<app-button colorVariant="black" variant="secondary" sizeVariant="icon-square" [icon]="['fas', 'copy']"/>
 
 <!-- With loading state -->
 <app-button colorVariant="white" variant="primary" [loading]="true" [disabled]="true">Creating...</app-button>
