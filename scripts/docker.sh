@@ -47,7 +47,7 @@ notify_deploy() {
         \"fields\": [
           {\"title\": \"Services\", \"value\": \"${services}\", \"short\": true},
           {\"title\": \"Version\", \"value\": \"${version}\", \"short\": true},
-          {\"title\": \"By\", \"value\": \"$(git -C "$PROJECT_ROOT" config user.name)\", \"short\": true}
+          {\"title\": \"By\", \"value\": \"${GITHUB_ACTOR:-$(git -C "$PROJECT_ROOT" config user.name)}\", \"short\": true}
         ]
       }]
     }")
