@@ -45,7 +45,7 @@
   },
   "dependencies": {
     "@atomiqlabs/chain-starknet": "^8.2.2",
-    "@atomiqlabs/sdk": "^8.4.3",
+    "@atomiqlabs/sdk": "^8.6.0",
     "@bim/atomiq": "*",
     "@bim/atomiq-storage-postgres": "*",
     "@bim/db": "*",
@@ -53,25 +53,25 @@
     "@bim/lib": "*",
     "@bim/slack": "*",
     "@bim/starknet": "*",
-    "@hono/node-server": "^1.19.9",
+    "@hono/node-server": "^1.19.14",
     "@noble/curves": "^1.9.7",
     "@noble/hashes": "^1.8.0",
     "@stablelib/base64": "^2.0.1",
-    "dotenv": "^17.3.1",
+    "dotenv": "^17.4.2",
     "dotenv-expand": "^12.0.3",
-    "hono": "^4.12.3",
+    "hono": "^4.12.14",
     "hono-rate-limiter": "^0.5.3",
     "light-bolt11-decoder": "^3.2.0",
     "pino": "^10.3.1",
     "pino-pretty": "^13.1.3",
-    "slack-web-api-client": "^1.1.8",
-    "starknet": "^9.3.0",
+    "slack-web-api-client": "^1.1.11",
+    "starknet": "^9.4.2",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@bim/test-toolkit": "*",
-    "@testcontainers/postgresql": "^11.12.0",
-    "@types/node": "^25.3.3",
-    "testcontainers": "^11.12.0"
+    "@testcontainers/postgresql": "^11.14.0",
+    "@types/node": "^25.6.0",
+    "testcontainers": "^11.14.0"
   }
 }
