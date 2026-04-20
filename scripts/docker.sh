@@ -30,7 +30,10 @@ notify_deploy() {
   local services="${1:-all}"
   local version="$2"
   local token="${ALERTING_SLACK_BOT_TOKEN:-}"
-  [ -z "$token" ] && return 0
+  if [ -z "$token" ]; then
+    echo "Warning: ALERTING_SLACK_BOT_TOKEN not set, skipping Slack notification" >&2
+    return 0
+  fi
 
   local response
   response=$(curl -s -X POST "https://slack.com/api/chat.postMessage" \
