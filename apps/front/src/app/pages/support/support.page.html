@@ -7,9 +7,9 @@
         <p class="support-intro">{{ 'support.intro' | translate }}</p>
 
         <div class="quick-picks">
-          <button class="quick-pick" (click)="setQuickAmount(100)">100 sat</button>
           <button class="quick-pick" (click)="setQuickAmount(1000)">1k sat</button>
           <button class="quick-pick" (click)="setQuickAmount(10000)">10k sat</button>
+          <button class="quick-pick" (click)="setQuickAmount(100000)">100k sat</button>
         </div>
 
         <app-amount-field

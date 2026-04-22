@@ -56,9 +56,9 @@ export class SupportPage {
     if (this.isSending()) return this.i18n.t('support.button.sending');
     const sats = this.amountSats();
     if (sats <= 0) return this.i18n.t('support.button.default');
-    if (sats < 100) return this.i18n.t('support.button.tiers.espresso');
-    if (sats < 1_000) return this.i18n.t('support.button.tiers.cappuccino');
-    if (sats < 10_000) return this.i18n.t('support.button.tiers.cappuccinoDeluxe');
+    if (sats < 1_000) return this.i18n.t('support.button.tiers.espresso');
+    if (sats < 10_000) return this.i18n.t('support.button.tiers.cappuccino');
+    if (sats < 100_000) return this.i18n.t('support.button.tiers.cappuccinoDeluxe');
     return this.i18n.t('support.button.tiers.grandCru');
   });
 
