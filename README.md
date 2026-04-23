@@ -90,10 +90,18 @@ user sends a payment.
 
 ## Architecture at a Glance
 
+BIM's codebase uses a pragmatic blend of **Hexagonal architecture**
+(ports & adapters), **Clean Architecture** (use cases distinct from
+enterprise domain rules), and a handful of core **DDD practices** (rich
+entities, ubiquitous language, domain services only when justified).
+At the current project size, both domain rules and use cases live in a
+single `@bim/domain` package — a documented compromise detailed in
+[ARCHITECTURE.md](ARCHITECTURE.md).
+
 ```
 apps/api  ────┬────  apps/front    (Angular PWA, served by the API)
               │
-              ├────  @bim/domain   (pure TS: entities, use cases, ports)
+              ├────  @bim/domain   (pure TS: entities, use cases, services, ports)
               │
               ├────  @bim/db       (PostgreSQL + Drizzle)
               │
@@ -173,7 +181,7 @@ You will need a real `AVNU_API_KEY` (with credits) in
 bim/
 ├── packages/                       # Libraries (pure TypeScript)
 │   ├── lib/                        # @bim/lib      — shared utilities
-│   ├── domain/                     # @bim/domain   — domain + use cases
+│   ├── domain/                     # @bim/domain   — entities, use cases, domain services, ports
 │   ├── db/                         # @bim/db       — Drizzle schema & client
 │   ├── test-toolkit/               # @bim/test-toolkit — test helpers
 │   ├── atomiq/                     # @bim/atomiq   — Atomiq SDK adapter

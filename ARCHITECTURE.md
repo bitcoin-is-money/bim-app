@@ -10,7 +10,7 @@ workflow, see [CONTRIBUTING.md](CONTRIBUTING.md).
 - [High-Level View](#high-level-view)
 - [Monorepo Layout](#monorepo-layout)
 - [Dependency Graph](#dependency-graph)
-- [Domain Layer (Hexagonal)](#domain-layer-hexagonal)
+- [Domain Layer (Architecture Mix)](#domain-layer-architecture-mix)
 - [Backend Application (apps/api)](#backend-application-appsapi)
 - [Frontend (apps/front)](#frontend-appsfront)
 - [Indexer (apps/indexer)](#indexer-appsindexer)
@@ -244,37 +244,97 @@ Rules:
   utilities; the rest of its communication with the backend goes
   through HTTP.
 
-## Domain Layer (Hexagonal)
+## Domain Layer (Architecture Mix)
 
-Inside `packages/domain/src/` each bounded context has its own folder:
+BIM's domain layer is a deliberate blend of three architectural
+traditions:
+
+- **Hexagonal / Ports & Adapters** (Cockburn) — the domain declares
+  ports (interfaces); adapters implement them. Primary ports are what
+  the domain *offers* to its callers (the API); secondary ports are
+  what the domain *requires* from infrastructure (the SPI).
+- **Clean Architecture** (Uncle Bob) — separation between enterprise
+  business rules (entities) and application rules (use cases).
+- **DDD practices** (Evans / Vernon) — rich entities that own their
+  behavior (no anemic domain model), domain services only when an
+  operation doesn't naturally fit on an entity, ubiquitous language.
+
+**Pragmatic compromise for project size.** A strict Clean Architecture
+would place use cases in a separate `application` package depending on
+`domain`. At BIM's current scale (a single app consumer, small number
+of use cases per slice), we collapse both layers into the single
+`@bim/domain` package. Layer separation is preserved *inside* the
+package through the `use-cases/` and `services/` folders.
+
+### Structure per bounded context
 
 ```
-packages/domain/src/
-├── account/         # Account entity, status, Starknet address derivation
-├── auth/            # WebAuthn challenge, session, credential
-├── currency/        # Money, Amount, Asset value objects
-├── health/          # Health-check domain
-├── notifications/   # Slack/domain notification contracts
-├── payment/         # Receive/Pay use cases, fee calculator, ERC20 calls
-├── ports/           # Interfaces consumed by use cases, implemented by adapters
-├── shared/          # Branded types (AccountId, ChallengeId, …), errors, result
-├── swap/            # Swap entity, state machine, swap monitor
-└── user/            # UserSettings, Transaction, WatchedAddress
+packages/domain/src/<context>/
+├── <entity>.ts                     # Entity — state + behavior (invariants, transitions)
+├── types.ts                        # Branded types, status literals, I/O shapes
+├── use-cases/                      # Primary ports (API): interface + I/O types only
+│   └── <operation>.use-case.ts
+├── services/                       # Implementations + internal domain services
+│   └── <operation>.service.ts
+└── index.ts                        # Barrel re-export
 ```
 
-Each context typically contains:
+```
+packages/domain/src/ports/          # Secondary ports (SPI):
+                                    # Repository / Gateway / Decoder interfaces
+```
 
-- **Entities & value objects** — dumb, immutable, self-validating.
-- **Domain services** — pure functions operating on the entities.
-- **Use cases** (a.k.a. application services) — orchestrate entities and
-  ports to fulfill a single user-visible action (e.g. `RegisterAccount`,
-  `PayLightningInvoice`, `ClaimSwap`).
-- **Ports** — TypeScript interfaces describing what the use case needs
-  (`AccountRepository`, `SwapGateway`, `PaymasterGateway`,
-  `StarknetRpcGateway`, `Clock`, `Logger`…).
+Bounded contexts currently present: `account`, `auth`, `payment`,
+`swap`, `user`, `shared` (cross-cutting value objects and errors),
+and `ports` (secondary-port interfaces).
 
-Ports live under `packages/domain/src/ports/` and are implemented by
-adapters in `apps/api/src/adapters/`.
+### Fundamental rules
+
+1. **Rich domain model.** Entities own their behavior — invariants,
+   state transitions, and business rules live as methods on the entity.
+   Anemic entities (getter/setter bags with all logic in services) are
+   forbidden.
+
+2. **Entity method first, domain service only when justified.** Create
+   a `DomainService` only when the operation:
+   - spans multiple aggregates (e.g. a hypothetical
+     `MoneyTransfer(source, target)`),
+   - is stateless and doesn't own an invariant (e.g. `FeeCalculator`,
+     `Erc20CallFactory`, `ParseService`), or
+   - would force an entity to depend on things outside its concern
+     (another aggregate, a port, an external source).
+
+   Any rule, invariant, or state transition of a single aggregate
+   belongs on the entity, not on a service.
+
+3. **UseCase = primary port = API.** One interface per business
+   operation, one method `execute`, verb-in-imperative name
+   (`DeployAccount`, `PayLightningInvoice`, `GetBalance`). The
+   interface lives in `<context>/use-cases/<op>.use-case.ts`; the
+   implementation is a class in `<context>/services/<op>.service.ts`
+   that `implements` the interface. Routes depend on the interface
+   type, never on the concrete class.
+
+4. **Repository / Gateway / Decoder = secondary port = SPI.** Declared
+   in `packages/domain/src/ports/`, implemented by adapters in
+   infrastructure (`apps/api/src/adapters/` or a dedicated
+   `packages/*` adapter package).
+
+5. **Pure TypeScript in the domain.** No Hono, no Drizzle, no Zod, no
+   `node:*` imports in `@bim/domain`. Exception: `pino` imported as
+   `type Logger` only.
+
+6. **Dependencies via constructor.** Services receive ports and other
+   services via constructor. No static calls to frameworks, no DI
+   magic — the API's hand-written `app-context.ts` wires everything at
+   startup.
+
+7. **Domain errors, thrown.** Every failure that represents a violation
+   of a domain invariant throws a subclass of `DomainError` carrying
+   an `errorCode`. Entities throw on invalid state transitions;
+   services throw when preconditions aren't met. Never throw a raw
+   `Error`. Routes catch `DomainError` at the HTTP boundary and map it
+   to an HTTP status + error code.
 
 ## Backend Application (apps/api)
 
@@ -302,16 +362,25 @@ apps/api/src/
 **Request lifecycle.** A typical `POST /api/payment/pay/execute` flows
 through:
 
-1. Hono route handler (validation with Zod)
-2. Use case from `@bim/domain/payment` — pure, receives ports from the
-   app context
-3. Adapters implementing those ports — Atomiq gateway, AVNU paymaster,
-   Starknet RPC, account repository
-4. JSON response shaped by a route-level DTO mapper
+1. **Hono route handler** — Zod validation of the request body, session
+   extraction (via auth middleware), DTO mapping in, DTO mapping out,
+   HTTP error translation. In the "Clean Architecture" sense, the
+   route plays the role of the application service: we don't create a
+   separate intermediate class because Hono + middleware + `serialize*`
+   already provide exactly that work.
+2. **UseCase implementation** from
+   `@bim/domain/<context>/services/<op>.service.ts`, exposed via its
+   `<op>.use-case.ts` interface in `<context>/use-cases/`. Thin
+   orchestrator that loads aggregates via repository ports, calls
+   entity methods and internal domain services, persists, and returns
+   a domain result.
+3. **Adapters** implementing the secondary ports — Atomiq gateway, AVNU
+   paymaster, Starknet RPC, account repository (Drizzle).
+4. **JSON response** shaped by a route-level DTO mapper.
 
-The app context (`app-context.ts`) is a hand-written, typed DI container.
-No framework magic; each adapter is constructed once at startup and
-handed to the routes that need it.
+The app context (`app-context.ts`) is a hand-written, typed DI
+container. No framework magic; each adapter and each use case is
+constructed once at startup and handed to the routes that need it.
 
 ## Frontend (apps/front)
 

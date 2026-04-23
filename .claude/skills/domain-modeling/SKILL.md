@@ -1,67 +1,181 @@
 ---
 name: domain-modeling
-description: Guide for BIM domain modeling. This skill should be used when creating entities, branded types, value objects, domain services, error classes, state machines, or working with the domain layer in packages/domain.
+description: Guide for BIM domain modeling. This skill should be used when creating entities, branded types, value objects, domain services, use cases, error classes, state machines, or working with the domain layer in packages/domain.
 ---
 
 # Domain Modeling
 
-Hexagonal architecture (ports & adapters). Domain is pure TypeScript with no infrastructure dependencies. It defines interfaces (ports) that infrastructure implements (adapters).
+## Architecture Mix
+
+BIM's domain combines three traditions:
+- **Hexagonal** (Cockburn) — ports & adapters; primary ports (API) vs secondary ports (SPI).
+- **Clean Architecture** (Uncle Bob) — entities (enterprise rules) vs use cases (application rules).
+- **DDD practices** (Evans / Vernon) — rich domain model, ubiquitous language, domain services only when justified.
+
+**Pragmatic compromise for project size.** Use cases live in `@bim/domain` rather than a separate `application` package. Layer separation is enforced *inside* the package through `use-cases/` (primary port interfaces) and `services/` (implementations + internal domain services). See `ARCHITECTURE.md` for the full rationale.
+
+## Fundamental Rules
+
+1. **Rich domain model.** Entities own their behavior (invariants, transitions, rules on own state). Anemic entities (getter/setter bags with all logic in services) are forbidden.
+2. **Entity method first, domain service only when justified.** Create a `DomainService` only when the operation (a) spans multiple aggregates, (b) is stateless and owns no invariant, or (c) would force an entity to know things outside its concern.
+3. **UseCase = primary port = API.** One interface per business operation, one method `execute`, verb in imperative (`DeployAccount`, `PayLightningInvoice`).
+4. **Repository / Gateway / Decoder = secondary port = SPI.** Declared in `ports/`, implemented by adapters.
+5. **Pure TypeScript in domain.** No Hono / Drizzle / Zod / `node:*`. Exception: `pino` as `type Logger` only.
+6. **Dependencies via constructor.** No static calls, no DI magic.
+7. **Domain errors, thrown.** Extend `DomainError`, never throw raw `Error`. Entities throw on invariant violations; services throw when preconditions aren't met.
+
+## Structure per Bounded Context
+
+```
+packages/domain/src/<context>/
+├── <entity>.ts                     Entity — state + behavior
+├── types.ts                        Branded types, status literals
+├── use-cases/                      Primary ports (API): interface + I/O types only
+│   └── <operation>.use-case.ts
+├── services/                       UseCase impls + internal domain services
+│   └── <operation>.service.ts
+└── index.ts                        Barrel re-export
+```
+
+`packages/domain/src/ports/` holds the secondary ports (SPI): `Repository`, `Gateway`, `Decoder` interfaces.
 
 ## Bounded Contexts
 
-All under `packages/domain/src/<context>/`. Each has: entity class(es), service(s), `index.ts` barrel. Types in `types.ts` when small; extract per type (`account-id.ts`, etc.) when it grows.
-
 | Context | Key Entities | Description |
-|---------|-------------|-------------|
+|---------|--------------|-------------|
 | `account` | Account, AccountId, StarknetAddress | Username + WebAuthn + Starknet wallet |
 | `auth` | Session, Challenge, CredentialId | WebAuthn registration/login, sessions, challenges |
 | `payment` | Payment, Receive | Parse, pay, receive, fees, ERC-20 calls |
 | `swap` | Swap, SwapId, LightningInvoice, BitcoinAddress | Cross-chain atomic: Lightning/Bitcoin <-> Starknet |
 | `user` | UserSettings, Transaction | Settings, transaction history |
-| `shared` | Amount, DomainError | Errors, Amount (millisatoshi base unit), StarknetConfig |
-| `ports` | — | All interfaces (repositories + gateways) |
+| `shared` | Amount, DomainError | Shared value objects, errors, StarknetConfig |
+| `ports` | — | Secondary ports (repositories + gateways + decoders) |
 
 ## Layer Rules
 
-| Layer | Contains | Must NOT Contain |
-|-------|----------|------------------|
-| **Entity** | State transitions, invariants | I/O, external calls |
-| **Service** | Orchestration, workflow | HTTP concerns, DB queries |
-| **Adapter** | Technical implementation | Business rules |
-| **Route** | Zod validation, HTTP mapping | Business logic |
+| Role | Folder | Contains | Must NOT Contain |
+|------|--------|----------|------------------|
+| **Entity** | `<context>/` | Invariants, transitions, behavior on own state | I/O, port calls |
+| **Primary port (UseCase)** | `<context>/use-cases/` | Interface + I/O types | Implementation, logic |
+| **Service (UC impl or internal)** | `<context>/services/` | Orchestration (UC impl) or multi-aggregate / stateless logic | HTTP, direct DB, single-aggregate rules |
+| **Secondary port (SPI)** | `ports/` | `Repository` / `Gateway` / `Decoder` interfaces | Implementation |
+| **Adapter** | `apps/api/src/adapters/` or dedicated `packages/*` | Technical implementation | Business rules |
+| **Route** | `apps/api/src/routes/` | Zod validation, auth, DTO mapping, HTTP errors | Business logic |
 
 **Domain is pure TypeScript.** Forbidden imports in `packages/domain/`: Hono, Drizzle, Zod, `node:fs`, `pg`, `fetch`. Exception: `pino` (logger) is allowed.
 
-## Entity Pattern
+## UseCase vs Entity Method vs Domain Service — Decision Tree
+
+When adding a new operation, decide:
+
+- **Triggered by an external actor** (route, CLI, scheduler)? → **UseCase**. Interface in `use-cases/<op>.use-case.ts`, implementation class in `services/<op>.service.ts`.
+- **Operates on a single aggregate's state** (invariant, transition, rule about its own data)? → **Entity method**. No service.
+- **Spans multiple aggregates, OR stateless with no invariant** (calculator, parser, factory)? → **Internal DomainService** in `<context>/services/`, with NO corresponding interface in `use-cases/`. Called by a UseCase or another service.
+
+### Examples
+
+| Operation | Where it lives |
+|-----------|----------------|
+| `DeployAccount` (triggered by `POST /account/deploy`) | UseCase — interface in `account/use-cases/`, impl in `account/services/` |
+| Account status transition from `pending` to `deploying` | Entity method `Account.markAsDeploying()` |
+| Fee calculation from amount + network + config | Internal DomainService `FeeCalculator` in `payment/services/`, no interface |
+| Parsing an invoice / address / payment URI | Internal DomainService `ParseService` in `payment/services/`, no interface |
+| Hypothetical `MoneyTransfer(from, to, amount)` (multi-aggregate) | Internal DomainService in `<context>/services/`, no interface |
+
+## UseCase Pattern
+
+```typescript
+// packages/domain/src/account/use-cases/deploy-account.use-case.ts
+import type {Account, AccountId} from '..';
+
+export type DeployAccountInput = {accountId: AccountId};
+export type DeployAccountOutput = {account: Account; txHash: string};
+
+export interface DeployAccountUseCase {
+  execute(input: DeployAccountInput): Promise<DeployAccountOutput>;
+}
+```
+
+```typescript
+// packages/domain/src/account/services/deploy-account.service.ts
+export class DeployAccount implements DeployAccountUseCase {
+  constructor(private readonly deps: {
+    accountRepository: AccountRepository;
+    paymasterGateway: PaymasterGateway;
+    starknetGateway: StarknetGateway;
+    logger: Logger;
+  }) {}
+
+  async execute({accountId}: DeployAccountInput): Promise<DeployAccountOutput> {
+    const account = await this.deps.accountRepository.findById(accountId);
+    if (!account) throw new AccountNotFoundError(accountId);
+    // load → call entity methods → call ports → persist → return
+  }
+}
+```
+
+Routes depend on the interface, never on the concrete class:
+
+```typescript
+const {deployAccount}: {deployAccount: DeployAccountUseCase} = appCtx.useCases;
+await deployAccount.execute({accountId});
+```
+
+## Entity Pattern (Rich Domain Model)
 
 ```typescript
 export class Account {
+  private status: AccountStatus;
+
   constructor(
-    readonly id: AccountId,            // Immutable: readonly
+    readonly id: AccountId,
     readonly username: string,
-    private status: AccountStatus,     // Mutable: private + getXxx()
-  ) {}
+    status: AccountStatus,
+  ) {
+    this.status = status;
+  }
 
   static create(params: CreateAccountParams): Account {
     return new Account(params.id, params.username, 'pending');
   }
 
-  // No fromData/toData — persistence mapping lives in repository adapters.
-  // Constructor is public to allow reconstitution from persistence layer.
-
   getStatus(): AccountStatus { return this.status; }
 
+  // Rule on own state: entity method, throws domain error on violation.
   markAsDeploying(address: StarknetAddress, txHash: string): void {
-    if (this.status !== 'pending') throw new InvalidStateTransitionError(this.status, 'deploying');
+    if (this.status !== 'pending' && this.status !== 'failed') {
+      throw new InvalidStateTransitionError(this.status, 'deploying');
+    }
     this.status = 'deploying';
+  }
+
+  canDeploy(): boolean {
+    return this.status === 'pending' || this.status === 'failed';
   }
 }
 ```
 
+### Anti-pattern — Anemic Domain Model (forbidden)
+
+```typescript
+// FORBIDDEN — entity as a data bag, rules leak into a service
+class Account {
+  setStatus(s: AccountStatus) { this.status = s; }  // no invariant
+}
+class AccountStatusService {
+  changeStatus(account: Account, newStatus: AccountStatus) {
+    if (/* rule about Account's state */) account.setStatus(newStatus);
+    // rule about a single Account lives outside the Account entity
+  }
+}
+```
+
+If the rule concerns the entity's own state, the rule belongs on the entity.
+
 ## Branded Types
 
 ```typescript
-export type SwapId = string & { readonly __brand: 'SwapId' };
+export type SwapId = string & {readonly __brand: 'SwapId'};
 export namespace SwapId {
   export function of(value: string): SwapId {
     if (!value) throw new ValidationError('swapId', 'cannot be empty');
@@ -99,22 +213,12 @@ export class SwapNotFoundError extends DomainError {
 
 Use native `cause` chaining (`super(msg, {cause})`) when wrapping external errors, not a `readonly cause` field.
 
-## Domain Services
+**Where errors are thrown:**
+- **Entities** throw on invariant violations and invalid state transitions.
+- **Services** (UseCase impls or internal) throw when a precondition isn't met (aggregate not found, port error wrapped, etc.).
+- **Routes** catch `DomainError` and map to HTTP status via the central error mapper.
 
-```typescript
-export class AccountService {
-  constructor(private readonly deps: {
-    accountRepository: AccountRepository;
-    starknetGateway: StarknetGateway;
-    paymasterGateway: PaymasterGateway;
-    logger: Logger;
-  }) {}
-}
-```
-
-Dependencies via constructor object. Services call ports only, throw domain errors only.
-
-## Port Interfaces
+## Port Interfaces (Secondary / SPI)
 
 | Suffix | Purpose |
 |--------|---------|
@@ -124,12 +228,18 @@ Dependencies via constructor object. Services call ports only, throw domain erro
 
 Repositories return `undefined` (not `null`) when not found, `save()` is upsert, take/return domain entities.
 
-## New Entity Checklist
+## New Operation Checklist
 
-1. Branded type in `<context>/types.ts` (or in a specific file) with `of()` factory
-2. Entity class: private constructor + `create()`
-3. Domain errors extending `DomainError`
-4. Port interface in `ports/`
-5. Export from `<context>/index.ts`
-6. Service class for orchestration
-7. Unit tests in `packages/domain/test/<context>/`
+For a new business operation (e.g. `PayLightningInvoice`):
+
+1. Decide: UseCase, entity method, or internal domain service (see decision tree above).
+2. If UseCase:
+   - Create the interface + I/O types in `<context>/use-cases/<op>.use-case.ts`
+   - Create the implementation class in `<context>/services/<op>.service.ts` with `implements <Op>UseCase`
+   - Wire in `apps/api/src/app-context.ts`
+   - Route handler depends on the interface type, not the class
+3. Rules / invariants of a single aggregate → entity methods (throw `DomainError` on violation).
+4. Multi-aggregate or stateless logic → internal domain service in `<context>/services/` (no interface in `use-cases/`).
+5. Secondary ports go in `packages/domain/src/ports/`; adapters in `apps/api/src/adapters/`.
+6. Unit tests in `packages/domain/test/<context>/`.
+7. Export from `<context>/index.ts`.
