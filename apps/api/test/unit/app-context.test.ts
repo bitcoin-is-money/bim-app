@@ -138,7 +138,7 @@ describe('AppContext', () => {
 
       // Verify the gateway is the mocked one
       expect((context.gateways.paymaster as any).name).toBe('mock-paymaster');
-      // The AccountService should have been created with this gateway
+      // The DeployAccount service should have been created with this gateway
       // (we can't directly verify this, but the integration tests will confirm it works)
     });
 
