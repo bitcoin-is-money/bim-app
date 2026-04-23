@@ -9,5 +9,5 @@ export interface BeginLoginOutput {
  * Initiates WebAuthn authentication using discoverable credentials (usernameless flow).
  */
 export interface BeginLoginUseCase {
-  execute(): Promise<BeginLoginOutput>;
+  begin(): Promise<BeginLoginOutput>;
 }

@@ -9,7 +9,7 @@ import type {
   ValidateSessionUseCase,
 } from '../use-cases/validate-session.use-case';
 
-export interface ValidateSessionDeps {
+export interface SessionValidatorDeps {
   sessionRepository: SessionRepository;
   accountRepository: AccountRepository;
   sessionConfig: SessionConfig;
@@ -26,14 +26,14 @@ export interface ValidateSessionDeps {
  * @throws SessionExpiredError if session is expired
  * @throws InvalidSessionIdError if the session ID format is invalid
  */
-export class ValidateSession implements ValidateSessionUseCase {
+export class SessionValidator implements ValidateSessionUseCase {
   private readonly log: Logger;
 
-  constructor(private readonly deps: ValidateSessionDeps) {
-    this.log = deps.logger.child({name: 'validate-session.service.ts'});
+  constructor(private readonly deps: SessionValidatorDeps) {
+    this.log = deps.logger.child({name: 'session-validator.service.ts'});
   }
 
-  async execute(input: ValidateSessionInput): Promise<ValidateSessionOutput> {
+  async validate(input: ValidateSessionInput): Promise<ValidateSessionOutput> {
     const sessionId = SessionId.of(input.sessionId);
     const session = await this.deps.sessionRepository.findById(sessionId);
 

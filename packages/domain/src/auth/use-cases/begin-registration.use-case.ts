@@ -15,5 +15,5 @@ export interface BeginRegistrationOutput {
  * Initiates WebAuthn registration by creating a challenge.
  */
 export interface BeginRegistrationUseCase {
-  execute(input: BeginRegistrationInput): Promise<BeginRegistrationOutput>;
+  begin(input: BeginRegistrationInput): Promise<BeginRegistrationOutput>;
 }

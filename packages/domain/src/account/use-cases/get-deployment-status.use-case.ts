@@ -14,5 +14,5 @@ export interface GetDeploymentStatusOutput {
  * Retrieves the current deployment status of an account.
  */
 export interface GetDeploymentStatusUseCase {
-  execute(input: GetDeploymentStatusInput): Promise<GetDeploymentStatusOutput>;
+  getDeploymentStatus(input: GetDeploymentStatusInput): Promise<GetDeploymentStatusOutput>;
 }

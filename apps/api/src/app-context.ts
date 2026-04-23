@@ -1,29 +1,26 @@
 import type {Database} from "@bim/db/database";
 import {
-  DeployAccount,
+  AccountDeployer,
+  AccountReader,
   type DeployAccountUseCase,
-  GetBalance,
   type GetBalanceUseCase,
-  GetDeploymentStatus,
   type GetDeploymentStatusUseCase
 } from "@bim/domain/account";
 import {
-  BeginLogin,
+  Authenticator,
   type BeginLoginUseCase,
-  BeginRegistration,
   type BeginRegistrationUseCase,
   ChallengeConsumer,
-  CompleteLogin,
   type CompleteLoginUseCase,
-  CompleteRegistration,
   type CompleteRegistrationUseCase,
-  InvalidateSession,
   type InvalidateSessionUseCase,
+  Registrar,
   type SessionConfig,
-  ValidateSession,
+  SessionInvalidator,
+  SessionValidator,
   type ValidateSessionUseCase
 } from "@bim/domain/auth";
-import {GetPrices, type GetPricesUseCase} from "@bim/domain/currency";
+import {BtcPriceReader, type GetPricesUseCase} from "@bim/domain/currency";
 import {type ComponentName, HealthRegistry, type HealthTransitionEvent} from "@bim/domain/health";
 import {ServiceHealthChange} from "@bim/domain/notifications";
 import {
@@ -128,22 +125,19 @@ export interface AppContext {
   };
   useCases: {
     // Account
-    deployAccount: DeployAccountUseCase;
-    getBalance: GetBalanceUseCase;
-    getDeploymentStatus: GetDeploymentStatusUseCase;
+    accountDeployer: DeployAccountUseCase;
+    accountReader: GetBalanceUseCase & GetDeploymentStatusUseCase;
     // Auth
-    beginRegistration: BeginRegistrationUseCase;
-    completeRegistration: CompleteRegistrationUseCase;
-    beginLogin: BeginLoginUseCase;
-    completeLogin: CompleteLoginUseCase;
-    validateSession: ValidateSessionUseCase;
-    invalidateSession: InvalidateSessionUseCase;
+    registrar: BeginRegistrationUseCase & CompleteRegistrationUseCase;
+    authenticator: BeginLoginUseCase & CompleteLoginUseCase;
+    sessionValidator: ValidateSessionUseCase;
+    sessionInvalidator: InvalidateSessionUseCase;
     // User
     fetchSettings: FetchSettingsUseCase;
     updateSettings: UpdateSettingsUseCase;
     fetchTransactions: FetchTransactionsUseCase;
     // Currency
-    getPrices: GetPricesUseCase;
+    btcPriceReader: GetPricesUseCase;
     // Swap
     fetchSwapLimits: FetchSwapLimitsUseCase;
     fetchSwapStatus: FetchSwapStatusUseCase;
@@ -278,19 +272,16 @@ export namespace AppContext {
 
     // Initialize services AFTER applying overrides
     // This ensures services use the correct (possibly overridden) dependencies
-    const deployAccount = new DeployAccount({
+    const accountDeployer = new AccountDeployer({
       accountRepository: repositories.account,
       starknetGateway: gateways.starknet,
       paymasterGateway: gateways.paymaster,
       logger: rootLogger,
     });
-    const getBalance = new GetBalance({
+    const accountReader = new AccountReader({
       accountRepository: repositories.account,
       starknetGateway: gateways.starknet,
       logger: rootLogger,
-    });
-    const getDeploymentStatus = new GetDeploymentStatus({
-      accountRepository: repositories.account,
     });
 
     // Internal domain service: shared challenge consumption logic
@@ -300,41 +291,35 @@ export namespace AppContext {
 
     const transactionManager = new DrizzleTransactionManager(db);
 
-    const beginRegistration = new BeginRegistration({
-      challengeRepository: repositories.challenge,
-      webAuthnConfig: webauthn,
-      logger: rootLogger,
-    });
-    const completeRegistration = new CompleteRegistration({
+    const registrar = new Registrar({
       accountRepository: repositories.account,
       sessionRepository: repositories.session,
+      challengeRepository: repositories.challenge,
       transactionManager,
       webAuthnGateway: gateways.webAuthn,
       challengeConsumer,
       sessionConfig: config.session,
-      logger: rootLogger,
-    });
-    const beginLogin = new BeginLogin({
-      challengeRepository: repositories.challenge,
       webAuthnConfig: webauthn,
       logger: rootLogger,
     });
-    const completeLogin = new CompleteLogin({
+    const authenticator = new Authenticator({
       accountRepository: repositories.account,
       sessionRepository: repositories.session,
+      challengeRepository: repositories.challenge,
       transactionManager,
       webAuthnGateway: gateways.webAuthn,
       challengeConsumer,
       sessionConfig: config.session,
+      webAuthnConfig: webauthn,
       logger: rootLogger,
     });
-    const validateSession = new ValidateSession({
+    const sessionValidator = new SessionValidator({
       sessionRepository: repositories.session,
       accountRepository: repositories.account,
       sessionConfig: config.session,
       logger: rootLogger,
     });
-    const invalidateSession = new InvalidateSession({
+    const sessionInvalidator = new SessionInvalidator({
       sessionRepository: repositories.session,
     });
 
@@ -380,7 +365,7 @@ export namespace AppContext {
       logger: rootLogger,
     });
 
-    const getPrices = new GetPrices({
+    const btcPriceReader = new BtcPriceReader({
       priceGateway: gateways.price,
       logger: rootLogger,
     });
@@ -429,22 +414,19 @@ export namespace AppContext {
 
     const useCases: AppContext['useCases'] = {
       // Account
-      deployAccount,
-      getBalance,
-      getDeploymentStatus,
+      accountDeployer,
+      accountReader,
       // Auth
-      beginRegistration,
-      completeRegistration,
-      beginLogin,
-      completeLogin,
-      validateSession,
-      invalidateSession,
+      registrar,
+      authenticator,
+      sessionValidator,
+      sessionInvalidator,
       // User
       fetchSettings: userSettingsService,
       updateSettings: userSettingsService,
       fetchTransactions: transactionService,
       // Currency
-      getPrices,
+      btcPriceReader,
       // Swap
       fetchSwapLimits: swapService,
       fetchSwapStatus: swapService,

@@ -8,25 +8,36 @@ import type {
   GetBalanceOutput,
   GetBalanceUseCase,
 } from '../use-cases/get-balance.use-case';
+import type {
+  GetDeploymentStatusInput,
+  GetDeploymentStatusOutput,
+  GetDeploymentStatusUseCase,
+} from '../use-cases/get-deployment-status.use-case';
 
-export interface GetBalanceDeps {
+export interface AccountReaderDeps {
   accountRepository: AccountRepository;
   starknetGateway: StarknetGateway;
   logger: Logger;
 }
 
 /**
- * Retrieves token balances for an account's Starknet address.
- * Returns zero balances if the account is not deployed yet.
+ * Read-only queries on an account: token balances and deployment status.
+ *
+ * Groups two use cases that share the AccountRepository dependency and
+ * belong to the same "query" concern — reading the account state.
  */
-export class GetBalance implements GetBalanceUseCase {
+export class AccountReader implements GetBalanceUseCase, GetDeploymentStatusUseCase {
   private readonly log: Logger;
 
-  constructor(private readonly deps: GetBalanceDeps) {
-    this.log = deps.logger.child({name: 'get-balance.service.ts'});
+  constructor(private readonly deps: AccountReaderDeps) {
+    this.log = deps.logger.child({name: 'account-reader.service.ts'});
   }
 
-  async execute({accountId}: GetBalanceInput): Promise<GetBalanceOutput> {
+  /**
+   * Retrieves token balances for an account's Starknet address.
+   * Returns zero balances if the account is not deployed yet.
+   */
+  async getBalance({accountId}: GetBalanceInput): Promise<GetBalanceOutput> {
     const account = await this.deps.accountRepository.findById(accountId);
 
     if (!account) {
@@ -74,6 +85,21 @@ export class GetBalance implements GetBalanceUseCase {
         amount: strkAmount.toString(),
         decimals: STRKToken.decimals,
       },
+    };
+  }
+
+  /**
+   * Retrieves the current deployment status of an account (fresh from DB).
+   */
+  async getDeploymentStatus({accountId}: GetDeploymentStatusInput): Promise<GetDeploymentStatusOutput> {
+    const account = await this.deps.accountRepository.findById(accountId);
+    if (!account) {
+      throw new AccountNotFoundError(accountId);
+    }
+    return {
+      status: account.getStatus(),
+      txHash: account.getDeploymentTxHash(),
+      isDeployed: account.isDeployed(),
     };
   }
 }

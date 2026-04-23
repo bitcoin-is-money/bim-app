@@ -1,10 +1,10 @@
 import {createLogger} from '@bim/lib/logger';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {FiatCurrency, GetPrices} from '../../../src/currency';
+import {BtcPriceReader, FiatCurrency} from '../../../src/currency';
 import type {PriceGateway} from '../../../src/ports';
 
-describe('GetPrices', () => {
-  let service: GetPrices;
+describe('BtcPriceReader', () => {
+  let service: BtcPriceReader;
   let mockGateway: PriceGateway;
 
   const usd = FiatCurrency.of('USD');
@@ -29,7 +29,7 @@ describe('GetPrices', () => {
       getBtcPrices: vi.fn(),
       checkHealth: vi.fn(),
     };
-    service = new GetPrices({
+    service = new BtcPriceReader({
       priceGateway: mockGateway,
       logger: createLogger('silent'),
     });
@@ -38,7 +38,7 @@ describe('GetPrices', () => {
   it('always fetches all available currencies from gateway', async () => {
     vi.mocked(mockGateway.getBtcPrices).mockResolvedValue(allPrices());
 
-    await service.execute({currencies: [usd]});
+    await service.getPrices({currencies: [usd]});
 
     // Gateway should receive ALL supported currencies, not just [usd]
     const calledWith = vi.mocked(mockGateway.getBtcPrices).mock.calls[0]![0];
@@ -48,7 +48,7 @@ describe('GetPrices', () => {
   it('returns only requested currencies from the full cache', async () => {
     vi.mocked(mockGateway.getBtcPrices).mockResolvedValue(allPrices());
 
-    const result = await service.execute({currencies: [usd, eur]});
+    const result = await service.getPrices({currencies: [usd, eur]});
 
     expect(result.size).toBe(2);
     expect(result.get(usd)).toBe(95000);
@@ -58,8 +58,8 @@ describe('GetPrices', () => {
   it('returns cached prices on second call within TTL', async () => {
     vi.mocked(mockGateway.getBtcPrices).mockResolvedValue(allPrices());
 
-    await service.execute({currencies: [usd, eur]});
-    const result = await service.execute({currencies: [usd]});
+    await service.getPrices({currencies: [usd, eur]});
+    const result = await service.getPrices({currencies: [usd]});
 
     expect(result.get(usd)).toBe(95000);
     expect(result.size).toBe(1);
@@ -69,8 +69,8 @@ describe('GetPrices', () => {
   it('filters cached prices to requested currencies', async () => {
     vi.mocked(mockGateway.getBtcPrices).mockResolvedValue(allPrices());
 
-    await service.execute({currencies: [usd, eur]});
-    const result = await service.execute({currencies: [usd]});
+    await service.getPrices({currencies: [usd, eur]});
+    const result = await service.getPrices({currencies: [usd]});
 
     expect(result.size).toBe(1);
     expect(result.get(usd)).toBe(95000);
@@ -79,13 +79,13 @@ describe('GetPrices', () => {
 
   it('re-fetches after cache TTL expires', async () => {
     vi.mocked(mockGateway.getBtcPrices).mockResolvedValue(allPrices());
-    await service.execute({currencies: [usd]});
+    await service.getPrices({currencies: [usd]});
 
     vi.useFakeTimers();
-    vi.advanceTimersByTime(GetPrices.CACHE_TTL_MS + 1);
+    vi.advanceTimersByTime(BtcPriceReader.CACHE_TTL_MS + 1);
 
     vi.mocked(mockGateway.getBtcPrices).mockResolvedValue(allPrices({USD: 96000}));
-    const result = await service.execute({currencies: [usd]});
+    const result = await service.getPrices({currencies: [usd]});
 
     expect(result.get(usd)).toBe(96000);
     expect(mockGateway.getBtcPrices).toHaveBeenCalledTimes(2);
@@ -94,13 +94,13 @@ describe('GetPrices', () => {
 
   it('returns stale cache on gateway failure', async () => {
     vi.mocked(mockGateway.getBtcPrices).mockResolvedValue(allPrices());
-    await service.execute({currencies: [usd]});
+    await service.getPrices({currencies: [usd]});
 
     vi.useFakeTimers();
-    vi.advanceTimersByTime(GetPrices.CACHE_TTL_MS + 1);
+    vi.advanceTimersByTime(BtcPriceReader.CACHE_TTL_MS + 1);
 
     vi.mocked(mockGateway.getBtcPrices).mockRejectedValue(new Error('API down'));
-    const result = await service.execute({currencies: [usd]});
+    const result = await service.getPrices({currencies: [usd]});
 
     expect(result.get(usd)).toBe(95000);
     vi.useRealTimers();
@@ -109,6 +109,6 @@ describe('GetPrices', () => {
   it('throws when no cache and gateway fails', async () => {
     vi.mocked(mockGateway.getBtcPrices).mockRejectedValue(new Error('API down'));
 
-    await expect(service.execute({currencies: [usd]})).rejects.toThrow('No cached BTC prices available');
+    await expect(service.getPrices({currencies: [usd]})).rejects.toThrow('No cached BTC prices available');
   });
 });

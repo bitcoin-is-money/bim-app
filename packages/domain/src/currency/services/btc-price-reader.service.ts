@@ -7,7 +7,7 @@ import type {
   GetPricesUseCase,
 } from '../use-cases/get-prices.use-case';
 
-export interface GetPricesDeps {
+export interface BtcPriceReaderDeps {
   priceGateway: PriceGateway;
   logger: Logger;
 }
@@ -22,7 +22,7 @@ export interface GetPricesDeps {
  * If the upstream gateway fails but a stale cache is available, the stale
  * cache is returned (graceful degradation). Throws only when no cache exists.
  */
-export class GetPrices implements GetPricesUseCase {
+export class BtcPriceReader implements GetPricesUseCase {
 
   public static readonly CACHE_TTL_MS = 2 * 3600 * 1000; // 2 hours
 
@@ -31,15 +31,15 @@ export class GetPrices implements GetPricesUseCase {
   private cachedPrices = new Map<FiatCurrency, number>();
   private cachedAt = 0;
 
-  constructor(private readonly deps: GetPricesDeps) {
-    this.log = deps.logger.child({name: 'get-prices.service.ts'});
+  constructor(private readonly deps: BtcPriceReaderDeps) {
+    this.log = deps.logger.child({name: 'btc-price-reader.service.ts'});
     this.allCurrencies = FiatCurrency.getSupportedCurrencies()
       .map(c => FiatCurrency.of(c));
   }
 
-  async execute({currencies}: GetPricesInput): Promise<Map<FiatCurrency, number>> {
+  async getPrices({currencies}: GetPricesInput): Promise<Map<FiatCurrency, number>> {
     const shouldRefreshCache: boolean = this.cachedPrices.size === 0
-      || Date.now() - this.cachedAt >= GetPrices.CACHE_TTL_MS;
+      || Date.now() - this.cachedAt >= BtcPriceReader.CACHE_TTL_MS;
 
     if (shouldRefreshCache) {
       try {

@@ -14,5 +14,5 @@ export interface ValidateSessionOutput {
  * Validates an active session and returns the associated account.
  */
 export interface ValidateSessionUseCase {
-  execute(input: ValidateSessionInput): Promise<ValidateSessionOutput>;
+  validate(input: ValidateSessionInput): Promise<ValidateSessionOutput>;
 }
