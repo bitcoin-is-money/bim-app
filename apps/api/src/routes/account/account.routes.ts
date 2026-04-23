@@ -50,7 +50,7 @@ export function createAccountRoutes(appCtx: AppContext): AuthenticatedHono {
     try {
       const account: Account = honoCtx.get('account');
 
-      const result = await deployAccount.deploy({
+      const result = await deployAccount.execute({
         accountId: account.id,
       });
 
@@ -72,7 +72,7 @@ export function createAccountRoutes(appCtx: AppContext): AuthenticatedHono {
     try {
       const account: Account = honoCtx.get('account');
 
-      const result = await getDeploymentStatus.getDeploymentStatus({accountId: account.id});
+      const result = await getDeploymentStatus.execute({accountId: account.id});
 
       return honoCtx.json<GetDeploymentStatusResponse>({
         status: result.status,
@@ -88,7 +88,7 @@ export function createAccountRoutes(appCtx: AppContext): AuthenticatedHono {
     try {
       const account: Account = honoCtx.get('account');
 
-      const result = await getBalance.getBalance({accountId: account.id});
+      const result = await getBalance.execute({accountId: account.id});
 
       return honoCtx.json<GetBalanceResponse>(result);
     } catch (error) {

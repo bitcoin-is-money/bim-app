@@ -1,7 +1,7 @@
-import type {AccountStatus} from '../types';
+import type {AccountId, AccountStatus} from '../types';
 
 export interface GetDeploymentStatusInput {
-  accountId: string;
+  accountId: AccountId;
 }
 
 export interface GetDeploymentStatusOutput {
@@ -14,5 +14,5 @@ export interface GetDeploymentStatusOutput {
  * Retrieves the current deployment status of an account.
  */
 export interface GetDeploymentStatusUseCase {
-  getDeploymentStatus(input: GetDeploymentStatusInput): Promise<GetDeploymentStatusOutput>;
+  execute(input: GetDeploymentStatusInput): Promise<GetDeploymentStatusOutput>;
 }

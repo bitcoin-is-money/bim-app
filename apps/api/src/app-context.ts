@@ -1,8 +1,10 @@
 import type {Database} from "@bim/db/database";
 import {
-  AccountService,
+  DeployAccount,
   type DeployAccountUseCase,
+  GetBalance,
   type GetBalanceUseCase,
+  GetDeploymentStatus,
   type GetDeploymentStatusUseCase
 } from "@bim/domain/account";
 import {
@@ -112,7 +114,6 @@ export interface AppContext {
   };
   healthRegistry: HealthRegistry;
   services: {
-    account: AccountService;
     auth: AuthService;
     session: SessionService;
     swap: SwapService;
@@ -275,11 +276,19 @@ export namespace AppContext {
 
     // Initialize services AFTER applying overrides
     // This ensures services use the correct (possibly overridden) dependencies
-    const accountService = new AccountService({
+    const deployAccount = new DeployAccount({
       accountRepository: repositories.account,
       starknetGateway: gateways.starknet,
       paymasterGateway: gateways.paymaster,
       logger: rootLogger,
+    });
+    const getBalance = new GetBalance({
+      accountRepository: repositories.account,
+      starknetGateway: gateways.starknet,
+      logger: rootLogger,
+    });
+    const getDeploymentStatus = new GetDeploymentStatus({
+      accountRepository: repositories.account,
     });
 
     const authService = new AuthService({
@@ -392,9 +401,9 @@ export namespace AppContext {
 
     const useCases: AppContext['useCases'] = {
       // Account
-      deployAccount: accountService,
-      getBalance: accountService,
-      getDeploymentStatus: accountService,
+      deployAccount,
+      getBalance,
+      getDeploymentStatus,
       // Auth
       beginRegistration: authService,
       completeRegistration: authService,
@@ -426,7 +435,6 @@ export namespace AppContext {
       useCases,
       paymentBuildCache,
       services: {
-        account: accountService,
         auth: authService,
         session: sessionService,
         swap: swapService,
