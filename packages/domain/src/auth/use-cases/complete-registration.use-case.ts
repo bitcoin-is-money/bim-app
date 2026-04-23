@@ -25,5 +25,5 @@ export interface CompleteRegistrationOutput {
  * Completes WebAuthn registration after user interaction.
  */
 export interface CompleteRegistrationUseCase {
-  completeRegistration(input: CompleteRegistrationInput): Promise<CompleteRegistrationOutput>;
+  execute(input: CompleteRegistrationInput): Promise<CompleteRegistrationOutput>;
 }

@@ -8,14 +8,19 @@ import {
   type GetDeploymentStatusUseCase
 } from "@bim/domain/account";
 import {
-  AuthService,
+  BeginLogin,
   type BeginLoginUseCase,
+  BeginRegistration,
   type BeginRegistrationUseCase,
+  ChallengeConsumer,
+  CompleteLogin,
   type CompleteLoginUseCase,
+  CompleteRegistration,
   type CompleteRegistrationUseCase,
+  InvalidateSession,
   type InvalidateSessionUseCase,
   type SessionConfig,
-  SessionService,
+  ValidateSession,
   type ValidateSessionUseCase
 } from "@bim/domain/auth";
 import {CurrencyService, type GetPricesUseCase} from "@bim/domain/currency";
@@ -114,8 +119,6 @@ export interface AppContext {
   };
   healthRegistry: HealthRegistry;
   services: {
-    auth: AuthService;
-    session: SessionService;
     swap: SwapService;
     userSettings: UserSettingsService;
     transaction: TransactionService;
@@ -291,23 +294,49 @@ export namespace AppContext {
       accountRepository: repositories.account,
     });
 
-    const authService = new AuthService({
-        accountRepository: repositories.account,
-        challengeRepository: repositories.challenge,
-        sessionRepository: repositories.session,
-        transactionManager: new DrizzleTransactionManager(db),
-        webAuthnGateway: gateways.webAuthn,
-        sessionConfig: config.session,
-        logger: rootLogger,
-      },
-      webauthn,
-    );
+    // Internal domain service: shared challenge consumption logic
+    const challengeConsumer = new ChallengeConsumer({
+      challengeRepository: repositories.challenge,
+    });
 
-    const sessionService = new SessionService({
+    const transactionManager = new DrizzleTransactionManager(db);
+
+    const beginRegistration = new BeginRegistration({
+      challengeRepository: repositories.challenge,
+      webAuthnConfig: webauthn,
+      logger: rootLogger,
+    });
+    const completeRegistration = new CompleteRegistration({
+      accountRepository: repositories.account,
+      sessionRepository: repositories.session,
+      transactionManager,
+      webAuthnGateway: gateways.webAuthn,
+      challengeConsumer,
+      sessionConfig: config.session,
+      logger: rootLogger,
+    });
+    const beginLogin = new BeginLogin({
+      challengeRepository: repositories.challenge,
+      webAuthnConfig: webauthn,
+      logger: rootLogger,
+    });
+    const completeLogin = new CompleteLogin({
+      accountRepository: repositories.account,
+      sessionRepository: repositories.session,
+      transactionManager,
+      webAuthnGateway: gateways.webAuthn,
+      challengeConsumer,
+      sessionConfig: config.session,
+      logger: rootLogger,
+    });
+    const validateSession = new ValidateSession({
       sessionRepository: repositories.session,
       accountRepository: repositories.account,
       sessionConfig: config.session,
       logger: rootLogger,
+    });
+    const invalidateSession = new InvalidateSession({
+      sessionRepository: repositories.session,
     });
 
     const swapService = new SwapService({
@@ -405,12 +434,12 @@ export namespace AppContext {
       getBalance,
       getDeploymentStatus,
       // Auth
-      beginRegistration: authService,
-      completeRegistration: authService,
-      beginLogin: authService,
-      completeLogin: authService,
-      validateSession: sessionService,
-      invalidateSession: sessionService,
+      beginRegistration,
+      completeRegistration,
+      beginLogin,
+      completeLogin,
+      validateSession,
+      invalidateSession,
       // User
       fetchSettings: userSettingsService,
       updateSettings: userSettingsService,
@@ -435,8 +464,6 @@ export namespace AppContext {
       useCases,
       paymentBuildCache,
       services: {
-        auth: authService,
-        session: sessionService,
         swap: swapService,
         userSettings: userSettingsService,
         transaction: transactionService,
