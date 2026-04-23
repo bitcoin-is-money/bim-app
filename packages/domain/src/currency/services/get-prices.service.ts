@@ -1,23 +1,28 @@
 import {serializeError} from '@bim/lib/error';
 import type {Logger} from 'pino';
-import type {PriceGateway} from '../ports';
-import {FiatCurrency} from './fiat-currency';
-import type {GetPricesUseCase} from './use-case/get-prices.use-case';
+import type {PriceGateway} from '../../ports';
+import {FiatCurrency} from '../fiat-currency';
+import type {
+  GetPricesInput,
+  GetPricesUseCase,
+} from '../use-cases/get-prices.use-case';
 
-// =============================================================================
-// Dependencies
-// =============================================================================
-
-export interface CurrencyServiceDeps {
+export interface GetPricesDeps {
   priceGateway: PriceGateway;
   logger: Logger;
 }
 
-// =============================================================================
-// Service Class
-// =============================================================================
-
-export class CurrencyService implements GetPricesUseCase {
+/**
+ * Retrieves BTC prices for the requested fiat currencies.
+ *
+ * Cache strategy: a single fetch pulls prices for ALL supported currencies
+ * and caches them in memory for CACHE_TTL_MS. Callers receive only the
+ * subset they requested.
+ *
+ * If the upstream gateway fails but a stale cache is available, the stale
+ * cache is returned (graceful degradation). Throws only when no cache exists.
+ */
+export class GetPrices implements GetPricesUseCase {
 
   public static readonly CACHE_TTL_MS = 2 * 3600 * 1000; // 2 hours
 
@@ -26,20 +31,15 @@ export class CurrencyService implements GetPricesUseCase {
   private cachedPrices = new Map<FiatCurrency, number>();
   private cachedAt = 0;
 
-  constructor(private readonly deps: CurrencyServiceDeps) {
-    this.log = deps.logger.child({name: 'currency.service.ts'});
+  constructor(private readonly deps: GetPricesDeps) {
+    this.log = deps.logger.child({name: 'get-prices.service.ts'});
     this.allCurrencies = FiatCurrency.getSupportedCurrencies()
       .map(c => FiatCurrency.of(c));
   }
 
-  /**
-   * Returns BTC prices for the requested fiat currencies.
-   * The cache always holds ALL available currencies (single fetch).
-   * Returns only the requested subset.
-   */
-  async getBtcPrices(currencies: FiatCurrency[]): Promise<Map<FiatCurrency, number>> {
+  async execute({currencies}: GetPricesInput): Promise<Map<FiatCurrency, number>> {
     const shouldRefreshCache: boolean = this.cachedPrices.size === 0
-      || Date.now() - this.cachedAt >= CurrencyService.CACHE_TTL_MS;
+      || Date.now() - this.cachedAt >= GetPrices.CACHE_TTL_MS;
 
     if (shouldRefreshCache) {
       try {
@@ -74,11 +74,10 @@ export class CurrencyService implements GetPricesUseCase {
     this.cachedPrices = prices;
     this.cachedAt = Date.now();
     const logMsg = 'Fetched BTC prices for all available currencies';
-    if (this.log.isLevelEnabled("debug")) {
+    if (this.log.isLevelEnabled('debug')) {
       this.log.info({prices: Object.fromEntries(prices)}, logMsg);
     } else {
       this.log.info(logMsg);
     }
   }
-
 }
