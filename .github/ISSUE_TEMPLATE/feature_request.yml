@@ -1,64 +1,12 @@
 name: Feature request
-description: Suggest a new feature or improvement for BIM
+description: Suggest an idea for BIM
 title: "[feat]: "
-labels: ["enhancement", "triage"]
+labels: ["enhancement"]
 body:
-  - type: markdown
-    attributes:
-      value: |
-        Thanks for proposing a feature. Please describe the problem you are
-        trying to solve before jumping into the solution — it helps
-        maintainers evaluate alternatives.
-
   - type: textarea
-    id: problem
+    id: idea
     attributes:
-      label: Problem
-      description: What problem are you trying to solve? Who is affected?
-      placeholder: As a user, I cannot currently do X, which makes Y hard.
+      label: What would you like to see?
+      description: Describe the problem and, if you have one, a proposed solution.
     validations:
       required: true
-
-  - type: textarea
-    id: proposal
-    attributes:
-      label: Proposed solution
-      description: Describe the feature you would like to see. Mockups, API sketches, or diagrams are welcome.
-    validations:
-      required: true
-
-  - type: textarea
-    id: alternatives
-    attributes:
-      label: Alternatives considered
-      description: What other approaches did you consider, and why did you rule them out?
-
-  - type: dropdown
-    id: component
-    attributes:
-      label: Affected component
-      options:
-        - Backend API (apps/api)
-        - Frontend (apps/front)
-        - Indexer (apps/indexer)
-        - CLI (apps/cli)
-        - Domain layer (packages/domain)
-        - Documentation
-        - Infrastructure / deploy
-        - Other / cross-cutting
-    validations:
-      required: true
-
-  - type: textarea
-    id: context
-    attributes:
-      label: Additional context
-      description: Any other context, links, related issues, or references.
-
-  - type: checkboxes
-    id: checks
-    attributes:
-      label: Checks
-      options:
-        - label: I have searched existing issues and this feature has not been requested yet.
-          required: true
