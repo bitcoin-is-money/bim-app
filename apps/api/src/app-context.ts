@@ -23,7 +23,7 @@ import {
   ValidateSession,
   type ValidateSessionUseCase
 } from "@bim/domain/auth";
-import {CurrencyService, type GetPricesUseCase} from "@bim/domain/currency";
+import {GetPrices, type GetPricesUseCase} from "@bim/domain/currency";
 import {type ComponentName, HealthRegistry, type HealthTransitionEvent} from "@bim/domain/health";
 import {ServiceHealthChange} from "@bim/domain/notifications";
 import {
@@ -125,7 +125,6 @@ export interface AppContext {
     parseService: ParseService;
     payService: PayService;
     receive: ReceiveService;
-    currency: CurrencyService;
   };
   useCases: {
     // Account
@@ -381,7 +380,7 @@ export namespace AppContext {
       logger: rootLogger,
     });
 
-    const currencyService = new CurrencyService({
+    const getPrices = new GetPrices({
       priceGateway: gateways.price,
       logger: rootLogger,
     });
@@ -445,7 +444,7 @@ export namespace AppContext {
       updateSettings: userSettingsService,
       fetchTransactions: transactionService,
       // Currency
-      getPrices: currencyService,
+      getPrices,
       // Swap
       fetchSwapLimits: swapService,
       fetchSwapStatus: swapService,
@@ -470,7 +469,6 @@ export namespace AppContext {
         parseService: parseService,
         payService: payService,
         receive: receiveService,
-        currency: currencyService,
       },
       sessionConfig: config.session,
       starknetConfig,
