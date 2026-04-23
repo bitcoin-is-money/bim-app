@@ -1,13 +1,13 @@
 import type {WebAuthnAuthenticationOptions} from '../webauthn.types';
 
-export interface BeginAuthenticationOutput {
+export interface BeginLoginOutput {
   options: WebAuthnAuthenticationOptions;
   challengeId: string;
 }
 
 /**
- * Initiates WebAuthn authentication using discoverable credentials.
+ * Initiates WebAuthn authentication using discoverable credentials (usernameless flow).
  */
 export interface BeginLoginUseCase {
-  beginAuthentication(): Promise<BeginAuthenticationOutput>;
+  execute(): Promise<BeginLoginOutput>;
 }

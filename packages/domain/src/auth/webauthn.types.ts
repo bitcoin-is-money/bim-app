@@ -42,3 +42,17 @@ export interface WebAuthnAuthenticationResponse {
   signature: string;
   signCount: number;
 }
+
+// =============================================================================
+// WebAuthn Config
+// =============================================================================
+
+/**
+ * WebAuthn Relying Party configuration (rpId, rpName, origin).
+ * Injected into the Begin* services that create challenges.
+ */
+export interface WebAuthnConfig {
+  rpId: string;
+  rpName: string;
+  origin: string;
+}

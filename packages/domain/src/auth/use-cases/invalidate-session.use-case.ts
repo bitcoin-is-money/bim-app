@@ -6,5 +6,5 @@ export interface InvalidateSessionInput {
  * Invalidates a session (logout).
  */
 export interface InvalidateSessionUseCase {
-  invalidate(input: InvalidateSessionInput): Promise<void>;
+  execute(input: InvalidateSessionInput): Promise<void>;
 }

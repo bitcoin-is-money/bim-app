@@ -1,7 +1,7 @@
 import type {Account} from '../../account';
 import type {Session} from '../session';
 
-export interface CompleteAuthenticationInput {
+export interface CompleteLoginInput {
   challengeId: string;
   credential: {
     id: string;
@@ -16,7 +16,7 @@ export interface CompleteAuthenticationInput {
   };
 }
 
-export interface CompleteAuthenticationOutput {
+export interface CompleteLoginOutput {
   account: Account;
   session: Session;
 }
@@ -25,5 +25,5 @@ export interface CompleteAuthenticationOutput {
  * Completes WebAuthn authentication after user interaction.
  */
 export interface CompleteLoginUseCase {
-  completeAuthentication(input: CompleteAuthenticationInput): Promise<CompleteAuthenticationOutput>;
+  execute(input: CompleteLoginInput): Promise<CompleteLoginOutput>;
 }

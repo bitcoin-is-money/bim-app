@@ -37,7 +37,7 @@ export function createAuthMiddleware(appContext: AppContext) {
     }
 
     try {
-      const result = await validateSession.validate({sessionId});
+      const result = await validateSession.execute({sessionId});
       ctx.set('account', result.account);
       ctx.set('session', result.session);
 
