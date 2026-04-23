@@ -5,7 +5,7 @@ import type {
   InvalidateSessionUseCase,
 } from '../use-cases/invalidate-session.use-case';
 
-export interface InvalidateSessionDeps {
+export interface SessionInvalidatorDeps {
   sessionRepository: SessionRepository;
 }
 
@@ -14,10 +14,10 @@ export interface InvalidateSessionDeps {
  *
  * @throws InvalidSessionIdError if the session ID format is invalid
  */
-export class InvalidateSession implements InvalidateSessionUseCase {
-  constructor(private readonly deps: InvalidateSessionDeps) {}
+export class SessionInvalidator implements InvalidateSessionUseCase {
+  constructor(private readonly deps: SessionInvalidatorDeps) {}
 
-  async execute(input: InvalidateSessionInput): Promise<void> {
+  async invalidate(input: InvalidateSessionInput): Promise<void> {
     const sessionId = SessionId.of(input.sessionId);
     await this.deps.sessionRepository.delete(sessionId);
   }

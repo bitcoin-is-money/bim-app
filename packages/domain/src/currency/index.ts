@@ -8,4 +8,4 @@ export type {
 } from './use-cases/get-prices.use-case';
 
 // Use case implementation (service)
-export {GetPrices, type GetPricesDeps} from './services/get-prices.service';
+export {BtcPriceReader, type BtcPriceReaderDeps} from './services/btc-price-reader.service';

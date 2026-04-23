@@ -6,7 +6,7 @@ import {
   SessionExpiredError,
   SessionId,
   SessionNotFoundError,
-  ValidateSession,
+  SessionValidator,
 } from '@bim/domain/auth';
 import type {AccountRepository, SessionRepository} from '@bim/domain/ports';
 import {createLogger} from '@bim/lib/logger';
@@ -17,13 +17,13 @@ const logger = createLogger('silent');
 const DURATION_MS = SessionConfig.DEFAULT_DURATION_MS;
 const sessionConfig = SessionConfig.create({durationMs: DURATION_MS});
 
-describe('ValidateSession', () => {
+describe('SessionValidator', () => {
   const accountId = AccountId.of('550e8400-e29b-41d4-a716-446655440000');
   const sessionId = SessionId.of('660e8400-e29b-41d4-a716-446655440001');
 
   let mockSessionRepo: SessionRepository;
   let mockAccountRepo: AccountRepository;
-  let service: ValidateSession;
+  let service: SessionValidator;
 
   function makeAccount(): Account {
     return Account.create({
@@ -46,7 +46,7 @@ describe('ValidateSession', () => {
   beforeEach(() => {
     mockSessionRepo = createSessionRepoMock();
     mockAccountRepo = createAccountRepoMock();
-    service = new ValidateSession({
+    service = new SessionValidator({
       sessionRepository: mockSessionRepo,
       accountRepository: mockAccountRepo,
       sessionConfig,
@@ -60,7 +60,7 @@ describe('ValidateSession', () => {
     vi.mocked(mockSessionRepo.findById).mockResolvedValue(session);
     vi.mocked(mockAccountRepo.findById).mockResolvedValue(account);
 
-    const result = await service.execute({sessionId});
+    const result = await service.validate({sessionId});
 
     expect(result.account.id).toBe(accountId);
     expect(result.session.id).toBe(sessionId);
@@ -78,7 +78,7 @@ describe('ValidateSession', () => {
     // Advance 5 minutes into the session
     vi.advanceTimersByTime(5 * 60 * 1000);
 
-    const result = await service.execute({sessionId});
+    const result = await service.validate({sessionId});
 
     // Renewed session should have expiresAt = now + DURATION_MS (not original expiry)
     expect(result.session.expiresAt.getTime()).toBe(Date.now() + DURATION_MS);
@@ -90,7 +90,7 @@ describe('ValidateSession', () => {
 
   it('throws InvalidSessionIdError for invalid session ID format', async () => {
     await expect(
-      service.execute({sessionId: 'invalid-uuid'}),
+      service.validate({sessionId: 'invalid-uuid'}),
     ).rejects.toThrow(InvalidSessionIdError);
   });
 
@@ -98,7 +98,7 @@ describe('ValidateSession', () => {
     vi.mocked(mockSessionRepo.findById).mockResolvedValue(undefined);
 
     await expect(
-      service.execute({sessionId}),
+      service.validate({sessionId}),
     ).rejects.toThrow(SessionNotFoundError);
   });
 
@@ -107,7 +107,7 @@ describe('ValidateSession', () => {
     vi.mocked(mockSessionRepo.findById).mockResolvedValue(expiredSession);
 
     await expect(
-      service.execute({sessionId}),
+      service.validate({sessionId}),
     ).rejects.toThrow(SessionExpiredError);
   });
 
@@ -117,7 +117,7 @@ describe('ValidateSession', () => {
     vi.mocked(mockAccountRepo.findById).mockResolvedValue(undefined);
 
     await expect(
-      service.execute({sessionId}),
+      service.validate({sessionId}),
     ).rejects.toThrow(SessionNotFoundError);
 
     expect(mockSessionRepo.delete).toHaveBeenCalledWith(sessionId);

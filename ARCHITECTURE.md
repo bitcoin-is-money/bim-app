@@ -273,9 +273,9 @@ packages/domain/src/<context>/
 ├── <entity>.ts                     # Entity — state + behavior (invariants, transitions)
 ├── types.ts                        # Branded types, status literals, I/O shapes
 ├── use-cases/                      # Primary ports (API): interface + I/O types only
-│   └── <operation>.use-case.ts
-├── services/                       # Implementations + internal domain services
-│   └── <operation>.service.ts
+│   └── <operation>.use-case.ts     # e.g. deploy-account.use-case.ts
+├── services/                       # Implementations (actor-role classes) + internal services
+│   └── <actor>.service.ts          # e.g. account-deployer.service.ts, registrar.service.ts
 └── index.ts                        # Barrel re-export
 ```
 
@@ -308,28 +308,41 @@ and `ports` (secondary-port interfaces).
    belongs on the entity, not on a service.
 
 3. **UseCase = primary port = API.** One interface per business
-   operation, one method `execute`, verb-in-imperative name
-   (`DeployAccount`, `PayLightningInvoice`, `GetBalance`). The
-   interface lives in `<context>/use-cases/<op>.use-case.ts`; the
-   implementation is a class in `<context>/services/<op>.service.ts`
-   that `implements` the interface. Routes depend on the interface
-   type, never on the concrete class.
+   operation. The interface is named as a verb-phrase
+   (`DeployAccountUseCase`, `ValidateSessionUseCase`); its single
+   method uses the **domain verb** (`deploy`, `validate`), never a
+   generic `execute` — unless "execute" IS the domain verb (e.g.
+   `PaymentExecutor.execute()` for a signed payment). The interface
+   lives in `<context>/use-cases/<op>.use-case.ts`; its implementation
+   is a class in `<context>/services/<actor>.service.ts`. Routes
+   depend on the interface type, never on the concrete class.
 
-4. **Repository / Gateway / Decoder = secondary port = SPI.** Declared
+4. **Services named as actor-role nouns.** Implementing classes are
+   nouns describing who performs the action: `AccountDeployer`,
+   `SessionValidator`, `Registrar`, `PaymentBuilder`. File names
+   match in kebab-case (`account-deployer.service.ts`). Never
+   verb-phrase class names (`DeployAccount`). A single actor class
+   may implement multiple UseCase interfaces when the operations
+   belong to the same flow or role (e.g. `Registrar` implements
+   `BeginRegistrationUseCase.begin()` + `CompleteRegistrationUseCase.complete()`).
+   Split them when deps or lifecycles diverge significantly
+   (e.g. `SessionValidator` and `SessionInvalidator` stay separate).
+
+5. **Repository / Gateway / Decoder = secondary port = SPI.** Declared
    in `packages/domain/src/ports/`, implemented by adapters in
    infrastructure (`apps/api/src/adapters/` or a dedicated
    `packages/*` adapter package).
 
-5. **Pure TypeScript in the domain.** No Hono, no Drizzle, no Zod, no
+6. **Pure TypeScript in the domain.** No Hono, no Drizzle, no Zod, no
    `node:*` imports in `@bim/domain`. Exception: `pino` imported as
    `type Logger` only.
 
-6. **Dependencies via constructor.** Services receive ports and other
+7. **Dependencies via constructor.** Services receive ports and other
    services via constructor. No static calls to frameworks, no DI
    magic — the API's hand-written `app-context.ts` wires everything at
    startup.
 
-7. **Domain errors, thrown.** Every failure that represents a violation
+8. **Domain errors, thrown.** Every failure that represents a violation
    of a domain invariant throws a subclass of `DomainError` carrying
    an `errorCode`. Entities throw on invalid state transitions;
    services throw when preconditions aren't met. Never throw a raw

@@ -14,5 +14,5 @@ export interface DeployAccountOutput {
  * Deploys an account's smart contract to Starknet via the AVNU paymaster.
  */
 export interface DeployAccountUseCase {
-  execute(input: DeployAccountInput): Promise<DeployAccountOutput>;
+  deploy(input: DeployAccountInput): Promise<DeployAccountOutput>;
 }

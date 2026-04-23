@@ -1,7 +1,7 @@
 import {
+  AccountDeployer,
   AccountId,
   AccountNotFoundError,
-  DeployAccount,
   InvalidAccountStateError,
   StarknetAddress,
 } from '@bim/domain/account';
@@ -14,14 +14,14 @@ import {createAccount, createAccountRepoMock} from '../../helper';
 const LOG_LEVEL = 'debug';
 const logger: Logger = createLogger(LOG_LEVEL);
 
-describe('DeployAccount', () => {
+describe('AccountDeployer', () => {
   const accountId = AccountId.of('550e8400-e29b-41d4-a716-446655440000');
   const starknetAddress = StarknetAddress.of('0x0' + '1'.repeat(63));
 
   let mockAccountRepo: AccountRepository;
   let mockStarknetGateway: StarknetGateway;
   let mockPaymasterGateway: PaymasterGateway;
-  let service: DeployAccount;
+  let service: AccountDeployer;
 
   beforeEach(() => {
     mockAccountRepo = createAccountRepoMock();
@@ -36,7 +36,7 @@ describe('DeployAccount', () => {
       executeTransaction: vi.fn().mockResolvedValue({txHash: '0xtxhash'}),
     } as unknown as PaymasterGateway;
 
-    service = new DeployAccount({
+    service = new AccountDeployer({
       accountRepository: mockAccountRepo,
       starknetGateway: mockStarknetGateway,
       paymasterGateway: mockPaymasterGateway,
@@ -51,7 +51,7 @@ describe('DeployAccount', () => {
     // Make waitForTransaction never resolve during test to keep status as 'deploying'
     vi.mocked(mockStarknetGateway.waitForTransaction).mockReturnValue(new Promise(() => { /* never resolves — keeps status as 'deploying' */ }));
 
-    const result = await service.execute({accountId});
+    const result = await service.deploy({accountId});
 
     expect(result.txHash).toBe('0xtxhash');
     expect(result.account.getStatus()).toBe('deploying');
@@ -65,7 +65,7 @@ describe('DeployAccount', () => {
     vi.mocked(mockAccountRepo.findById).mockResolvedValue(undefined);
 
     await expect(
-      service.execute({accountId}),
+      service.deploy({accountId}),
     ).rejects.toThrow(AccountNotFoundError);
   });
 
@@ -73,7 +73,7 @@ describe('DeployAccount', () => {
     const account = createAccount('deployed');
     vi.mocked(mockAccountRepo.findById).mockResolvedValue(account);
 
-    const error = await service.execute({accountId}).catch((err: unknown) => err);
+    const error = await service.deploy({accountId}).catch((err: unknown) => err);
 
     expect(error).toBeInstanceOf(InvalidAccountStateError);
     expect((error as InvalidAccountStateError).args).toEqual({status: 'deployed', action: 'deploy'});
@@ -85,7 +85,7 @@ describe('DeployAccount', () => {
     vi.mocked(mockAccountRepo.markAsDeploying).mockResolvedValue(false);
 
     await expect(
-      service.execute({accountId}),
+      service.deploy({accountId}),
     ).rejects.toThrow(InvalidAccountStateError);
 
     expect(mockPaymasterGateway.executeTransaction).not.toHaveBeenCalled();
@@ -98,7 +98,7 @@ describe('DeployAccount', () => {
       vi.mocked(mockStarknetGateway.waitForTransaction).mockResolvedValue({} as never);
       vi.mocked(mockStarknetGateway.isDeployed).mockResolvedValue(true);
 
-      const result = await service.execute({accountId});
+      const result = await service.deploy({accountId});
 
       expect(result.account.getStatus()).toBe('deployed');
       expect(result.txHash).toBe('0xtx');
@@ -112,7 +112,7 @@ describe('DeployAccount', () => {
 
       let caught: unknown;
       try {
-        await service.execute({accountId});
+        await service.deploy({accountId});
       } catch (err) {
         caught = err;
       }
@@ -128,7 +128,7 @@ describe('DeployAccount', () => {
       vi.mocked(mockStarknetGateway.waitForTransaction).mockResolvedValue({} as never);
       vi.mocked(mockStarknetGateway.isDeployed).mockResolvedValue(false);
 
-      await expect(service.execute({accountId})).rejects.toThrow(InvalidAccountStateError);
+      await expect(service.deploy({accountId})).rejects.toThrow(InvalidAccountStateError);
 
       expect(account.getStatus()).toBe('failed');
     });

@@ -8,5 +8,5 @@ export interface GetPricesInput {
  * Retrieves BTC prices for the requested fiat currencies.
  */
 export interface GetPricesUseCase {
-  execute(input: GetPricesInput): Promise<Map<FiatCurrency, number>>;
+  getPrices(input: GetPricesInput): Promise<Map<FiatCurrency, number>>;
 }

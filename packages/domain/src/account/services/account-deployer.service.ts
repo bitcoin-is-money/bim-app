@@ -8,7 +8,7 @@ import type {
   DeployAccountUseCase,
 } from '../use-cases/deploy-account.use-case';
 
-export interface DeployAccountDeps {
+export interface AccountDeployerDeps {
   accountRepository: AccountRepository;
   starknetGateway: StarknetGateway;
   paymasterGateway: PaymasterGateway;
@@ -20,14 +20,14 @@ export interface DeployAccountDeps {
  * Computes the Starknet address and transitions the account from
  * 'pending' -> 'deploying' -> 'deployed' (or 'failed').
  */
-export class DeployAccount implements DeployAccountUseCase {
+export class AccountDeployer implements DeployAccountUseCase {
   private readonly log: Logger;
 
-  constructor(private readonly deps: DeployAccountDeps) {
-    this.log = deps.logger.child({name: 'deploy-account.service.ts'});
+  constructor(private readonly deps: AccountDeployerDeps) {
+    this.log = deps.logger.child({name: 'account-deployer.service.ts'});
   }
 
-  async execute({accountId}: DeployAccountInput): Promise<DeployAccountOutput> {
+  async deploy({accountId}: DeployAccountInput): Promise<DeployAccountOutput> {
     this.log.info({accountId}, 'Deploying account');
     const account = await this.deps.accountRepository.findById(accountId);
     if (!account) {

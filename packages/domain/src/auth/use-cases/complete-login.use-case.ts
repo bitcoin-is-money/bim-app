@@ -25,5 +25,5 @@ export interface CompleteLoginOutput {
  * Completes WebAuthn authentication after user interaction.
  */
 export interface CompleteLoginUseCase {
-  execute(input: CompleteLoginInput): Promise<CompleteLoginOutput>;
+  complete(input: CompleteLoginInput): Promise<CompleteLoginOutput>;
 }

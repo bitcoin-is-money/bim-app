@@ -35,12 +35,10 @@ export type {
 } from './use-cases/invalidate-session.use-case';
 
 // Use case implementations (services)
-export {BeginRegistration, type BeginRegistrationDeps} from './services/begin-registration.service';
-export {CompleteRegistration, type CompleteRegistrationDeps} from './services/complete-registration.service';
-export {BeginLogin, type BeginLoginDeps} from './services/begin-login.service';
-export {CompleteLogin, type CompleteLoginDeps} from './services/complete-login.service';
-export {ValidateSession, type ValidateSessionDeps} from './services/validate-session.service';
-export {InvalidateSession, type InvalidateSessionDeps} from './services/invalidate-session.service';
+export {Registrar, type RegistrarDeps} from './services/registrar.service';
+export {Authenticator, type AuthenticatorDeps} from './services/authenticator.service';
+export {SessionValidator, type SessionValidatorDeps} from './services/session-validator.service';
+export {SessionInvalidator, type SessionInvalidatorDeps} from './services/session-invalidator.service';
 
 // Internal domain service (no UseCase interface — not a primary port)
 export {ChallengeConsumer, type ChallengeConsumerDeps} from './services/challenge-consumer.service';

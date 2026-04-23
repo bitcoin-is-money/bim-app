@@ -14,5 +14,5 @@ export interface GetBalanceOutput {
  * Retrieves token balances for an account's Starknet address.
  */
 export interface GetBalanceUseCase {
-  execute(input: GetBalanceInput): Promise<GetBalanceOutput>;
+  getBalance(input: GetBalanceInput): Promise<GetBalanceOutput>;
 }

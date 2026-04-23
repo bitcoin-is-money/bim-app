@@ -23,6 +23,5 @@ export type {
 } from './use-cases/get-deployment-status.use-case';
 
 // Use case implementations (services)
-export {DeployAccount, type DeployAccountDeps} from './services/deploy-account.service';
-export {GetBalance, type GetBalanceDeps} from './services/get-balance.service';
-export {GetDeploymentStatus, type GetDeploymentStatusDeps} from './services/get-deployment-status.service';
+export {AccountDeployer, type AccountDeployerDeps} from './services/account-deployer.service';
+export {AccountReader, type AccountReaderDeps} from './services/account-reader.service';

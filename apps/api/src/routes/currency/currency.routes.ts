@@ -27,8 +27,8 @@ export function createCurrencyRoutes(appCtx: AppContext): AuthenticatedHono {
       const allCurrencies = FiatCurrency.getSupportedCurrencies()
         .map(c => FiatCurrency.of(c));
 
-      const priceMap = await appCtx.useCases.getPrices
-        .execute({currencies: allCurrencies});
+      const priceMap = await appCtx.useCases.btcPriceReader
+        .getPrices({currencies: allCurrencies});
 
       const prices: GetPricesResponse = {};
       for (const [currency, price] of priceMap) {

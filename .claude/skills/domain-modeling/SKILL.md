@@ -18,11 +18,13 @@ BIM's domain combines three traditions:
 
 1. **Rich domain model.** Entities own their behavior (invariants, transitions, rules on own state). Anemic entities (getter/setter bags with all logic in services) are forbidden.
 2. **Entity method first, domain service only when justified.** Create a `DomainService` only when the operation (a) spans multiple aggregates, (b) is stateless and owns no invariant, or (c) would force an entity to know things outside its concern.
-3. **UseCase = primary port = API.** One interface per business operation, one method `execute`, verb in imperative (`DeployAccount`, `PayLightningInvoice`).
-4. **Repository / Gateway / Decoder = secondary port = SPI.** Declared in `ports/`, implemented by adapters.
-5. **Pure TypeScript in domain.** No Hono / Drizzle / Zod / `node:*`. Exception: `pino` as `type Logger` only.
-6. **Dependencies via constructor.** No static calls, no DI magic.
-7. **Domain errors, thrown.** Extend `DomainError`, never throw raw `Error`. Entities throw on invariant violations; services throw when preconditions aren't met.
+3. **UseCase = primary port = API.** One interface per business operation. The interface is named as a verb-phrase (`DeployAccountUseCase`, `ValidateSessionUseCase`). Its single method uses the **domain verb** (`deploy`, `validate`), never a generic `execute` — unless "execute" IS the domain verb (e.g. `PaymentExecutor.execute()` for a signed payment).
+4. **Services named as role-actors.** Implementing classes are nouns describing an agent: `AccountDeployer`, `SessionValidator`, `Registrar`, `PaymentBuilder`. Files match in kebab-case: `account-deployer.service.ts`. Never `DeployAccount` (verb-phrase class names).
+5. **Grouping allowed when natural.** A single class may implement multiple UseCase interfaces when the operations share concepts, a flow, or a natural role (e.g. `Registrar` implements `BeginRegistrationUseCase.begin()` + `CompleteRegistrationUseCase.complete()`). Split them when their deps or lifecycles differ significantly (e.g. `SessionValidator` and `SessionInvalidator` stay separate — very different deps and contexts).
+6. **Repository / Gateway / Decoder = secondary port = SPI.** Declared in `ports/`, implemented by adapters.
+7. **Pure TypeScript in domain.** No Hono / Drizzle / Zod / `node:*`. Exception: `pino` as `type Logger` only.
+8. **Dependencies via constructor.** No static calls, no DI magic.
+9. **Domain errors, thrown.** Extend `DomainError`, never throw raw `Error`. Entities throw on invariant violations; services throw when preconditions aren't met.
 
 ## Structure per Bounded Context
 
@@ -76,13 +78,17 @@ When adding a new operation, decide:
 
 | Operation | Where it lives |
 |-----------|----------------|
-| `DeployAccount` (triggered by `POST /account/deploy`) | UseCase — interface in `account/use-cases/`, impl in `account/services/` |
+| Deploy account (triggered by `POST /account/deploy`) | UseCase — interface `DeployAccountUseCase.deploy()` in `account/use-cases/`, class `AccountDeployer` in `account/services/` |
+| Get balance + get deployment status | UseCases `GetBalanceUseCase.getBalance()` + `GetDeploymentStatusUseCase.getDeploymentStatus()`, **grouped** under `AccountReader` (one class implements both) |
+| Begin + complete registration | UseCases `BeginRegistrationUseCase.begin()` + `CompleteRegistrationUseCase.complete()`, **grouped** under `Registrar` |
 | Account status transition from `pending` to `deploying` | Entity method `Account.markAsDeploying()` |
 | Fee calculation from amount + network + config | Internal DomainService `FeeCalculator` in `payment/services/`, no interface |
-| Parsing an invoice / address / payment URI | Internal DomainService `ParseService` in `payment/services/`, no interface |
+| Parsing an invoice / address / payment URI | Internal DomainService `PaymentParser` in `payment/services/`, no interface |
 | Hypothetical `MoneyTransfer(from, to, amount)` (multi-aggregate) | Internal DomainService in `<context>/services/`, no interface |
 
 ## UseCase Pattern
+
+The interface's method uses the **domain verb** (not `execute`):
 
 ```typescript
 // packages/domain/src/account/use-cases/deploy-account.use-case.ts
@@ -92,13 +98,15 @@ export type DeployAccountInput = {accountId: AccountId};
 export type DeployAccountOutput = {account: Account; txHash: string};
 
 export interface DeployAccountUseCase {
-  execute(input: DeployAccountInput): Promise<DeployAccountOutput>;
+  deploy(input: DeployAccountInput): Promise<DeployAccountOutput>;
 }
 ```
 
+The implementing class is named as an **actor-role noun**:
+
 ```typescript
-// packages/domain/src/account/services/deploy-account.service.ts
-export class DeployAccount implements DeployAccountUseCase {
+// packages/domain/src/account/services/account-deployer.service.ts
+export class AccountDeployer implements DeployAccountUseCase {
   constructor(private readonly deps: {
     accountRepository: AccountRepository;
     paymasterGateway: PaymasterGateway;
@@ -106,7 +114,7 @@ export class DeployAccount implements DeployAccountUseCase {
     logger: Logger;
   }) {}
 
-  async execute({accountId}: DeployAccountInput): Promise<DeployAccountOutput> {
+  async deploy({accountId}: DeployAccountInput): Promise<DeployAccountOutput> {
     const account = await this.deps.accountRepository.findById(accountId);
     if (!account) throw new AccountNotFoundError(accountId);
     // load → call entity methods → call ports → persist → return
@@ -114,12 +122,49 @@ export class DeployAccount implements DeployAccountUseCase {
 }
 ```
 
-Routes depend on the interface, never on the concrete class:
+Routes depend on the interface, never on the concrete class.
+**The `appCtx.useCases` map is keyed by actor name**, not by use case
+name — this avoids the `getBalance.getBalance(...)` redundancy:
 
 ```typescript
-const {deployAccount}: {deployAccount: DeployAccountUseCase} = appCtx.useCases;
-await deployAccount.execute({accountId});
+const {accountDeployer} = appCtx.useCases;
+await accountDeployer.deploy({accountId});
 ```
+
+### Grouping multiple use cases under one class
+
+When two UseCases belong to the same flow (e.g. `begin` + `complete` of a
+two-phase registration), one class can implement both interfaces:
+
+```typescript
+// packages/domain/src/auth/services/registrar.service.ts
+export class Registrar implements BeginRegistrationUseCase, CompleteRegistrationUseCase {
+  async begin(input: BeginRegistrationInput): Promise<BeginRegistrationOutput> { ... }
+  async complete(input: CompleteRegistrationInput): Promise<CompleteRegistrationOutput> { ... }
+}
+```
+
+The `AppContext['useCases']` map exposes the actor under a single key,
+typed as the **intersection** of the implemented interfaces:
+
+```typescript
+useCases: {
+  registrar: BeginRegistrationUseCase & CompleteRegistrationUseCase;
+  // ...
+}
+```
+
+Routes destructure by actor name and call the domain-verb method:
+
+```typescript
+const {registrar} = appCtx.useCases;
+await registrar.begin({username});
+await registrar.complete({challengeId, accountId, username, credential});
+```
+
+Split when the deps or concerns diverge significantly (e.g. `SessionValidator`
+vs `SessionInvalidator`: one has 4 deps including sessionConfig, the other has
+just sessionRepository).
 
 ## Entity Pattern (Rich Domain Model)
 
@@ -234,12 +279,13 @@ For a new business operation (e.g. `PayLightningInvoice`):
 
 1. Decide: UseCase, entity method, or internal domain service (see decision tree above).
 2. If UseCase:
-   - Create the interface + I/O types in `<context>/use-cases/<op>.use-case.ts`
-   - Create the implementation class in `<context>/services/<op>.service.ts` with `implements <Op>UseCase`
-   - Wire in `apps/api/src/app-context.ts`
-   - Route handler depends on the interface type, not the class
+   - Create the interface + I/O types in `<context>/use-cases/<op>.use-case.ts`. Interface named as verb-phrase (`PayLightningInvoiceUseCase`), single method using the domain verb (`pay`, not `execute`).
+   - Decide on the implementing class: either a new actor-role class (`LightningInvoicePayer`) OR group the operation onto an existing actor if natural (`PaymentExecutor` already handling similar ops).
+   - Create / update the class in `<context>/services/<actor>.service.ts` with `implements <Op>UseCase`. Class name is a noun (actor), file matches in kebab-case.
+   - Wire in `apps/api/src/app-context.ts` — the same instance may back multiple `useCases.*` keys when grouped.
+   - Route handler depends on the interface type, not the class.
 3. Rules / invariants of a single aggregate → entity methods (throw `DomainError` on violation).
-4. Multi-aggregate or stateless logic → internal domain service in `<context>/services/` (no interface in `use-cases/`).
+4. Multi-aggregate or stateless logic → internal domain service in `<context>/services/` (no interface in `use-cases/`). Named as actor (`FeeCalculator`, `PaymentParser`, `ChallengeConsumer`).
 5. Secondary ports go in `packages/domain/src/ports/`; adapters in `apps/api/src/adapters/`.
-6. Unit tests in `packages/domain/test/<context>/`.
+6. Unit tests in `packages/domain/test/<context>/services/<actor>.service.test.ts`. One test file per class; group sub-describe blocks by method when the class implements multiple use cases.
 7. Export from `<context>/index.ts`.
