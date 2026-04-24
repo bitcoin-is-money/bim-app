@@ -1,50 +1,49 @@
 import type {Logger} from 'pino';
-import {AccountNotDeployedError, Amount, type StarknetAddress, type StarknetConfig} from '../shared';
-import {LightningInvoice, type SwapService} from '../swap';
-import type {BitcoinReceiveService} from './bitcoin-receive.service';
-import {InvalidPaymentAmountError} from './errors';
-import type {ReceivePaymentInput as DomainReceiveInput, ReceiveResult} from './receive.types';
-import type {CommitReceiveInput, CommitReceiveOutput, CommitReceiveUseCase} from './use-case/commit-receive.use-case';
+import {AccountNotDeployedError, Amount, type StarknetAddress, type StarknetConfig} from '../../shared';
+import {LightningInvoice, type SwapService} from '../../swap';
+import {InvalidPaymentAmountError} from '../errors';
+import type {ReceivePaymentInput as DomainReceiveInput, ReceiveResult} from '../receive.types';
 import type {
-  BitcoinPendingCommitOutput,
+  CommitReceiveInput,
+  CommitReceiveOutput,
+  CommitReceiveUseCase,
+} from '../use-cases/commit-receive.use-case';
+import type {
   ReceivePaymentInput,
   ReceivePaymentOutput,
-  ReceivePaymentUseCase
-} from './use-case/receive-payment.use-case';
+  ReceivePaymentUseCase,
+} from '../use-cases/receive-payment.use-case';
+import type {BitcoinReceiver} from './bitcoin-receiver.service';
 
-// =============================================================================
-// Dependencies
-// =============================================================================
-
-export interface ReceiveServiceDeps {
+export interface PaymentReceiverDeps {
   swapService: SwapService;
-  bitcoinReceiveService: BitcoinReceiveService;
+  bitcoinReceiver: BitcoinReceiver;
   starknetConfig: StarknetConfig;
   logger: Logger;
 }
 
-// =============================================================================
-// Service Class
-// =============================================================================
-
 /**
- * Receive service — handles incoming payments (receive).
+ * Handles incoming payments (receive flow). Implements the two primary ports:
  *
- * For Lightning and Bitcoin, creates a swap (invoice or deposit address).
- * For Starknet, returns the user's address + a starknet: URI.
+ * - `receive` — creates a receive request for any supported network. For
+ *   Bitcoin, returns a pending-commit response (phase 1 of two-phase flow).
+ * - `commit` — completes the Bitcoin receive after WebAuthn signing (phase 2).
+ *
+ * Delegates the Bitcoin-specific commit logic to the internal
+ * BitcoinReceiver domain service.
  */
-export class ReceiveService implements ReceivePaymentUseCase, CommitReceiveUseCase {
+export class PaymentReceiver implements ReceivePaymentUseCase, CommitReceiveUseCase {
   private readonly log: Logger;
 
-  constructor(private readonly deps: ReceiveServiceDeps) {
-    this.log = deps.logger.child({name: 'receive.service.ts'});
+  constructor(private readonly deps: PaymentReceiverDeps) {
+    this.log = deps.logger.child({name: 'payment-receiver.service.ts'});
   }
 
   // ===========================================================================
   // UseCase: ReceivePaymentUseCase
   // ===========================================================================
 
-  async receivePayment(input: ReceivePaymentInput): Promise<ReceivePaymentOutput> {
+  async receive(input: ReceivePaymentInput): Promise<ReceivePaymentOutput> {
     const {account} = input;
     const starknetAddress = account.getStarknetAddress();
     if (!starknetAddress) {
@@ -56,7 +55,7 @@ export class ReceiveService implements ReceivePaymentUseCase, CommitReceiveUseCa
       : undefined;
     const description = input.description?.trim();
 
-    const result = await this.receive({
+    const result = await this.prepareReceive({
       network: input.network,
       destinationAddress: starknetAddress,
       ...(amount !== undefined && {amount}),
@@ -65,9 +64,9 @@ export class ReceiveService implements ReceivePaymentUseCase, CommitReceiveUseCa
       useUriPrefix: input.useUriPrefix,
     });
 
-    // Bitcoin pending commit: delegate to BitcoinReceiveService
+    // Bitcoin pending commit: delegate to BitcoinReceiver
     if (result.network === 'bitcoin' && 'status' in result) {
-      const {buildId, messageHash} = await this.deps.bitcoinReceiveService.handlePendingCommit({
+      const {buildId, messageHash} = await this.deps.bitcoinReceiver.prepareCommit({
         swapId: result.swapId,
         commitCalls: result.commitCalls,
         amount: result.amount,
@@ -78,7 +77,7 @@ export class ReceiveService implements ReceivePaymentUseCase, CommitReceiveUseCa
         useUriPrefix: input.useUriPrefix,
       });
 
-      const pendingCommitOutput: BitcoinPendingCommitOutput = {
+      return {
         network: 'bitcoin',
         status: 'pending_commit',
         buildId,
@@ -88,7 +87,6 @@ export class ReceiveService implements ReceivePaymentUseCase, CommitReceiveUseCa
         amountSats: result.amount.toSatString(),
         expiresAt: result.expiresAt,
       };
-      return pendingCommitOutput;
     }
 
     return result;
@@ -98,8 +96,8 @@ export class ReceiveService implements ReceivePaymentUseCase, CommitReceiveUseCa
   // UseCase: CommitReceiveUseCase
   // ===========================================================================
 
-  async commitReceive(input: CommitReceiveInput): Promise<CommitReceiveOutput> {
-    const result = await this.deps.bitcoinReceiveService.commitAndComplete({
+  async commit(input: CommitReceiveInput): Promise<CommitReceiveOutput> {
+    const result = await this.deps.bitcoinReceiver.commitAndComplete({
       buildId: input.buildId,
       assertion: input.assertion,
       account: input.account,
@@ -116,10 +114,12 @@ export class ReceiveService implements ReceivePaymentUseCase, CommitReceiveUseCa
   }
 
   // ===========================================================================
-  // Internal: Create receive request (used by receivePayment and tests)
+  // Internal helper — builds the raw receive request by network.
+  // Kept public (no UseCase interface) so tests can exercise the
+  // network-specific branches without stubbing BitcoinReceiver.
   // ===========================================================================
 
-  async receive(input: DomainReceiveInput): Promise<ReceiveResult> {
+  async prepareReceive(input: DomainReceiveInput): Promise<ReceiveResult> {
     if (input.network !== 'starknet' && (!input.amount?.isPositive())) {
       throw new InvalidPaymentAmountError(input.network, input.amount?.getSat() ?? 0n);
     }
@@ -149,7 +149,7 @@ export class ReceiveService implements ReceivePaymentUseCase, CommitReceiveUseCa
   }
 
   // ===========================================================================
-  // Private Helpers
+  // Private Helpers (per-network)
   // ===========================================================================
 
   private receiveStarknet(address: StarknetAddress, amount?: Amount, useUriPrefix = true, description?: string) {

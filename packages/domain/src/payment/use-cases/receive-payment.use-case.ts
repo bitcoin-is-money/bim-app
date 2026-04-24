@@ -31,5 +31,5 @@ export type ReceivePaymentOutput = ReceiveResult | BitcoinPendingCommitOutput;
  * For Bitcoin, returns commit data for WebAuthn signing (two-phase flow).
  */
 export interface ReceivePaymentUseCase {
-  receivePayment(input: ReceivePaymentInput): Promise<ReceivePaymentOutput>;
+  receive(input: ReceivePaymentInput): Promise<ReceivePaymentOutput>;
 }

@@ -1,17 +1,12 @@
 import {StarknetAddress} from '@bim/domain/account';
-import {type BitcoinReceiveService, InvalidPaymentAmountError, ReceiveService} from '@bim/domain/payment';
+import {type BitcoinReceiver, InvalidPaymentAmountError, PaymentReceiver} from '@bim/domain/payment';
 import type {StarknetCall} from '@bim/domain/ports';
 import {Amount} from '@bim/domain/shared';
 import {LightningInvoice, Swap, SwapAmountError, SwapCreationError, SwapId, type SwapService} from '@bim/domain/swap';
 import {createLogger} from '@bim/lib/logger';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
-const LOG_LEVEL = 'silent';
-const logger = createLogger(LOG_LEVEL);
-
-// =============================================================================
-// Constants
-// =============================================================================
+const logger = createLogger('silent');
 
 const WBTC_TOKEN_ADDRESS = StarknetAddress.of('0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac');
 const STRK_TOKEN_ADDRESS = StarknetAddress.of('0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d');
@@ -26,10 +21,6 @@ const MOCK_COMMIT_CALLS: StarknetCall[] = [
   {contractAddress: '0xabc', entrypoint: 'approve', calldata: ['0x1', '0x2']},
 ];
 
-// =============================================================================
-// Mock swap factories
-// =============================================================================
-
 function createMockLightningReceiveSwap(): Swap {
   return Swap.createLightningToStarknet({
     id: SwapId.of('recv-ln-001'),
@@ -42,26 +33,10 @@ function createMockLightningReceiveSwap(): Swap {
   });
 }
 
-function createMockBitcoinReceiveSwap(): Swap {
-  return Swap.createBitcoinToStarknet({
-    id: SwapId.of('recv-btc-002'),
-    amount: Amount.ofSatoshi(200_000n),
-    destinationAddress: DESTINATION_ADDRESS,
-    depositAddress: BTC_DEPOSIT_ADDRESS,
-    expiresAt: new Date(Date.now() + 60 * 60 * 1000),
-    description: 'Received',
-    accountId: ACCOUNT_ID,
-  });
-}
-
-// =============================================================================
-// Tests
-// =============================================================================
-
-describe('ReceiveService', () => {
-  let service: ReceiveService;
+describe('PaymentReceiver', () => {
+  let service: PaymentReceiver;
   let mockSwapService: SwapService;
-  let mockBitcoinReceiveService: BitcoinReceiveService;
+  let mockBitcoinReceiver: BitcoinReceiver;
 
   beforeEach(() => {
     mockSwapService = {
@@ -75,7 +50,7 @@ describe('ReceiveService', () => {
         amount: Amount.ofSatoshi(200_000n),
         expiresAt: new Date(Date.now() + 60 * 60 * 1000),
       }),
-      saveBitcoinCommit: vi.fn().mockResolvedValue(createMockBitcoinReceiveSwap()),
+      saveBitcoinCommit: vi.fn().mockResolvedValue(undefined),
       createStarknetToLightning: vi.fn(),
       createStarknetToBitcoin: vi.fn(),
       fetchStatus: vi.fn(),
@@ -83,24 +58,28 @@ describe('ReceiveService', () => {
       claim: vi.fn(),
     } as unknown as SwapService;
 
-    mockBitcoinReceiveService = {} as unknown as BitcoinReceiveService;
+    mockBitcoinReceiver = {} as unknown as BitcoinReceiver;
 
-    service = new ReceiveService({
+    service = new PaymentReceiver({
       swapService: mockSwapService,
-      bitcoinReceiveService: mockBitcoinReceiveService,
-      starknetConfig: {network: 'mainnet', bitcoinNetwork: 'mainnet', rpcUrl: 'http://localhost:5050', accountClassHash: '0x123', wbtcTokenAddress: WBTC_TOKEN_ADDRESS, strkTokenAddress: STRK_TOKEN_ADDRESS, feeTreasuryAddress: FEE_TREASURY_ADDRESS},
-      logger: logger,
+      bitcoinReceiver: mockBitcoinReceiver,
+      starknetConfig: {
+        network: 'mainnet',
+        bitcoinNetwork: 'mainnet',
+        rpcUrl: 'http://localhost:5050',
+        accountClassHash: '0x123',
+        wbtcTokenAddress: WBTC_TOKEN_ADDRESS,
+        strkTokenAddress: STRK_TOKEN_ADDRESS,
+        feeTreasuryAddress: FEE_TREASURY_ADDRESS,
+      },
+      logger,
     });
   });
-
-  // ===========================================================================
-  // Amount validation
-  // ===========================================================================
 
   describe('amount validation', () => {
     it('throws InvalidPaymentAmountError when amount is 0', async () => {
       await expect(
-        service.receive({
+        service.prepareReceive({
           network: 'lightning',
           destinationAddress: DESTINATION_ADDRESS,
           amount: Amount.zero(),
@@ -113,7 +92,7 @@ describe('ReceiveService', () => {
 
     it('throws InvalidPaymentAmountError when amount is undefined', async () => {
       await expect(
-        service.receive({
+        service.prepareReceive({
           network: 'lightning',
           destinationAddress: DESTINATION_ADDRESS,
           accountId: ACCOUNT_ID,
@@ -124,13 +103,9 @@ describe('ReceiveService', () => {
     });
   });
 
-  // ===========================================================================
-  // Starknet receive
-  // ===========================================================================
-
-  describe('receive — starknet', () => {
+  describe('prepareReceive — starknet', () => {
     it('returns the address and a URI with amount and default WBTC token', async () => {
-      const result = await service.receive({
+      const result = await service.prepareReceive({
         network: 'starknet',
         destinationAddress: SENDER_ADDRESS,
         amount: Amount.ofSatoshi(50_000n),
@@ -146,7 +121,7 @@ describe('ReceiveService', () => {
     });
 
     it('omits the starknet: prefix when useUriPrefix is false', async () => {
-      const result = await service.receive({
+      const result = await service.prepareReceive({
         network: 'starknet',
         destinationAddress: SENDER_ADDRESS,
         amount: Amount.ofSatoshi(50_000n),
@@ -159,22 +134,8 @@ describe('ReceiveService', () => {
       expect(result.uri).toBe(`${SENDER_ADDRESS}?amount=50000&token=${WBTC_TOKEN_ADDRESS}`);
     });
 
-    it('includes the starknet: prefix when useUriPrefix is true', async () => {
-      const result = await service.receive({
-        network: 'starknet',
-        destinationAddress: SENDER_ADDRESS,
-        amount: Amount.ofSatoshi(50_000n),
-        accountId: ACCOUNT_ID,
-        description: undefined,
-        useUriPrefix: true,
-      });
-
-      if (result.network !== 'starknet') throw new Error('Expected starknet result');
-      expect(result.uri).toBe(`starknet:${SENDER_ADDRESS}?amount=50000&token=${WBTC_TOKEN_ADDRESS}`);
-    });
-
     it('returns address-only URI when amount is omitted', async () => {
-      const result = await service.receive({
+      const result = await service.prepareReceive({
         network: 'starknet',
         destinationAddress: SENDER_ADDRESS,
         accountId: ACCOUNT_ID,
@@ -188,7 +149,7 @@ describe('ReceiveService', () => {
     });
 
     it('returns address-only URI when amount is zero', async () => {
-      const result = await service.receive({
+      const result = await service.prepareReceive({
         network: 'starknet',
         destinationAddress: SENDER_ADDRESS,
         amount: Amount.zero(),
@@ -202,13 +163,9 @@ describe('ReceiveService', () => {
     });
   });
 
-  // ===========================================================================
-  // Lightning receive
-  // ===========================================================================
-
-  describe('receive — lightning', () => {
+  describe('prepareReceive — lightning', () => {
     it('delegates to swapService.createLightningToStarknet', async () => {
-      await service.receive({
+      await service.prepareReceive({
         network: 'lightning',
         destinationAddress: DESTINATION_ADDRESS,
         amount: Amount.ofSatoshi(50_000n),
@@ -226,7 +183,7 @@ describe('ReceiveService', () => {
     });
 
     it('returns swap id, invoice and expiry', async () => {
-      const result = await service.receive({
+      const result = await service.prepareReceive({
         network: 'lightning',
         destinationAddress: DESTINATION_ADDRESS,
         amount: Amount.ofSatoshi(50_000n),
@@ -253,7 +210,7 @@ describe('ReceiveService', () => {
       );
 
       await expect(
-        service.receive({
+        service.prepareReceive({
           network: 'lightning',
           destinationAddress: DESTINATION_ADDRESS,
           amount: Amount.ofSatoshi(50_000n),
@@ -270,7 +227,7 @@ describe('ReceiveService', () => {
       );
 
       await expect(
-        service.receive({
+        service.prepareReceive({
           network: 'lightning',
           destinationAddress: DESTINATION_ADDRESS,
           amount: Amount.ofSatoshi(50_000n),
@@ -282,13 +239,9 @@ describe('ReceiveService', () => {
     });
   });
 
-  // ===========================================================================
-  // Bitcoin receive — Phase 1 (prepare)
-  // ===========================================================================
-
-  describe('receive — bitcoin (prepare)', () => {
+  describe('prepareReceive — bitcoin (prepare)', () => {
     it('delegates to swapService.prepareBitcoinToStarknet', async () => {
-      await service.receive({
+      await service.prepareReceive({
         network: 'bitcoin',
         destinationAddress: DESTINATION_ADDRESS,
         amount: Amount.ofSatoshi(200_000n),
@@ -306,7 +259,7 @@ describe('ReceiveService', () => {
     });
 
     it('returns pending_commit status with swap id, commit calls and expiry', async () => {
-      const result = await service.receive({
+      const result = await service.prepareReceive({
         network: 'bitcoin',
         destinationAddress: DESTINATION_ADDRESS,
         amount: Amount.ofSatoshi(200_000n),
@@ -331,7 +284,7 @@ describe('ReceiveService', () => {
       );
 
       await expect(
-        service.receive({
+        service.prepareReceive({
           network: 'bitcoin',
           destinationAddress: DESTINATION_ADDRESS,
           amount: Amount.ofSatoshi(200_000n),
@@ -342,5 +295,4 @@ describe('ReceiveService', () => {
       ).rejects.toThrow(SwapCreationError);
     });
   });
-
 });

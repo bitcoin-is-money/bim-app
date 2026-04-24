@@ -1,5 +1,5 @@
 import {InvalidStarknetAddressError, StarknetAddress} from '@bim/domain/account';
-import {ParseService, PaymentParsingError, UnsupportedNetworkError, UnsupportedTokenError} from '@bim/domain/payment';
+import {PaymentParser, PaymentParsingError, UnsupportedNetworkError, UnsupportedTokenError} from '@bim/domain/payment';
 import type {LightningDecoder} from '@bim/domain/ports';
 import {type StarknetConfig, ValidationError} from '@bim/domain/shared';
 import {BitcoinAddressNetworkMismatchError, InvalidBitcoinAddressError, LightningInvoice} from '@bim/domain/swap';
@@ -8,10 +8,6 @@ import {beforeEach, describe, expect, it, vi} from 'vitest';
 
 const LOG_LEVEL = 'trace';
 const logger = createLogger(LOG_LEVEL);
-
-// =============================================================================
-// Constants
-// =============================================================================
 
 const WBTC_TOKEN_ADDRESS = StarknetAddress.of('0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac');
 const STRK_TOKEN_ADDRESS = StarknetAddress.of('0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7');
@@ -33,10 +29,6 @@ function testStarknetConfig(overrides?: Partial<StarknetConfig>): StarknetConfig
   };
 }
 
-// =============================================================================
-// Helpers
-// =============================================================================
-
 function createMockDecoder(overrides?: Partial<ReturnType<LightningDecoder['decode']>>): LightningDecoder {
   return {
     decode: vi.fn().mockReturnValue({
@@ -48,22 +40,14 @@ function createMockDecoder(overrides?: Partial<ReturnType<LightningDecoder['deco
   };
 }
 
-// =============================================================================
-// Tests
-// =============================================================================
-
-describe('ParseService', () => {
-  // ===========================================================================
-  // Auto-detect routing
-  // ===========================================================================
-
+describe('PaymentParser', () => {
   describe('auto-detect routing', () => {
-    let service: ParseService;
+    let service: PaymentParser;
     let mockDecoder: LightningDecoder;
 
     beforeEach(() => {
       mockDecoder = createMockDecoder();
-      service = new ParseService({
+      service = new PaymentParser({
         lightningDecoder: mockDecoder,
         starknetConfig: testStarknetConfig(),
         logger,
@@ -77,14 +61,12 @@ describe('ParseService', () => {
     });
 
     it('routes bitcoin: URI to bitcoin parser', () => {
-      const uri = `bitcoin:${BTC_BECH32}?amount=0.001`;
-      const result = service.parse(uri);
+      const result = service.parse(`bitcoin:${BTC_BECH32}?amount=0.001`);
       expect(result.network).toBe('bitcoin');
     });
 
     it('routes starknet: URI to starknet parser', () => {
-      const uri = `starknet:${STRK_TOKEN_ADDRESS}?amount=1000&token=${WBTC_TOKEN_ADDRESS}`;
-      const result = service.parse(uri);
+      const result = service.parse(`starknet:${STRK_TOKEN_ADDRESS}?amount=1000&token=${WBTC_TOKEN_ADDRESS}`);
       expect(result.network).toBe('starknet');
     });
 
@@ -104,7 +86,7 @@ describe('ParseService', () => {
     });
 
     it('routes bare testnet Bitcoin address (tb1) to bitcoin parser', () => {
-      const testnetService = new ParseService({
+      const testnetService = new PaymentParser({
         lightningDecoder: mockDecoder,
         starknetConfig: testStarknetConfig({network: 'testnet', bitcoinNetwork: 'testnet'}),
         logger,
@@ -182,10 +164,6 @@ describe('ParseService', () => {
     it('throws UnsupportedNetworkError for short hex strings', () => {
       expect(() => service.parse('0x1234')).toThrow(UnsupportedNetworkError);
     });
-
-    // =========================================================================
-    // Unsupported network detection
-    // =========================================================================
 
     it('extracts network name from unsupported URI scheme with args for i18n', () => {
       try {
@@ -284,7 +262,7 @@ describe('ParseService', () => {
         throw new Error('decode failed');
       });
 
-      const failingService = new ParseService({
+      const failingService = new PaymentParser({
         lightningDecoder: failingDecoder,
         starknetConfig: testStarknetConfig(),
         logger,
@@ -294,15 +272,11 @@ describe('ParseService', () => {
     });
   });
 
-  // ===========================================================================
-  // Starknet URI parsing
-  // ===========================================================================
-
   describe('starknet URI parsing', () => {
-    let service: ParseService;
+    let service: PaymentParser;
 
     beforeEach(() => {
-      service = new ParseService({
+      service = new PaymentParser({
         lightningDecoder: createMockDecoder(),
         starknetConfig: testStarknetConfig(),
         logger,
@@ -310,8 +284,7 @@ describe('ParseService', () => {
     });
 
     it('parses starknet: URI with amount and WBTC token', () => {
-      const uri = `starknet:${RECIPIENT_ADDRESS}?amount=1000000&token=${WBTC_TOKEN_ADDRESS}`;
-      const result = service.parse(uri);
+      const result = service.parse(`starknet:${RECIPIENT_ADDRESS}?amount=1000000&token=${WBTC_TOKEN_ADDRESS}`);
 
       expect(result.network).toBe('starknet');
       if (result.network === 'starknet') {
@@ -328,40 +301,33 @@ describe('ParseService', () => {
 
       expect(result.network).toBe('starknet');
       if (result.network === 'starknet') {
-        expect(result.address).toBe(
-          '0x0000000000000000000000000000000000000000000000000000000000001234',
-        );
+        expect(result.address).toBe('0x0000000000000000000000000000000000000000000000000000000000001234');
         expect(result.amount.getSat()).toBe(100n);
       }
     });
 
     it('uses summary as description (ERC-1138)', () => {
-      const uri = `starknet:${STRK_TOKEN_ADDRESS}?amount=1000&token=${WBTC_TOKEN_ADDRESS}&summary=nftPurchase`;
-      const result = service.parse(uri);
+      const result = service.parse(`starknet:${STRK_TOKEN_ADDRESS}?amount=1000&token=${WBTC_TOKEN_ADDRESS}&summary=nftPurchase`);
       expect(result.description).toBe('nftPurchase');
     });
 
     it('falls back to description param when summary is absent', () => {
-      const uri = `starknet:${STRK_TOKEN_ADDRESS}?amount=1000&token=${WBTC_TOKEN_ADDRESS}&description=tokenTransfer`;
-      const result = service.parse(uri);
+      const result = service.parse(`starknet:${STRK_TOKEN_ADDRESS}?amount=1000&token=${WBTC_TOKEN_ADDRESS}&description=tokenTransfer`);
       expect(result.description).toBe('tokenTransfer');
     });
 
     it('falls back to context when summary and description are absent', () => {
-      const uri = `starknet:${STRK_TOKEN_ADDRESS}?amount=1000&token=${WBTC_TOKEN_ADDRESS}&context=dappInteraction`;
-      const result = service.parse(uri);
+      const result = service.parse(`starknet:${STRK_TOKEN_ADDRESS}?amount=1000&token=${WBTC_TOKEN_ADDRESS}&context=dappInteraction`);
       expect(result.description).toBe('dappInteraction');
     });
 
     it('prefers summary over description and context', () => {
-      const uri = `starknet:${STRK_TOKEN_ADDRESS}?amount=1000&token=${WBTC_TOKEN_ADDRESS}&summary=topPriority&description=mid&context=low`;
-      const result = service.parse(uri);
+      const result = service.parse(`starknet:${STRK_TOKEN_ADDRESS}?amount=1000&token=${WBTC_TOKEN_ADDRESS}&summary=topPriority&description=mid&context=low`);
       expect(result.description).toBe('topPriority');
     });
 
     it('parses starknet: URI with zero amount as editable', () => {
-      const uri = `starknet:${STRK_TOKEN_ADDRESS}?amount=0&token=${WBTC_TOKEN_ADDRESS}`;
-      const result = service.parse(uri);
+      const result = service.parse(`starknet:${STRK_TOKEN_ADDRESS}?amount=0&token=${WBTC_TOKEN_ADDRESS}`);
       expect(result.amount.isZero()).toBe(true);
       if (result.network === 'starknet') {
         expect(result.amountEditable).toBe(true);
@@ -369,8 +335,7 @@ describe('ParseService', () => {
     });
 
     it('parses starknet: URI without amount as editable', () => {
-      const uri = `starknet:${STRK_TOKEN_ADDRESS}?token=${WBTC_TOKEN_ADDRESS}`;
-      const result = service.parse(uri);
+      const result = service.parse(`starknet:${STRK_TOKEN_ADDRESS}?token=${WBTC_TOKEN_ADDRESS}`);
       expect(result.network).toBe('starknet');
       if (result.network === 'starknet') {
         expect(result.amount.isZero()).toBe(true);
@@ -384,13 +349,11 @@ describe('ParseService', () => {
 
     it('throws UnsupportedTokenError for unsupported token', () => {
       const unknownToken = '0x0000000000000000000000000000000000000000000000000000000000abcdef';
-      const uri = `starknet:${STRK_TOKEN_ADDRESS}?amount=1000&token=${unknownToken}`;
-      expect(() => service.parse(uri)).toThrow(UnsupportedTokenError);
+      expect(() => service.parse(`starknet:${STRK_TOKEN_ADDRESS}?amount=1000&token=${unknownToken}`)).toThrow(UnsupportedTokenError);
     });
 
     it('throws ValidationError when starknet amount is negative', () => {
-      const uri = `starknet:${STRK_TOKEN_ADDRESS}?amount=-100&token=${WBTC_TOKEN_ADDRESS}`;
-      expect(() => service.parse(uri)).toThrow(ValidationError);
+      expect(() => service.parse(`starknet:${STRK_TOKEN_ADDRESS}?amount=-100&token=${WBTC_TOKEN_ADDRESS}`)).toThrow(ValidationError);
     });
 
     it('throws InvalidStarknetAddressError for invalid address', () => {
@@ -398,13 +361,9 @@ describe('ParseService', () => {
     });
   });
 
-  // ===========================================================================
-  // Lightning invoice parsing
-  // ===========================================================================
-
   describe('lightning invoice parsing', () => {
     it('detects a Lightning invoice and returns decoded data', () => {
-      const service = new ParseService({
+      const service = new PaymentParser({
         lightningDecoder: createMockDecoder(),
         starknetConfig: testStarknetConfig(),
         logger,
@@ -423,7 +382,7 @@ describe('ParseService', () => {
     });
 
     it('returns amountEditable when invoice has no amount', () => {
-      const service = new ParseService({
+      const service = new PaymentParser({
         lightningDecoder: {decode: vi.fn().mockReturnValue({description: 'test'})},
         starknetConfig: testStarknetConfig(),
         logger,
@@ -438,7 +397,7 @@ describe('ParseService', () => {
     });
 
     it('throws ValidationError when invoice has negative amount', () => {
-      const service = new ParseService({
+      const service = new PaymentParser({
         lightningDecoder: createMockDecoder({amountMSat: BigInt(-1)}),
         starknetConfig: testStarknetConfig(),
         logger,
@@ -448,15 +407,11 @@ describe('ParseService', () => {
     });
   });
 
-  // ===========================================================================
-  // Bitcoin URI parsing
-  // ===========================================================================
-
   describe('bitcoin URI parsing', () => {
-    let service: ParseService;
+    let service: PaymentParser;
 
     beforeEach(() => {
-      service = new ParseService({
+      service = new PaymentParser({
         lightningDecoder: createMockDecoder(),
         starknetConfig: testStarknetConfig(),
         logger,
@@ -523,13 +478,9 @@ describe('ParseService', () => {
     });
   });
 
-  // ===========================================================================
-  // Bitcoin address network mismatch
-  // ===========================================================================
-
   describe('bitcoin address network mismatch', () => {
     it('throws BitcoinAddressNetworkMismatchError with network details for testnet address on mainnet', () => {
-      const mainnetService = new ParseService({
+      const mainnetService = new PaymentParser({
         lightningDecoder: createMockDecoder(),
         starknetConfig: testStarknetConfig(),
         logger,
@@ -547,7 +498,7 @@ describe('ParseService', () => {
     });
 
     it('throws BitcoinAddressNetworkMismatchError with network details for mainnet address on testnet', () => {
-      const testnetService = new ParseService({
+      const testnetService = new PaymentParser({
         lightningDecoder: createMockDecoder(),
         starknetConfig: testStarknetConfig({network: 'testnet', bitcoinNetwork: 'testnet'}),
         logger,
@@ -565,7 +516,7 @@ describe('ParseService', () => {
     });
 
     it('accepts testnet address on testnet config', () => {
-      const testnetService = new ParseService({
+      const testnetService = new PaymentParser({
         lightningDecoder: createMockDecoder(),
         starknetConfig: testStarknetConfig({network: 'testnet', bitcoinNetwork: 'testnet'}),
         logger,

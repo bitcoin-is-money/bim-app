@@ -1,7 +1,7 @@
-import {Amount, type StarknetAddress} from '../shared';
-import type {FeeConfig} from './fee';
-import {FeeCalculator} from './fee';
-import type {PaymentNetwork} from './types';
+import {Amount, type StarknetAddress} from '../../shared';
+import type {FeeConfig} from '../fee';
+import {FeeCalculator} from '../fee';
+import type {PaymentNetwork} from '../types';
 
 /**
  * Represents a Starknet ERC-20 transfer call.
@@ -40,15 +40,6 @@ export class Erc20CallFactory {
 
   /**
    * Creates ERC-20 transfer calls, optionally including a BIM fee call.
-   *
-   * When `applyFee` is true, a second transfer call to the BIM treasury
-   * is appended if the calculated fee is positive.
-   *
-   * @param params.tokenAddress - The ERC-20 token contract address
-   * @param params.recipientAddress - The recipient's Starknet address
-   * @param params.amount - The amount to transfer
-   * @param params.applyFee - Whether to include a BIM developer fee
-   * @returns TransferResult with calls array and fee amount
    */
   createTransfer(params: {
     tokenAddress: StarknetAddress;

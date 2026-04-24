@@ -10,14 +10,14 @@ export function createDonationRoutes(appContext: AppContext): AuthenticatedHono 
   const log = appContext.logger.child({name: 'donation.routes.ts'});
   const app: AuthenticatedHono = new Hono();
 
-  const {buildDonation} = appContext.useCases;
+  const {donationBuilder} = appContext.useCases;
 
   app.post('/build', async (honoCtx): Promise<TypedResponse<DonationBuildResponse | ApiErrorResponse>> => {
     try {
       const input: DonationBuildBody = DonationBuildSchema.parse(await honoCtx.req.json());
       const account = honoCtx.get('account');
 
-      const result = await buildDonation.buildDonation({
+      const result = await donationBuilder.build({
         amountSats: input.amountSats.toString(),
         account,
       });

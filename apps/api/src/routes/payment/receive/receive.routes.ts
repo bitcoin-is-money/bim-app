@@ -26,7 +26,7 @@ export function createReceiveRoutes(
   const log = appContext.logger.child({name: 'receive.routes.ts'});
   const app: AuthenticatedHono = new Hono();
 
-  const {receivePayment, commitReceive} = appContext.useCases;
+  const {paymentReceiver} = appContext.useCases;
 
   // ---------------------------------------------------------------------------
   // Create receive request
@@ -37,7 +37,7 @@ export function createReceiveRoutes(
       const input: ReceiveBody = ReceiveSchema.parse(await honoCtx.req.json());
       const account = honoCtx.get('account');
 
-      const result = await receivePayment.receivePayment({
+      const result = await paymentReceiver.receive({
         network: input.network,
         amount: input.amount,
         description: input.description,
@@ -76,7 +76,7 @@ export function createReceiveRoutes(
       const input: ReceiveCommitBody = ReceiveCommitSchema.parse(await honoCtx.req.json());
       const account = honoCtx.get('account');
 
-      const result = await commitReceive.commitReceive({
+      const result = await paymentReceiver.commit({
         buildId: input.buildId,
         assertion: input.assertion,
         account,
