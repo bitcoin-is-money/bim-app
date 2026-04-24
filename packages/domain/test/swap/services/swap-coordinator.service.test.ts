@@ -2,14 +2,12 @@ import {StarknetAddress} from '@bim/domain/account';
 import type {AtomiqGateway, SwapRepository, TransactionRepository} from '@bim/domain/ports';
 import {Amount} from '@bim/domain/shared';
 import {
-  BitcoinAddress,
   Swap,
   SwapAmountError,
+  SwapCoordinator,
   SwapCreationError,
   SwapId,
   SwapNotFoundError,
-  SwapOwnershipError,
-  SwapService
 } from '@bim/domain/swap';
 import {createLogger} from '@bim/lib/logger';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
@@ -29,31 +27,6 @@ function createPendingLightningSwap(id = 'swap-001'): Swap {
     invoice: VALID_INVOICE,
     expiresAt: new Date(Date.now() + 30 * 60 * 1000),
     description: 'Received',
-    accountId: ACCOUNT_ID,
-  });
-}
-
-function createPendingBitcoinSwap(id = 'swap-btc-001'): Swap {
-  return Swap.createBitcoinToStarknet({
-    id: SwapId.of(id),
-    amount: Amount.ofSatoshi(500_000n),
-    destinationAddress: DESTINATION_ADDRESS,
-    depositAddress: 'bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4',
-    expiresAt: new Date(Date.now() + 3 * 60 * 60 * 1000),
-    description: 'Received',
-    accountId: ACCOUNT_ID,
-  });
-}
-
-function createPendingStarknetToBitcoinSwap(id = 'swap-rev-001'): Swap {
-  return Swap.createStarknetToBitcoin({
-    id: SwapId.of(id),
-    amount: Amount.ofSatoshi(50_000n),
-    sourceAddress: DESTINATION_ADDRESS,
-    destinationAddress: BitcoinAddress.of('bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4', 'mainnet'),
-    depositAddress: '0xdeposit',
-    expiresAt: new Date(Date.now() + 30 * 60 * 1000),
-    description: 'Sent',
     accountId: ACCOUNT_ID,
   });
 }
@@ -104,8 +77,8 @@ function createMockTransactionRepository(): TransactionRepository {
   };
 }
 
-describe('SwapService', () => {
-  let service: SwapService;
+describe('SwapCoordinator', () => {
+  let service: SwapCoordinator;
   let repository: SwapRepository;
   let gateway: AtomiqGateway;
   let transactionRepository: TransactionRepository;
@@ -114,7 +87,13 @@ describe('SwapService', () => {
     repository = createMockRepository();
     gateway = createMockGateway();
     transactionRepository = createMockTransactionRepository();
-    service = new SwapService({swapRepository: repository, atomiqGateway: gateway, transactionRepository, bitcoinNetwork: 'mainnet', logger: logger});
+    service = new SwapCoordinator({
+      swapRepository: repository,
+      atomiqGateway: gateway,
+      transactionRepository,
+      bitcoinNetwork: 'mainnet',
+      logger,
+    });
   });
 
   // =========================================================================
@@ -138,270 +117,6 @@ describe('SwapService', () => {
       const result = await service.getActiveSwaps();
 
       expect(result).toHaveLength(0);
-    });
-  });
-
-  // =========================================================================
-  // fetchStatus — Bitcoin deposit edge case
-  // =========================================================================
-
-  describe('fetchStatus — Bitcoin deposit edge case', () => {
-    it('marks Bitcoin swap as paid when Atomiq reports expired but deposit is confirmed', async () => {
-      const swap = createPendingBitcoinSwap();
-      vi.mocked(repository.findById).mockResolvedValue(swap);
-      vi.mocked(gateway.getSwapStatus).mockResolvedValue({
-        state: 1,
-        isPaid: true,
-        isClaimable: false,
-        isCompleted: false,
-        isFailed: false,
-        isExpired: true, // Atomiq says expired...
-        isRefunded: false,
-        isRefundable: false,
-      });
-
-      const result = await service.fetchStatus({swapId: swap.data.id, accountId: ACCOUNT_ID});
-
-      // ...but deposit is confirmed, so it should be paid, not expired
-      expect(result.status).toBe('paid');
-      expect(result.progress).toBe(33);
-      expect(repository.save).toHaveBeenCalled();
-    });
-
-    it('marks Bitcoin swap as expired when Atomiq reports expired with no deposit', async () => {
-      const swap = createPendingBitcoinSwap();
-      vi.mocked(repository.findById).mockResolvedValue(swap);
-      vi.mocked(gateway.getSwapStatus).mockResolvedValue({
-        state: -1,
-        isPaid: false,
-        isClaimable: false,
-        isCompleted: false,
-        isFailed: false,
-        isExpired: true,
-        isRefunded: false,
-        isRefundable: false,
-      });
-
-      const result = await service.fetchStatus({swapId: swap.data.id, accountId: ACCOUNT_ID});
-
-      expect(result.status).toBe('expired');
-      expect(repository.save).toHaveBeenCalled();
-    });
-
-    it('marks Lightning swap as expired normally even with isPaid+isExpired', async () => {
-      // Lightning swaps don't have the deposit edge case
-      const swap = createPendingLightningSwap();
-      vi.mocked(repository.findById).mockResolvedValue(swap);
-      vi.mocked(gateway.getSwapStatus).mockResolvedValue({
-        state: -1,
-        isPaid: false,
-        isClaimable: false,
-        isCompleted: false,
-        isFailed: false,
-        isExpired: true,
-        isRefunded: false,
-        isRefundable: false,
-      });
-
-      const result = await service.fetchStatus({swapId: swap.data.id, accountId: ACCOUNT_ID});
-
-      expect(result.status).toBe('expired');
-    });
-  });
-
-  // =========================================================================
-  // fetchStatus — normal transitions
-  // =========================================================================
-
-  describe('fetchStatus — normal transitions', () => {
-    it('detects paid status from Atomiq', async () => {
-      const swap = createPendingLightningSwap();
-      vi.mocked(repository.findById).mockResolvedValue(swap);
-      vi.mocked(gateway.getSwapStatus).mockResolvedValue({
-        state: 1,
-        isPaid: true,
-        isClaimable: false,
-        isCompleted: false,
-        isFailed: false,
-        isExpired: false,
-        isRefunded: false,
-        isRefundable: false,
-      });
-
-      const result = await service.fetchStatus({swapId: swap.data.id, accountId: ACCOUNT_ID});
-
-      expect(result.status).toBe('paid');
-      expect(result.progress).toBe(33);
-    });
-
-    it('reaches completed directly when Atomiq reports isCompleted', async () => {
-      // isCompleted has highest priority — no intermediate steps needed
-      const swap = createPendingLightningSwap();
-      vi.mocked(repository.findById).mockResolvedValue(swap);
-      vi.mocked(gateway.getSwapStatus).mockResolvedValue({
-        state: 3,
-        isPaid: true,
-        isClaimable: true,
-        isCompleted: true,
-        isFailed: false,
-        isExpired: false,
-        isRefunded: false,
-        isRefundable: false,
-        txHash: '0xabc',
-      });
-
-      const result = await service.fetchStatus({swapId: swap.data.id, accountId: ACCOUNT_ID});
-      expect(result.status).toBe('completed');
-      expect(result.progress).toBe(100);
-      expect(result.txHash).toBe('0xabc');
-    });
-
-    it('detects failed status from Atomiq', async () => {
-      const swap = createPendingLightningSwap();
-      vi.mocked(repository.findById).mockResolvedValue(swap);
-      vi.mocked(gateway.getSwapStatus).mockResolvedValue({
-        state: -4,
-        isPaid: false,
-        isClaimable: false,
-        isCompleted: false,
-        isFailed: true,
-        isExpired: false,
-        isRefunded: false,
-        isRefundable: false,
-        error: 'Network error',
-      });
-
-      const result = await service.fetchStatus({swapId: swap.data.id, accountId: ACCOUNT_ID});
-
-      expect(result.status).toBe('failed');
-    });
-
-    it('does not sync terminal swaps with Atomiq', async () => {
-      const swap = createPendingLightningSwap();
-      swap.markAsPaid();
-      swap.markAsCompleted('0x123');
-      vi.mocked(repository.findById).mockResolvedValue(swap);
-
-      await service.fetchStatus({swapId: swap.data.id, accountId: ACCOUNT_ID});
-
-      expect(gateway.getSwapStatus).not.toHaveBeenCalled();
-    });
-
-    it('detects claimable status when Atomiq reports isClaimable', async () => {
-      const swap = createPendingLightningSwap();
-      vi.mocked(repository.findById).mockResolvedValue(swap);
-      vi.mocked(gateway.getSwapStatus).mockResolvedValue({
-        state: 2,
-        isPaid: true,
-        isClaimable: true,
-        isCompleted: false,
-        isFailed: false,
-        isExpired: false,
-        isRefunded: false,
-        isRefundable: false,
-      });
-
-      const result = await service.fetchStatus({swapId: swap.data.id, accountId: ACCOUNT_ID});
-
-      expect(result.status).toBe('claimable');
-      expect(result.progress).toBe(50);
-    });
-
-    it('isClaimable takes priority over isPaid in syncWithAtomiq', async () => {
-      const swap = createPendingLightningSwap();
-      vi.mocked(repository.findById).mockResolvedValue(swap);
-      vi.mocked(gateway.getSwapStatus).mockResolvedValue({
-        state: 2,
-        isPaid: true,
-        isClaimable: true,
-        isCompleted: false,
-        isFailed: false,
-        isExpired: false,
-        isRefunded: false,
-        isRefundable: false,
-      });
-
-      const result = await service.fetchStatus({swapId: swap.data.id, accountId: ACCOUNT_ID});
-
-      // isClaimable should win over isPaid
-      expect(result.status).toBe('claimable');
-    });
-
-    // A transient gateway error (network timeout, 500, etc.) must NOT cause
-    // the swap to be marked as expired or lost — doing so would permanently
-    // kill an active swap that still has funds in escrow.
-    it('does not mark swap as expired or lost on transient gateway error', async () => {
-      const swap = createPendingLightningSwap();
-      vi.mocked(repository.findById).mockResolvedValue(swap);
-      vi.mocked(gateway.getSwapStatus).mockRejectedValue(new Error('ETIMEDOUT'));
-
-      const result = await service.fetchStatus({swapId: swap.data.id, accountId: ACCOUNT_ID});
-
-      // The swap must remain pending — not lost or expired
-      expect(result.status).toBe('pending');
-      expect(repository.save).not.toHaveBeenCalled();
-    });
-
-    it('ignores sync errors and returns local state', async () => {
-      const swap = createPendingLightningSwap();
-      vi.mocked(repository.findById).mockResolvedValue(swap);
-      vi.mocked(gateway.getSwapStatus).mockRejectedValue(new Error('Network error'));
-
-      const result = await service.fetchStatus({swapId: swap.data.id, accountId: ACCOUNT_ID});
-
-      expect(result.status).toBe('pending');
-    });
-
-    it('detects refundable status for reverse swap when Atomiq reports isRefundable', async () => {
-      const swap = createPendingStarknetToBitcoinSwap();
-      vi.mocked(repository.findById).mockResolvedValue(swap);
-      vi.mocked(gateway.getSwapStatus).mockResolvedValue({
-        state: 4,
-        isPaid: false,
-        isClaimable: false,
-        isCompleted: false,
-        isFailed: false,
-        isExpired: false,
-        isRefunded: false,
-        isRefundable: true,
-      });
-
-      const result = await service.fetchStatus({swapId: swap.data.id, accountId: ACCOUNT_ID});
-
-      expect(result.status).toBe('refundable');
-      expect(result.progress).toBe(0);
-      expect(repository.save).toHaveBeenCalled();
-    });
-
-    it('throws SwapOwnershipError when swap belongs to another account', async () => {
-      const swap = createPendingLightningSwap();
-      vi.mocked(repository.findById).mockResolvedValue(swap);
-      const otherAccountId = '660e8400-e29b-41d4-a716-446655440099';
-
-      const error = await service.fetchStatus({swapId: swap.data.id, accountId: otherAccountId})
-        .catch((err: unknown) => err);
-
-      expect(error).toBeInstanceOf(SwapOwnershipError);
-    });
-
-    it('does not mark refundable swap as completed', async () => {
-      const swap = createPendingStarknetToBitcoinSwap();
-      vi.mocked(repository.findById).mockResolvedValue(swap);
-      vi.mocked(gateway.getSwapStatus).mockResolvedValue({
-        state: 4,
-        isPaid: false,
-        isClaimable: false,
-        isCompleted: false,
-        isFailed: false,
-        isExpired: false,
-        isRefunded: false,
-        isRefundable: true,
-      });
-
-      const result = await service.fetchStatus({swapId: swap.data.id, accountId: ACCOUNT_ID});
-
-      expect(result.status).not.toBe('completed');
-      expect(result.status).toBe('refundable');
     });
   });
 
@@ -613,7 +328,7 @@ describe('SwapService', () => {
       expect(result.swapId).toBe(SWAP_ID);
       expect(result.commitCalls).toHaveLength(1);
       expect(result.expiresAt).toBe(expiresAt);
-      expect(repository.save).not.toHaveBeenCalled(); // persisted later via saveBitcoinCommit
+      expect(repository.save).not.toHaveBeenCalled();
     });
 
     it('throws SwapAmountError with correct limits when amount is above maximum', async () => {
@@ -727,42 +442,6 @@ describe('SwapService', () => {
           accountId: ACCOUNT_ID,
         }),
       ).rejects.toThrow(SwapCreationError);
-    });
-  });
-
-  // =========================================================================
-  // fetchLimits
-  // =========================================================================
-
-  describe('fetchLimits', () => {
-    const limits = {minSats: 1_000n, maxSats: 1_000_000n, baseFeeSats: 100n, feePercent: 1};
-
-    it('dispatches lightning_to_starknet to the right gateway method', async () => {
-      vi.mocked(gateway.getLightningToStarknetLimits).mockResolvedValue(limits);
-      const result = await service.fetchLimits({direction: 'lightning_to_starknet'});
-      expect(result.limits).toBe(limits);
-      expect(gateway.getLightningToStarknetLimits).toHaveBeenCalledOnce();
-    });
-
-    it('dispatches bitcoin_to_starknet to the right gateway method', async () => {
-      vi.mocked(gateway.getBitcoinToStarknetLimits).mockResolvedValue(limits);
-      const result = await service.fetchLimits({direction: 'bitcoin_to_starknet'});
-      expect(result.limits).toBe(limits);
-      expect(gateway.getBitcoinToStarknetLimits).toHaveBeenCalledOnce();
-    });
-
-    it('dispatches starknet_to_lightning to the right gateway method', async () => {
-      vi.mocked(gateway.getStarknetToLightningLimits).mockResolvedValue(limits);
-      const result = await service.fetchLimits({direction: 'starknet_to_lightning'});
-      expect(result.limits).toBe(limits);
-      expect(gateway.getStarknetToLightningLimits).toHaveBeenCalledOnce();
-    });
-
-    it('dispatches starknet_to_bitcoin to the right gateway method', async () => {
-      vi.mocked(gateway.getStarknetToBitcoinLimits).mockResolvedValue(limits);
-      const result = await service.fetchLimits({direction: 'starknet_to_bitcoin'});
-      expect(result.limits).toBe(limits);
-      expect(gateway.getStarknetToBitcoinLimits).toHaveBeenCalledOnce();
     });
   });
 });

@@ -15,7 +15,7 @@ import {
   ForbiddenError,
   InsufficientBalanceError,
 } from '@bim/domain/shared';
-import type {SwapService} from '@bim/domain/swap';
+import type {SwapCoordinator} from '@bim/domain/swap';
 import {BitcoinAddress, Swap, SwapId} from '@bim/domain/swap';
 import {createLogger} from '@bim/lib/logger';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
@@ -60,7 +60,7 @@ describe('BitcoinReceiver', () => {
   let mockStarknetGateway: StarknetGateway;
   let mockDexGateway: SwapGateway;
   let mockSignatureProcessor: SignatureProcessor;
-  let mockSwapService: SwapService;
+  let mockSwapCoordinator: SwapCoordinator;
   let mockTransactionRepo: TransactionRepository;
   let mockNotificationGateway: NotificationGateway;
 
@@ -86,14 +86,14 @@ describe('BitcoinReceiver', () => {
       process: vi.fn().mockReturnValue(['0xsig']),
     };
 
-    mockSwapService = {
+    mockSwapCoordinator = {
       saveBitcoinCommit: vi.fn().mockResolvedValue(undefined),
       completeBitcoinToStarknet: vi.fn().mockResolvedValue({
         swap: createMockBitcoinReceiveSwap(),
         depositAddress: BTC_DEPOSIT_ADDRESS,
         bip21Uri: `bitcoin:${BTC_DEPOSIT_ADDRESS}?amount=0.002`,
       }),
-    } as unknown as SwapService;
+    } as unknown as SwapCoordinator;
 
     mockTransactionRepo = {
       saveDescription: vi.fn().mockResolvedValue(undefined),
@@ -104,7 +104,7 @@ describe('BitcoinReceiver', () => {
     } as unknown as NotificationGateway;
 
     service = new BitcoinReceiver({
-      swapService: mockSwapService,
+      swapCoordinator: mockSwapCoordinator,
       starknetGateway: mockStarknetGateway,
       dexGateway: mockDexGateway,
       signatureProcessor: mockSignatureProcessor,
@@ -284,10 +284,10 @@ describe('BitcoinReceiver', () => {
 
       expect(mockStarknetGateway.executeSignedCalls).toHaveBeenCalled();
       expect(mockStarknetGateway.waitForTransaction).toHaveBeenCalledWith('0x' + 'ab'.repeat(32));
-      expect(mockSwapService.saveBitcoinCommit).toHaveBeenCalledWith(
+      expect(mockSwapCoordinator.saveBitcoinCommit).toHaveBeenCalledWith(
         expect.objectContaining({swapId: 'swap-btc-1', commitTxHash: '0x' + 'ab'.repeat(32)}),
       );
-      expect(mockSwapService.completeBitcoinToStarknet).toHaveBeenCalledWith({swapId: 'swap-btc-1'});
+      expect(mockSwapCoordinator.completeBitcoinToStarknet).toHaveBeenCalledWith({swapId: 'swap-btc-1'});
       expect(mockTransactionRepo.saveDescription).toHaveBeenCalled();
       expect(result.depositAddress).toBe(BitcoinAddress.of(BTC_DEPOSIT_ADDRESS));
       expect(result.bip21Uri).toBe(`bitcoin:${BTC_DEPOSIT_ADDRESS}?amount=0.002`);
@@ -319,7 +319,7 @@ describe('BitcoinReceiver', () => {
     it('propagates errors from swapService.completeBitcoinToStarknet', async () => {
       const account = createAccount('deployed');
       seedBuild(account);
-      vi.mocked(mockSwapService.completeBitcoinToStarknet).mockRejectedValue(
+      vi.mocked(mockSwapCoordinator.completeBitcoinToStarknet).mockRejectedValue(
         new Error('atomiq unavailable'),
       );
 

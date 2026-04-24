@@ -20,7 +20,7 @@ import {
   SwapAmountError,
   SwapCreationError,
   SwapId,
-  type SwapService,
+  type SwapCoordinator,
 } from '@bim/domain/swap';
 import {createLogger} from '@bim/lib/logger';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
@@ -84,7 +84,7 @@ describe('PaymentBuilder', () => {
   let service: PaymentBuilder;
   let mockPaymentParser: PaymentParser;
   let mockPaymentPreparator: PaymentPreparator;
-  let mockSwapService: SwapService;
+  let mockSwapCoordinator: SwapCoordinator;
   let mockStarknetGateway: StarknetGateway;
   let paymentBuildCache: PaymentBuildCache;
 
@@ -99,10 +99,10 @@ describe('PaymentBuilder', () => {
       prepare: vi.fn(),
     } as unknown as PaymentPreparator;
 
-    mockSwapService = {
+    mockSwapCoordinator = {
       createStarknetToLightning: vi.fn(),
       createStarknetToBitcoin: vi.fn(),
-    } as unknown as SwapService;
+    } as unknown as SwapCoordinator;
 
     mockStarknetGateway = {
       buildCalls: vi.fn().mockResolvedValue({typedData: {mock: true}, messageHash: '0xabc'}),
@@ -114,7 +114,7 @@ describe('PaymentBuilder', () => {
       paymentParser: mockPaymentParser,
       paymentPreparator: mockPaymentPreparator,
       erc20CallFactory: new Erc20CallFactory(feeConfig),
-      swapService: mockSwapService,
+      swapCoordinator: mockSwapCoordinator,
       starknetGateway: mockStarknetGateway,
       paymentBuildCache,
       starknetConfig,
@@ -310,7 +310,7 @@ describe('PaymentBuilder', () => {
       };
       vi.mocked(mockPaymentParser.parse).mockReturnValue(parsed);
       vi.mocked(mockPaymentPreparator.prepare).mockResolvedValue({...parsed, fee: Amount.ofSatoshi(250n)});
-      vi.mocked(mockSwapService.createStarknetToLightning).mockResolvedValue({
+      vi.mocked(mockSwapCoordinator.createStarknetToLightning).mockResolvedValue({
         swap: createMockLightningPaySwap(),
         commitCalls: [
           {contractAddress: '0x0123456789abcdef', entrypoint: 'approve', calldata: ['0x1', '0x2']},
@@ -324,7 +324,7 @@ describe('PaymentBuilder', () => {
       const account = createAccount('deployed', undefined, SENDER_ADDRESS);
       const result = await service.build({paymentPayload: VALID_INVOICE, account});
 
-      expect(mockSwapService.createStarknetToLightning).toHaveBeenCalledWith({
+      expect(mockSwapCoordinator.createStarknetToLightning).toHaveBeenCalledWith({
         invoice: LightningInvoice.of(VALID_INVOICE),
         sourceAddress: SENDER_ADDRESS,
         accountId: account.id,
@@ -350,7 +350,7 @@ describe('PaymentBuilder', () => {
     });
 
     it('propagates SwapAmountError from swap service', async () => {
-      vi.mocked(mockSwapService.createStarknetToLightning).mockRejectedValue(
+      vi.mocked(mockSwapCoordinator.createStarknetToLightning).mockRejectedValue(
         new SwapAmountError(
           Amount.ofSatoshi(50_000n),
           Amount.ofSatoshi(100_000n),
@@ -365,7 +365,7 @@ describe('PaymentBuilder', () => {
     });
 
     it('propagates SwapCreationError from swap service', async () => {
-      vi.mocked(mockSwapService.createStarknetToLightning).mockRejectedValue(
+      vi.mocked(mockSwapCoordinator.createStarknetToLightning).mockRejectedValue(
         new SwapCreationError('Atomiq service unavailable'),
       );
       const account = createAccount('deployed', undefined, SENDER_ADDRESS);
@@ -391,7 +391,7 @@ describe('PaymentBuilder', () => {
       };
       vi.mocked(mockPaymentParser.parse).mockReturnValue(parsed);
       vi.mocked(mockPaymentPreparator.prepare).mockResolvedValue({...parsed, fee: Amount.ofSatoshi(600n)});
-      vi.mocked(mockSwapService.createStarknetToBitcoin).mockResolvedValue({
+      vi.mocked(mockSwapCoordinator.createStarknetToBitcoin).mockResolvedValue({
         swap: createMockBitcoinPaySwap(),
         commitCalls: [
           {contractAddress: '0x0123456789abcdef', entrypoint: 'approve', calldata: ['0x1', '0x2']},
@@ -405,7 +405,7 @@ describe('PaymentBuilder', () => {
       const account = createAccount('deployed', undefined, SENDER_ADDRESS);
       const result = await service.build({paymentPayload: `bitcoin:${BTC_BECH32}?amount=0.001`, account});
 
-      expect(mockSwapService.createStarknetToBitcoin).toHaveBeenCalledWith({
+      expect(mockSwapCoordinator.createStarknetToBitcoin).toHaveBeenCalledWith({
         amount: Amount.ofSatoshi(100_000n),
         destinationAddress: BitcoinAddress.of(BTC_BECH32),
         sourceAddress: SENDER_ADDRESS,
@@ -446,7 +446,7 @@ describe('PaymentBuilder', () => {
     });
 
     it('propagates SwapAmountError from swap service', async () => {
-      vi.mocked(mockSwapService.createStarknetToBitcoin).mockRejectedValue(
+      vi.mocked(mockSwapCoordinator.createStarknetToBitcoin).mockRejectedValue(
         new SwapAmountError(
           Amount.ofSatoshi(100_000n),
           Amount.ofSatoshi(500_000n),
@@ -461,7 +461,7 @@ describe('PaymentBuilder', () => {
     });
 
     it('propagates SwapCreationError from swap service', async () => {
-      vi.mocked(mockSwapService.createStarknetToBitcoin).mockRejectedValue(
+      vi.mocked(mockSwapCoordinator.createStarknetToBitcoin).mockRejectedValue(
         new SwapCreationError('Service unavailable'),
       );
       const account = createAccount('deployed', undefined, SENDER_ADDRESS);

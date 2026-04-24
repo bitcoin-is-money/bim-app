@@ -1,5 +1,5 @@
 import type {AtomiqGateway} from '@bim/domain/ports';
-import type {Swap, SwapId, SwapService} from '@bim/domain/swap';
+import type {FetchSwapStatusUseCase, Swap, SwapCoordinator, SwapId} from '@bim/domain/swap';
 import {serializeError} from '@bim/lib/error';
 
 import type {Logger} from 'pino';
@@ -40,10 +40,11 @@ const DEFAULT_CLAIM_COOLDOWN_MS = 2 * 60 * 1000;
  * with Atomiq, and auto-claims forward swaps when paid.
  *
  * This class is a pure orchestrator — it contains no business logic.
- * It calls SwapService methods to perform all operations.
+ * It delegates to SwapReader (fetchStatus) and SwapCoordinator
+ * (getActiveSwaps, recordClaimAttempt) for all operations.
  *
  * Designed to be extractable to a separate process in the future:
- * the same SwapService methods can be exposed as internal HTTP endpoints.
+ * the same methods can be exposed as internal HTTP endpoints.
  */
 export class SwapMonitor {
   private timer: ReturnType<typeof setInterval> | null = null;
@@ -56,7 +57,8 @@ export class SwapMonitor {
   private readonly log: Logger;
 
   constructor(
-    private readonly swapService: SwapService,
+    private readonly swapReader: FetchSwapStatusUseCase,
+    private readonly swapCoordinator: SwapCoordinator,
     private readonly atomiqGateway: AtomiqGateway,
     rootLogger: Logger,
     config: SwapMonitorConfig,
@@ -115,7 +117,7 @@ export class SwapMonitor {
     this.iterating = true;
     this.log.trace('Running iteration');
     try {
-      const activeSwaps = await this.swapService.getActiveSwaps();
+      const activeSwaps = await this.swapCoordinator.getActiveSwaps();
 
       if (activeSwaps.length === 0) {
         await this.handleIdleIteration();
@@ -170,7 +172,7 @@ export class SwapMonitor {
 
   private async processActiveSwap(swap: Swap): Promise<void> {
     try {
-      const {swap: syncedSwap, status} = await this.swapService.fetchStatus({
+      const {swap: syncedSwap, status} = await this.swapReader.fetchStatus({
         swapId: swap.data.id,
         accountId: swap.data.accountId,
       });
@@ -251,7 +253,7 @@ export class SwapMonitor {
       // Record the attempt so subsequent iterations respect the cooldown.
       // The status stays `claimable` — Atomiq will transition it to
       // `completed` on its own once the tx is mined.
-      await this.swapService.recordClaimAttempt(swapId, result.claimTxHash);
+      await this.swapCoordinator.recordClaimAttempt(swapId, result.claimTxHash);
     } catch (err) {
       this.log.error({
         swapId,

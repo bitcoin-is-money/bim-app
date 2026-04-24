@@ -3,7 +3,7 @@ import type {Logger} from 'pino';
 import type {Account} from '../../account';
 import type {StarknetGateway} from '../../ports';
 import {AccountNotDeployedError, type StarknetAddress, type StarknetConfig} from '../../shared';
-import type {SwapService} from '../../swap';
+import type {SwapCoordinator} from '../../swap';
 import {InvalidPaymentAmountError, SameAddressPaymentError} from '../errors';
 import type {PreparedCalls, PreparedPaymentData} from '../pay.types';
 import type {PaymentBuildCache} from '../payment-build.cache';
@@ -21,7 +21,7 @@ export interface PaymentBuilderDeps {
   paymentParser: PaymentParser;
   paymentPreparator: PaymentPreparator;
   erc20CallFactory: Erc20CallFactory;
-  swapService: SwapService;
+  swapCoordinator: SwapCoordinator;
   starknetGateway: StarknetGateway;
   paymentBuildCache: PaymentBuildCache;
   starknetConfig: StarknetConfig;
@@ -144,7 +144,7 @@ export class PaymentBuilder implements BuildPaymentUseCase {
     accountId: string,
     description: string,
   ): Promise<PreparedCalls> {
-    const swapResult = await this.deps.swapService.createStarknetToLightning({
+    const swapResult = await this.deps.swapCoordinator.createStarknetToLightning({
       invoice: parsed.invoice,
       sourceAddress: senderAddress,
       accountId,
@@ -178,7 +178,7 @@ export class PaymentBuilder implements BuildPaymentUseCase {
       throw new InvalidPaymentAmountError('bitcoin', parsed.amount.getSat());
     }
 
-    const swapResult = await this.deps.swapService.createStarknetToBitcoin({
+    const swapResult = await this.deps.swapCoordinator.createStarknetToBitcoin({
       amount: parsed.amount,
       destinationAddress: parsed.address,
       sourceAddress: senderAddress,

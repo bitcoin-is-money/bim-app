@@ -2,7 +2,7 @@ import {StarknetAddress} from '@bim/domain/account';
 import {type BitcoinReceiver, InvalidPaymentAmountError, PaymentReceiver} from '@bim/domain/payment';
 import type {StarknetCall} from '@bim/domain/ports';
 import {Amount} from '@bim/domain/shared';
-import {LightningInvoice, Swap, SwapAmountError, SwapCreationError, SwapId, type SwapService} from '@bim/domain/swap';
+import {LightningInvoice, Swap, SwapAmountError, SwapCreationError, SwapId, type SwapCoordinator} from '@bim/domain/swap';
 import {createLogger} from '@bim/lib/logger';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
@@ -35,11 +35,11 @@ function createMockLightningReceiveSwap(): Swap {
 
 describe('PaymentReceiver', () => {
   let service: PaymentReceiver;
-  let mockSwapService: SwapService;
+  let mockSwapCoordinator: SwapCoordinator;
   let mockBitcoinReceiver: BitcoinReceiver;
 
   beforeEach(() => {
-    mockSwapService = {
+    mockSwapCoordinator = {
       createLightningToStarknet: vi.fn().mockResolvedValue({
         swap: createMockLightningReceiveSwap(),
         invoice: VALID_INVOICE,
@@ -56,12 +56,12 @@ describe('PaymentReceiver', () => {
       fetchStatus: vi.fn(),
       fetchLimits: vi.fn(),
       claim: vi.fn(),
-    } as unknown as SwapService;
+    } as unknown as SwapCoordinator;
 
     mockBitcoinReceiver = {} as unknown as BitcoinReceiver;
 
     service = new PaymentReceiver({
-      swapService: mockSwapService,
+      swapCoordinator: mockSwapCoordinator,
       bitcoinReceiver: mockBitcoinReceiver,
       starknetConfig: {
         network: 'mainnet',
@@ -174,7 +174,7 @@ describe('PaymentReceiver', () => {
         useUriPrefix: true,
       });
 
-      expect(mockSwapService.createLightningToStarknet).toHaveBeenCalledWith({
+      expect(mockSwapCoordinator.createLightningToStarknet).toHaveBeenCalledWith({
         amount: Amount.ofSatoshi(50_000n),
         destinationAddress: DESTINATION_ADDRESS,
         accountId: ACCOUNT_ID,
@@ -201,7 +201,7 @@ describe('PaymentReceiver', () => {
     });
 
     it('propagates SwapAmountError from swap service', async () => {
-      vi.mocked(mockSwapService.createLightningToStarknet).mockRejectedValue(
+      vi.mocked(mockSwapCoordinator.createLightningToStarknet).mockRejectedValue(
         new SwapAmountError(
           Amount.ofSatoshi(50_000n),
           Amount.ofSatoshi(100_000n),
@@ -222,7 +222,7 @@ describe('PaymentReceiver', () => {
     });
 
     it('propagates SwapCreationError from swap service', async () => {
-      vi.mocked(mockSwapService.createLightningToStarknet).mockRejectedValue(
+      vi.mocked(mockSwapCoordinator.createLightningToStarknet).mockRejectedValue(
         new SwapCreationError('Invoice generation failed'),
       );
 
@@ -250,7 +250,7 @@ describe('PaymentReceiver', () => {
         useUriPrefix: true,
       });
 
-      expect(mockSwapService.prepareBitcoinToStarknet).toHaveBeenCalledWith({
+      expect(mockSwapCoordinator.prepareBitcoinToStarknet).toHaveBeenCalledWith({
         amount: Amount.ofSatoshi(200_000n),
         destinationAddress: DESTINATION_ADDRESS,
         accountId: ACCOUNT_ID,
@@ -279,7 +279,7 @@ describe('PaymentReceiver', () => {
     });
 
     it('propagates SwapCreationError from swap service', async () => {
-      vi.mocked(mockSwapService.prepareBitcoinToStarknet).mockRejectedValue(
+      vi.mocked(mockSwapCoordinator.prepareBitcoinToStarknet).mockRejectedValue(
         new SwapCreationError('Swap preparation failed'),
       );
 

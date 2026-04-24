@@ -6,7 +6,7 @@ import {
   PaymentPreparator,
 } from '@bim/domain/payment';
 import {Amount} from '@bim/domain/shared';
-import {BitcoinAddress, LightningInvoice, type SwapService} from '@bim/domain/swap';
+import {BitcoinAddress, LightningInvoice, type SwapReader} from '@bim/domain/swap';
 import {createLogger} from '@bim/lib/logger';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
@@ -27,7 +27,7 @@ const feeConfig = FeeConfig.create({
 describe('PaymentPreparator', () => {
   let service: PaymentPreparator;
   let mockPaymentParser: PaymentParser;
-  let mockSwapService: SwapService;
+  let mockSwapReader: SwapReader;
 
   beforeEach(() => {
     vi.resetAllMocks();
@@ -36,15 +36,15 @@ describe('PaymentPreparator', () => {
       parse: vi.fn(),
     } as unknown as PaymentParser;
 
-    mockSwapService = {
+    mockSwapReader = {
       fetchLimits: vi.fn().mockResolvedValue({
         limits: {minSats: 1n, maxSats: BigInt(Number.MAX_SAFE_INTEGER), feePercent: 0.3},
       }),
-    } as unknown as SwapService;
+    } as unknown as SwapReader;
 
     service = new PaymentPreparator({
       paymentParser: mockPaymentParser,
-      swapService: mockSwapService,
+      swapReader: mockSwapReader,
       feeConfig,
       logger,
     });
@@ -84,7 +84,7 @@ describe('PaymentPreparator', () => {
     const bimFee = FeeCalculator.calculateFee(amount, feeConfig.percentageFor('lightning'));
     expect(result.network).toBe('lightning');
     expect(result.fee.getSat()).toBe(lpFee.getSat() + bimFee.getSat());
-    expect(mockSwapService.fetchLimits).toHaveBeenCalledWith({direction: 'starknet_to_lightning'});
+    expect(mockSwapReader.fetchLimits).toHaveBeenCalledWith({direction: 'starknet_to_lightning'});
   });
 
   it('estimates LP fee + BIM fee for bitcoin payments', async () => {
@@ -103,7 +103,7 @@ describe('PaymentPreparator', () => {
     const bimFee = FeeCalculator.calculateFee(amount, feeConfig.percentageFor('bitcoin'));
     expect(result.network).toBe('bitcoin');
     expect(result.fee.getSat()).toBe(lpFee.getSat() + bimFee.getSat());
-    expect(mockSwapService.fetchLimits).toHaveBeenCalledWith({direction: 'starknet_to_bitcoin'});
+    expect(mockSwapReader.fetchLimits).toHaveBeenCalledWith({direction: 'starknet_to_bitcoin'});
   });
 
   it('accepts already-parsed data and skips paymentParser', async () => {

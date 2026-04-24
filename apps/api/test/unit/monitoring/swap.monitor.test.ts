@@ -1,7 +1,13 @@
 import {StarknetAddress} from '@bim/domain/account';
 import type {AtomiqGateway} from '@bim/domain/ports';
 import {Amount} from '@bim/domain/shared';
-import {type LightningInvoice, Swap, SwapId, type SwapService} from '@bim/domain/swap';
+import {
+  type LightningInvoice,
+  Swap,
+  type SwapCoordinator,
+  SwapId,
+  type SwapReader,
+} from '@bim/domain/swap';
 import {createLogger} from '@bim/lib/logger';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {SwapMonitor} from '../../../src/monitoring/swap.monitor';
@@ -21,17 +27,24 @@ function createLightningSwap(id: string): Swap {
   });
 }
 
-function createMockSwapService(): SwapService {
+function createMockSwapReader(): SwapReader {
+  return {
+    fetchStatus: vi.fn(),
+    fetchLimits: vi.fn(),
+  } as unknown as SwapReader;
+}
+
+function createMockSwapCoordinator(): SwapCoordinator {
   return {
     getActiveSwaps: vi.fn().mockResolvedValue([]),
-    fetchStatus: vi.fn(),
     recordClaimAttempt: vi.fn().mockResolvedValue(undefined),
     createLightningToStarknet: vi.fn(),
-    createBitcoinToStarknet: vi.fn(),
+    prepareBitcoinToStarknet: vi.fn(),
+    saveBitcoinCommit: vi.fn(),
+    completeBitcoinToStarknet: vi.fn(),
     createStarknetToLightning: vi.fn(),
     createStarknetToBitcoin: vi.fn(),
-    fetchLimits: vi.fn(),
-  } as unknown as SwapService;
+  } as unknown as SwapCoordinator;
 }
 
 function createMockAtomiqGateway(): AtomiqGateway {
@@ -48,20 +61,22 @@ function createMockAtomiqGateway(): AtomiqGateway {
 
 describe('SwapMonitor', () => {
   let monitor: SwapMonitor;
-  let swapService: SwapService;
+  let swapReader: SwapReader;
+  let swapCoordinator: SwapCoordinator;
   let atomiqGateway: AtomiqGateway;
 
   beforeEach(() => {
-    swapService = createMockSwapService();
+    swapReader = createMockSwapReader();
+    swapCoordinator = createMockSwapCoordinator();
     atomiqGateway = createMockAtomiqGateway();
-    monitor = new SwapMonitor(swapService, atomiqGateway, createLogger(), {keepaliveUrl: 'http://localhost:8080', pollInterval: 100});
+    monitor = new SwapMonitor(swapReader, swapCoordinator, atomiqGateway, createLogger(), {keepaliveUrl: 'http://localhost:8080', pollInterval: 100});
   });
 
   describe('runIteration', () => {
     it('fetches active swaps and syncs their status', async () => {
       const swap = createLightningSwap('s1');
-      vi.mocked(swapService.getActiveSwaps).mockResolvedValue([swap]);
-      vi.mocked(swapService.fetchStatus).mockResolvedValue({
+      vi.mocked(swapCoordinator.getActiveSwaps).mockResolvedValue([swap]);
+      vi.mocked(swapReader.fetchStatus).mockResolvedValue({
         swap,
         status: 'pending',
         progress: 0,
@@ -69,42 +84,41 @@ describe('SwapMonitor', () => {
 
       await monitor.runIteration();
 
-      expect(swapService.getActiveSwaps).toHaveBeenCalledOnce();
-      expect(swapService.fetchStatus).toHaveBeenCalledWith({swapId: 's1', accountId: 'account-001'});
+      expect(swapCoordinator.getActiveSwaps).toHaveBeenCalledOnce();
+      expect(swapReader.fetchStatus).toHaveBeenCalledWith({swapId: 's1', accountId: 'account-001'});
     });
 
     it('continues processing other swaps when one fails', async () => {
       const swap1 = createLightningSwap('s1');
       const swap2 = createLightningSwap('s2');
-      vi.mocked(swapService.getActiveSwaps).mockResolvedValue([swap1, swap2]);
-      vi.mocked(swapService.fetchStatus)
+      vi.mocked(swapCoordinator.getActiveSwaps).mockResolvedValue([swap1, swap2]);
+      vi.mocked(swapReader.fetchStatus)
         .mockRejectedValueOnce(new Error('SDK error'))
         .mockResolvedValueOnce({swap: swap2, status: 'pending', progress: 0});
 
       await monitor.runIteration();
 
-      expect(swapService.fetchStatus).toHaveBeenCalledTimes(2);
+      expect(swapReader.fetchStatus).toHaveBeenCalledTimes(2);
     });
   });
 
   describe('start / stop', () => {
     it('starts and stops without errors', async () => {
-      vi.mocked(swapService.getActiveSwaps).mockResolvedValue([]);
+      vi.mocked(swapCoordinator.getActiveSwaps).mockResolvedValue([]);
 
       monitor.start();
-      // Let at least one tick happen
       await new Promise(resolve => setTimeout(resolve, 150));
       await monitor.stop();
 
-      expect(swapService.getActiveSwaps).toHaveBeenCalled();
+      expect(swapCoordinator.getActiveSwaps).toHaveBeenCalled();
     });
 
     it('does not start twice', async () => {
-      vi.mocked(swapService.getActiveSwaps).mockResolvedValue([]);
+      vi.mocked(swapCoordinator.getActiveSwaps).mockResolvedValue([]);
 
       expect(() => {
         monitor.start();
-        monitor.start(); // second call is a no-op
+        monitor.start();
       }).not.toThrow();
 
       await monitor.stop();
@@ -113,63 +127,55 @@ describe('SwapMonitor', () => {
 
   describe('auto-stop', () => {
     it('stops after maxIdleIterations with no active swaps', async () => {
-      const autoStopMonitor = new SwapMonitor(swapService, atomiqGateway, createLogger(), {
+      const autoStopMonitor = new SwapMonitor(swapReader, swapCoordinator, atomiqGateway, createLogger(), {
         keepaliveUrl: 'http://localhost:8080',
         pollInterval: 100,
         maxIdleIterations: 3,
       });
-      vi.mocked(swapService.getActiveSwaps).mockResolvedValue([]);
+      vi.mocked(swapCoordinator.getActiveSwaps).mockResolvedValue([]);
 
       autoStopMonitor.start();
-      // Wait for enough iterations (3 × 100ms + margin)
       await new Promise(resolve => setTimeout(resolve, 500));
 
-      // Monitor should have auto-stopped — start again should work (proves it stopped)
-      vi.mocked(swapService.getActiveSwaps).mockClear();
+      vi.mocked(swapCoordinator.getActiveSwaps).mockClear();
       autoStopMonitor.start();
       await new Promise(resolve => setTimeout(resolve, 150));
       await autoStopMonitor.stop();
 
-      expect(swapService.getActiveSwaps).toHaveBeenCalled();
+      expect(swapCoordinator.getActiveSwaps).toHaveBeenCalled();
     });
 
     it('resets idle counter when active swaps are found', async () => {
-      const autoStopMonitor = new SwapMonitor(swapService, atomiqGateway, createLogger(), {
+      const autoStopMonitor = new SwapMonitor(swapReader, swapCoordinator, atomiqGateway, createLogger(), {
         keepaliveUrl: 'http://localhost:8080',
         pollInterval: 100,
         maxIdleIterations: 3,
       });
       const swap = createLightningSwap('s1');
 
-      // First 2 iterations: no swaps (idle=1, idle=2)
-      vi.mocked(swapService.getActiveSwaps)
+      vi.mocked(swapCoordinator.getActiveSwaps)
         .mockResolvedValueOnce([])
         .mockResolvedValueOnce([])
-        // 3rd iteration: swap found → resets idle counter
         .mockResolvedValueOnce([swap])
-        // Next 2 iterations: no swaps again (idle=1, idle=2) — should NOT stop yet
         .mockResolvedValueOnce([])
         .mockResolvedValueOnce([])
-        // 6th iteration: idle=3 → auto-stop
         .mockResolvedValue([]);
 
-      vi.mocked(swapService.fetchStatus).mockResolvedValue({swap, status: 'pending', progress: 0});
+      vi.mocked(swapReader.fetchStatus).mockResolvedValue({swap, status: 'pending', progress: 0});
 
       autoStopMonitor.start();
-      // Wait for all iterations
       await new Promise(resolve => setTimeout(resolve, 800));
       await autoStopMonitor.stop();
 
-      // Should have been called at least 6 times (2 idle + 1 active + 3 idle until stop)
-      expect(swapService.getActiveSwaps).toHaveBeenCalledTimes(6);
+      expect(swapCoordinator.getActiveSwaps).toHaveBeenCalledTimes(6);
     });
   });
 
   describe('auto-claim', () => {
     it('claims forward swap when status is claimable', async () => {
       const swap = createLightningSwap('s1');
-      vi.mocked(swapService.getActiveSwaps).mockResolvedValue([swap]);
-      vi.mocked(swapService.fetchStatus).mockResolvedValue({
+      vi.mocked(swapCoordinator.getActiveSwaps).mockResolvedValue([swap]);
+      vi.mocked(swapReader.fetchStatus).mockResolvedValue({
         swap,
         status: 'claimable',
         progress: 50,
@@ -178,15 +184,14 @@ describe('SwapMonitor', () => {
       await monitor.runIteration();
 
       expect(atomiqGateway.claimForwardSwap).toHaveBeenCalledWith('s1');
-      expect(swapService.recordClaimAttempt).toHaveBeenCalledWith('s1', '0xclaim_tx');
+      expect(swapCoordinator.recordClaimAttempt).toHaveBeenCalledWith('s1', '0xclaim_tx');
     });
 
     it('does NOT re-claim a swap that has a recent claim attempt within cooldown', async () => {
       const swap = createLightningSwap('s1');
-      // Simulate a claim tx submitted a few seconds ago
       swap.recordClaimAttempt('0xprevious_claim');
-      vi.mocked(swapService.getActiveSwaps).mockResolvedValue([swap]);
-      vi.mocked(swapService.fetchStatus).mockResolvedValue({
+      vi.mocked(swapCoordinator.getActiveSwaps).mockResolvedValue([swap]);
+      vi.mocked(swapReader.fetchStatus).mockResolvedValue({
         swap,
         status: 'claimable',
         progress: 50,
@@ -195,13 +200,13 @@ describe('SwapMonitor', () => {
       await monitor.runIteration();
 
       expect(atomiqGateway.claimForwardSwap).not.toHaveBeenCalled();
-      expect(swapService.recordClaimAttempt).not.toHaveBeenCalled();
+      expect(swapCoordinator.recordClaimAttempt).not.toHaveBeenCalled();
     });
 
     it('does NOT claim forward swap when status is paid (not yet claimable)', async () => {
       const swap = createLightningSwap('s1');
-      vi.mocked(swapService.getActiveSwaps).mockResolvedValue([swap]);
-      vi.mocked(swapService.fetchStatus).mockResolvedValue({
+      vi.mocked(swapCoordinator.getActiveSwaps).mockResolvedValue([swap]);
+      vi.mocked(swapReader.fetchStatus).mockResolvedValue({
         swap,
         status: 'paid',
         progress: 33,
@@ -223,8 +228,8 @@ describe('SwapMonitor', () => {
         description: 'Sent',
         accountId: 'account-001',
       });
-      vi.mocked(swapService.getActiveSwaps).mockResolvedValue([reverseSwap]);
-      vi.mocked(swapService.fetchStatus).mockResolvedValue({
+      vi.mocked(swapCoordinator.getActiveSwaps).mockResolvedValue([reverseSwap]);
+      vi.mocked(swapReader.fetchStatus).mockResolvedValue({
         swap: reverseSwap,
         status: 'claimable',
         progress: 50,
@@ -238,20 +243,20 @@ describe('SwapMonitor', () => {
 
   describe('ensureRunning', () => {
     it('starts the monitor if not running', async () => {
-      vi.mocked(swapService.getActiveSwaps).mockResolvedValue([]);
+      vi.mocked(swapCoordinator.getActiveSwaps).mockResolvedValue([]);
 
       monitor.ensureRunning();
       await new Promise(resolve => setTimeout(resolve, 150));
       await monitor.stop();
 
-      expect(swapService.getActiveSwaps).toHaveBeenCalled();
+      expect(swapCoordinator.getActiveSwaps).toHaveBeenCalled();
     });
 
     it('is a no-op if already running', async () => {
-      vi.mocked(swapService.getActiveSwaps).mockResolvedValue([]);
+      vi.mocked(swapCoordinator.getActiveSwaps).mockResolvedValue([]);
 
       monitor.start();
-      expect(() => { monitor.ensureRunning(); }).not.toThrow(); // should not throw or restart
+      expect(() => { monitor.ensureRunning(); }).not.toThrow();
 
       await new Promise(resolve => setTimeout(resolve, 150));
       await monitor.stop();

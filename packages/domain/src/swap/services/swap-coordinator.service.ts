@@ -1,28 +1,14 @@
 import type {Logger} from 'pino';
-import {AccountId} from '../account';
-import type {AtomiqGateway, StarknetCall, SwapRepository, TransactionRepository} from '../ports';
-import {Amount, BitcoinAddress, type BitcoinNetwork, StarknetAddress} from '../shared';
-import {TransactionHash} from '../user/types';
-import {SwapAmountError, SwapCreationError, SwapNotFoundError, SwapOwnershipError} from './errors';
-import {LightningInvoice} from './lightning-invoice';
-import {Swap} from './swap';
-import {SwapId, type SwapLimits} from './types';
-import type {
-  FetchSwapLimitsInput,
-  FetchSwapLimitsOutput,
-  FetchSwapLimitsUseCase
-} from './use-case/fetch-swap-limits.use-case';
-import type {
-  FetchSwapStatusInput,
-  FetchSwapStatusOutput,
-  FetchSwapStatusUseCase
-} from './use-case/fetch-swap-status.use-case';
+import {AccountId} from '../../account';
+import type {AtomiqGateway, StarknetCall, SwapRepository, TransactionRepository} from '../../ports';
+import {Amount, BitcoinAddress, type BitcoinNetwork, StarknetAddress} from '../../shared';
+import {TransactionHash} from '../../user/types';
+import {SwapAmountError, SwapCreationError, SwapNotFoundError} from '../errors';
+import {LightningInvoice} from '../lightning-invoice';
+import {Swap} from '../swap';
+import {SwapId, type SwapLimits} from '../types';
 
-// =============================================================================
-// Dependencies
-// =============================================================================
-
-export interface SwapServiceDeps {
+export interface SwapCoordinatorDeps {
   swapRepository: SwapRepository;
   atomiqGateway: AtomiqGateway;
   transactionRepository: TransactionRepository;
@@ -31,7 +17,7 @@ export interface SwapServiceDeps {
 }
 
 // =============================================================================
-// Input/Output Types - Lightning → Starknet
+// Input/Output Types — Lightning → Starknet
 // =============================================================================
 
 export interface CreateLightningToStarknetInput {
@@ -47,7 +33,7 @@ export interface CreateLightningToStarknetOutput {
 }
 
 // =============================================================================
-// Input/Output Types - Bitcoin → Starknet
+// Input/Output Types — Bitcoin → Starknet
 // =============================================================================
 
 export interface PrepareBitcoinToStarknetInput {
@@ -85,7 +71,7 @@ export interface CompleteBitcoinToStarknetOutput {
 }
 
 // =============================================================================
-// Input/Output Types - Starknet → Lightning
+// Input/Output Types — Starknet → Lightning
 // =============================================================================
 
 export interface CreateStarknetToLightningInput {
@@ -102,7 +88,7 @@ export interface CreateStarknetToLightningOutput {
 }
 
 // =============================================================================
-// Input/Output Types - Starknet → Bitcoin
+// Input/Output Types — Starknet → Bitcoin
 // =============================================================================
 
 export interface CreateStarknetToBitcoinInput {
@@ -120,26 +106,23 @@ export interface CreateStarknetToBitcoinOutput {
 }
 
 // =============================================================================
-// Input/Output Types - Status & Limits & Claim
-// =============================================================================
-
-// Re-export UseCase types for backward compatibility
-export type {FetchSwapStatusInput, FetchSwapStatusOutput} from './use-case/fetch-swap-status.use-case';
-export type {FetchSwapLimitsInput, FetchSwapLimitsOutput} from './use-case/fetch-swap-limits.use-case';
-
-// =============================================================================
-// Service Class
+// Service
 // =============================================================================
 
 /**
- * Service for cross-chain swap operations.
- * Supports Lightning ↔ Starknet and Bitcoin ↔ Starknet swaps.
+ * Internal domain service that orchestrates the full swap lifecycle with
+ * Atomiq: creation (both directions for Lightning and Bitcoin), Bitcoin
+ * commit + complete (2-phase receive), claim tracking, and active-swap
+ * listing for the SwapMonitor.
+ *
+ * No primary-port (UseCase) interface — consumed by payment services
+ * (PaymentBuilder, PaymentReceiver, BitcoinReceiver) and the SwapMonitor.
  */
-export class SwapService implements FetchSwapLimitsUseCase, FetchSwapStatusUseCase {
+export class SwapCoordinator {
   private readonly log: Logger;
 
-  constructor(private readonly deps: SwapServiceDeps) {
-    this.log = deps.logger.child({name: 'swap.service.ts'});
+  constructor(private readonly deps: SwapCoordinatorDeps) {
+    this.log = deps.logger.child({name: 'swap-coordinator.service.ts'});
   }
 
   // ===========================================================================
@@ -160,11 +143,9 @@ export class SwapService implements FetchSwapLimitsUseCase, FetchSwapStatusUseCa
 
     const destinationAddress = StarknetAddress.of(input.destinationAddress);
 
-    // Validate amount against limits
     const limits = await this.deps.atomiqGateway.getLightningToStarknetLimits();
     this.validateAmountAgainstLimits(input.amount, limits);
 
-    // Create swap via Atomiq (port uses bigint)
     const atomiqSwap = await this.deps.atomiqGateway.createLightningToStarknetSwap({
       amountSats: input.amount.getSat(),
       destinationAddress,
@@ -189,7 +170,7 @@ export class SwapService implements FetchSwapLimitsUseCase, FetchSwapStatusUseCa
 
     this.log.info({
       swapId: atomiqSwap.swapId,
-      amountSats: input.amount.toSatString()
+      amountSats: input.amount.toSatString(),
     }, 'Lightning-to-Starknet swap created');
     return {swap, invoice: atomiqSwap.invoice};
   }
@@ -208,11 +189,9 @@ export class SwapService implements FetchSwapLimitsUseCase, FetchSwapStatusUseCa
     this.log.debug({input}, 'Preparing Bitcoin-to-Starknet swap');
     const destinationAddress = StarknetAddress.of(input.destinationAddress);
 
-    // Validate amount against limits
     const limits = await this.deps.atomiqGateway.getBitcoinToStarknetLimits();
     this.validateAmountAgainstLimits(input.amount, limits);
 
-    // Create swap quote + get unsigned commit transactions
     const quote = await this.deps.atomiqGateway.prepareBitcoinToStarknetSwap({
       amountSats: input.amount.getSat(),
       destinationAddress,
@@ -278,7 +257,6 @@ export class SwapService implements FetchSwapLimitsUseCase, FetchSwapStatusUseCa
       throw new SwapNotFoundError(swapId);
     }
 
-    // Wait for SDK to detect the on-chain commit and get the deposit address
     const result = await this.deps.atomiqGateway.completeBitcoinSwapCommit(input.swapId);
 
     if (!result.depositAddress) {
@@ -307,7 +285,6 @@ export class SwapService implements FetchSwapLimitsUseCase, FetchSwapStatusUseCa
 
   /**
    * Creates a Starknet → Lightning swap.
-   * User deposits tokens on Starknet, receives payment on Lightning.
    *
    * @throws SwapAmountError if invoice amount is outside limits
    * @throws SwapCreationError if deposit address generation fails
@@ -321,7 +298,6 @@ export class SwapService implements FetchSwapLimitsUseCase, FetchSwapStatusUseCa
 
     const limits = await this.deps.atomiqGateway.getStarknetToLightningLimits();
 
-    // Create swap (invoice determines amount)
     const atomiqSwap = await this.deps.atomiqGateway.createStarknetToLightningSwap({
       invoice,
       sourceAddress,
@@ -332,7 +308,6 @@ export class SwapService implements FetchSwapLimitsUseCase, FetchSwapStatusUseCa
       throw new SwapCreationError('Failed to generate escrow commit calls');
     }
 
-    // Convert from port bigint to Amount, then validate
     const swapAmount = Amount.ofSatoshi(atomiqSwap.amountSats);
     this.validateAmountAgainstLimits(swapAmount, limits);
 
@@ -350,10 +325,10 @@ export class SwapService implements FetchSwapLimitsUseCase, FetchSwapStatusUseCa
     await this.deps.swapRepository.save(swap);
 
     const logMsg = 'Starknet-to-Lightning swap created';
-    if (this.log.isLevelEnabled("debug")) {
+    if (this.log.isLevelEnabled('debug')) {
       this.log.debug({
         swapId: atomiqSwap.swapId,
-        amountSats: swapAmount.toSatString()
+        amountSats: swapAmount.toSatString(),
       }, logMsg);
     } else {
       this.log.info(logMsg);
@@ -368,7 +343,6 @@ export class SwapService implements FetchSwapLimitsUseCase, FetchSwapStatusUseCa
 
   /**
    * Creates a Starknet → Bitcoin swap.
-   * User deposits tokens on Starknet, receives BTC on-chain.
    *
    * @throws SwapAmountError if amount is outside limits
    * @throws SwapCreationError if deposit address generation fails
@@ -380,11 +354,9 @@ export class SwapService implements FetchSwapLimitsUseCase, FetchSwapStatusUseCa
     const destinationAddress = BitcoinAddress.of(input.destinationAddress, this.deps.bitcoinNetwork);
     const sourceAddress = StarknetAddress.of(input.sourceAddress);
 
-    // Validate amount against limits
     const limits = await this.deps.atomiqGateway.getStarknetToBitcoinLimits();
     this.validateAmountAgainstLimits(input.amount, limits);
 
-    // Create swap via Atomiq (port uses bigint)
     const atomiqSwap = await this.deps.atomiqGateway.createStarknetToBitcoinSwap({
       amountSats: input.amount.getSat(),
       destinationAddress,
@@ -413,76 +385,13 @@ export class SwapService implements FetchSwapLimitsUseCase, FetchSwapStatusUseCa
 
     this.log.info({
       swapId: atomiqSwap.swapId,
-      amountSats: swapAmount.toSatString()
+      amountSats: swapAmount.toSatString(),
     }, 'Starknet-to-Bitcoin swap created');
     return {
       swap,
       commitCalls: atomiqSwap.commitCalls,
       amount: swapAmount,
     };
-  }
-
-  // ===========================================================================
-  // Status & Limits
-  // ===========================================================================
-
-  /**
-   * Fetches the current status of a swap.
-   * Syncs with Atomiq if the swap is not in a terminal state.
-   *
-   * @throws SwapNotFoundError if swap doesn't exist
-   */
-  async fetchStatus(input: FetchSwapStatusInput): Promise<FetchSwapStatusOutput> {
-    const swapId = SwapId.of(input.swapId);
-    const accountId = AccountId.of(input.accountId);
-
-    const swap = await this.deps.swapRepository.findById(swapId);
-    if (!swap) {
-      throw new SwapNotFoundError(swapId);
-    }
-
-    if (swap.data.accountId !== accountId) {
-      throw new SwapOwnershipError(swapId);
-    }
-
-    // Atomiq is the source of truth — always sync non-terminal swaps.
-    // Double-claim is prevented orthogonally by SwapMonitor via
-    // recordClaimAttempt / hasRecentClaimAttempt, not by skipping sync.
-    if (!swap.isTerminal()) {
-      await this.syncWithAtomiq(swap);
-    }
-
-    const txHash = swap.getTxHash();
-    return {
-      swap,
-      status: swap.getStatus(),
-      progress: swap.getProgress(),
-      ...(txHash !== undefined && {txHash}),
-    };
-  }
-
-  /**
-   * Fetches min/max amounts and fees for a given swap direction.
-   */
-  async fetchLimits(input: FetchSwapLimitsInput): Promise<FetchSwapLimitsOutput> {
-    let limits: SwapLimits;
-
-    switch (input.direction) {
-      case 'lightning_to_starknet':
-        limits = await this.deps.atomiqGateway.getLightningToStarknetLimits();
-        break;
-      case 'bitcoin_to_starknet':
-        limits = await this.deps.atomiqGateway.getBitcoinToStarknetLimits();
-        break;
-      case 'starknet_to_lightning':
-        limits = await this.deps.atomiqGateway.getStarknetToLightningLimits();
-        break;
-      case 'starknet_to_bitcoin':
-        limits = await this.deps.atomiqGateway.getStarknetToBitcoinLimits();
-        break;
-    }
-
-    return {limits};
   }
 
   // ===========================================================================
@@ -522,10 +431,6 @@ export class SwapService implements FetchSwapLimitsUseCase, FetchSwapStatusUseCa
   // Private Helpers
   // ===========================================================================
 
-  /**
-   * Persists the swap description to the transaction descriptions table
-   * when the swap has a transaction hash.
-   */
   private async persistDescription(swap: Swap): Promise<void> {
     const txHash = swap.getTxHash();
     if (txHash) {
@@ -541,10 +446,6 @@ export class SwapService implements FetchSwapLimitsUseCase, FetchSwapStatusUseCa
     }
   }
 
-  /**
-   * Validates that an amount is within the gateway limits.
-   * Converts limits from bigint (port boundary) to Amount for comparison.
-   */
   private validateAmountAgainstLimits(amount: Amount, limits: SwapLimits): void {
     const min = Amount.ofSatoshi(limits.minSats);
     const max = Amount.ofSatoshi(limits.maxSats);
@@ -552,56 +453,4 @@ export class SwapService implements FetchSwapLimitsUseCase, FetchSwapStatusUseCa
       throw new SwapAmountError(amount, min, max);
     }
   }
-
-  /**
-   * Syncs local swap state with Atomiq.
-   * Atomiq is the source of truth — we transcribe its state without
-   * checking local state coherence. Priority: completed > paid > failed > expired.
-   * Protection against regressing a terminal swap is in fetchStatus() (isTerminal guard).
-   */
-  private async syncWithAtomiq(swap: Swap): Promise<void> {
-    try {
-      const atomiqStatus = await this.deps.atomiqGateway.getSwapStatus(swap.data.id, swap.data.direction);
-      this.log.debug({atomiqStatus, direction: swap.data.direction}, 'Sync swap with Atomiq');
-
-      if (atomiqStatus.isCompleted) {
-        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- empty txHash should fallback
-        swap.markAsCompleted(atomiqStatus.txHash || 'unknown');
-        await this.deps.swapRepository.save(swap);
-        await this.persistDescription(swap);
-      } else if (atomiqStatus.isClaimable) {
-        swap.markAsClaimable();
-        await this.deps.swapRepository.save(swap);
-      } else if (atomiqStatus.isPaid) {
-        swap.markAsPaid();
-        await this.deps.swapRepository.save(swap);
-      } else if (atomiqStatus.isRefundable) {
-        swap.markAsRefundable();
-        await this.deps.swapRepository.save(swap);
-      } else if (atomiqStatus.isRefunded) {
-        swap.markAsRefunded();
-        await this.deps.swapRepository.save(swap);
-      } else if (atomiqStatus.isFailed) {
-        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- empty error should fallback
-        swap.markAsFailed(atomiqStatus.error || 'Unknown error');
-        await this.deps.swapRepository.save(swap);
-      } else if (atomiqStatus.isExpired) {
-        // If the swap is not found in SDK storage (e.g. after container restart),
-        // mark as 'lost' so the monitor stops polling — the refund can never be
-        // detected without SDK data.
-        if (atomiqStatus.error?.includes('not found in SDK storage')) {
-          swap.markAsLost();
-        } else {
-          swap.markAsExpired();
-        }
-        await this.deps.swapRepository.save(swap);
-      }
-    } catch (error) {
-      this.log.warn({
-        swapId: swap.data.id,
-        cause: error,
-      }, 'Failed to sync swap with Atomiq');
-    }
-  }
-
 }
