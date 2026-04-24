@@ -16,7 +16,7 @@ export function createTransactionRoutes(appContext: AppContext): AuthenticatedHo
   const log = appContext.logger.child({name: 'transaction.routes.ts'});
   const app: AuthenticatedHono = new Hono();
 
-  const {fetchTransactions} = appContext.useCases;
+  const {transactionReader} = appContext.useCases;
 
   // ---------------------------------------------------------------------------
   // Get Transactions
@@ -31,7 +31,7 @@ export function createTransactionRoutes(appContext: AppContext): AuthenticatedHo
         offset: honoCtx.req.query('offset'),
       });
 
-      const result = await fetchTransactions.fetchForAccount({
+      const result = await transactionReader.fetchForAccount({
         accountId: account.id,
         limit,
         offset,

@@ -3,8 +3,26 @@ export * from './errors';
 export * from './language';
 export * from './user-settings';
 export * from './transaction';
-export {UserSettingsService, type UserSettingsServiceDeps} from './user-settings.service';
-export {TransactionService, type TransactionServiceDeps} from './transaction.service';
-export type {FetchSettingsUseCase} from './use-case/fetch-settings.use-case';
-export type {UpdateSettingsUseCase} from './use-case/update-settings.use-case';
-export type {FetchTransactionsUseCase} from './use-case/fetch-transactions.use-case';
+
+// Use case interfaces (primary ports)
+export type {
+  FetchUserSettingsInput,
+  FetchUserSettingsOutput,
+  FetchSettingsUseCase,
+} from './use-cases/fetch-settings.use-case';
+export type {
+  UserSettingsUpdate,
+  UpdateUserSettingsInput,
+  UpdateUserSettingsOutput,
+  UpdateSettingsUseCase,
+} from './use-cases/update-settings.use-case';
+export type {
+  FetchTransactionsInput,
+  FetchTransactionsOutput,
+  FetchTransactionsUseCase,
+} from './use-cases/fetch-transactions.use-case';
+
+// Use case implementations (services)
+export {UserSettingsReader, type UserSettingsReaderDeps} from './services/user-settings-reader.service';
+export {UserSettingsUpdater, type UserSettingsUpdaterDeps} from './services/user-settings-updater.service';
+export {TransactionReader, type TransactionReaderDeps} from './services/transaction-reader.service';

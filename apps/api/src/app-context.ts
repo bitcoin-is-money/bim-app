@@ -69,9 +69,10 @@ import {
 import {
   type FetchSettingsUseCase,
   type FetchTransactionsUseCase,
-  TransactionService,
+  TransactionReader,
   type UpdateSettingsUseCase,
-  UserSettingsService
+  UserSettingsReader,
+  UserSettingsUpdater,
 } from "@bim/domain/user";
 import {serializeError} from '@bim/lib/error';
 import type pg from 'pg';
@@ -123,8 +124,6 @@ export interface AppContext {
   healthRegistry: HealthRegistry;
   services: {
     swapCoordinator: SwapCoordinator;
-    userSettings: UserSettingsService;
-    transaction: TransactionService;
   };
   useCases: {
     // Account
@@ -136,9 +135,9 @@ export interface AppContext {
     sessionValidator: ValidateSessionUseCase;
     sessionInvalidator: InvalidateSessionUseCase;
     // User
-    fetchSettings: FetchSettingsUseCase;
-    updateSettings: UpdateSettingsUseCase;
-    fetchTransactions: FetchTransactionsUseCase;
+    userSettingsReader: FetchSettingsUseCase;
+    userSettingsUpdater: UpdateSettingsUseCase;
+    transactionReader: FetchTransactionsUseCase;
     // Currency
     btcPriceReader: GetPricesUseCase;
     // Swap
@@ -339,11 +338,15 @@ export namespace AppContext {
       logger: rootLogger,
     });
 
-    const userSettingsService = new UserSettingsService({
+    const userSettingsReader = new UserSettingsReader({
       userSettingsRepository: repositories.userSettings,
     });
 
-    const transactionService = new TransactionService({
+    const userSettingsUpdater = new UserSettingsUpdater({
+      userSettingsRepository: repositories.userSettings,
+    });
+
+    const transactionReader = new TransactionReader({
       transactionRepository: repositories.transaction,
     });
 
@@ -435,9 +438,9 @@ export namespace AppContext {
       sessionValidator,
       sessionInvalidator,
       // User
-      fetchSettings: userSettingsService,
-      updateSettings: userSettingsService,
-      fetchTransactions: transactionService,
+      userSettingsReader,
+      userSettingsUpdater,
+      transactionReader,
       // Currency
       btcPriceReader,
       // Swap
@@ -457,8 +460,6 @@ export namespace AppContext {
       paymentBuildCache,
       services: {
         swapCoordinator,
-        userSettings: userSettingsService,
-        transaction: transactionService,
       },
       sessionConfig: config.session,
       starknetConfig,
