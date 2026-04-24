@@ -27,7 +27,7 @@ export function createPayRoutes(
 ): AuthenticatedHono {
   const log = appContext.logger.child({name: 'pay.routes.ts'});
   const app: AuthenticatedHono = new Hono();
-  const {preparePayment, buildPayment, executePayment} = appContext.useCases;
+  const {paymentPreparator, paymentBuilder, paymentExecutor} = appContext.useCases;
 
   // ---------------------------------------------------------------------------
   // Parse + prepare payment (returns parsed data + fee)
@@ -37,7 +37,7 @@ export function createPayRoutes(
     try {
       const {paymentPayload}: ParsePaymentBody = ParsePaymentSchema.parse(await honoCtx.req.json());
 
-      const prepared = await preparePayment.prepare(paymentPayload);
+      const prepared = await paymentPreparator.prepare(paymentPayload);
 
       const response = serializePreparedPayment(prepared, prepared.fee);
       return honoCtx.json(response) as TypedResponse<PreparedPaymentResponse>;
@@ -55,7 +55,7 @@ export function createPayRoutes(
       const input: BuildPaymentBody = BuildPaymentSchema.parse(await honoCtx.req.json());
       const account = honoCtx.get('account');
 
-      const result = await buildPayment.buildPayment({
+      const result = await paymentBuilder.build({
         paymentPayload: input.paymentPayload,
         description: input.description,
         account,
@@ -84,7 +84,7 @@ export function createPayRoutes(
       const input: ExecuteSignedPaymentBody = ExecuteSignedPaymentSchema.parse(await honoCtx.req.json());
       const account = honoCtx.get('account');
 
-      const result = await executePayment.executePayment({
+      const result = await paymentExecutor.execute({
         buildId: input.buildId,
         assertion: input.assertion,
         account,

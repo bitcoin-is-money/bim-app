@@ -1,48 +1,48 @@
 import {serializeError} from '@bim/lib/error';
 import type {Logger} from 'pino';
-import {DonationReceived, InvalidOwnerSignature} from '../notifications';
-import type {AccountRepository, NotificationGateway, SignatureProcessor, StarknetGateway} from '../ports';
-import {BuildExpiredError, ExternalServiceError, ForbiddenError, type StarknetConfig} from '../shared';
-import type {PayService} from './pay.service';
-import type {PaymentResult, PreparedCalls} from './pay.types';
-import type {PaymentBuildCache} from './payment-build.cache';
+import {AccountId} from '../../account';
+import {DonationReceived, InvalidOwnerSignature} from '../../notifications';
+import type {
+  AccountRepository,
+  NotificationGateway,
+  SignatureProcessor,
+  StarknetGateway,
+  TransactionRepository,
+} from '../../ports';
+import {BuildExpiredError, ExternalServiceError, ForbiddenError, type StarknetConfig} from '../../shared';
+import {TransactionHash} from '../../user/types';
+import type {PaymentResult, PreparedCalls} from '../pay.types';
+import type {PaymentBuildCache} from '../payment-build.cache';
 import type {
   ExecutePaymentInput,
   ExecutePaymentOutput,
-  ExecutePaymentUseCase
-} from './use-case/execute-payment.use-case';
+  ExecutePaymentUseCase,
+} from '../use-cases/execute-payment.use-case';
 
-// =============================================================================
-// Dependencies
-// =============================================================================
-
-export interface PaymentExecutionServiceDeps {
-  payService: PayService;
-  starknetGateway: StarknetGateway;
-  signatureProcessor: SignatureProcessor;
+export interface PaymentExecutorDeps {
   paymentBuildCache: PaymentBuildCache;
+  signatureProcessor: SignatureProcessor;
+  starknetGateway: StarknetGateway;
   accountRepository: AccountRepository;
+  transactionRepository: TransactionRepository;
   notificationGateway: NotificationGateway;
   starknetConfig: StarknetConfig;
   logger: Logger;
 }
 
-// =============================================================================
-// Service Class
-// =============================================================================
-
 /**
- * Executes a previously built payment: processes WebAuthn signature,
- * submits the transaction, and saves descriptions.
+ * Executes a previously built payment: validates cache, processes WebAuthn
+ * signature, submits the transaction on Starknet, and saves transaction
+ * descriptions (sender + recipient when applicable).
  */
-export class PaymentExecutionService implements ExecutePaymentUseCase {
+export class PaymentExecutor implements ExecutePaymentUseCase {
   private readonly log: Logger;
 
-  constructor(private readonly deps: PaymentExecutionServiceDeps) {
-    this.log = deps.logger.child({name: 'payment-execution.service.ts'});
+  constructor(private readonly deps: PaymentExecutorDeps) {
+    this.log = deps.logger.child({name: 'payment-executor.service.ts'});
   }
 
-  async executePayment(input: ExecutePaymentInput): Promise<ExecutePaymentOutput> {
+  async execute(input: ExecutePaymentInput): Promise<ExecutePaymentOutput> {
     const {account} = input;
 
     const build = this.deps.paymentBuildCache.consume(input.buildId);
@@ -58,11 +58,7 @@ export class PaymentExecutionService implements ExecutePaymentUseCase {
 
     const txHash = await this.executeSignedCalls(build.senderAddress, build.typedData, signature, account.publicKey);
 
-    await this.deps.payService.savePaymentResult({
-      txHash,
-      accountId: build.accountId,
-      description: build.description,
-    });
+    await this.saveDescription(txHash, build.accountId, build.description);
 
     // Save description for recipient (if Starknet transfer to a BIM user)
     if (build.preparedCalls.network === 'starknet') {
@@ -70,11 +66,7 @@ export class PaymentExecutionService implements ExecutePaymentUseCase {
         build.preparedCalls.recipientAddress,
       );
       if (recipientAccount) {
-        await this.deps.payService.savePaymentResult({
-          txHash,
-          accountId: recipientAccount.id,
-          description: build.description,
-        });
+        await this.saveDescription(txHash, recipientAccount.id, build.description);
       }
     }
 
@@ -92,6 +84,14 @@ export class PaymentExecutionService implements ExecutePaymentUseCase {
     }
 
     return buildPaymentResult(txHash, build.preparedCalls);
+  }
+
+  private async saveDescription(txHash: string, accountId: string, description: string): Promise<void> {
+    await this.deps.transactionRepository.saveDescription(
+      TransactionHash.of(txHash),
+      AccountId.of(accountId),
+      description,
+    );
   }
 
   private async executeSignedCalls(

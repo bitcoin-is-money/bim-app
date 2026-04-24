@@ -24,22 +24,23 @@ import {BtcPriceReader, type GetPricesUseCase} from "@bim/domain/currency";
 import {type ComponentName, HealthRegistry, type HealthTransitionEvent} from "@bim/domain/health";
 import {ServiceHealthChange} from "@bim/domain/notifications";
 import {
-  BitcoinReceiveService,
+  BitcoinReceiver,
   type BuildDonationUseCase,
   type BuildPaymentUseCase,
   type CommitReceiveUseCase,
+  DonationBuilder,
   Erc20CallFactory,
   type ExecutePaymentUseCase,
   FeeConfig,
-  ParseService,
   PaymentBuildCache,
-  PaymentBuilderService,
-  PaymentExecutionService,
-  PayService,
+  PaymentBuilder,
+  PaymentExecutor,
+  PaymentParser,
+  PaymentPreparator,
+  PaymentReceiver,
   type PreparePaymentUseCase,
   ReceiveBuildCache,
   type ReceivePaymentUseCase,
-  ReceiveService
 } from "@bim/domain/payment";
 import type {
   AccountRepository,
@@ -119,9 +120,6 @@ export interface AppContext {
     swap: SwapService;
     userSettings: UserSettingsService;
     transaction: TransactionService;
-    parseService: ParseService;
-    payService: PayService;
-    receive: ReceiveService;
   };
   useCases: {
     // Account
@@ -142,12 +140,11 @@ export interface AppContext {
     fetchSwapLimits: FetchSwapLimitsUseCase;
     fetchSwapStatus: FetchSwapStatusUseCase;
     // Payment
-    preparePayment: PreparePaymentUseCase;
-    buildPayment: BuildPaymentUseCase;
-    executePayment: ExecutePaymentUseCase;
-    receivePayment: ReceivePaymentUseCase;
-    commitReceive: CommitReceiveUseCase;
-    buildDonation: BuildDonationUseCase;
+    paymentPreparator: PreparePaymentUseCase;
+    paymentBuilder: BuildPaymentUseCase;
+    donationBuilder: BuildDonationUseCase;
+    paymentExecutor: ExecutePaymentUseCase;
+    paymentReceiver: ReceivePaymentUseCase & CommitReceiveUseCase;
   };
   paymentBuildCache: PaymentBuildCache;
   sessionConfig: SessionConfig;
@@ -348,19 +345,15 @@ export namespace AppContext {
 
     const erc20CallFactory = new Erc20CallFactory(feeConfig);
 
-    const parseService = new ParseService({
+    const paymentParser = new PaymentParser({
       lightningDecoder: gateways.lightningDecoder,
       starknetConfig,
       logger: rootLogger,
     });
 
-    const payService = new PayService({
-      parseService,
-      erc20CallFactory,
-      starknetGateway: gateways.starknet,
+    const paymentPreparator = new PaymentPreparator({
+      paymentParser,
       swapService,
-      transactionRepository: repositories.transaction,
-      starknetConfig,
       feeConfig,
       logger: rootLogger,
     });
@@ -373,7 +366,7 @@ export namespace AppContext {
     const paymentBuildCache = new PaymentBuildCache();
     const receiveBuildCache = new ReceiveBuildCache();
 
-    const bitcoinReceiveService = new BitcoinReceiveService({
+    const bitcoinReceiver = new BitcoinReceiver({
       swapService,
       starknetGateway: gateways.starknet,
       dexGateway: gateways.dex,
@@ -385,28 +378,37 @@ export namespace AppContext {
       logger: rootLogger,
     });
 
-    const receiveService = new ReceiveService({
+    const paymentReceiver = new PaymentReceiver({
       swapService,
-      bitcoinReceiveService,
+      bitcoinReceiver,
       starknetConfig,
       logger: rootLogger,
     });
 
-    const paymentBuilderService = new PaymentBuilderService({
-      payService,
-      parseService,
+    const paymentBuilder = new PaymentBuilder({
+      paymentParser,
+      paymentPreparator,
+      erc20CallFactory,
+      swapService,
       starknetGateway: gateways.starknet,
       paymentBuildCache,
       starknetConfig,
       logger: rootLogger,
     });
 
-    const paymentExecutionService = new PaymentExecutionService({
-      payService,
+    const donationBuilder = new DonationBuilder({
       starknetGateway: gateways.starknet,
+      paymentBuildCache,
+      starknetConfig,
+      logger: rootLogger,
+    });
+
+    const paymentExecutor = new PaymentExecutor({
+      paymentBuildCache,
       signatureProcessor: gateways.signatureProcessor,
-      paymentBuildCache,
+      starknetGateway: gateways.starknet,
       accountRepository: repositories.account,
+      transactionRepository: repositories.transaction,
       notificationGateway: gateways.notification,
       starknetConfig,
       logger: rootLogger,
@@ -431,12 +433,11 @@ export namespace AppContext {
       fetchSwapLimits: swapService,
       fetchSwapStatus: swapService,
       // Payment
-      preparePayment: payService,
-      buildPayment: paymentBuilderService,
-      executePayment: paymentExecutionService,
-      receivePayment: receiveService,
-      commitReceive: receiveService,
-      buildDonation: paymentBuilderService,
+      paymentPreparator,
+      paymentBuilder,
+      donationBuilder,
+      paymentExecutor,
+      paymentReceiver,
     };
 
     return {
@@ -448,9 +449,6 @@ export namespace AppContext {
         swap: swapService,
         userSettings: userSettingsService,
         transaction: transactionService,
-        parseService: parseService,
-        payService: payService,
-        receive: receiveService,
       },
       sessionConfig: config.session,
       starknetConfig,

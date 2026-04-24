@@ -15,5 +15,5 @@ export interface BuildDonationOutput {
  * Builds a donation: creates an ERC-20 transfer to the treasury, no fee.
  */
 export interface BuildDonationUseCase {
-  buildDonation(input: BuildDonationInput): Promise<BuildDonationOutput>;
+  build(input: BuildDonationInput): Promise<BuildDonationOutput>;
 }

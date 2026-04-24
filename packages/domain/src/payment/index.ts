@@ -5,16 +5,47 @@ export * from './pay.types';
 export * from './payment-build.cache';
 export * from './receive-build.cache';
 export * from './receive.types';
-export * from './erc20-call.factory';
-export * from './parse.service';
-export * from './pay.service';
-export * from './receive.service';
-export {PaymentBuilderService, type PaymentBuilderServiceDeps} from './payment-builder.service';
-export {PaymentExecutionService, type PaymentExecutionServiceDeps} from './payment-execution.service';
-export {BitcoinReceiveService, type BitcoinReceiveServiceDeps} from './bitcoin-receive.service';
-export type {PreparePaymentUseCase} from './use-case/prepare-payment.use-case';
-export type {BuildPaymentUseCase, BuildPaymentInput, BuildPaymentOutput} from './use-case/build-payment.use-case';
-export type {ExecutePaymentUseCase, ExecutePaymentInput, ExecutePaymentOutput} from './use-case/execute-payment.use-case';
-export type {ReceivePaymentUseCase, ReceivePaymentInput, ReceivePaymentOutput, BitcoinPendingCommitOutput} from './use-case/receive-payment.use-case';
-export type {CommitReceiveUseCase, CommitReceiveInput, CommitReceiveOutput} from './use-case/commit-receive.use-case';
-export type {BuildDonationUseCase, BuildDonationInput, BuildDonationOutput} from './use-case/build-donation.use-case';
+
+// Internal domain services (moved under services/)
+export * from './services/erc20-call.factory';
+export * from './services/payment-parser.service';
+export {BitcoinReceiver, type BitcoinReceiverDeps} from './services/bitcoin-receiver.service';
+
+// Use case interfaces (primary ports)
+export type {
+  PreparePaymentInput,
+  PreparePaymentUseCase,
+} from './use-cases/prepare-payment.use-case';
+export type {
+  BuildPaymentInput,
+  BuildPaymentOutput,
+  BuildPaymentUseCase,
+} from './use-cases/build-payment.use-case';
+export type {
+  BuildDonationInput,
+  BuildDonationOutput,
+  BuildDonationUseCase,
+} from './use-cases/build-donation.use-case';
+export type {
+  ExecutePaymentInput,
+  ExecutePaymentOutput,
+  ExecutePaymentUseCase,
+} from './use-cases/execute-payment.use-case';
+export type {
+  BitcoinPendingCommitOutput,
+  ReceivePaymentInput,
+  ReceivePaymentOutput,
+  ReceivePaymentUseCase,
+} from './use-cases/receive-payment.use-case';
+export type {
+  CommitReceiveInput,
+  CommitReceiveOutput,
+  CommitReceiveUseCase,
+} from './use-cases/commit-receive.use-case';
+
+// Use case implementations (services)
+export {PaymentPreparator, type PaymentPreparatorDeps} from './services/payment-preparator.service';
+export {PaymentBuilder, type PaymentBuilderDeps} from './services/payment-builder.service';
+export {DonationBuilder, type DonationBuilderDeps} from './services/donation-builder.service';
+export {PaymentExecutor, type PaymentExecutorDeps} from './services/payment-executor.service';
+export {PaymentReceiver, type PaymentReceiverDeps} from './services/payment-receiver.service';

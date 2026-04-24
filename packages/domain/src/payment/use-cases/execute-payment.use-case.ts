@@ -13,7 +13,10 @@ export type ExecutePaymentOutput = PaymentResult;
 /**
  * Executes a previously built payment: processes WebAuthn signature,
  * submits the transaction, and saves descriptions.
+ *
+ * Note: `execute` is the domain verb here — we literally "execute" a
+ * previously-signed payment on-chain.
  */
 export interface ExecutePaymentUseCase {
-  executePayment(input: ExecutePaymentInput): Promise<ExecutePaymentOutput>;
+  execute(input: ExecutePaymentInput): Promise<ExecutePaymentOutput>;
 }

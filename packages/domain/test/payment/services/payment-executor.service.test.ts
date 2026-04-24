@@ -1,12 +1,17 @@
 import {AccountId, StarknetAddress} from '@bim/domain/account';
-import type {PayService} from '@bim/domain/payment';
-import {PaymentBuildCache, PaymentExecutionService,} from '@bim/domain/payment';
-import type {AccountRepository, NotificationGateway, SignatureProcessor, StarknetGateway} from '@bim/domain/ports';
+import {PaymentBuildCache, PaymentExecutor} from '@bim/domain/payment';
+import type {
+  AccountRepository,
+  NotificationGateway,
+  SignatureProcessor,
+  StarknetGateway,
+  TransactionRepository,
+} from '@bim/domain/ports';
 import {Amount, BuildExpiredError, ExternalServiceError, ForbiddenError} from '@bim/domain/shared';
 import {LightningInvoice, SwapId} from '@bim/domain/swap';
 import {createLogger} from '@bim/lib/logger';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {createAccount, createAccountRepoMock} from '../helper';
+import {createAccount, createAccountRepoMock} from '../../helper';
 
 const logger = createLogger('silent');
 
@@ -22,24 +27,29 @@ const MOCK_ASSERTION = {
   signature: 'CCCC',
 };
 
-describe('PaymentExecutionService', () => {
-  let service: PaymentExecutionService;
+function createMockTransactionRepository(): TransactionRepository {
+  return {
+    saveDescription: vi.fn().mockResolvedValue(undefined),
+    findByAccountId: vi.fn(),
+    findById: vi.fn(),
+    findByHash: vi.fn(),
+  } as unknown as TransactionRepository;
+}
+
+describe('PaymentExecutor', () => {
+  let service: PaymentExecutor;
   let paymentBuildCache: PaymentBuildCache;
-  let mockPayService: PayService;
   let mockStarknetGateway: StarknetGateway;
   let mockSignatureProcessor: SignatureProcessor;
   let mockAccountRepo: AccountRepository;
+  let mockTransactionRepo: TransactionRepository;
   let mockNotificationGateway: NotificationGateway;
 
   beforeEach(() => {
     paymentBuildCache = new PaymentBuildCache();
 
-    mockPayService = {
-      savePaymentResult: vi.fn().mockResolvedValue(undefined),
-    } as unknown as PayService;
-
     mockStarknetGateway = {
-      executeSignedCalls: vi.fn().mockResolvedValue({txHash: '0xtxhash'}),
+      executeSignedCalls: vi.fn().mockResolvedValue({txHash: '0x' + 'a'.repeat(63)}),
     } as unknown as StarknetGateway;
 
     mockSignatureProcessor = {
@@ -47,17 +57,18 @@ describe('PaymentExecutionService', () => {
     };
 
     mockAccountRepo = createAccountRepoMock();
+    mockTransactionRepo = createMockTransactionRepository();
 
     mockNotificationGateway = {
       send: vi.fn().mockResolvedValue(undefined),
     } as unknown as NotificationGateway;
 
-    service = new PaymentExecutionService({
-      payService: mockPayService,
-      starknetGateway: mockStarknetGateway,
-      signatureProcessor: mockSignatureProcessor,
+    service = new PaymentExecutor({
       paymentBuildCache,
+      signatureProcessor: mockSignatureProcessor,
+      starknetGateway: mockStarknetGateway,
       accountRepository: mockAccountRepo,
+      transactionRepository: mockTransactionRepo,
       notificationGateway: mockNotificationGateway,
       starknetConfig: {
         network: 'testnet',
@@ -96,7 +107,7 @@ describe('PaymentExecutionService', () => {
     const account = createAccount('deployed');
 
     await expect(
-      service.executePayment({buildId: 'nonexistent', assertion: MOCK_ASSERTION, account}),
+      service.execute({buildId: 'nonexistent', assertion: MOCK_ASSERTION, account}),
     ).rejects.toThrow(BuildExpiredError);
   });
 
@@ -106,28 +117,24 @@ describe('PaymentExecutionService', () => {
     const intruder = createAccount('deployed', AccountId.of('660e8400-e29b-41d4-a716-446655440000'), StarknetAddress.of('0x0' + '2'.repeat(63)));
 
     await expect(
-      service.executePayment({buildId: 'test-build-id', assertion: MOCK_ASSERTION, account: intruder}),
+      service.execute({buildId: 'test-build-id', assertion: MOCK_ASSERTION, account: intruder}),
     ).rejects.toThrow(ForbiddenError);
   });
 
-  it('executes a starknet payment and returns result', async () => {
+  it('executes a starknet payment and saves the sender description', async () => {
     const account = createAccount('deployed');
     seedStarknetBuild(account);
 
-    const result = await service.executePayment({
+    const result = await service.execute({
       buildId: 'test-build-id',
       assertion: MOCK_ASSERTION,
       account,
     });
 
     expect(result.network).toBe('starknet');
-    expect(result.txHash).toBe('0xtxhash');
+    expect(result.txHash).toBe('0x' + 'a'.repeat(63));
     expect(mockSignatureProcessor.process).toHaveBeenCalledWith(MOCK_ASSERTION, account.publicKey);
-    expect(mockPayService.savePaymentResult).toHaveBeenCalledWith({
-      txHash: '0xtxhash',
-      accountId: account.id,
-      description: 'Test payment',
-    });
+    expect(mockTransactionRepo.saveDescription).toHaveBeenCalledOnce();
   });
 
   it('saves description for recipient when starknet transfer to a BIM user', async () => {
@@ -136,18 +143,13 @@ describe('PaymentExecutionService', () => {
     seedStarknetBuild(account);
     vi.mocked(mockAccountRepo.findByStarknetAddress).mockResolvedValue(recipient);
 
-    await service.executePayment({
+    await service.execute({
       buildId: 'test-build-id',
       assertion: MOCK_ASSERTION,
       account,
     });
 
-    expect(mockPayService.savePaymentResult).toHaveBeenCalledTimes(2);
-    expect(mockPayService.savePaymentResult).toHaveBeenCalledWith({
-      txHash: '0xtxhash',
-      accountId: recipient.id,
-      description: 'Test payment',
-    });
+    expect(mockTransactionRepo.saveDescription).toHaveBeenCalledTimes(2);
   });
 
   it('sends donation notification when isDonation is true', async () => {
@@ -170,7 +172,7 @@ describe('PaymentExecutionService', () => {
       isDonation: true,
     });
 
-    await service.executePayment({buildId, assertion: MOCK_ASSERTION, account});
+    await service.execute({buildId, assertion: MOCK_ASSERTION, account});
 
     expect(mockNotificationGateway.send).toHaveBeenCalled();
   });
@@ -183,7 +185,7 @@ describe('PaymentExecutionService', () => {
     );
 
     await expect(
-      service.executePayment({buildId: 'test-build-id', assertion: MOCK_ASSERTION, account}),
+      service.execute({buildId: 'test-build-id', assertion: MOCK_ASSERTION, account}),
     ).rejects.toThrow(ExternalServiceError);
 
     expect(mockNotificationGateway.send).toHaveBeenCalled();
@@ -209,7 +211,7 @@ describe('PaymentExecutionService', () => {
       createdAt: Date.now(),
     });
 
-    const result = await service.executePayment({buildId, assertion: MOCK_ASSERTION, account});
+    const result = await service.execute({buildId, assertion: MOCK_ASSERTION, account});
 
     expect(result.network).toBe('lightning');
     if (result.network !== 'lightning') throw new Error('Expected lightning');

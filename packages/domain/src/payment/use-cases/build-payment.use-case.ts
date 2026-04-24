@@ -20,5 +20,5 @@ export interface BuildPaymentOutput {
  * Parses, prepares calls, builds typed data, and caches a payment for execution.
  */
 export interface BuildPaymentUseCase {
-  buildPayment(input: BuildPaymentInput): Promise<BuildPaymentOutput>;
+  build(input: BuildPaymentInput): Promise<BuildPaymentOutput>;
 }

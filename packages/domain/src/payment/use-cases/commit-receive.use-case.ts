@@ -22,5 +22,5 @@ export interface CommitReceiveOutput {
  * waits for confirmation, and returns the deposit address.
  */
 export interface CommitReceiveUseCase {
-  commitReceive(input: CommitReceiveInput): Promise<CommitReceiveOutput>;
+  commit(input: CommitReceiveInput): Promise<CommitReceiveOutput>;
 }

@@ -1,25 +1,25 @@
 import {AccountId, StarknetAddress} from '@bim/domain/account';
-import {BitcoinReceiveService, ReceiveBuildCache,} from '@bim/domain/payment';
+import {BitcoinReceiver, ReceiveBuildCache} from '@bim/domain/payment';
 import type {
   NotificationGateway,
   SignatureProcessor,
   StarknetCall,
   StarknetGateway,
   SwapGateway,
-  TransactionRepository
+  TransactionRepository,
 } from '@bim/domain/ports';
 import {
   Amount,
   BuildExpiredError,
   ExternalServiceError,
   ForbiddenError,
-  InsufficientBalanceError
+  InsufficientBalanceError,
 } from '@bim/domain/shared';
 import type {SwapService} from '@bim/domain/swap';
 import {BitcoinAddress, Swap, SwapId} from '@bim/domain/swap';
 import {createLogger} from '@bim/lib/logger';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {createAccount} from '../helper';
+import {createAccount} from '../../helper';
 
 const logger = createLogger('silent');
 
@@ -54,8 +54,8 @@ function createMockBitcoinReceiveSwap(): Swap {
   });
 }
 
-describe('BitcoinReceiveService', () => {
-  let service: BitcoinReceiveService;
+describe('BitcoinReceiver', () => {
+  let service: BitcoinReceiver;
   let receiveBuildCache: ReceiveBuildCache;
   let mockStarknetGateway: StarknetGateway;
   let mockDexGateway: SwapGateway;
@@ -103,7 +103,7 @@ describe('BitcoinReceiveService', () => {
       send: vi.fn().mockResolvedValue(undefined),
     } as unknown as NotificationGateway;
 
-    service = new BitcoinReceiveService({
+    service = new BitcoinReceiver({
       swapService: mockSwapService,
       starknetGateway: mockStarknetGateway,
       dexGateway: mockDexGateway,
@@ -124,18 +124,14 @@ describe('BitcoinReceiveService', () => {
     });
   });
 
-  // ===========================================================================
-  // handlePendingCommit
-  // ===========================================================================
-
-  describe('handlePendingCommit', () => {
+  describe('prepareCommit', () => {
     it('builds typed data and caches the result', async () => {
       const account = createAccount('deployed');
       const commitCalls: StarknetCall[] = [
         {contractAddress: '0xabc', entrypoint: 'commit', calldata: []},
       ];
 
-      const result = await service.handlePendingCommit({
+      const result = await service.prepareCommit({
         swapId: 'swap-1',
         commitCalls,
         amount: Amount.ofSatoshi(200_000n),
@@ -163,7 +159,7 @@ describe('BitcoinReceiveService', () => {
         calldata: ['0xspender', '1000', '0'],
       };
 
-      await service.handlePendingCommit({
+      await service.prepareCommit({
         swapId: 'swap-1',
         commitCalls: [nonStrkApprove],
         amount: Amount.ofSatoshi(200_000n),
@@ -182,7 +178,7 @@ describe('BitcoinReceiveService', () => {
       const approveAmount = 100n * 10n ** 18n;
       vi.mocked(mockStarknetGateway.getBalance).mockResolvedValue(approveAmount);
 
-      await service.handlePendingCommit({
+      await service.prepareCommit({
         swapId: 'swap-1',
         commitCalls: [createStrkApproveCall(approveAmount)],
         amount: Amount.ofSatoshi(200_000n),
@@ -200,10 +196,10 @@ describe('BitcoinReceiveService', () => {
       const account = createAccount('deployed');
       const approveAmount = 100n * 10n ** 18n;
       vi.mocked(mockStarknetGateway.getBalance)
-        .mockResolvedValueOnce(0n)  // STRK = 0
-        .mockResolvedValueOnce(10_000n); // WBTC sufficient
+        .mockResolvedValueOnce(0n)
+        .mockResolvedValueOnce(10_000n);
 
-      await service.handlePendingCommit({
+      await service.prepareCommit({
         swapId: 'swap-1',
         commitCalls: [createStrkApproveCall(approveAmount)],
         amount: Amount.ofSatoshi(200_000n),
@@ -215,7 +211,6 @@ describe('BitcoinReceiveService', () => {
       });
 
       expect(mockDexGateway.getSwapCalls).toHaveBeenCalled();
-      // buildCalls should receive DEX calls prepended to commit calls
       const buildCallsArg = vi.mocked(mockStarknetGateway.buildCalls).mock.calls[0]?.[0];
       expect(buildCallsArg?.calls.length).toBeGreaterThan(1);
     });
@@ -224,11 +219,11 @@ describe('BitcoinReceiveService', () => {
       const account = createAccount('deployed');
       const approveAmount = 100n * 10n ** 18n;
       vi.mocked(mockStarknetGateway.getBalance)
-        .mockResolvedValueOnce(0n)  // STRK = 0
-        .mockResolvedValueOnce(0n); // WBTC = 0
+        .mockResolvedValueOnce(0n)
+        .mockResolvedValueOnce(0n);
 
       await expect(
-        service.handlePendingCommit({
+        service.prepareCommit({
           swapId: 'swap-1',
           commitCalls: [createStrkApproveCall(approveAmount)],
           amount: Amount.ofSatoshi(200_000n),
@@ -241,10 +236,6 @@ describe('BitcoinReceiveService', () => {
       ).rejects.toThrow(InsufficientBalanceError);
     });
   });
-
-  // ===========================================================================
-  // commitAndComplete
-  // ===========================================================================
 
   describe('commitAndComplete', () => {
     function seedBuild(account = createAccount('deployed')): string {

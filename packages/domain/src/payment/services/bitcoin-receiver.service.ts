@@ -1,17 +1,17 @@
 import {serializeError} from '@bim/lib/error';
 import {randomUUID} from 'node:crypto';
 import type {Logger} from 'pino';
-import type {Account} from '../account';
-import {AccountId} from '../account';
-import {InvalidOwnerSignature} from '../notifications';
+import type {Account} from '../../account';
+import {AccountId} from '../../account';
+import {InvalidOwnerSignature} from '../../notifications';
 import type {
   NotificationGateway,
   SignatureProcessor,
   StarknetCall,
   StarknetGateway,
   SwapGateway,
-  TransactionRepository
-} from '../ports';
+  TransactionRepository,
+} from '../../ports';
 import {
   type Amount,
   BitcoinAddress,
@@ -20,19 +20,15 @@ import {
   ForbiddenError,
   InsufficientBalanceError,
   type StarknetAddress,
-  type StarknetConfig
-} from '../shared';
-import type {SwapService} from '../swap';
-import {TransactionHash} from '../user/types';
-import type {ReceiveBuildCache} from './receive-build.cache';
-import type {BitcoinReceiveResult} from './receive.types';
-import type {WebAuthnAssertion} from './types';
+  type StarknetConfig,
+} from '../../shared';
+import type {SwapService} from '../../swap';
+import {TransactionHash} from '../../user/types';
+import type {ReceiveBuildCache} from '../receive-build.cache';
+import type {BitcoinReceiveResult} from '../receive.types';
+import type {WebAuthnAssertion} from '../types';
 
-// =============================================================================
-// Dependencies
-// =============================================================================
-
-export interface BitcoinReceiveServiceDeps {
+export interface BitcoinReceiverDeps {
   swapService: SwapService;
   starknetGateway: StarknetGateway;
   dexGateway: SwapGateway;
@@ -44,26 +40,24 @@ export interface BitcoinReceiveServiceDeps {
   logger: Logger;
 }
 
-// =============================================================================
-// Service Class
-// =============================================================================
-
 /**
- * Handles the Bitcoin two-phase receive flow:
- * - Phase 1: auto-swap WBTC→STRK if needed, build commit typed data, cache
- * - Phase 2: sign + execute commit, wait, save swap, complete
+ * Internal domain service for the Bitcoin two-phase receive flow.
+ *
+ * Phase 1 (`prepareCommit`): auto-swap WBTC→STRK if needed, build commit typed
+ * data, cache for signing.
+ * Phase 2 (`commitAndComplete`): sign + execute commit, wait for on-chain
+ * confirmation, save swap, complete.
+ *
+ * Consumed by PaymentReceiver — not exposed as a primary port.
  */
-export class BitcoinReceiveService {
+export class BitcoinReceiver {
   private readonly log: Logger;
 
-  constructor(private readonly deps: BitcoinReceiveServiceDeps) {
-    this.log = deps.logger.child({name: 'bitcoin-receive.service.ts'});
+  constructor(private readonly deps: BitcoinReceiverDeps) {
+    this.log = deps.logger.child({name: 'bitcoin-receiver.service.ts'});
   }
 
-  /**
-   * Handles a Bitcoin pending commit: auto-swap if needed, build typed data, cache for signing.
-   */
-  async handlePendingCommit(params: {
+  async prepareCommit(params: {
     swapId: string;
     commitCalls: readonly StarknetCall[];
     amount: Amount;
@@ -95,9 +89,6 @@ export class BitcoinReceiveService {
     return {buildId, messageHash};
   }
 
-  /**
-   * Commits a Bitcoin receive: sign, execute, wait for confirmation, save, complete.
-   */
   async commitAndComplete(params: {
     buildId: string;
     assertion: WebAuthnAssertion;
