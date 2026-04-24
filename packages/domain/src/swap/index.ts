@@ -3,7 +3,36 @@ export * from './errors';
 export * from './lightning-invoice';
 export {BitcoinAddress} from '../shared/bitcoin-address';
 export * from './swap';
-export {SwapService, type SwapServiceDeps} from './swap.service';
 export type {ClaimerConfig} from './claimer-config';
-export type {FetchSwapLimitsUseCase} from './use-case/fetch-swap-limits.use-case';
-export type {FetchSwapStatusUseCase} from './use-case/fetch-swap-status.use-case';
+
+// Use case interfaces (primary ports)
+export type {
+  FetchSwapLimitsInput,
+  FetchSwapLimitsOutput,
+  FetchSwapLimitsUseCase,
+} from './use-cases/fetch-swap-limits.use-case';
+export type {
+  FetchSwapStatusInput,
+  FetchSwapStatusOutput,
+  FetchSwapStatusUseCase,
+} from './use-cases/fetch-swap-status.use-case';
+
+// Use case implementation (service)
+export {SwapReader, type SwapReaderDeps} from './services/swap-reader.service';
+
+// Internal domain service
+export {
+  SwapCoordinator,
+  type SwapCoordinatorDeps,
+  type CreateLightningToStarknetInput,
+  type CreateLightningToStarknetOutput,
+  type PrepareBitcoinToStarknetInput,
+  type PrepareBitcoinToStarknetOutput,
+  type SaveBitcoinCommitInput,
+  type CompleteBitcoinToStarknetInput,
+  type CompleteBitcoinToStarknetOutput,
+  type CreateStarknetToLightningInput,
+  type CreateStarknetToLightningOutput,
+  type CreateStarknetToBitcoinInput,
+  type CreateStarknetToBitcoinOutput,
+} from './services/swap-coordinator.service';

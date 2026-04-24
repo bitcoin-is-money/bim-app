@@ -19,7 +19,7 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
 
   app.use('*', createAuthMiddleware(appContext));
 
-  const {fetchSwapLimits, fetchSwapStatus} = appContext.useCases;
+  const {swapReader} = appContext.useCases;
 
   // ---------------------------------------------------------------------------
   // Get Swap Limits
@@ -29,7 +29,7 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
     try {
       const direction: SwapDirection = SwapDirectionSchema.parse(honoCtx.req.param('direction'));
 
-      const result = await fetchSwapLimits.fetchLimits({direction});
+      const result = await swapReader.fetchLimits({direction});
 
       return honoCtx.json<SwapLimitsResponse>({
         minSats: result.limits.minSats.toString(),
@@ -50,7 +50,7 @@ export function createSwapRoutes(appContext: AppContext): AuthenticatedHono {
       const account: Account = honoCtx.get('account');
       const swapId: SwapIdParam = SwapIdParamSchema.parse(honoCtx.req.param('swapId'));
 
-      const result = await fetchSwapStatus.fetchStatus({swapId, accountId: account.id});
+      const result = await swapReader.fetchStatus({swapId, accountId: account.id});
 
       // Map internal 'claimable' to 'paid' for the frontend — the distinction
       // is only relevant for backend orchestration (SwapMonitor claim timing).

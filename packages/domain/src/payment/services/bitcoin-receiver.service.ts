@@ -22,14 +22,14 @@ import {
   type StarknetAddress,
   type StarknetConfig,
 } from '../../shared';
-import type {SwapService} from '../../swap';
+import type {SwapCoordinator} from '../../swap';
 import {TransactionHash} from '../../user/types';
 import type {ReceiveBuildCache} from '../receive-build.cache';
 import type {BitcoinReceiveResult} from '../receive.types';
 import type {WebAuthnAssertion} from '../types';
 
 export interface BitcoinReceiverDeps {
-  swapService: SwapService;
+  swapCoordinator: SwapCoordinator;
   starknetGateway: StarknetGateway;
   dexGateway: SwapGateway;
   signatureProcessor: SignatureProcessor;
@@ -138,7 +138,7 @@ export class BitcoinReceiver {
     await this.deps.starknetGateway.waitForTransaction(txHash);
 
     const starknetAddress = account.requireStarknetAddress();
-    await this.deps.swapService.saveBitcoinCommit({
+    await this.deps.swapCoordinator.saveBitcoinCommit({
       swapId: build.swapId,
       destinationAddress: starknetAddress,
       amount: build.amount,
@@ -157,7 +157,7 @@ export class BitcoinReceiver {
       this.log.warn({txHash, err: descErr}, 'Failed to save security deposit description (non-fatal)');
     }
 
-    const completeResult = await this.deps.swapService.completeBitcoinToStarknet({
+    const completeResult = await this.deps.swapCoordinator.completeBitcoinToStarknet({
       swapId: build.swapId,
     });
 

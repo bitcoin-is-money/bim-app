@@ -60,7 +60,12 @@ import type {
   WebAuthnGateway,
 } from "@bim/domain/ports";
 import type {StarknetConfig} from "@bim/domain/shared";
-import {type FetchSwapLimitsUseCase, type FetchSwapStatusUseCase, SwapService} from "@bim/domain/swap";
+import {
+  type FetchSwapLimitsUseCase,
+  type FetchSwapStatusUseCase,
+  SwapCoordinator,
+  SwapReader,
+} from "@bim/domain/swap";
 import {
   type FetchSettingsUseCase,
   type FetchTransactionsUseCase,
@@ -117,7 +122,7 @@ export interface AppContext {
   };
   healthRegistry: HealthRegistry;
   services: {
-    swap: SwapService;
+    swapCoordinator: SwapCoordinator;
     userSettings: UserSettingsService;
     transaction: TransactionService;
   };
@@ -137,8 +142,7 @@ export interface AppContext {
     // Currency
     btcPriceReader: GetPricesUseCase;
     // Swap
-    fetchSwapLimits: FetchSwapLimitsUseCase;
-    fetchSwapStatus: FetchSwapStatusUseCase;
+    swapReader: FetchSwapLimitsUseCase & FetchSwapStatusUseCase;
     // Payment
     paymentPreparator: PreparePaymentUseCase;
     paymentBuilder: BuildPaymentUseCase;
@@ -320,7 +324,14 @@ export namespace AppContext {
       sessionRepository: repositories.session,
     });
 
-    const swapService = new SwapService({
+    const swapReader = new SwapReader({
+      swapRepository: repositories.swap,
+      atomiqGateway: gateways.atomiq,
+      transactionRepository: repositories.transaction,
+      logger: rootLogger,
+    });
+
+    const swapCoordinator = new SwapCoordinator({
       swapRepository: repositories.swap,
       atomiqGateway: gateways.atomiq,
       transactionRepository: repositories.transaction,
@@ -353,7 +364,7 @@ export namespace AppContext {
 
     const paymentPreparator = new PaymentPreparator({
       paymentParser,
-      swapService,
+      swapReader,
       feeConfig,
       logger: rootLogger,
     });
@@ -367,7 +378,7 @@ export namespace AppContext {
     const receiveBuildCache = new ReceiveBuildCache();
 
     const bitcoinReceiver = new BitcoinReceiver({
-      swapService,
+      swapCoordinator,
       starknetGateway: gateways.starknet,
       dexGateway: gateways.dex,
       signatureProcessor: gateways.signatureProcessor,
@@ -379,7 +390,7 @@ export namespace AppContext {
     });
 
     const paymentReceiver = new PaymentReceiver({
-      swapService,
+      swapCoordinator,
       bitcoinReceiver,
       starknetConfig,
       logger: rootLogger,
@@ -389,7 +400,7 @@ export namespace AppContext {
       paymentParser,
       paymentPreparator,
       erc20CallFactory,
-      swapService,
+      swapCoordinator,
       starknetGateway: gateways.starknet,
       paymentBuildCache,
       starknetConfig,
@@ -430,8 +441,7 @@ export namespace AppContext {
       // Currency
       btcPriceReader,
       // Swap
-      fetchSwapLimits: swapService,
-      fetchSwapStatus: swapService,
+      swapReader,
       // Payment
       paymentPreparator,
       paymentBuilder,
@@ -446,7 +456,7 @@ export namespace AppContext {
       useCases,
       paymentBuildCache,
       services: {
-        swap: swapService,
+        swapCoordinator,
         userSettings: userSettingsService,
         transaction: transactionService,
       },

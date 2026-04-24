@@ -111,7 +111,8 @@ export async function createApp(options: CreateAppOptions = {}): Promise<AppInst
   let swapMonitor: SwapMonitor | null = null;
   if (!options.skipMonitor) {
     swapMonitor = new SwapMonitor(
-      context.services.swap,
+      context.useCases.swapReader,
+      context.services.swapCoordinator,
       context.gateways.atomiq,
       context.logger,
       {keepaliveUrl: config.webauthn.origin},

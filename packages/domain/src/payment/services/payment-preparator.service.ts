@@ -1,6 +1,6 @@
 import type {Logger} from 'pino';
 import type {Amount} from '../../shared';
-import type {SwapService} from '../../swap';
+import type {SwapReader} from '../../swap';
 import {FeeCalculator, type FeeConfig} from '../fee';
 import type {PreparedPaymentData} from '../pay.types';
 import type {ParsedPaymentData} from '../types';
@@ -12,7 +12,7 @@ import type {PaymentParser} from './payment-parser.service';
 
 export interface PaymentPreparatorDeps {
   paymentParser: PaymentParser;
-  swapService: SwapService;
+  swapReader: SwapReader;
   feeConfig: FeeConfig;
   logger: Logger;
 }
@@ -41,14 +41,14 @@ export class PaymentPreparator implements PreparePaymentUseCase {
         fee = FeeCalculator.calculateFee(parsed.amount, this.deps.feeConfig.percentageFor('starknet'));
         break;
       case 'lightning': {
-        const limits = await this.deps.swapService.fetchLimits({direction: 'starknet_to_lightning'});
+        const limits = await this.deps.swapReader.fetchLimits({direction: 'starknet_to_lightning'});
         const lpFeeEstimate = FeeCalculator.calculateFee(parsed.amount, limits.limits.feePercent / 100);
         const bimFeeLn = FeeCalculator.calculateFee(parsed.amount, this.deps.feeConfig.percentageFor('lightning'));
         fee = lpFeeEstimate.add(bimFeeLn);
         break;
       }
       case 'bitcoin': {
-        const limits = await this.deps.swapService.fetchLimits({direction: 'starknet_to_bitcoin'});
+        const limits = await this.deps.swapReader.fetchLimits({direction: 'starknet_to_bitcoin'});
         const lpFeeEstimate = FeeCalculator.calculateFee(parsed.amount, limits.limits.feePercent / 100);
         const bimFeeBtc = FeeCalculator.calculateFee(parsed.amount, this.deps.feeConfig.percentageFor('bitcoin'));
         fee = lpFeeEstimate.add(bimFeeBtc);

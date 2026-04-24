@@ -1,6 +1,6 @@
 import type {Logger} from 'pino';
 import {AccountNotDeployedError, Amount, type StarknetAddress, type StarknetConfig} from '../../shared';
-import {LightningInvoice, type SwapService} from '../../swap';
+import {LightningInvoice, type SwapCoordinator} from '../../swap';
 import {InvalidPaymentAmountError} from '../errors';
 import type {ReceivePaymentInput as DomainReceiveInput, ReceiveResult} from '../receive.types';
 import type {
@@ -16,7 +16,7 @@ import type {
 import type {BitcoinReceiver} from './bitcoin-receiver.service';
 
 export interface PaymentReceiverDeps {
-  swapService: SwapService;
+  swapCoordinator: SwapCoordinator;
   bitcoinReceiver: BitcoinReceiver;
   starknetConfig: StarknetConfig;
   logger: Logger;
@@ -174,7 +174,7 @@ export class PaymentReceiver implements ReceivePaymentUseCase, CommitReceiveUseC
   }
 
   private async receiveLightning(destinationAddress: StarknetAddress, amount: Amount, accountId: string, description: string) {
-    const result = await this.deps.swapService.createLightningToStarknet({
+    const result = await this.deps.swapCoordinator.createLightningToStarknet({
       amount,
       destinationAddress,
       accountId,
@@ -195,7 +195,7 @@ export class PaymentReceiver implements ReceivePaymentUseCase, CommitReceiveUseC
     accountId: string,
     description: string,
   ) {
-    const result = await this.deps.swapService.prepareBitcoinToStarknet({
+    const result = await this.deps.swapCoordinator.prepareBitcoinToStarknet({
       amount,
       destinationAddress,
       accountId,
