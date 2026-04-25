@@ -88,7 +88,7 @@ export class PaymentBuilder implements BuildPaymentUseCase {
   }
 
   // ===========================================================================
-  // Prepare calls per network (was PayService.prepareCalls)
+  // Prepare calls per network
   // ===========================================================================
 
   private async prepareCalls(

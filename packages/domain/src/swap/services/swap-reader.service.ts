@@ -75,8 +75,9 @@ export class SwapReader implements FetchSwapLimitsUseCase, FetchSwapStatusUseCas
     }
 
     // Atomiq is the source of truth — always sync non-terminal swaps.
-    // Double-claim is prevented orthogonally by SwapCoordinator via
-    // recordClaimAttempt / hasRecentClaimAttempt, not by skipping sync.
+    // Double-claim is prevented orthogonally: SwapCoordinator.recordClaimAttempt
+    // persists the attempt; SwapMonitor consults Swap.hasRecentClaimAttempt()
+    // before retrying. Skipping sync is not the mechanism.
     if (!swap.isTerminal()) {
       await this.syncWithAtomiq(swap);
     }

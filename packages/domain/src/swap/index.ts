@@ -17,7 +17,7 @@ export type {
   FetchSwapStatusUseCase,
 } from './use-cases/fetch-swap-status.use-case';
 
-// Use case implementation (service)
+// Use case implementations (one service grouping FetchSwapLimits + FetchSwapStatus)
 export {SwapReader, type SwapReaderDeps} from './services/swap-reader.service';
 
 // Internal domain service

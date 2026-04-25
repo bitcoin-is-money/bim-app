@@ -6,7 +6,7 @@ export * from './payment-build.cache';
 export * from './receive-build.cache';
 export * from './receive.types';
 
-// Internal domain services (moved under services/)
+// Internal domain services
 export * from './services/erc20-call.factory';
 export * from './services/payment-parser.service';
 export {BitcoinReceiver, type BitcoinReceiverDeps} from './services/bitcoin-receiver.service';

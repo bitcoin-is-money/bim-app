@@ -3,7 +3,7 @@ import type {SwapDirection} from '@bim/domain/swap';
 /**
  * Flags summarising an Atomiq swap's current state.
  *
- * Shape consumed by SwapService.syncWithAtomiq: at most one of the
+ * Shape consumed by SwapReader.syncWithAtomiq: at most one of the
  * "terminal" flags (isCompleted, isFailed, isExpired, isRefunded) should
  * be true at any given time. All flags false means "still pending".
  */

@@ -5,7 +5,7 @@ import type {PreparedCalls} from './pay.types';
  * Data stored for a pending payment build (between /build and /execute).
  */
 export interface PaymentBuildData {
-  /** The prepared calls and payment metadata from PayService.prepareCalls() */
+  /** The prepared calls and payment metadata from PaymentBuilder.prepareCalls() */
   preparedCalls: PreparedCalls;
   /** The SNIP-29 OutsideExecution typed data from AVNU paymaster */
   typedData: unknown;

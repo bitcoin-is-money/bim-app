@@ -38,7 +38,7 @@ export function isReverseSwap(direction: SwapDirection): boolean {
 /**
  * Lifecycle status of a swap.
  *
- * All statuses mirror Atomiq. BIM never invents a status: the SwapService
+ * All statuses mirror Atomiq. BIM never invents a status: the SwapReader
  * transcribes what Atomiq reports, and the SwapMonitor uses orthogonal
  * metadata (lastClaimAttemptAt) to avoid double-submitting claim txs.
  */

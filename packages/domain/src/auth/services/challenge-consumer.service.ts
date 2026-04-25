@@ -11,7 +11,7 @@ export interface ChallengeConsumerDeps {
  * resolves precise errors when consumption fails.
  *
  * Encapsulates the "consume or explain why it failed" pattern shared by
- * CompleteRegistration and CompleteLogin.
+ * Registrar.complete and Authenticator.complete.
  */
 export class ChallengeConsumer {
   constructor(private readonly deps: ChallengeConsumerDeps) {}
