@@ -33,30 +33,22 @@ built, signed, executed, and persisted lives in
 
 ## What the user sees
 
-1. User opens the "Receive" page, picks "Bitcoin", enters an amount.
-2. Frontend calls `POST /api/payment/receive/` with
-   `{ network: "bitcoin", amount }`.
-3. Backend responds with `status: "pending_commit"` plus the data
-   needed to trigger a WebAuthn ceremony (`buildId`, `messageHash`,
-   `credentialId`).
-4. Frontend shows **"Confirm with Touch ID"**. The user approves.
-5. Frontend calls `POST /api/payment/receive/commit` with the WebAuthn
-   assertion.
-6. Backend executes the Starknet commit tx (gasless, via the AVNU
-   paymaster), waits for it to confirm, and asks Atomiq for the
-   Bitcoin deposit address.
-7. Frontend displays the **BIP-21 URI** (`bitcoin:bc1q...?amount=0.005`)
-   as a QR code and a copy-pastable address.
-8. User (or their payer) sends BTC to the address from any Bitcoin
-   wallet.
-9. The `SwapMonitor` polls Atomiq in the background. When the deposit
+1. User picks "Bitcoin" on the Receive page and enters an amount. The
+   frontend prompts **"Confirm with Touch ID"** and the user approves
+   with WebAuthn — the backend then executes the Starknet commit tx
+   (gasless via AVNU paymaster) which locks the STRK security deposit
+   in the Atomiq escrow.
+2. Once the commit confirms, the frontend displays the **BIP-21 URI**
+   (`bitcoin:bc1q...?amount=0.005`) as a QR code and a copy-pastable
+   address. The user (or their payer) sends BTC to that address from
+   any Bitcoin wallet.
+3. The `SwapMonitor` polls Atomiq in the background. When the deposit
    confirms on-chain, the swap becomes `claimable`; the monitor
-   auto-submits the claim transaction; WBTC lands on the user's
-   Starknet address.
-10. The user's tx history shows the claim tx as "Received", and the
-    commit tx as "Security deposit". The bounty STRK is refunded to
-    the user in a subsequent backend tx (see
-    [swap-monitor.md](./swap-monitor.md#claiming-and-bounty-refund)).
+   auto-submits the claim, WBTC lands on the user's Starknet address,
+   and the STRK bounty is refunded in a follow-up tx (see
+   [swap-monitor.md](./swap-monitor.md#claiming-and-bounty-refund)).
+4. The user's tx history then shows the claim tx as **"Received"** and
+   the commit tx as **"Security deposit"**.
 
 ---
 
@@ -240,23 +232,7 @@ from where it left off on the next iteration.
 If the SDK cannot find a swap by ID (pathological: DB corruption,
 partial migration), `getSwapStatus()` returns `state: -2` with
 `error: "Swap {id} not found in SDK storage"`.
-`SwapService.syncWithAtomiq()` detects this specific error and
-transitions the swap to `lost` (`swap.service.ts:597-601`), which is a
+`SwapReader.syncWithAtomiq()` detects this specific error and
+transitions the swap to `lost` (`swap-reader.service.ts`), which is a
 **terminal** state even for Bitcoin. The monitor stops polling and a
 human must intervene to investigate.
-
----
-
-## Key file references
-
-The bulk of the implementation lives in the commit-phase flow — see
-[swap-commit.md § Key file references](./receive-bitcoin-swap-commit.md#key-file-references).
-
-Bitcoin-specific entry points:
-
-- Route phase 1: `apps/api/src/routes/payment/receive/receive.routes.ts:43-178`
-- Route phase 2: `apps/api/src/routes/payment/receive/receive.routes.ts:184-256`
-- Bitcoin dispatch in `ReceiveService`: `packages/domain/src/payment/receive.service.ts:61-68`
-- `isTerminal` override for bitcoin expired: `packages/domain/src/swap/swap.ts:177-184`
-- `Swap.createBitcoinToStarknetCommitted`: `packages/domain/src/swap/swap.ts:75-94`
-- Atomiq SDK call: `packages/atomiq/src/atomiq.gateway.ts:353-446` (prepare + complete)

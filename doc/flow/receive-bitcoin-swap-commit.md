@@ -67,125 +67,34 @@ A Bitcoin receive is therefore:
 
 ## Phase 1 — `POST /api/payment/receive/` (network = bitcoin)
 
-**Route:** `apps/api/src/routes/payment/receive/receive.routes.ts:43-178`
+**Route:** `apps/api/src/routes/payment/receive/receive.routes.ts`.
 
-### Happy path
+`POST /api/payment/receive/` with `network: "bitcoin"` proceeds in five
+steps:
 
-```
-POST /api/payment/receive/                    (receive.routes.ts:43)
-│
-├── Auth middleware → account
-├── ReceiveSchema.parse(body)                  (receive.types.ts:3-8)
-│       { network: "bitcoin", amount: "500000", description?, useUriPrefix? }
-│
-├── account.getStarknetAddress() → starknetAddress
-│       (400 ACCOUNT_NOT_DEPLOYED if missing)
-│
-├── amount = Amount.ofSatoshi(BigInt(input.amount))
-│
-├── receiveService.receive({network:"bitcoin", ...})
-│   │
-│   └── ReceiveService.prepareBitcoinReceive()
-│       │   (receive.service.ts:122-141)
-│       │
-│       └── swapService.prepareBitcoinToStarknet({amount, destinationAddress, ...})
-│           │   (swap.service.ts:212-240)
-│           │
-│           ├── validateAmountAgainstLimits()       ← SwapAmountError if out of range
-│           │
-│           ├── atomiqGateway.prepareBitcoinToStarknetSwap({amountSats, destinationAddress})
-│           │   │   (atomiq.gateway.ts:353-412)
-│           │   │
-│           │   ├── swapper.createFromBTCSwap(
-│           │   │     'STARKNET', destinationAddress, swapToken.address,
-│           │   │     amountSats, exactOut=true,
-│           │   │     undefined,
-│           │   │     {unsafeZeroWatchtowerFee: true}
-│           │   │   )
-│           │   ├── swapId = swap.getId()
-│           │   ├── commitCalls = extractCommitCalls(swap)   ← via swap.txsCommit()
-│           │   ├── expiresAt = new Date(swap.getQuoteExpiry())
-│           │   └── return { swapId, commitCalls, expiresAt }
-│           │
-│           └── return { swapId, commitCalls, amount, expiresAt }
-│
-│   → returns {
-│         network: "bitcoin",
-│         status: "pending_commit",
-│         swapId, commitCalls, amount, expiresAt
-│       }
-│
-├── (Route code continues on receive.routes.ts:67-170)
-│
-├── Auto-swap WBTC → STRK if needed                (receive.routes.ts:73-129)
-│   │
-│   ├── extractApproveAmount(commitCalls)          (receive.routes.ts:270-287)
-│   │     Finds the 'approve' call in commitCalls and decodes its u256 amount
-│   │     (calldata = [spender, low, high]; amount = low + high << 128)
-│   │
-│   ├── If the approved token is STRK (security deposit token):
-│   │   │
-│   │   ├── Fetch user's STRK balance on Starknet
-│   │   │
-│   │   ├── rawDeficit = approveAmount - strkBalance
-│   │   │
-│   │   ├── If rawDeficit > 0:
-│   │   │   │
-│   │   │   ├── deficit = max(
-│   │   │   │     roundUpToWholeStrk(rawDeficit * 1.10),   ← +10% slippage buffer
-│   │   │   │     50 STRK                                    ← MIN_SWAP to avoid
-│   │   │   │                                                  DEX "insufficient
-│   │   │   │                                                  input amount" on
-│   │   │   │                                                  tiny swaps
-│   │   │   │   )
-│   │   │   │
-│   │   │   ├── gateways.dex.getSwapCalls({
-│   │   │   │       sellToken: WBTC, buyToken: STRK,
-│   │   │   │       buyAmount: deficit, takerAddress
-│   │   │   │   })
-│   │   │   │   → { calls: [approveWbtc, swapWbtcForStrk], sellAmount, buyAmount }
-│   │   │   │
-│   │   │   ├── Pre-check: user has >= sellAmount WBTC
-│   │   │   │     (else throws InsufficientBalanceError 'security_deposit')
-│   │   │   │
-│   │   │   └── finalCalls = [...dexCalls, ...commitCalls]
-│   │   │
-│   │   └── Else (enough STRK): finalCalls = commitCalls
-│   │
-│   └── Else (approve is not for STRK, or no approve): finalCalls = commitCalls
-│
-├── buildCalls via AVNU paymaster                  (receive.routes.ts:131-143)
-│   │
-│   ├── gateways.starknet.buildCalls({senderAddress, calls: finalCalls})
-│   │     → { typedData, messageHash }
-│   │     Uses the AVNU paymaster to produce a SNIP-29 typed message
-│   │     that will sponsor gas on Starknet (user pays 0 ETH/STRK for gas).
-│   │
-│   └── If buildCalls throws InsufficientBalanceError, re-throw it with
-│       kind='security_deposit' and the approve amount, so the frontend can
-│       surface "You don't have enough STRK for the security deposit" to the user.
-│
-├── Cache the build                                (receive.routes.ts:148-159)
-│   │
-│   ├── buildId = randomUUID()
-│   └── buildCache.set(buildId, {
-│         swapId, typedData, senderAddress, accountId, amount,
-│         expiresAt, description, useUriPrefix, createdAt: now
-│       })
-│
-│   The ReceiveBuildCache is an in-memory, single-use, TTL'd map:
-│   apps/api/src/routes/payment/receive/receive-build.cache.ts
-│
-└── 200 OK {
-      network: "bitcoin",
-      status: "pending_commit",
-      buildId,                ← frontend passes this back in phase 2
-      messageHash,            ← message to sign with WebAuthn
-      credentialId,           ← which passkey to use
-      swapId,
-      amount, expiresAt
-    }
-```
+1. **Quote.** `PaymentReceiver.prepareBitcoinReceive` asks
+   `SwapCoordinator.prepareBitcoinToStarknet` for a quote. The
+   coordinator validates the amount against the LP limits and calls
+   `AtomiqGateway.prepareBitcoinToStarknetSwap`, which returns
+   `{ swapId, commitCalls, expiresAt }` (the `commitCalls` are the
+   unsigned Starknet multicall — typically `approve(STRK→escrow)` plus
+   protocol-specific init calls).
+2. **STRK top-up.** The route inspects the `approve` call to find the
+   security deposit amount. If the user's STRK balance is below it,
+   the route asks the AVNU DEX for `getSwapCalls(WBTC → STRK)`
+   (rounded up to whole STRK with a +10 % slippage buffer, minimum
+   50 STRK to avoid DEX "insufficient input" errors on tiny swaps)
+   and prepends those calls to the multicall. If WBTC is also
+   insufficient, an `InsufficientBalanceError` with
+   `kind: 'security_deposit'` is thrown.
+3. **Build.** `gateways.starknet.buildCalls` (AVNU paymaster) wraps
+   the final calls into a SNIP-29 typed message and returns
+   `{ typedData, messageHash }` so gas will be sponsored.
+4. **Cache.** A `buildId` (UUID) is generated and the build is stored
+   in the `ReceiveBuildCache` (in-memory, single-use, TTL'd).
+5. **Respond.** `200 OK { status: "pending_commit", buildId,
+   messageHash, credentialId, swapId, amount, expiresAt }`. No funds
+   have moved yet — the user still has to sign with WebAuthn.
 
 ### What the frontend does between phase 1 and phase 2
 
@@ -204,117 +113,32 @@ build quietly expires and the Atomiq quote also expires — no harm done.
 
 ## Phase 2 — `POST /api/payment/receive/commit`
 
-**Route:** `apps/api/src/routes/payment/receive/receive.routes.ts:184-256`
+**Route:** `apps/api/src/routes/payment/receive/receive.routes.ts`.
 
-### Happy path
+`POST /api/payment/receive/commit` resumes the flow after WebAuthn:
 
-```
-POST /api/payment/receive/commit               (receive.routes.ts:184)
-│
-├── Auth middleware → account
-├── ReceiveCommitSchema.parse(body)              (receive.types.ts:16-19)
-│       { buildId: uuid, assertion: {authenticatorData, clientDataJSON, signature} }
-│
-├── build = buildCache.consume(buildId)          ← single-use
-│       → 400 BUILD_EXPIRED if the build is missing or already consumed
-│
-├── Account ownership check
-│       if account.id !== build.accountId
-│         → 403 FORBIDDEN 'Build does not belong to this account'
-│
-├── signature = WebAuthnSignatureProcessor.process(input.assertion, account.publicKey)
-│       │   (apps/api/src/adapters/webauthn-signature-processor.ts)
-│       │
-│       ├── Verifies the assertion against the cached challenge (messageHash)
-│       └── Converts it into an Argent-compatible Starknet signature
-│
-├── gateways.starknet.executeSignedCalls({
-│     senderAddress: build.senderAddress,
-│     typedData: build.typedData,
-│     signature
-│   })
-│   │
-│   ├── Sends the signed typed data to the AVNU paymaster
-│   ├── AVNU executes the multicall on Starknet (gas sponsored)
-│   └── returns { txHash }
-│
-├── gateways.starknet.waitForTransaction(txHash)
-│       Blocks until the Starknet node confirms the tx (ACCEPTED_ON_L2).
-│
-├── swapService.saveBitcoinCommit({             ← IMPORTANT: persist BEFORE completing
-│     swapId, destinationAddress: starknetAddress,
-│     amount, description, accountId,
-│     commitTxHash: txHash, expiresAt
-│   })
-│   │   (swap.service.ts:249-267)
-│   │
-│   ├── Swap.createBitcoinToStarknetCommitted(...)
-│   │     → new Swap entity in state {
-│   │         status: 'committed',
-│   │         commitTxHash, committedAt: now
-│   │       }
-│   │     No deposit address yet — the swap is known on-chain but the
-│   │     Bitcoin address has not been handed back by the SDK.
-│   │
-│   └── swapRepository.save(swap)
-│
-│   Why save here (before the deposit address is known)?
-│   If the next step (completeBitcoinSwapCommit) fails or the container
-│   crashes, the SwapMonitor will still find the swap in the DB and
-│   continue polling Atomiq. Otherwise the user's security deposit
-│   would be locked on-chain with no way for BIM to track the swap.
-│
-├── transactionRepository.saveDescription(
-│     txHash, accountId, 'Security deposit'
-│   )                                             ← non-fatal if it fails
-│       Labels the commit tx as "Security deposit" in the user's tx history.
-│
-├── swapService.completeBitcoinToStarknet({swapId})
-│   │   (swap.service.ts:277-309)         ← called inline by BitcoinReceiveService.commitAndComplete
-│   │
-│   ├── swapRepository.findById(swapId)
-│   │     → throws SwapNotFoundError if missing
-│   │
-│   ├── atomiqGateway.completeBitcoinSwapCommit(swapId)
-│   │   │   (atomiq.gateway.ts:414-446)
-│   │   │
-│   │   ├── swap = swapper.getSwapById(swapId, 'STARKNET')
-│   │   ├── abortController with 90s timeout
-│   │   ├── swap.waitTillCommited(abortSignal)
-│   │   │     Polls Atomiq's on-chain state until the escrow is confirmed
-│   │   │     (transitions to CLAIM_COMMITED). Normally fast because we
-│   │   │     already waited for the tx above, but the SDK has its own
-│   │   │     view and may need a few seconds to pick up the event.
-│   │   ├── depositAddress = swap.getAddress()
-│   │   ├── amount = swap.getInput()?.rawAmount
-│   │   └── return {
-│   │         depositAddress,
-│   │         bip21Uri: `bitcoin:${depositAddress}?amount=${BTC}`
-│   │       }
-│   │
-│   ├── swap.setDepositAddress(depositAddress)
-│   ├── swap.markAsPaid()                   ← transition committed → paid
-│   ├── swapRepository.save(swap)
-│   │
-│   └── return { swap, depositAddress, bip21Uri }
-│
-├── apply useUriPrefix to bip21Uri (strip "bitcoin:" if false)
-│
-├── wrap depositAddress in BitcoinAddress.of(addr, bitcoinNetwork)
-│
-├── swapMonitor.ensureRunning()
-│       No-op if the monitor is already running from a previous swap;
-│       otherwise starts the 5s polling loop.
-│
-└── 200 OK {
-      network: "bitcoin",
-      swapId,
-      depositAddress,
-      bip21Uri,                  ← "bitcoin:bc1q.../?amount=0.005"
-      amount: { value, currency: "SAT" },
-      expiresAt
-    }
-```
+1. **Consume the build.** `buildCache.consume(buildId)` is single-use
+   (returns `400 BUILD_EXPIRED` if missing or already used). The
+   account ownership is verified — `403 FORBIDDEN` if it doesn't
+   match.
+2. **Sign + execute.** The WebAuthn assertion is converted to an
+   Argent-compatible signature; `gateways.starknet.executeSignedCalls`
+   submits the multicall via the AVNU paymaster (gasless) and returns
+   the `txHash`. The route waits for L2 confirmation with
+   `waitForTransaction(txHash)`.
+3. **Persist commit (load-bearing).** Immediately after confirmation,
+   `SwapCoordinator.saveBitcoinCommit` writes the swap to the DB in
+   `committed` state with the `commitTxHash`. **This must happen
+   before completion** — see the next subsection.
+4. **Label.** The commit tx is labelled `"Security deposit"` in the
+   user's tx history (non-fatal if it fails).
+5. **Complete.** `SwapCoordinator.completeBitcoinToStarknet` calls
+   `AtomiqGateway.completeBitcoinSwapCommit`, which polls the SDK
+   (`swap.waitTillCommited`, 90 s timeout) until the on-chain escrow
+   is confirmed, then returns the Bitcoin deposit address. The swap
+   transitions `committed → paid` and the deposit address is saved.
+6. **Respond.** `swapMonitor?.ensureRunning()`, then
+   `200 OK { swapId, depositAddress, bip21Uri, amount, expiresAt }`.
 
 ### Why the swap is persisted *before* completion
 
@@ -334,73 +158,45 @@ address. This is deliberate:
   via the SDK's `_sync(true)` mechanism.
 
 This is a load-bearing invariant. **Never move the `saveBitcoinCommit`
-call below `swapService.completeBitcoinToStarknet`.**
+call below `swapCoordinator.completeBitcoinToStarknet`.**
 
 ---
 
 ## The `committed` state
 
-The `Swap` entity's state machine includes a dedicated `committed` state
-for Bitcoin receives. It encodes "the Starknet escrow is funded, but
-Atomiq has not yet handed back the Bitcoin deposit address".
+The `Swap` state machine has a dedicated `committed` state for Bitcoin
+receives — "the Starknet escrow is funded, but Atomiq has not yet
+handed back the Bitcoin deposit address". Bitcoin receives skip
+`pending` entirely and start in `committed`.
 
-```ts
-// packages/domain/src/swap/types.ts:58-68
-export type SwapState =
-  | { status: 'pending' }
-  | { status: 'committed'; commitTxHash: string; committedAt: Date }
-  | { status: 'paid'; paidAt: Date }
-  | { status: 'claimable'; claimableAt: Date }
-  | { status: 'completed'; txHash: string; completedAt: Date }
-  | { status: 'expired'; expiredAt: Date }
-  | { status: 'refundable'; refundableAt: Date }
-  | { status: 'refunded'; refundedAt: Date }
-  | { status: 'failed'; error: string; failedAt: Date }
-  | { status: 'lost'; lostAt: Date };
-```
-
-Progress values (`swap.ts:279-298`):
+Progress values:
 
 | Status | Progress |
 |--------|----------|
-| `pending` | 0% (never used for Bitcoin — swap goes straight to `committed`) |
-| `committed` | 10% |
-| `paid` | 33% |
-| `claimable` | 50% |
-| `completed` | 100% |
+| `committed` | 10 % |
+| `paid` | 33 % |
+| `claimable` | 50 % |
+| `completed` | 100 % |
 
-`getTxHash()` returns the `commitTxHash` while the swap is in the
-`committed` state, the `lastClaimTxHash` in `claimable`, and the final
-`txHash` once `completed` (`swap.ts:150-161`).
+`getTxHash()` returns the `commitTxHash` in `committed`, the
+`lastClaimTxHash` in `claimable`, and the final `txHash` once
+`completed`.
 
 ---
 
 ## Why `bitcoin_to_starknet` in `expired` is **not** terminal
 
-```ts
-// packages/domain/src/swap/swap.ts:177-184
-isTerminal(): boolean {
-  // Expired bitcoin_to_starknet swaps are NOT terminal: the Atomiq smart
-  // contract will auto-refund the security deposit after timelock expiry
-  // (state -3).
-  if (this.state.status === 'expired' && this.data.direction === 'bitcoin_to_starknet') {
-    return false;
-  }
-  return ['completed', 'expired', 'failed', 'refunded', 'lost'].includes(this.state.status);
-}
-```
-
 For Lightning, an expired swap is terminal — nothing more can happen.
 For Bitcoin, an expired swap (typically: user never sent BTC in time)
-has a **security deposit still locked in the escrow contract**. Atomiq
-will auto-refund it after the timelock expires, which transitions the
-swap to state `-3` (refunded) on-chain.
+still has a **security deposit locked in the escrow contract**. Atomiq
+auto-refunds it after the on-chain timelock, transitioning the swap to
+`refunded`.
 
-Because `isTerminal()` returns `false` for this specific combination,
-the `SwapMonitor` keeps polling the swap, picks up the on-chain refund,
-and transitions it to `refunded`. The user is never asked to sign
-anything; the STRK simply reappears in their account when the smart
-contract releases it.
+`Swap.isTerminal()` returns `false` for the
+`(expired, bitcoin_to_starknet)` combination, so the `SwapMonitor`
+keeps polling and picks up the eventual refund. The user is never
+asked to sign anything — the STRK simply reappears in their account
+when the contract releases it.
 
 This is the practical reason the `refundable` / `refunded` / `lost`
 states exist and why you should **not** collapse them into `failed`
@@ -416,8 +212,9 @@ sequenceDiagram
     participant Front as BIM Frontend
     participant API as BIM Backend API (/receive)
     participant Commit as BIM Backend API (/receive/commit)
-    participant Recv as BIM Backend ReceiveService
-    participant Swap as BIM Backend SwapService
+    participant PR as BIM Backend PaymentReceiver
+    participant Reader as BIM Backend SwapReader
+    participant Coord as BIM Backend SwapCoordinator
     participant Gw as BIM Backend AtomiqGateway
     participant DEX as AVNU DEX
     participant Pay as AVNU Paymaster
@@ -429,14 +226,14 @@ sequenceDiagram
     Note over User,DB: PHASE 1 — Prepare
     User->>Front: Enter amount, select Bitcoin
     Front->>API: POST { network:"bitcoin", amount, ... }
-    API->>Recv: receive({network:"bitcoin", ...})
-    Recv->>Swap: prepareBitcoinToStarknet(...)
-    Swap->>Gw: prepareBitcoinToStarknetSwap(...)
+    API->>PR: receive({network:"bitcoin", ...})
+    PR->>Coord: prepareBitcoinToStarknet(...)
+    Coord->>Gw: prepareBitcoinToStarknetSwap(...)
     Gw->>SDK: swapper.createFromBTCSwap(...)
     SDK-->>Gw: Swap object (commitCalls)
-    Gw-->>Swap: { swapId, commitCalls, expiresAt }
-    Swap-->>Recv: { swapId, commitCalls, amount, expiresAt }
-    Recv-->>API: { status:"pending_commit", swapId, commitCalls, ... }
+    Gw-->>Coord: { swapId, commitCalls, expiresAt }
+    Coord-->>PR: { swapId, commitCalls, amount, expiresAt }
+    PR-->>API: { status:"pending_commit", swapId, commitCalls, ... }
 
     Note over API,DEX: Auto-swap WBTC → STRK if STRK balance < security deposit
     opt STRK deficit > 0
@@ -470,22 +267,22 @@ sequenceDiagram
 
     rect rgb(235, 245, 255)
     Note over Commit,DB: Persist BEFORE completion (load-bearing invariant)
-    Commit->>Swap: saveBitcoinCommit({swapId, commitTxHash, ...})
-    Swap->>DB: INSERT swap status=committed
+    Commit->>Coord: saveBitcoinCommit({swapId, commitTxHash, ...})
+    Coord->>DB: INSERT swap status=committed
     end
 
     Commit->>Commit: transactionRepository.saveDescription(txHash, "Security deposit")
-    Commit->>Swap: completeBitcoinToStarknet({swapId})
-    Swap->>DB: findById(swapId)
-    Swap->>Gw: completeBitcoinSwapCommit(swapId)
+    Commit->>Coord: completeBitcoinToStarknet({swapId})
+    Coord->>DB: findById(swapId)
+    Coord->>Gw: completeBitcoinSwapCommit(swapId)
     Gw->>SDK: swap.waitTillCommited(signal, timeout=90s)
     SDK-->>Gw: committed on-chain
     Gw->>SDK: swap.getAddress() + swap.getInput()
     SDK-->>Gw: depositAddress
-    Gw-->>Swap: { depositAddress, bip21Uri }
-    Swap->>Swap: swap.setDepositAddress + swap.markAsPaid
-    Swap->>DB: UPDATE swap status=paid
-    Swap-->>Commit: { swap, depositAddress, bip21Uri }
+    Gw-->>Coord: { depositAddress, bip21Uri }
+    Coord->>Coord: swap.setDepositAddress + swap.markAsPaid
+    Coord->>DB: UPDATE swap status=paid
+    Coord-->>Commit: { swap, depositAddress, bip21Uri }
     Commit->>Mon: ensureRunning()
     Commit-->>Front: { swapId, depositAddress, bip21Uri, amount, expiresAt }
     Front->>User: Display bitcoin:... QR code
@@ -546,34 +343,3 @@ deposit quote has its own TTL; if BTC arrives after it, the LP may or
 may not honor the swap. The Atomiq SDK `_sync(true)` call in
 `getSwapStatus()` forces a fresh on-chain read, which helps recover
 edge cases where the SDK reported `expired` prematurely.
-
----
-
-## Key file references
-
-**Routes:**
-- Phase 1: `apps/api/src/routes/payment/receive/receive.routes.ts:43-178`
-- Phase 2: `apps/api/src/routes/payment/receive/receive.routes.ts:184-256`
-- Zod schemas: `apps/api/src/routes/payment/receive/receive.types.ts:3-19`
-- Response types: `apps/api/src/routes/payment/receive/receive.types.ts:57-66`
-- Auto-swap WBTC → STRK: `apps/api/src/routes/payment/receive/receive.routes.ts:73-129`
-- Build cache: `apps/api/src/routes/payment/receive/receive-build.cache.ts`
-
-**Domain:**
-- `ReceiveService.prepareBitcoinReceive`: `packages/domain/src/payment/receive.service.ts`
-- `BitcoinReceiveService.commitAndComplete`: `packages/domain/src/payment/bitcoin-receive.service.ts` (inlines the swap completion + bip21Uri formatting)
-- `SwapService.prepareBitcoinToStarknet`: `packages/domain/src/swap/swap.service.ts:212-240`
-- `SwapService.saveBitcoinCommit`: `packages/domain/src/swap/swap.service.ts:249-267`
-- `SwapService.completeBitcoinToStarknet`: `packages/domain/src/swap/swap.service.ts:277-309`
-- `Swap.createBitcoinToStarknetCommitted`: `packages/domain/src/swap/swap.ts:75-94`
-- `Swap.setDepositAddress`: `packages/domain/src/swap/swap.ts:195-203`
-- `Swap.isTerminal` (bitcoin expired exception): `packages/domain/src/swap/swap.ts:177-184`
-
-**Adapter:**
-- `AtomiqSdkGateway.prepareBitcoinToStarknetSwap`: `packages/atomiq/src/atomiq.gateway.ts:353-412`
-- `AtomiqSdkGateway.completeBitcoinSwapCommit`: `packages/atomiq/src/atomiq.gateway.ts:414-446`
-- `extractCommitCalls` helper: `packages/atomiq/src/atomiq.gateway.ts:508-533`
-
-**Ports:**
-- `AtomiqGateway` interface: `packages/domain/src/ports/gateways.ts:176-250`
-- `BitcoinSwapQuote`, `BitcoinSwapCommitResult`: `packages/domain/src/ports/gateways.ts:293-304`

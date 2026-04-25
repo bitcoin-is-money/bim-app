@@ -34,8 +34,8 @@ flow is a single HTTP round trip until the invoice is created.
 |-----------|-------|----------------|
 | Frontend (Angular) | `apps/front` | Collects the amount, shows the QR code, polls status |
 | `POST /api/payment/receive/` | `apps/api/src/routes/payment/receive/receive.routes.ts:43` | HTTP route — auth + Zod validation + orchestration |
-| `ReceiveService` | `packages/domain/src/payment/receive.service.ts` | Thin dispatcher: routes lightning → `SwapService.createLightningToStarknet()` |
-| `SwapService` | `packages/domain/src/swap/swap.service.ts` | Domain use case: validates limits, calls gateway, creates the `Swap` entity, saves it |
+| `PaymentReceiver` | `packages/domain/src/payment/services/payment-receiver.service.ts` | Thin dispatcher: routes lightning → `SwapCoordinator.createLightningToStarknet()` |
+| `SwapCoordinator` | `packages/domain/src/swap/services/swap-coordinator.service.ts` | Domain use case: validates limits, calls gateway, creates the `Swap` entity, saves it |
 | `Swap` entity | `packages/domain/src/swap/swap.ts` | State machine (`pending` → `paid` → `claimable` → `completed`) |
 | `AtomiqGateway` port | `packages/domain/src/ports/gateways.ts:176` | Interface |
 | `AtomiqSdkGateway` adapter | `packages/atomiq/src/atomiq.gateway.ts` | Wraps the Atomiq SDK |
@@ -51,8 +51,9 @@ sequenceDiagram
     actor User
     participant Front as BIM Frontend (Angular)
     participant API as BIM Backend API (POST /receive)
-    participant Recv as BIM Backend ReceiveService
-    participant Swap as BIM Backend SwapService
+    participant PR as BIM Backend PaymentReceiver
+    participant Reader as BIM Backend SwapReader
+    participant Coord as BIM Backend SwapCoordinator
     participant Gw as BIM Backend AtomiqGateway
     participant SDK as Atomiq SDK
     participant DB as BIM PostgreSQL
@@ -64,19 +65,19 @@ sequenceDiagram
     Note over User,DB: Phase 1 — Invoice creation (single round trip)
     User->>Front: Enter amount, select Lightning
     Front->>API: POST /api/payment/receive/<br/>{ network:"lightning", amount, description? }
-    API->>Recv: receive({network:"lightning", ...})
-    Recv->>Swap: createLightningToStarknet({amount, destinationAddress, ...})
-    Swap->>Gw: getLightningToStarknetLimits()
-    Gw-->>Swap: {minSats, maxSats, feePercent}
-    Swap->>Swap: validateAmountAgainstLimits()
-    Swap->>Gw: createLightningToStarknetSwap({amountSats, destinationAddress, description?})
+    API->>PR: receive({network:"lightning", ...})
+    PR->>Coord: createLightningToStarknet({amount, destinationAddress, ...})
+    Coord->>Gw: getLightningToStarknetLimits()
+    Gw-->>Coord: {minSats, maxSats, feePercent}
+    Coord->>Coord: validateAmountAgainstLimits()
+    Coord->>Gw: createLightningToStarknetSwap({amountSats, destinationAddress, description?})
     Gw->>SDK: swapper.createFromBTCLNSwapNew('STARKNET', dest, swapToken, amount, exactOut=true, undefined, {description?})
     SDK-->>Gw: Swap object
-    Gw-->>Swap: { swapId, invoice, expiresAt }
-    Swap->>Swap: Swap.createLightningToStarknet(...)<br/>state: pending
-    Swap->>DB: swapRepository.save(swap)
-    Swap-->>Recv: { swap, invoice }
-    Recv-->>API: { swapId, invoice, amount, expiresAt }
+    Gw-->>Coord: { swapId, invoice, expiresAt }
+    Coord->>Coord: Swap.createLightningToStarknet(...)<br/>state: pending
+    Coord->>DB: swapRepository.save(swap)
+    Coord-->>PR: { swap, invoice }
+    PR-->>API: { swapId, invoice, amount, expiresAt }
     API->>Mon: swapMonitor.ensureRunning()
     API-->>Front: 200 { network:"lightning", swapId, invoice, amount, expiresAt }
     Front->>User: Display BOLT-11 invoice as QR code
@@ -87,14 +88,14 @@ sequenceDiagram
 
     Note over Mon,SN: Phase 3 — Monitor sync + auto-claim
     loop every 5s while active
-        Mon->>Swap: fetchStatus({swapId, accountId})
-        Swap->>Gw: getSwapStatus(swapId, 'lightning_to_starknet')
+        Mon->>Reader: fetchStatus({swapId, accountId})
+        Reader->>Gw: getSwapStatus(swapId, 'lightning_to_starknet')
         Gw->>SDK: swap._sync(true) + swap.getState()
         SDK-->>Gw: state → mapped to {isPaid/isClaimable/...}
-        Gw-->>Swap: AtomiqSwapStatus
+        Gw-->>Reader: AtomiqSwapStatus
         alt isClaimable
-            Swap->>Swap: swap.markAsClaimable()
-            Swap->>DB: save(swap)
+            Reader->>Reader: swap.markAsClaimable()
+            Reader->>DB: save(swap)
             Mon->>Gw: claimForwardSwap(swapId)
             Gw->>SDK: swap.claim(claimerAccount, undefined, onSubmitted)
             SDK->>SN: Submit claim tx (WBTC to user, bounty to claimer)
@@ -102,19 +103,19 @@ sequenceDiagram
             Gw->>Gw: verify tx sender == backend (else watchtower claimed)
             Gw->>SN: refundBounty (STRK from backend to user)
             Gw-->>Mon: { claimTxHash, claimedByBackend, refundTxHash, bountyAmount }
-            Mon->>Swap: recordClaimAttempt(swapId, claimTxHash)
+            Mon->>Coord: recordClaimAttempt(swapId, claimTxHash)
             Note over Mon: Status stays 'claimable'<br/>Atomiq remains source of truth
         else isCompleted
-            Swap->>Swap: swap.markAsCompleted(txHash)
-            Swap->>DB: save(swap)
+            Reader->>Reader: swap.markAsCompleted(txHash)
+            Reader->>DB: save(swap)
         end
     end
 
     Note over Front,SN: Phase 4 — Frontend polling
     loop every few seconds
         Front->>API: GET /api/swap/status/:swapId
-        API->>Swap: fetchStatus({swapId, accountId})
-        Swap-->>API: { status, progress, txHash? }
+        API->>Reader: fetchStatus({swapId, accountId})
+        Reader-->>API: { status, progress, txHash? }
         API->>Front: 200 { status, progress, txHash? }
         Note over API: Internal 'claimable' is mapped to 'paid'<br/>for the public status (swap.routes.ts:59)
     end
@@ -123,99 +124,33 @@ sequenceDiagram
 
 ---
 
-## Detailed trace — Invoice creation
+## Invoice creation — what the route actually does
 
-```
-Frontend:
-│
-├── User enters amount (sats) + optional description
-└── POST /api/payment/receive/
-      { network: "lightning", amount: "100000", description?: "Coffee" }
+`POST /api/payment/receive/` (authenticated) accepts
+`{ network: "lightning", amount: "100000", description?, useUriPrefix? }`.
 
-POST /api/payment/receive/  (receive.routes.ts:43)
-│
-├── Auth middleware → sets honoCtx.get('account')
-├── ReceiveSchema.parse(body)
-│     amount: string /^\d+$/ (optional)
-│     description: string max 100 (optional)
-│     useUriPrefix: boolean (default true)
-│
-├── account.getStarknetAddress()
-│     → 400 ACCOUNT_NOT_DEPLOYED if missing
-│
-├── amount = Amount.ofSatoshi(BigInt(input.amount))
-│
-├── receiveService.receive({
-│     network: "lightning",
-│     destinationAddress,
-│     amount,
-│     description,
-│     accountId,
-│     useUriPrefix
-│   })
-│
-│   ReceiveService.receive()  (receive.service.ts:43)
-│   │
-│   ├── Guard: amount > 0 (else InvalidPaymentAmountError)
-│   └── switch(network) case 'lightning':
-│         └── receiveLightning() → swapService.createLightningToStarknet({...})
-│
-│       SwapService.createLightningToStarknet()  (swap.service.ts:163)
-│       │
-│       ├── StarknetAddress.of(destinationAddress)
-│       │
-│       ├── getLightningToStarknetLimits()
-│       │     → delegates to swapper.getSwapLimits(BTCLN, swapToken)
-│       │     → returns { minSats, maxSats, feePercent }
-│       │
-│       ├── validateAmountAgainstLimits(amount, limits)
-│       │     → throws SwapAmountError if out of range
-│       │
-│       ├── atomiqGateway.createLightningToStarknetSwap({
-│       │       amountSats: amount.getSat(),
-│       │       destinationAddress,
-│       │       description?
-│       │   })
-│       │
-│       │   AtomiqSdkGateway.createLightningToStarknetSwap()  (atomiq.gateway.ts:235)
-│       │   │
-│       │   ├── ensureInitialized()
-│       │   ├── swapper.createFromBTCLNSwapNew(
-│       │   │     'STARKNET',
-│       │   │     destinationAddress.toString(),
-│       │   │     swapToken.address,       // WBTC by default
-│       │   │     amountSats,
-│       │   │     true,                    // exactOut — user receives exactly the requested amount
-│       │   │     undefined,
-│       │   │     description ? {description} : undefined
-│       │   │   )
-│       │   ├── swapId = swap.getId()
-│       │   ├── invoice = swap.getAddress()     // BOLT-11 string
-│       │   ├── expiresAt = new Date(swap.getQuoteExpiry())
-│       │   └── return { swapId, invoice, expiresAt }
-│       │
-│       ├── Swap.createLightningToStarknet({
-│       │     id: SwapId.of(atomiqSwap.swapId),
-│       │     amount, destinationAddress, invoice, expiresAt,
-│       │     description, accountId
-│       │   })
-│       │     → new Swap entity in state { status: 'pending' }
-│       │
-│       ├── swapRepository.save(swap)        // PostgreSQL via Drizzle
-│       │
-│       └── return { swap, invoice }
-│
-├── swapMonitor.ensureRunning()
-│     → no-op if already running; otherwise starts the 5s polling loop
-│
-└── 200 OK {
-      network: "lightning",
-      swapId,
-      invoice,
-      amount: { value: sats, currency: "SAT" },
-      expiresAt: ISO8601
-    }
-```
+1. **Validate.** Zod parses the body; the route fails with
+   `ACCOUNT_NOT_DEPLOYED` if the account has no Starknet address yet.
+   The amount is converted to a `BigInt` of sats.
+2. **Dispatch.** `PaymentReceiver.receive()` rejects amounts ≤ 0 and
+   delegates to `SwapCoordinator.createLightningToStarknet()`.
+3. **Quote + invoice.** `SwapCoordinator` fetches the LP limits from
+   Atomiq and validates the amount against them (`SwapAmountError` if
+   out of range), then asks `AtomiqGateway.createLightningToStarknetSwap`
+   for a swap quote. The gateway calls the SDK with `exactOut=true`
+   (the user receives the exact requested amount; the LP fee is added
+   on top) and returns `{ swapId, invoice, expiresAt }`.
+4. **Persist.** A `Swap` entity is built in `pending` state and saved
+   via `SwapRepository`.
+5. **Monitor.** `swapMonitor?.ensureRunning()` is a belt-and-suspenders
+   call — the monitor is already started at boot, but may have
+   auto-stopped on idle.
+6. **Respond.** `200 OK { network: "lightning", swapId, invoice,
+   amount: { value, currency: "SAT" }, expiresAt }`.
+
+The whole call is one HTTP round trip; there is no WebAuthn ceremony
+on the Lightning path (unlike Bitcoin — see
+[receive-bitcoin.md](./receive-bitcoin.md)).
 
 ---
 
@@ -264,7 +199,7 @@ POST /api/payment/receive/  (receive.routes.ts:43)
                     └─────────────────────────────────────────┘
 ```
 
-**States mirror Atomiq.** BIM never invents a status — the `SwapService`
+**States mirror Atomiq.** BIM never invents a status — the `SwapReader`
 transcribes what the SDK reports. The `SwapMonitor` uses orthogonal
 metadata (`lastClaimAttemptAt`, `lastClaimTxHash`) to avoid
 double-submitting claim txs while Atomiq has not yet reflected the
@@ -312,7 +247,7 @@ Response (`SwapStatusResponse`, `swap.routes.ts:61`):
 }
 ```
 
-The backend calls `SwapService.fetchStatus({swapId, accountId})` which
+The backend calls `SwapReader.fetchStatus({swapId, accountId})` which
 re-syncs with Atomiq if the swap is not terminal. An account can only
 read **its own** swaps — `fetchStatus` throws `SwapOwnershipError` if the
 swap belongs to another account.
@@ -331,7 +266,7 @@ the monitor stops polling it (terminal state for Lightning).
 ### Amount out of limits
 
 `SwapAmountError` is thrown by `validateAmountAgainstLimits` in
-`SwapService.createLightningToStarknet`. The error message includes the
+`SwapCoordinator.createLightningToStarknet`. The error message includes the
 requested amount and the gateway-reported min/max. The frontend should
 surface the limits via `GET /api/swap/limits/lightning_to_starknet`.
 
@@ -361,21 +296,5 @@ On restart, the Atomiq SDK loads all persisted swaps from
 However, if a swap ID is ever queried that the SDK cannot find in its
 storage (rare, e.g., partial migration), `getSwapStatus()` returns
 `state: -2` with an error string and `syncWithAtomiq()` marks it as
-**`lost`** (see `swap.service.ts:597-601`). The monitor then stops
+**`lost`** (see `swap-reader.service.ts`). The monitor then stops
 polling it to avoid an infinite loop.
-
----
-
-## Key file references
-
-- Route: `apps/api/src/routes/payment/receive/receive.routes.ts:43-178`
-- Zod schema: `apps/api/src/routes/payment/receive/receive.types.ts:3-8`
-- Response types: `apps/api/src/routes/payment/receive/receive.types.ts:33-41`
-- Status route: `apps/api/src/routes/swap/swap.routes.ts:50-74`
-- `ReceiveService.receiveLightning()`: `packages/domain/src/payment/receive.service.ts:102-116`
-- `SwapService.createLightningToStarknet()`: `packages/domain/src/swap/swap.service.ts:163-202`
-- `SwapService.fetchStatus()`: `packages/domain/src/swap/swap.service.ts:440-467`
-- `Swap.createLightningToStarknet()`: `packages/domain/src/swap/swap.ts:37-51`
-- `AtomiqGateway` port: `packages/domain/src/ports/gateways.ts:176-250`
-- SDK adapter: `packages/atomiq/src/atomiq.gateway.ts:235-290` (create), `679-738` (status), `749-808` (claim)
-- `SwapMonitor`: `apps/api/src/monitoring/swap.monitor.ts`
