@@ -1,0 +1,114 @@
+# gitleaks configuration — extends the default ruleset and allowlists
+# known false positives (build output, lockfiles, tests, scratch dirs).
+# Reference: https://github.com/gitleaks/gitleaks#configuration
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "BIM project allowlist"
+
+paths = [
+  # --- Dependencies & build artefacts ---
+  '''(.*/)?node_modules/''',
+  '''(.*/)?dist/''',
+  '''(.*/)?build/''',
+  '''(.*/)?out/''',
+  '''(.*/)?coverage/''',
+  '''(.*/)?\.next/''',
+  '''(.*/)?\.nuxt/''',
+  '''(.*/)?\.angular/''',
+  '''(.*/)?\.turbo/''',
+  '''(.*/)?\.cache/''',
+  '''(.*/)?\.parcel-cache/''',
+  '''(.*/)?\.svelte-kit/''',
+  '''(.*/)?vendor/''',
+  '''(.*/)?public/''',
+
+  # --- Lockfiles ---
+  '''(.*/)?package-lock\.json$''',
+  '''(.*/)?yarn\.lock$''',
+  '''(.*/)?pnpm-lock\.yaml$''',
+  '''(.*/)?bun\.lockb$''',
+  '''(.*/)?Cargo\.lock$''',
+  '''(.*/)?poetry\.lock$''',
+
+  # --- Minified / generated assets ---
+  '''(.*/)?.+\.min\.js$''',
+  '''(.*/)?.+\.min\.css$''',
+  '''(.*/)?.+\.map$''',
+
+  # --- Tests, fixtures, mocks ---
+  '''(.*/)?test/''',
+  '''(.*/)?tests/''',
+  '''(.*/)?__tests__/''',
+  '''(.*/)?__fixtures__/''',
+  '''(.*/)?__mocks__/''',
+  '''(.*/)?fixtures/''',
+  '''(.*/)?mocks/''',
+  '''(.*/)?.+\.test\.(ts|tsx|js|jsx|mjs|cjs)$''',
+  '''(.*/)?.+\.spec\.(ts|tsx|js|jsx|mjs|cjs)$''',
+
+  # --- Local / runtime data dirs ---
+  '''(.*/)?tmp/''',
+  '''(.*/)?temp/''',
+  '''(.*/)?\.tmp/''',
+  '''(.*/)?data/''',
+
+  # --- Patch / vendor overrides ---
+  '''(.*/)?patches/''',
+
+  # --- IDE / editor artefacts ---
+  '''(.*/)?\.idea/''',
+  '''(.*/)?\.vscode/''',
+  '''(.*/)?\.sonarlint/''',
+
+  # --- Documentation containing public on-chain addresses ---
+  '''(.*/)?apps/front/misc/README\.md$''',
+  '''(.*/)?scripts/README\.md$''',
+]
+
+regexes = [
+  # Obvious dummy / example placeholders
+  '''(?i)example[_-]?(api[_-]?key|secret|token|password)''',
+  '''(?i)dummy[_-]?(api[_-]?key|secret|token|password)''',
+  '''(?i)test[_-]?(api[_-]?key|secret|token|password)''',
+  '''(?i)fake[_-]?(api[_-]?key|secret|token|password)''',
+  '''(?i)your[_-]?(api[_-]?key|secret|token)[_-]?here''',
+
+  # Repeated placeholder hex
+  '''0{16,}''',
+  '''[fF]{16,}''',
+  '''(?i)deadbeef(deadbeef)+''',
+  '''(?i)cafebabe(cafebabe)+''',
+]
+
+stopwords = [
+  "example",
+  "dummy",
+  "fake",
+  "fixture",
+  "placeholder",
+  "sample",
+  "mock",
+  "TODO",
+  "REPLACE_ME",
+  "CHANGEME",
+]
+
+# Public Starknet token addresses & event selectors. These look like 64-char
+# hex secrets but are public, well-known on-chain identifiers. Matched against
+# the full line context (regexTarget = "match") so the variable name acts as a
+# safety anchor — a real secret in a different context would still be detected.
+[[allowlists]]
+description = "Public Starknet token addresses & event selectors (false positives)"
+regexTarget = "match"
+regexes = [
+  # STRK / WBTC / USDC / USDT / ETH token address constants:
+  # matches STRK_TOKEN_ADDRESS, STRK_TOKEN, strkTokenAddress, wbtc-token-address, etc.
+  '''(?i)\b(strk|wbtc|usdc|usdt|eth)[_-]?token([_-]?address)?\s*[:=]\s*['"]?0x[0-9a-fA-F]{60,64}['"]?''',
+  # Generic tokenAddress field in TS objects (no STRK/WBTC prefix on the same line)
+  '''(?i)\btokenaddress\s*[:=]\s*['"]?0x[0-9a-fA-F]{60,64}['"]?''',
+  # Starknet event selectors (Poseidon hash of event name, e.g. "Transfer")
+  '''(?i)\btransfer_event_key\s*=\s*['"]?0x[0-9a-fA-F]{60,64}['"]?''',
+]
