@@ -1,0 +1,115 @@
+name: gitleaks
+
+# ---------------------------------------------------------------------------
+# Local testing with Docker (run from repo root):
+#
+#   # Quick scan of the working tree only (no git history) — fast iteration
+#   docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:latest \
+#     detect --source /repo --no-git --redact --verbose
+#
+#   # Full history scan with custom config (same as CI)
+#   docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:latest \
+#     detect --source /repo --config /repo/.gitleaks.toml --redact --verbose
+#
+#   # Generate JSON report (easier to grep through findings)
+#   docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:latest \
+#     detect --source /repo --config /repo/.gitleaks.toml --redact \
+#            --report-format json --report-path /repo/gitleaks.json
+#
+#   # Generate SARIF report (same format CI uploads to the Security tab)
+#   docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:latest \
+#     detect --source /repo --config /repo/.gitleaks.toml --redact \
+#            --report-format sarif --report-path /repo/gitleaks.sarif
+#
+#   # Pre-commit: scan only staged changes
+#   docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:latest \
+#     protect --source /repo --staged --redact --verbose
+# ---------------------------------------------------------------------------
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * 1'  # every Monday 06:00 UTC — full-history audit
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+  security-events: write  # required to upload SARIF to the Security tab
+
+jobs:
+  scan:
+    name: Scan for secrets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (full history)
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Run gitleaks
+        id: gitleaks
+        continue-on-error: true
+        run: |
+          docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:latest \
+            detect \
+              --source /repo \
+              --config /repo/.gitleaks.toml \
+              --report-format sarif \
+              --report-path /repo/gitleaks.sarif \
+              --redact \
+              --exit-code 1 \
+              --verbose
+
+      - name: Upload SARIF to Security tab
+        if: always() && hashFiles('gitleaks.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: gitleaks.sarif
+          category: gitleaks
+
+      - name: Upload SARIF as artifact (backup)
+        if: always() && hashFiles('gitleaks.sarif') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitleaks-report
+          path: gitleaks.sarif
+          retention-days: 30
+
+      - name: Notify Slack on detection
+        if: steps.gitleaks.outcome == 'failure'
+        uses: slackapi/slack-github-action@v1.27.0
+        with:
+          channel-id: '#alerting'
+          payload: |
+            {
+              "text": ":rotating_light: gitleaks detected potential secrets in ${{ github.repository }}",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "gitleaks: potential secret(s) detected"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    { "type": "mrkdwn", "text": "*Repo:*\n${{ github.repository }}" },
+                    { "type": "mrkdwn", "text": "*Branch:*\n${{ github.ref_name }}" },
+                    { "type": "mrkdwn", "text": "*Trigger:*\n${{ github.event_name }}" },
+                    { "type": "mrkdwn", "text": "*Run:*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View workflow run>" }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "Review redacted findings under *Security -> Code scanning* in the GitHub repo, or download the `gitleaks-report` artifact from the workflow run."
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.ALERTING_SLACK_BOT_TOKEN }}

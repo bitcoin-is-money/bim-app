@@ -1,1 +1,10 @@
 npx lint-staged
+
+# Gitleaks scan on staged changes only — blocks the commit if a secret is detected.
+# False positive? Extend .gitleaks.toml allowlist. Do NOT bypass with --no-verify.
+if ! command -v docker >/dev/null 2>&1; then
+  echo "[pre-commit] docker not found — gitleaks scan skipped" >&2
+  exit 0
+fi
+docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:latest \
+  protect --source /repo --staged --config /repo/.gitleaks.toml --redact --verbose
