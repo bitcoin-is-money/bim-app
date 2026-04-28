@@ -1,0 +1,25 @@
+name: Trigger activity reporting
+
+on:
+  workflow_dispatch:
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: POST activity-reporting to the API
+        env:
+          API_URL: ${{ secrets.API_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -euo pipefail
+          status=$(curl -sS -o /tmp/body -w "%{http_code}" -X POST "$API_URL/" \
+            -H "Content-Type: application/json" \
+            --data-binary @- <<EOF
+          {"secret":"${CRON_SECRET}","type":"activity-reporting"}
+          EOF
+          )
+          echo "HTTP $status"
+          cat /tmp/body
+          test "$status" = "200"
