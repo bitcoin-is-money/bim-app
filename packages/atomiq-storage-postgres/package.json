@@ -38,8 +38,8 @@
     "pg": "^8.20.0"
   },
   "peerDependencies": {
-    "@atomiqlabs/sdk": "^8.0.0",
-    "@atomiqlabs/base": "^13.0.0"
+    "@atomiqlabs/base": "^13.0.0",
+    "@atomiqlabs/sdk": "^8.6.2"
   },
   "devDependencies": {
     "@types/pg": "^8.20.0"

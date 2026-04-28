@@ -44,8 +44,8 @@
     "copy:front": "rm -rf public/app && cp -r ../front/dist/frontend/browser/browser public/app"
   },
   "dependencies": {
-    "@atomiqlabs/chain-starknet": "^8.2.2",
-    "@atomiqlabs/sdk": "^8.6.0",
+    "@atomiqlabs/chain-starknet": "^8.4.0",
+    "@atomiqlabs/sdk": "^8.6.2",
     "@bim/atomiq": "*",
     "@bim/atomiq-storage-postgres": "*",
     "@bim/db": "*",
