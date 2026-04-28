@@ -92,7 +92,7 @@
     "lint-staged": "^16.4.0",
     "lockfile-lint": "^5.0.0",
     "patch-package": "^8.0.1",
-    "secretlint": "^12.1.0",
+    "secretlint": "^12.3.1",
     "tsx": "^4.21.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.58.2",
