@@ -95,7 +95,7 @@
     "secretlint": "^12.1.0",
     "tsx": "^4.21.0",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.58.2",
+    "typescript-eslint": "^8.59.1",
     "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^4.1.4"
   },
