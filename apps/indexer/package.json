@@ -31,7 +31,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@apibara/indexer": "^2.1.0-beta.59",
+    "@apibara/indexer": "^2.1.1",
     "@apibara/plugin-drizzle": "^2.1.0-beta.58",
     "@apibara/starknet": "^2.1.0-beta.59",
     "@bim/db": "*",
