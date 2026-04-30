@@ -43,7 +43,7 @@ WORKDIR /app
 # for the optional pg-native binding), which esbuild/Apibara cannot resolve
 # statically. Version pinned for reproducible builds — keep in sync with
 # package-lock.json.
-RUN echo '{"dependencies":{"pg":"8.20.0"}}' > package.json && npm install --ignore-scripts && chown -R node:node /app
+RUN echo '{"dependencies":{"pg":"8.20.0"}}' > package.json && npm install --ignore-scripts && chown -R node:node /app # NOSONAR
 
 # Copy Apibara build output
 COPY --from=builder --chown=node:node --chmod=0555 /app/apps/indexer/.apibara/build/ ./.apibara/build/
