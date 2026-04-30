@@ -1,5 +1,5 @@
 import { HttpResponse } from '@angular/common/http';
-import { type ApiErrorResponse, ErrorCode, type SwapDirection } from '../../model';
+import { type ApiErrorResponse, ErrorCode } from '../../model';
 import type { ReceiveResponse } from '../../services/receive.http.service';
 import type { DataStoreMock } from '../data-store.mock';
 import { createErrorResponse } from '../mock-error';
@@ -51,7 +51,7 @@ export class ReceiveHandlerMock {
         // Save swap for status tracking
         this.store.saveSwap({
           swapId,
-          direction: 'lightning_to_starknet' as SwapDirection,
+          direction: 'lightning_to_starknet',
           amountSats: amount,
           destinationAddress,
           createdAt: new Date().toISOString(),
@@ -73,7 +73,7 @@ export class ReceiveHandlerMock {
         // Save swap for status tracking
         this.store.saveSwap({
           swapId,
-          direction: 'bitcoin_to_starknet' as SwapDirection,
+          direction: 'bitcoin_to_starknet',
           amountSats: amount,
           destinationAddress,
           createdAt: new Date().toISOString(),

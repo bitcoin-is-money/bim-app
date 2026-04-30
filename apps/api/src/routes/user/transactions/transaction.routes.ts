@@ -54,7 +54,7 @@ export function createTransactionRoutes(appContext: AppContext): AuthenticatedHo
         total: result.total,
         limit,
         offset,
-      } satisfies GetTransactionsResponse) as TypedResponse<GetTransactionsResponse>;
+      } satisfies GetTransactionsResponse);
     } catch (error) {
       return handleDomainError(honoCtx, error, log);
     }

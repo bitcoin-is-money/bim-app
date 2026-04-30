@@ -28,7 +28,7 @@ export class AccountHandlerMock {
         id: account.id,
         username: account.username,
         starknetAddress: profile.starknetAddress,
-        status: account.status as AccountInfoResponse['status'],
+        status: account.status,
         deploymentTxHash: profile.deploymentTxHash,
         createdAt: profile.createdAt,
       },

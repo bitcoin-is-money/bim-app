@@ -136,7 +136,7 @@ describe('PaymentBuilder', () => {
         tokenAddress: WBTC_TOKEN_ADDRESS,
         description: 'Test',
         ...(parsed ?? {}),
-      } as ParsedPaymentData;
+      };
       vi.mocked(mockPaymentParser.parse).mockReturnValue(full);
       vi.mocked(mockPaymentPreparator.prepare).mockResolvedValue({
         ...full,

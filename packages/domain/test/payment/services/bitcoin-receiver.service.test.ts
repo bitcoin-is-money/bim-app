@@ -101,7 +101,7 @@ describe('BitcoinReceiver', () => {
 
     mockNotificationGateway = {
       send: vi.fn().mockResolvedValue(undefined),
-    } as unknown as NotificationGateway;
+    };
 
     service = new BitcoinReceiver({
       swapCoordinator: mockSwapCoordinator,
