@@ -73,7 +73,7 @@
     "deps:update": "npx npm-check-updates --workspaces --root -u && npm install"
   },
   "engines": {
-    "node": ">=22.22.2 <23"
+    "node": ">=24.15.0 <25"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.5.0",
