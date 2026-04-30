@@ -197,7 +197,7 @@ export class AuthService {
       const response = await firstValueFrom(
         this.httpService
           .getSession()
-          .pipe(catchError(() => [{ authenticated: false } as UserSessionResponse])),
+          .pipe(catchError((): UserSessionResponse[] => [{ authenticated: false }])),
       );
       if (response.authenticated && response.account) {
         this.currentUser.set(response.account);

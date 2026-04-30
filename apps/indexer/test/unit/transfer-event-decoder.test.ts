@@ -132,7 +132,7 @@ describe('TransferEventDecoder', () => {
     it('decodes real mainnet WBTC event (from Atomiq swap)', () => {
       const event: Event = {
         filterIds: [0],
-        address: '0x3fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac' as `0x${string}`,
+        address: '0x3fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac',
         keys: [TRANSFER_SELECTOR] as `0x${string}`[],
         data: [
           '0x4f278e1f19e495c3b1dd35ef307c4f7510768ed95481958fbae588bd173f79a',
@@ -142,7 +142,7 @@ describe('TransferEventDecoder', () => {
         ] as `0x${string}`[],
         eventIndex: 0,
         transactionIndex: 0,
-        transactionHash: '0x4959b38b2ea17df393065d7c8ef422d62759222db14b26723b075d28d215adc' as `0x${string}`,
+        transactionHash: '0x4959b38b2ea17df393065d7c8ef422d62759222db14b26723b075d28d215adc',
         transactionStatus: 'succeeded',
         eventIndexInTransaction: 0,
       };

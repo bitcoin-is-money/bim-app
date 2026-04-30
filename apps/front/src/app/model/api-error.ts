@@ -101,7 +101,7 @@ export function getErrorMessage(error: unknown, fallback = 'An error occurred'):
     return error.error.message;
   }
   if (typeof error === 'object' && error !== null && 'message' in error) {
-    return String((error as {message: unknown}).message);
+    return String((error).message);
   }
   return fallback;
 }

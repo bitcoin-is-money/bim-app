@@ -27,7 +27,7 @@ export function createDonationRoutes(appContext: AppContext): AuthenticatedHono 
         messageHash: result.messageHash,
         credentialId: result.credentialId,
       };
-      return honoCtx.json(response) as TypedResponse<DonationBuildResponse>;
+      return honoCtx.json(response);
     } catch (error) {
       return handleDomainError(honoCtx, error, log);
     }

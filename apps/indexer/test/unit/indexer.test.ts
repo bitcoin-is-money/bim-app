@@ -107,7 +107,7 @@ function makeConfig(
     startingBlock: '0',
     accountCacheTtlMs: '60000',
     ...overrides,
-  } as WbtcRuntimeConfig;
+  };
 }
 
 function mockDbSuccess() {
@@ -171,7 +171,7 @@ describe('createWbtcTransferIndexer', () => {
 
   it('exits when connectionString is missing', async () => {
     mockCheckAvailability.mockRejectedValue(new Error('DATABASE_URL is not set'));
-    const cfg = makeConfig({connectionString: '' as string});
+    const cfg = makeConfig({connectionString: ''});
 
     await expect(createWbtcTransferIndexer(cfg)).rejects.toThrow('process.exit');
     expect(getLogger().fatal).toHaveBeenCalledWith(

@@ -61,7 +61,7 @@ describe('PaymentExecutor', () => {
 
     mockNotificationGateway = {
       send: vi.fn().mockResolvedValue(undefined),
-    } as unknown as NotificationGateway;
+    };
 
     service = new PaymentExecutor({
       paymentBuildCache,

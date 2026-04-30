@@ -1,5 +1,5 @@
 import { HttpResponse } from '@angular/common/http';
-import { type ApiErrorResponse, ErrorCode, type SwapDirection } from '../../model';
+import { type ApiErrorResponse, ErrorCode } from '../../model';
 import type {
   BuildPaymentResponse,
   ExecutePaymentResponse,
@@ -120,7 +120,7 @@ export class PaymentHandlerMock {
         // Save swap for status tracking
         this.store.saveSwap({
           swapId,
-          direction: 'starknet_to_lightning' as SwapDirection,
+          direction: 'starknet_to_lightning',
           amountSats: parseResult.amount.value,
           destinationAddress: parseResult.invoice,
           createdAt: new Date().toISOString(),
@@ -142,7 +142,7 @@ export class PaymentHandlerMock {
         // Save swap for status tracking
         this.store.saveSwap({
           swapId,
-          direction: 'starknet_to_bitcoin' as SwapDirection,
+          direction: 'starknet_to_bitcoin',
           amountSats: parseResult.amount.value,
           destinationAddress: parseResult.address,
           createdAt: new Date().toISOString(),
