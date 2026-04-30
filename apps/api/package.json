@@ -59,7 +59,7 @@
     "@stablelib/base64": "^2.0.1",
     "dotenv": "^17.4.2",
     "dotenv-expand": "^13.0.0",
-    "hono": "^4.12.14",
+    "hono": "^4.12.16",
     "hono-rate-limiter": "^0.5.3",
     "light-bolt11-decoder": "^3.2.0",
     "pino": "^10.3.1",
