@@ -100,7 +100,10 @@
     "vitest": "^4.1.4"
   },
   "overrides": {
-    "vitest": "^4.1.4"
+    "vitest": "^4.1.4",
+    "@apibara/indexer": {
+      "vitest": "$vitest"
+    }
   },
   "dependencies": {
     "@atomiqlabs/base": "^13.2.0"
