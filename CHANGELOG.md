@@ -9,18 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Nothing yet.
-
-## [0.0.1] — Initial public release
-
-Initial open-source release of BIM — a Bitcoin wallet on Starknet that
-uses WebAuthn (passkey / biometric) for key management.
-
-### Added
-
+- 2026-04-30: Bump Node.js from 22.22.2 to 24.15.0 LTS
 - 2026-04-12: Activity report posted weekly to Slack
-- 2026-04-11: FAQ page accessible from the main menu.
-- 2026-04-11: Custom PWA install prompt.
+- 2026-04-11: FAQ page accessible from the main menu
+- 2026-04-11: Custom PWA install prompt
 
 ### Base features
 

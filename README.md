@@ -69,7 +69,7 @@ user sends a payment.
 
 | Layer | Tech |
 |-------|------|
-| **Backend** | [Hono](https://hono.dev/) on Node.js 22, ESM, built with [esbuild](https://esbuild.github.io/) |
+| **Backend** | [Hono](https://hono.dev/) on Node.js 24, ESM, built with [esbuild](https://esbuild.github.io/) |
 | **Domain** | Pure TypeScript — hexagonal (ports & adapters), no framework dependencies |
 | **Frontend** | [Angular 21](https://angular.dev/) PWA with signals and standalone components |
 | **Indexer** | [Apibara](https://www.apibara.com/) streaming Starknet DNA events |
