@@ -91,9 +91,9 @@ export class SwapAmountError extends DomainError {
 
   constructor(amount?: Amount, min?: Amount, max?: Amount) {
     const resolvedAmount = amount ?? Amount.zero();
-    const resolvedMin = min !== undefined
-      ? Amount.ofSatoshi(min.getSat() > SwapAmountError.DEFAULT_MIN ? min.getSat() : SwapAmountError.DEFAULT_MIN)
-      : Amount.ofSatoshi(SwapAmountError.DEFAULT_MIN);
+    const resolvedMin = min == undefined
+      ? Amount.ofSatoshi(SwapAmountError.DEFAULT_MIN)
+      : min.max(Amount.ofSatoshi(SwapAmountError.DEFAULT_MIN));
     const resolvedMax = max ?? Amount.ofSatoshi(SwapAmountError.DEFAULT_MAX);
     super(`Amount ${resolvedAmount.getSat()} sats is outside limits [${resolvedMin.getSat()}, ${resolvedMax.getSat()}]`);
     this.amount = resolvedAmount;

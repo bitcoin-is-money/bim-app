@@ -156,6 +156,13 @@ export class Amount {
     return new Amount((this.mSat * scaledPct) / PERCENTAGE_PRECISION);
   }
 
+  /**
+   * Return the larger of this and other.
+   */
+  max(other: Amount): Amount {
+    return this.mSat > other.mSat ? this : other;
+  }
+
   // ===========================================================================
   // Comparisons
   // ===========================================================================

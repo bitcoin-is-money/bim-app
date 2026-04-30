@@ -216,6 +216,33 @@ describe('Amount', () => {
         ).toThrow(ValidationError);
       });
     });
+
+    describe('max', () => {
+      it('returns this when greater than other', () => {
+        const a = Amount.ofSatoshi(1000n);
+        const b = Amount.ofSatoshi(500n);
+        expect(a.max(b)).toBe(a);
+      });
+
+      it('returns other when this is less', () => {
+        const a = Amount.ofSatoshi(500n);
+        const b = Amount.ofSatoshi(1000n);
+        expect(a.max(b)).toBe(b);
+      });
+
+      it('returns other when amounts are equal', () => {
+        const a = Amount.ofSatoshi(1000n);
+        const b = Amount.ofSatoshi(1000n);
+        expect(a.max(b)).toBe(b);
+      });
+
+      it('handles zero', () => {
+        const a = Amount.zero();
+        const b = Amount.ofSatoshi(1n);
+        expect(a.max(b)).toBe(b);
+        expect(b.max(a)).toBe(b);
+      });
+    });
   });
 
   describe('comparisons', () => {
