@@ -75,7 +75,7 @@ nvm install      # reads .nvmrc           (nvm users)
 asdf install     # reads .tool-versions   (asdf users)
 
 # 3. Install workspace dependencies
-npm ci --ignore-scripts && npx patch-package && npx husky
+npm ci --ignore-scripts && npm exec patch-package && npx husky
 
 # 4. Start PostgreSQL and push the schema
 npm run db:up

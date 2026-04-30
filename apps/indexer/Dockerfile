@@ -25,7 +25,7 @@ COPY packages/test-toolkit/package.json packages/test-toolkit/
 COPY apps/api/package.json apps/api/
 COPY apps/front/package.json apps/front/
 COPY apps/indexer/package.json apps/indexer/
-RUN npm ci --ignore-scripts && npx patch-package --ignore-scripts
+RUN npm ci --ignore-scripts && npm exec patch-package --ignore-scripts
 
 # Code layers — .dockerignore excludes node_modules, .env*, .git, dist, tests, docs
 COPY . .

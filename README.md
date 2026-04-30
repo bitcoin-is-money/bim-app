@@ -144,7 +144,7 @@ nvm install           # nvm
 asdf install          # asdf
 
 # 3. Install workspace dependencies
-npm ci --ignore-scripts && npx patch-package --ignore-scripts && npx husky
+npm ci --ignore-scripts && npm exec patch-package --ignore-scripts && npx husky
 
 # 4. Start PostgreSQL (docker-compose) and push the schema
 npm run db:up
