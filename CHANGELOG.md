@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`pending` → `deploying` → `deployed`), Starknet address derivation, and
   balance retrieval.
 - **Auto-deployment**: Gasless account deployment via the AVNU paymaster
-  (SNIP-29), triggered transparently on the first payment.
+  (SNIP-29), triggered right after registration (BIM covers the fee).
 - **Receive payments**: Lightning, Bitcoin, and Starknet via the Atomiq
   SDK; QR code generation; background swap monitor with auto-claim.
 - **Pay payments**: Lightning, Bitcoin, and Starknet payments with

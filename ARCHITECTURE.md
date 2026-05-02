@@ -121,8 +121,9 @@ What to take away from this diagram:
   Atomiq for another LP aggregator) without changing the networks,
   and vice-versa.
 - **AVNU Paymaster** sponsors Starknet transactions under SNIP-29,
-  enabling gasless account deployment the first time a user pays.
-  See the "Auto-deployment" flow for details.
+  enabling gasless account deployment immediately after the user
+  registers (BIM covers the fee). See the "Auto-deployment" flow for
+  details.
 - **Atomiq SDK** is the swap orchestrator that routes funds between
   Lightning, Bitcoin, and Starknet via a network of liquidity
   providers. Every non-native payment path goes through it.
@@ -520,17 +521,17 @@ Summary of the key flows:
 1. `POST /api/payment/pay/parse` — decode the invoice, quote the swap,
    return details.
 2. `POST /api/payment/pay/execute` with the WebAuthn credential.
-3. If the account is still `pending`, it is auto-deployed via the AVNU
-   paymaster before the payment is executed.
-4. Backend creates the swap, signs the Starknet tx, submits it.
-5. Frontend polls the swap/payment status.
+3. Backend creates the swap, signs the Starknet tx, submits it.
+4. Frontend polls the swap/payment status.
 
 ### Auto-deployment
 
-The first time a user makes a payment, BIM deploys their Starknet account
-contract on the fly, sponsored by the AVNU paymaster (no upfront gas
-needed). Status transitions: `pending` → `deploying` → `deployed` (or
-`failed`).
+Right after registration, the frontend's `AccountSetupPage` calls
+`POST /api/account/deploy`, which deploys the user's Starknet account
+contract via the AVNU paymaster (no gas charged to the user — BIM
+covers the fee). Status transitions: `pending` → `deploying` →
+`deployed` (or `failed`). The page polls `/deployment-status` until
+completion.
 
 ## Database
 

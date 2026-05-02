@@ -25,8 +25,9 @@ BIM takes a new path: a **smart-contract wallet on Starknet**, unlocked by **Web
 
 And because smart-contract accounts normally need gas to be deployed,
 BIM leans on the [AVNU paymaster](https://avnu.fi/) (SNIP-29) to
-**auto-deploy accounts for free** — transparently, the first time the
-user sends a payment.
+**auto-deploy accounts at no cost to the user** — transparently, right
+after registration. BIM covers the deployment fee so onboarding stays
+frictionless.
 
 ## Features
 
