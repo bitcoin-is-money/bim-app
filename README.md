@@ -5,11 +5,12 @@
 
 BIM (Bitcoin is money) lets anyone send and receive Bitcoin — on-chain, on the Lightning Network, or as WBTC on Starknet — using nothing but a passkey. No seed phrase to write down. No browser extension. No gas to pre-fund.
 
+**🚀 Try it live:** [**app.bitcoinismoney.app**](https://app.bitcoinismoney.app) — register a passkey in 30 seconds.
+**🌐 Website:** [bitcoinismoney.app](https://bitcoinismoney.app)
+
+[![Live App](https://img.shields.io/badge/app-bitcoinismoney-F7931A?logo=bitcoin&logoColor=white)](https://app.bitcoinismoney.app)
+[![Website](https://img.shields.io/badge/website-bitcoinismoney-F7931A)](https://bitcoinismoney.app)
 [![CI](https://github.com/bitcoin-is-money/bim-app/actions/workflows/ci.yml/badge.svg)](https://github.com/bitcoin-is-money/bim-app/actions/workflows/ci.yml)
-[![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=bitcoin-is-money_bim&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=bitcoin-is-money_bim)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=bitcoin-is-money_bim&metric=coverage)](https://sonarcloud.io/summary/new_code?id=bitcoin-is-money_bim)
-[![Maintainability](https://sonarcloud.io/api/project_badges/measure?project=bitcoin-is-money_bim&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=bitcoin-is-money_bim)
-[![Reliability](https://sonarcloud.io/api/project_badges/measure?project=bitcoin-is-money_bim&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=bitcoin-is-money_bim)
 [![Security](https://sonarcloud.io/api/project_badges/measure?project=bitcoin-is-money_bim&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=bitcoin-is-money_bim)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
@@ -79,7 +80,7 @@ frictionless.
 | **Auth** | [SimpleWebAuthn](https://simplewebauthn.dev/) for WebAuthn server verification |
 | **Testing** | [Vitest](https://vitest.dev/) + [Testcontainers](https://testcontainers.com/) |
 | **Infra** | Docker, [Terraform](https://www.terraform.io/), Scaleway Serverless Containers |
-| **CI/CD** | GitHub Actions (deploy on push to `main`) |
+| **CI/CD** | GitHub Actions |
 
 ## Screenshots
 
@@ -133,6 +134,9 @@ performs WebAuthn ceremonies; all business logic lives server-side.
   tests
 
 ### Quick start
+
+> **Just want to use BIM?** Head to [app.bitcoinismoney.app](https://app.bitcoinismoney.app) — no install needed.
+> The instructions below are for running the stack locally as a developer.
 
 ```bash
 # 1. Clone
