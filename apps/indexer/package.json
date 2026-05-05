@@ -32,7 +32,7 @@
   },
   "dependencies": {
     "@apibara/indexer": "^2.1.1",
-    "@apibara/plugin-drizzle": "^2.1.0-beta.58",
+    "@apibara/plugin-drizzle": "^2.1.2",
     "@apibara/starknet": "^2.1.1",
     "@bim/db": "*",
     "@bim/domain": "*",
