@@ -79,7 +79,7 @@ jobs:
 
       - name: Notify Slack on detection
         if: steps.gitleaks.outcome == 'failure'
-        uses: slackapi/slack-github-action@v3.0.2
+        uses: slackapi/slack-github-action@v3.0.3
         with:
           channel-id: '#alerting'
           payload: |
