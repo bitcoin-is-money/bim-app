@@ -53,7 +53,7 @@
     "@bim/lib": "*",
     "@bim/slack": "*",
     "@bim/starknet": "*",
-    "@hono/node-server": "^1.19.14",
+    "@hono/node-server": "^2.0.1",
     "@noble/curves": "^1.9.7",
     "@noble/hashes": "^1.8.0",
     "@stablelib/base64": "^2.0.1",
