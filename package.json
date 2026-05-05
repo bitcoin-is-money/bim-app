@@ -79,7 +79,7 @@
     "@commitlint/cli": "^20.5.0",
     "@commitlint/config-conventional": "^20.5.0",
     "@eslint/js": "^10.0.1",
-    "@secretlint/secretlint-rule-preset-recommend": "^12.1.0",
+    "@secretlint/secretlint-rule-preset-recommend": "^13.0.0",
     "@vitest/coverage-v8": "^4.1.4",
     "angular-eslint": "^21.3.1",
     "better-npm-audit": "^3.11.0",
