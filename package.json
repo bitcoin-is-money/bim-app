@@ -106,7 +106,7 @@
     }
   },
   "dependencies": {
-    "@atomiqlabs/base": "^13.2.0"
+    "@atomiqlabs/base": "^13.5.0"
   },
   "lint-staged": {
     "*.{ts,tsx,js,mjs,cjs}": "eslint --fix --max-warnings=0 --no-warn-ignored",
