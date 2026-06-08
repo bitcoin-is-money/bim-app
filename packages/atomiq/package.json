@@ -45,6 +45,6 @@
     "@atomiqlabs/chain-starknet": "^8.2.2",
     "@atomiqlabs/sdk": "^8.0.0",
     "pg": "^8.0.0",
-    "starknet": "^9.0.0"
+    "starknet": "^9.4.2"
   }
 }

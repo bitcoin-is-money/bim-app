@@ -34,6 +34,6 @@
   },
   "peerDependencies": {
     "pino": "^10.0.0",
-    "starknet": "^9.0.0"
+    "starknet": "^9.4.2"
   }
 }
