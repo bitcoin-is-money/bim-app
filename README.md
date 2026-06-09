@@ -142,7 +142,7 @@ performs WebAuthn ceremonies; all business logic lives server-side.
 
 ```bash
 # 1. Clone
-git clone https://github.com/bitcoin-is-money/bim.git
+git clone https://github.com/bitcoin-is-money/bim-app.git
 cd bim
 
 # 2. Install the pinned Node version
