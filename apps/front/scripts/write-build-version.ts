@@ -10,7 +10,7 @@
  *      as a static asset. Fetched at runtime as the "server version"
  *      side of the comparison.
  *
- * Runs automatically via the `prebuild` npm hook before every production
+ * Runs automatically via the `prebuild` hook before every production
  * / testnet `ng build`. Using Angular's own `ngsw.json.timestamp` as the
  * server side would desync — Angular computes it a few seconds after
  * this script runs and the two values would never match, causing an
@@ -19,7 +19,7 @@
 import { writeFileSync } from 'node:fs';
 
 // Relative paths, resolved by Node against the current working directory.
-// npm always invokes scripts with cwd set to the package containing the
+// pnpm always invokes scripts with cwd set to the package containing the
 // `prebuild` hook (apps/front here).
 const BUILD_VERSION_PATH = 'src/environments/build-version.prod.ts';
 const VERSION_JSON_PATH = 'public/version.json';
