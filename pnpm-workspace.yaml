@@ -34,7 +34,7 @@ allowBuilds:
   protobufjs: false
   ssh2: false
 
-# pnpm 11.5 enforces a default minimum release age before a freshly published
-# version may be installed. Dependency bumps here are deliberate and reviewed,
-# so we opt out rather than maintain an ever-growing per-version exclude list.
+# pnpm enforces a default minimum release age before a freshly published version
+# may be installed. Dependency bumps here are deliberate and reviewed, so we opt
+# out rather than maintain an ever-growing per-version exclude list.
 minimumReleaseAge: 0
