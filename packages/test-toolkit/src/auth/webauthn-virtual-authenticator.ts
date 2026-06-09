@@ -1,5 +1,7 @@
-// @noble/curves v1 import — pinned due to @noble/hashes 1.8.0 override (starknet compat)
-// TODO: when upgrading to v2, change to: '@noble/curves/nist.js'
+// @noble/curves pinned to v1: starknet still depends on @noble v1 internally, so
+// bumping our direct deps to v2 only makes v1 and v2 coexist (no dedup) while
+// forcing a rewrite of this p256 code. Migrate only once starknet itself adopts
+// @noble v2; then import p256 from '@noble/curves/nist.js'.
 /* eslint-disable @typescript-eslint/no-deprecated */
 import {p256} from '@noble/curves/p256';
 import {sha256} from '@noble/hashes/sha2';

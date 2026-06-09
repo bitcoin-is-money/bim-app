@@ -1,5 +1,8 @@
-// @noble/curves v1 imports — pinned due to @noble/hashes 1.8.0 override (starknet compat)
-// TODO: when upgrading to v2, change to: '@noble/curves/utils.js' and '@noble/curves/nist.js'
+// @noble/curves pinned to v1: starknet still depends on @noble v1 internally, so
+// bumping our direct deps to v2 only makes v1 and v2 coexist (no dedup) while
+// forcing a rewrite of this signer (v2 reworks the ECDSA API: sign() returns
+// bytes, randomPrivateKey -> randomSecretKey). Migrate only once starknet itself
+// adopts @noble v2; then import from '@noble/curves/utils.js' and '@noble/curves/nist.js'.
 /* eslint-disable @typescript-eslint/no-deprecated */
 import {bytesToHex, hexToBytes} from '@noble/curves/abstract/utils';
 import {p256} from '@noble/curves/p256';
