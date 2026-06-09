@@ -1,6 +1,7 @@
 version: 2
 updates:
-  # Root workspace + all npm workspaces
+  # Root + all pnpm workspaces. Dependabot reads pnpm-lock.yaml under the
+  # "npm" ecosystem identifier (there is no separate "pnpm" value).
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
