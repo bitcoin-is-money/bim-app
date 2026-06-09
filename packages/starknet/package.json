@@ -37,7 +37,7 @@
   "dependencies": {
     "@bim/domain": "workspace:*",
     "@bim/lib": "workspace:*",
-    "@starknet-io/starknet-types-010": "npm:@starknet-io/types-js@0.10.0",
+    "@starknet-io/starknet-types-010": "npm:@starknet-io/types-js@0.10.2",
     "p-timeout": "^7.0.1",
     "pino": "^10.3.1"
   },

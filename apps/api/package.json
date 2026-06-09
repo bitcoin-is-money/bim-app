@@ -44,8 +44,8 @@
     "copy:front": "rm -rf public/app && cp -r ../front/dist/frontend/browser/browser public/app"
   },
   "dependencies": {
-    "@atomiqlabs/chain-starknet": "^8.2.2",
-    "@atomiqlabs/sdk": "^8.6.0",
+    "@atomiqlabs/chain-starknet": "^8.4.5",
+    "@atomiqlabs/sdk": "^8.9.1",
     "@bim/atomiq": "workspace:*",
     "@bim/atomiq-storage-postgres": "workspace:*",
     "@bim/db": "workspace:*",
@@ -61,20 +61,20 @@
     "dotenv": "^17.4.2",
     "dotenv-expand": "^13.0.0",
     "drizzle-orm": "^0.45.2",
-    "hono": "^4.12.16",
+    "hono": "^4.12.25",
     "hono-rate-limiter": "^0.5.3",
     "light-bolt11-decoder": "^3.2.0",
-    "pg": "^8.20.0",
+    "pg": "^8.21.0",
     "pino": "^10.3.1",
     "pino-pretty": "^13.1.3",
-    "slack-web-api-client": "^1.1.11",
+    "slack-web-api-client": "^1.1.12",
     "starknet": "^9.4.2",
-    "zod": "^4.3.6"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@bim/test-toolkit": "workspace:*",
     "@testcontainers/postgresql": "^11.14.0",
-    "@types/node": "^25.6.0",
+    "@types/node": "^25.9.2",
     "testcontainers": "^11.14.0"
   }
 }
