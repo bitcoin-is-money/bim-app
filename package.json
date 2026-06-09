@@ -78,7 +78,7 @@
     "@eslint/js": "^10.0.1",
     "@secretlint/secretlint-rule-preset-recommend": "^13.0.2",
     "@vitest/coverage-v8": "^4.1.8",
-    "angular-eslint": "^21.4.0",
+    "angular-eslint": "^22.0.0",
     "dotenv-cli": "^11.0.0",
     "esbuild": "^0.28.0",
     "eslint": "^10.4.1",
