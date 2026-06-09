@@ -17,17 +17,23 @@ ARG NODE_VERSION
 FROM node:${NODE_VERSION}-slim AS builder
 WORKDIR /app
 
-# Dependencies layers
-COPY package.json package-lock.json ./
+# Dependencies layers — pnpm needs every workspace manifest + the lockfile.
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY patches/ patches/
-COPY packages/lib/package.json packages/lib/
-COPY packages/domain/package.json packages/domain/
+COPY packages/atomiq/package.json packages/atomiq/
+COPY packages/atomiq-storage-postgres/package.json packages/atomiq-storage-postgres/
 COPY packages/db/package.json packages/db/
+COPY packages/domain/package.json packages/domain/
+COPY packages/lib/package.json packages/lib/
+COPY packages/slack/package.json packages/slack/
+COPY packages/starknet/package.json packages/starknet/
 COPY packages/test-toolkit/package.json packages/test-toolkit/
 COPY apps/api/package.json apps/api/
+COPY apps/cli/package.json apps/cli/
 COPY apps/front/package.json apps/front/
 COPY apps/indexer/package.json apps/indexer/
-RUN npm ci --ignore-scripts && node_modules/.bin/patch-package
+# Patches are applied automatically by pnpm during install (patchedDependencies).
+RUN corepack enable && pnpm install --frozen-lockfile
 
 # Code layers — .dockerignore excludes node_modules, .env*, .git, dist, tests, docs
 COPY . .
@@ -36,7 +42,7 @@ COPY . .
 ARG APP_VERSION=dev
 RUN echo "export const APP_VERSION = '${APP_VERSION}';" > apps/front/src/environments/version.ts
 
-RUN npm run build:api
+RUN pnpm run build:api
 
 # -----------------------------------------------------------------------------
 # Stage 2: Production image

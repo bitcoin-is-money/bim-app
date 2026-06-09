@@ -14,6 +14,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 2026-04-11: FAQ page accessible from the main menu
 - 2026-04-11: Custom PWA install prompt
 
+### Changed
+
+- 2026-06-08: Migrate the package manager from npm to pnpm — workspaces,
+  scripts, CI/CD, and Docker now use pnpm. Patches are applied via pnpm
+  `patchedDependencies` (the obsolete `@atomiqlabs/sdk` log patch was dropped);
+  dependency versions were re-resolved within existing semver ranges with no
+  manual upgrades.
+
 ### Base features
 
 - **Authentication**: WebAuthn registration and login with challenge-based

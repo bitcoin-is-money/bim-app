@@ -9,13 +9,13 @@ description: Guide for testing conventions in the BIM project. This skill should
 
 | Tier | Location | Command | Dependencies |
 |------|----------|---------|-------------|
-| Unit (domain) | `packages/domain/test/` | `npm test -w @bim/domain` | None |
-| Unit (lib) | `packages/lib/test/` | `npm test -w @bim/lib` | None |
-| Unit (api) | `apps/api/test/unit/` | `npm test -w @bim/api` | Mocked ports |
-| Unit (front) | `apps/front/src/**/*.test.ts` | `npm test -w @bim/front` | TestBed |
-| Integration | `apps/api/test/integration/` | `npm run test:integration` | Docker (PG + Devnet) |
-| Integration (single file) | `apps/api/test/integration/` | `npx vitest run --config apps/api/vitest.config.integration.ts <file>` | Docker (PG + Devnet) |
-| Testnet | `apps/api/test/testnet/` | `npm run test:testnet -w @bim/api` | Sepolia + `AVNU_API_KEY` |
+| Unit (domain) | `packages/domain/test/` | `pnpm --filter @bim/domain test` | None |
+| Unit (lib) | `packages/lib/test/` | `pnpm --filter @bim/lib test` | None |
+| Unit (api) | `apps/api/test/unit/` | `pnpm --filter @bim/api test` | Mocked ports |
+| Unit (front) | `apps/front/src/**/*.test.ts` | `pnpm --filter @bim/front test` | TestBed |
+| Integration | `apps/api/test/integration/` | `pnpm test:integration` | Docker (PG + Devnet) |
+| Integration (single file) | `apps/api/test/integration/` | `pnpm exec vitest run --config apps/api/vitest.config.integration.ts <file>` | Docker (PG + Devnet) |
+| Testnet | `apps/api/test/testnet/` | `pnpm --filter @bim/api test:testnet` | Sepolia + `AVNU_API_KEY` |
 
 ## File Placement
 
@@ -117,11 +117,11 @@ Integration tests are slow (~3 minutes for the full suite) because they spin up 
 **When iterating on a specific test file**, run only that file:
 
 ```bash
-cd apps/api && npx vitest run --config vitest.config.integration.ts test/integration/payment/<file>.test.ts
+cd apps/api && pnpm exec vitest run --config vitest.config.integration.ts test/integration/payment/<file>.test.ts
 ```
 
 **Run the full suite only as a final validation** before committing:
 
 ```bash
-npm run test:integration
+pnpm test:integration
 ```

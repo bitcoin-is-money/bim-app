@@ -34,7 +34,7 @@ output "api_url" {
 |------|------|---------|
 | `*.tf` | Infrastructure definition | Yes |
 | `terraform.tfvars` | Your variable values (secrets!) | **No** (gitignored) |
-| `.terraform.lock.hcl` | Provider version lock (like `package-lock.json`) | **Yes** |
+| `.terraform.lock.hcl` | Provider version lock (like `pnpm-lock.yaml`) | **Yes** |
 | `terraform.tfstate` | Current state of deployed resources (contains secrets!) | **No** (gitignored) |
 | `.terraform/` | Downloaded provider plugins (like `node_modules/`) | **No** (gitignored) |
 

@@ -5,7 +5,7 @@ Apibara-based Starknet indexer that watches ERC20 Transfer events and stores mat
 ## Prerequisites
 
 - PostgreSQL running (see `docker-compose.yml` at repo root)
-- Schema pushed: `DATABASE_URL=postgresql://bim_user:bim_password@localhost:5432/bim npm run db:push -w @bim/api`
+- Schema pushed: `DATABASE_URL=postgresql://bim_user:bim_password@localhost:5432/bim pnpm --filter @bim/api db:push`
 - A DNA token from [app.apibara.com](https://app.apibara.com)
 
 ## Secret files
@@ -27,13 +27,13 @@ DATABASE_URL=postgresql://user:password@host:5432/bim
 
 ```bash
 # Dev (Sepolia testnet, hot-reload)
-npm run dev -w @bim/indexer
+pnpm --filter @bim/indexer dev
 
 # Production (mainnet)
-npm run start -w @bim/indexer
+pnpm --filter @bim/indexer start
 
 # Tests
-npm run test -w @bim/indexer
+pnpm --filter @bim/indexer test
 ```
 
 ## Configuration

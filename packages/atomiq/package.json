@@ -31,14 +31,15 @@
   },
   "scripts": {
     "clean": "rm -rf dist",
-    "clean:all": "npm run clean && rm -rf node_modules",
+    "clean:all": "pnpm run clean && rm -rf node_modules",
     "build": "tsc -p tsconfig.build.json",
     "dev": "tsc --watch",
     "test": "vitest run --coverage"
   },
   "dependencies": {
-    "@bim/atomiq-storage-postgres": "*",
-    "@bim/domain": "*",
+    "@bim/atomiq-storage-postgres": "workspace:*",
+    "@bim/domain": "workspace:*",
+    "@bim/lib": "workspace:*",
     "pino": "^10.3.1"
   },
   "peerDependencies": {

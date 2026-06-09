@@ -29,14 +29,15 @@
   },
   "scripts": {
     "clean": "rm -rf dist",
-    "clean:all": "npm run clean && rm -rf node_modules",
+    "clean:all": "pnpm run clean && rm -rf node_modules",
     "build": "tsc -p tsconfig.build.json",
     "dev": "tsc --watch",
     "test": "vitest run --coverage"
   },
   "dependencies": {
-    "@bim/domain": "*",
-    "@bim/lib": "*",
+    "@bim/domain": "workspace:*",
+    "@bim/lib": "workspace:*",
+    "@starknet-io/starknet-types-010": "npm:@starknet-io/types-js@0.10.0",
     "p-timeout": "^7.0.1",
     "pino": "^10.3.1"
   },

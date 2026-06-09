@@ -194,7 +194,7 @@ export class Database {
     );
     if (result.rowCount === 0) {
       throw new Error(
-        `Table "${tableName}" does not exist. Push the schema first:\n  DATABASE_URL=... npm run db:push -w @bim/db`,
+        `Table "${tableName}" does not exist. Push the schema first:\n  DATABASE_URL=... pnpm --filter @bim/db run db:push`,
       );
     }
     this.logger.debug(`Table "${tableName}" OK`);

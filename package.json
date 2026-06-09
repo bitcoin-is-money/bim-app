@@ -25,32 +25,29 @@
     "avnu",
     "paymaster"
   ],
-  "workspaces": [
-    "packages/*",
-    "apps/*"
-  ],
+  "packageManager": "pnpm@11.1.3",
   "scripts": {
-    "clean": "npm run clean --workspaces --if-present",
-    "clean:all": "npm run clean && rm -rf node_modules packages/*/node_modules apps/*/node_modules package-lock.json",
-    "build:libs": "npm run build -w @bim/test-toolkit && npm run build -w @bim/lib && npm run build -w @bim/domain && npm run build -w @bim/db && npm run build -w @bim/atomiq-storage-postgres && npm run build -w @bim/starknet && npm run build -w @bim/atomiq && npm run build -w @bim/slack",
-    "build:front": "npm run build -w @bim/front",
-    "build:api": "npm run build:libs && npm run build -w @bim/api && npm run build:front && npm run copy:front -w @bim/api",
-    "build:indexer": "npm run build:libs && npm run build -w @bim/indexer",
-    "build": "npm run build:api && npm run build:indexer",
-    "dev": "npm run dev -w @bim/api",
-    "dev:front": "npm run dev -w front",
-    "test": "npm run test -w @bim/test-toolkit && npm run test -w @bim/lib && npm run test -w @bim/domain && npm run test -w @bim/atomiq-storage-postgres && npm run test -w @bim/indexer && npm run test -w @bim/api && npm run test -w @bim/front",
-    "test:integration": "npm run test:integration -w @bim/api",
-    "test:e2e": "npm run test:e2e -w @bim/api",
-    "test:e2e:deploy": "npm run test:e2e:deploy -w @bim/api",
-    "test:e2e:starknet": "npm run test:e2e:starknet -w @bim/api",
-    "test:e2e:lightning": "npm run test:e2e:lightning -w @bim/api",
-    "test:e2e:bitcoin": "npm run test:e2e:bitcoin -w @bim/api",
-    "db:up": "docker compose up -d postgres && until docker compose exec postgres pg_isready -U bim_user -d bim > /dev/null 2>&1; do sleep 1; done && DATABASE_URL=postgresql://bim_user:bim_password@localhost:${DB_PORT:-5432}/bim npm run db:push",
-    "db:push": "npm run db:push -w @bim/db",
-    "db:generate": "npm run db:generate -w @bim/db",
-    "db:migrate": "npm run db:migrate -w @bim/db",
-    "db:studio": "npm run db:studio -w @bim/db",
+    "clean": "pnpm -r --if-present run clean",
+    "clean:all": "pnpm run clean && rm -rf node_modules packages/*/node_modules apps/*/node_modules pnpm-lock.yaml",
+    "build:libs": "pnpm --filter \"./packages/*\" run build",
+    "build:front": "pnpm --filter @bim/front run build",
+    "build:api": "pnpm run build:libs && pnpm --filter @bim/api run build && pnpm run build:front && pnpm --filter @bim/api run copy:front",
+    "build:indexer": "pnpm run build:libs && pnpm --filter @bim/indexer run build",
+    "build": "pnpm run build:api && pnpm run build:indexer",
+    "dev": "pnpm --filter @bim/api run dev",
+    "dev:front": "pnpm --filter @bim/front run dev",
+    "test": "pnpm --filter @bim/test-toolkit run test && pnpm --filter @bim/lib run test && pnpm --filter @bim/domain run test && pnpm --filter @bim/atomiq-storage-postgres run test && pnpm --filter @bim/indexer run test && pnpm --filter @bim/api run test && pnpm --filter @bim/front run test",
+    "test:integration": "pnpm --filter @bim/api run test:integration",
+    "test:e2e": "pnpm --filter @bim/api run test:e2e",
+    "test:e2e:deploy": "pnpm --filter @bim/api run test:e2e:deploy",
+    "test:e2e:starknet": "pnpm --filter @bim/api run test:e2e:starknet",
+    "test:e2e:lightning": "pnpm --filter @bim/api run test:e2e:lightning",
+    "test:e2e:bitcoin": "pnpm --filter @bim/api run test:e2e:bitcoin",
+    "db:up": "docker compose up -d postgres && until docker compose exec postgres pg_isready -U bim_user -d bim > /dev/null 2>&1; do sleep 1; done && DATABASE_URL=postgresql://bim_user:bim_password@localhost:${DB_PORT:-5432}/bim pnpm run db:push",
+    "db:push": "pnpm --filter @bim/db run db:push",
+    "db:generate": "pnpm --filter @bim/db run db:generate",
+    "db:migrate": "pnpm --filter @bim/db run db:migrate",
+    "db:studio": "pnpm --filter @bim/db run db:studio",
     "docker:build": "./scripts/docker.sh build",
     "docker:push": "./scripts/docker.sh push",
     "docker:up": "./scripts/docker.sh up",
@@ -64,16 +61,16 @@
     "infra:plan": "./scripts/docker.sh plan",
     "infra:apply": "./scripts/docker.sh apply",
     "infra:init": "./scripts/docker.sh init",
-    "security": "npm run security:audit; npm run security:lockfile",
-    "security:audit": "better-npm-audit audit --level moderate",
-    "security:lockfile": "lockfile-lint --path package-lock.json --type npm --allowed-hosts npm --validate-https",
+    "security": "pnpm run security:audit",
+    "security:audit": "pnpm audit --audit-level moderate",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "deps:check": "npx npm-check-updates --workspaces --root",
-    "deps:update": "npx npm-check-updates --workspaces --root -u && npm install"
+    "deps:check": "pnpm dlx npm-check-updates --workspaces --root",
+    "deps:update": "pnpm dlx npm-check-updates --workspaces --root -u && pnpm install"
   },
   "engines": {
-    "node": ">=24.15.0 <25"
+    "node": ">=24.15.0 <25",
+    "pnpm": ">=11"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.5.0",
@@ -82,7 +79,6 @@
     "@secretlint/secretlint-rule-preset-recommend": "^12.1.0",
     "@vitest/coverage-v8": "^4.1.4",
     "angular-eslint": "^21.3.1",
-    "better-npm-audit": "^3.11.0",
     "dotenv-cli": "^11.0.0",
     "esbuild": "^0.28.0",
     "eslint": "^10.3.0",
@@ -90,20 +86,12 @@
     "eslint-plugin-security": "^4.0.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
-    "lockfile-lint": "^5.0.0",
-    "patch-package": "^8.0.1",
     "secretlint": "^12.1.0",
     "tsx": "^4.21.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.58.2",
     "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^4.1.4"
-  },
-  "overrides": {
-    "vitest": "^4.1.4",
-    "@apibara/indexer": {
-      "vitest": "$vitest"
-    }
   },
   "dependencies": {
     "@atomiqlabs/base": "^13.2.0"

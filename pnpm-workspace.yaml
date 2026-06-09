@@ -1,0 +1,35 @@
+packages:
+  - 'packages/*'
+  - 'apps/*'
+
+# Type packages are needed by every workspace package through the shared
+# tsconfig.base.json ("types": ["node"]). Hoist @types/* to the root so tsc
+# resolves them without declaring @types/node in each package.json.
+publicHoistPattern:
+  - '@types/*'
+
+# Pinned to keep @apibara/indexer's transitive vitest aligned with the root
+# devDependency (avoids two parallel vitest installs in the workspace).
+overrides:
+  vitest: ^4.1.4
+  '@apibara/indexer>vitest': '$vitest'
+  # @atomiqlabs/bolt11 declares a `^1.8.1` @noble/curves peer but pnpm satisfied
+  # it with 2.2.0 (which renamed the `/secp256k1` export bolt11 imports). npm
+  # hoisting resolved it to 1.9.7; pin it back so the bundle resolves.
+  '@atomiqlabs/bolt11>@noble/curves': 1.9.7
+
+patchedDependencies:
+  '@apibara/plugin-drizzle@2.1.3': patches/@apibara__plugin-drizzle@2.1.3.patch
+  '@atomiqlabs/base@13.5.2': patches/@atomiqlabs__base@13.5.2.patch
+
+# Dependency install scripts are blocked by default in pnpm. Each native dep is
+# decided explicitly: esbuild (our bundler) is allowed; the rest ship prebuilt
+# binaries or have a JS fallback, so their build scripts stay disabled.
+allowBuilds:
+  esbuild: true
+  '@parcel/watcher': false
+  cpu-features: false
+  lmdb: false
+  msgpackr-extract: false
+  protobufjs: false
+  ssh2: false

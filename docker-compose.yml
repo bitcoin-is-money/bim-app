@@ -1,7 +1,7 @@
 # Usage:
-#   docker compose up -d postgres          # DB only (for local dev with npm run dev)
-#   npm run docker:up                      # Full stack (postgres + api + indexer)
-#   NETWORK=mainnet npm run docker:up      # Full stack on mainnet
+#   docker compose up -d postgres          # DB only (for local dev with pnpm dev)
+#   pnpm docker:up                         # Full stack (postgres + api + indexer)
+#   NETWORK=mainnet pnpm docker:up         # Full stack on mainnet
 
 services:
   postgres:

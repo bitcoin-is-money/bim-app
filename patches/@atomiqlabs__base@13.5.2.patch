@@ -1,0 +1,24 @@
+diff --git a/src/events/types/ChainEvent.ts b/src/events/types/ChainEvent.ts
+index 89de73477181544c61a2f7e5a34506d434177542..e05e116acc899a30a2eb1d39f113fc75f0e8918a 100644
+--- a/src/events/types/ChainEvent.ts
++++ b/src/events/types/ChainEvent.ts
+@@ -18,7 +18,7 @@ export class ChainEvent<T extends SwapData> {
+     /**
+      * Version of the contract that emitted the event
+      */
+-    contractVersion?: string;
++    contractVersion?: string | undefined;
+ 
+     constructor(contractVersion?: string) {
+         this.contractVersion = contractVersion;
+diff --git a/src/swaps/SwapData.ts b/src/swaps/SwapData.ts
+index 4c902694eae6f38796fca7e858f303cc5b4e7f61..32d5a391c23565b63406be09a255119030c6acd1 100644
+--- a/src/swaps/SwapData.ts
++++ b/src/swaps/SwapData.ts
+@@ -1,5 +1,5 @@
+ import {ChainSwapType} from "./ChainSwapType";
+-import {StorageObject} from "../storage/StorageObject";
++import type {StorageObject} from "../storage/StorageObject";
+ 
+ /**
+  * Represents full escrow swap data and parameters

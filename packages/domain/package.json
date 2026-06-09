@@ -76,7 +76,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@bim/lib": "*",
+    "@bim/lib": "workspace:*",
     "pino": "^10.3.1"
   },
   "devDependencies": {

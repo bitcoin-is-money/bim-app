@@ -32,10 +32,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
-          cache: npm
+          cache: pnpm
 
       - uses: hashicorp/setup-terraform@v4
         with:
@@ -53,7 +55,7 @@ jobs:
       - name: Preflight — tool versions
         run: |
           echo "node:      $(node --version)"
-          echo "npm:       $(npm --version)"
+          echo "pnpm:      $(pnpm --version)"
           echo "docker:    $(docker --version)"
           echo "terraform: $(terraform version | head -n1)"
           echo "scw:       $(scw version 2>&1 | head -n1)"
@@ -75,14 +77,12 @@ jobs:
           password: ${{ secrets.SCW_SECRET_KEY }}
 
       - name: Install dependencies
-        run: |
-          npm ci --ignore-scripts
-          npm exec patch-package --ignore-scripts
+        run: pnpm install --frozen-lockfile
 
       - name: Run database migration
         run: |
           export DATABASE_URL="$(terraform -chdir=infra output -raw database_url)"
-          npm run db:migrate -w @bim/db
+          pnpm --filter @bim/db run db:migrate
 
       - name: Build, push, redeploy
         run: scripts/docker.sh ship ${{ inputs.service }}

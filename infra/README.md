@@ -162,7 +162,7 @@ personal Scaleway account for state — only for the Scaleway provider via
 ### Configuring credentials locally
 
 Once you have the RW key pair, export it before any `terraform -chdir=infra *` or
-`npm run docker:*` command. Two compatible options:
+`pnpm docker:*` command. Two compatible options:
 
 **Option A — `.envrc` file at the repo root (gitignored)**
 
@@ -219,11 +219,11 @@ Terraform manages infrastructure but does **not** build or push Docker images.
 Scaleway requires images to exist in the registry before creating containers,
 so the first deployment is a 3-step process:
 
-1. **`npm run infra:apply -- -target=scaleway_registry_namespace.bim`** — creates only the Docker registry (minimum to push images)
-2. **`npm run docker:build` + `npm run docker:push`** — build and push images to the registry
-3. **`npm run infra:apply`** — creates everything else (database, containers) and deploys
+1. **`pnpm infra:apply -- -target=scaleway_registry_namespace.bim`** — creates only the Docker registry (minimum to push images)
+2. **`pnpm docker:build` + `pnpm docker:push`** — build and push images to the registry
+3. **`pnpm infra:apply`** — creates everything else (database, containers) and deploys
 
-For subsequent deploys, use `npm run docker:ship` (build + push + redeploy in one command).
+For subsequent deploys, use `pnpm docker:ship` (build + push + redeploy in one command).
 
 Once CI/CD is set up (`.github/workflows/deploy.yml`), steps 2 and 3 happen
 automatically on every push to `main`.
@@ -233,7 +233,7 @@ automatically on every push to `main`.
 ### 1. Initialize Terraform
 
 ```bash
-npm run infra:init
+pnpm infra:init
 ```
 
 Downloads the Scaleway provider plugin into `.terraform/` and creates
@@ -251,7 +251,7 @@ Leave `api_domain` commented out for now (set it after the first deploy, step 6)
 ### 3. Create the registry (first apply — minimal)
 
 ```bash
-npm run infra:apply -- -target=scaleway_registry_namespace.bim
+pnpm infra:apply -- -target=scaleway_registry_namespace.bim
 ```
 
 Only creates the Docker registry. This is the minimum needed before pushing images.
@@ -264,14 +264,14 @@ REGISTRY=$(cd infra && terraform output -raw registry_endpoint)
 docker login $REGISTRY -u nologin
 
 # Build and push images (tagged with git hash + latest)
-npm run docker:build
-npm run docker:push
+pnpm docker:build
+pnpm docker:push
 ```
 
 ### 5. Create remaining infrastructure and deploy
 
 ```bash
-npm run infra:apply
+pnpm infra:apply
 ```
 
 Creates the database, container namespace, both containers, and any enabled
@@ -290,7 +290,7 @@ api_domain = "bimxxxxxxxx-bim-api.functions.fnc.fr-par.scw.cloud"
 Then apply again to inject the correct WebAuthn config:
 
 ```bash
-npm run infra:apply
+pnpm infra:apply
 ```
 
 Your app is now live at the `api_url` output.
@@ -304,7 +304,7 @@ live in [`packages/db/DATABASE.md`](../packages/db/DATABASE.md).
 To apply pending migrations against the freshly created Scaleway database:
 
 ```bash
-DATABASE_URL=$(cd infra && terraform output -raw database_url) npm run db:migrate
+DATABASE_URL=$(cd infra && terraform output -raw database_url) pnpm db:migrate
 ```
 
 **Do not use `db:push` against the prod database** — `drizzle-kit push` syncs
@@ -313,13 +313,13 @@ without warning. It is intended for local dev only.
 
 ## Common Commands
 
-All Terraform commands can be run via `npm run infra:*` from the project root,
+All Terraform commands can be run via `pnpm infra:*` from the project root,
 or directly with `terraform` from the `infra/` directory.
 
 ### Preview changes (dry run)
 
 ```bash
-npm run infra:plan
+pnpm infra:plan
 ```
 
 Compares your `.tf` files against the state file and shows what would be
@@ -328,7 +328,7 @@ created/modified/destroyed. Nothing is actually changed. Safe to run anytime.
 ### Apply changes
 
 ```bash
-npm run infra:apply
+pnpm infra:apply
 ```
 
 Runs a `plan`, shows the diff, asks for confirmation, then executes.
@@ -337,16 +337,16 @@ Idempotent: running it twice with no changes does nothing.
 ### Docker image workflow
 
 ```bash
-npm run docker:build      # Build images tagged with git hash + latest
-npm run docker:push       # Push to Scaleway registry
-npm run docker:redeploy   # Update Scaleway containers to new version
-npm run docker:ship       # All three in one command
+pnpm docker:build      # Build images tagged with git hash + latest
+pnpm docker:push       # Push to Scaleway registry
+pnpm docker:redeploy   # Update Scaleway containers to new version
+pnpm docker:ship       # All three in one command
 ```
 
 ### Override a variable on the fly
 
 ```bash
-npm run infra:apply -- -var="network=testnet"
+pnpm infra:apply -- -var="network=testnet"
 ```
 
 Overrides the value from `terraform.tfvars` for this run only.
@@ -433,7 +433,7 @@ After import, run `terraform plan` to check if the config matches the real state
 ```
 infra/
 ├── .terraform/              # Downloaded plugins (gitignored, like node_modules/)
-├── .terraform.lock.hcl      # Provider version lock (committed, like package-lock.json)
+├── .terraform.lock.hcl      # Provider version lock (committed, like pnpm-lock.yaml)
 ├── main.tf                  # Provider config + all resources
 ├── outputs.tf               # Values displayed after apply (URLs, IDs)
 ├── variables.tf             # Variable declarations with defaults and validation
@@ -446,7 +446,7 @@ scripts/
 └── docker.sh                # Docker build/push/deploy + Terraform pass-through
 ```
 
-All operations are accessible via `npm run docker:*` and `npm run infra:*` from the project root.
+All operations are accessible via `pnpm docker:*` and `pnpm infra:*` from the project root.
 
 ## CI/CD Integration
 

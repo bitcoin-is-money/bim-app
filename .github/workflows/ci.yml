@@ -22,32 +22,35 @@ jobs:
           # Sonar needs full git history for blame / new-code detection
           fetch-depth: 0
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-          cache: 'npm'
+          cache: 'pnpm'
 
       - name: Preflight — tool versions
         run: |
           echo "node:   $(node --version)"
-          echo "npm:    $(npm --version)"
+          echo "pnpm:   $(pnpm --version)"
           echo "docker: $(docker --version)"
 
       - name: Install dependencies
-        run: npm ci --ignore-scripts && npm exec patch-package
+        run: pnpm install --frozen-lockfile
 
       - name: Build
-        run: npm run build
+        run: pnpm run build
 
       - name: Lint
-        run: npm run lint
+        run: pnpm run lint
 
       - name: Unit tests (with coverage)
-        run: npm run test
+        run: pnpm run test
 
       - name: Integration tests (with coverage)
-        run: npm run test:integration
+        run: pnpm run test:integration
 
       - name: SonarCloud scan
         uses: SonarSource/sonarcloud-github-action@v5

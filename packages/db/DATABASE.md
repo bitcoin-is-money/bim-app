@@ -65,16 +65,16 @@ All commands run from the **`packages/db`** workspace (or from root via convenie
 
 ```bash
 # Push schema directly to database (no migration files)
-DATABASE_URL="..." npm run db:push -w @bim/db
+DATABASE_URL="..." pnpm --filter @bim/db db:push
 
 # Generate a migration file from schema changes
-DATABASE_URL="..." npm run db:generate -w @bim/db
+DATABASE_URL="..." pnpm --filter @bim/db db:generate
 
 # Run pending migration files
-DATABASE_URL="..." npm run db:migrate -w @bim/db
+DATABASE_URL="..." pnpm --filter @bim/db db:migrate
 
 # Open Drizzle Studio (visual database browser)
-DATABASE_URL="..." npm run db:studio -w @bim/db
+DATABASE_URL="..." pnpm --filter @bim/db db:studio
 
 # On production, use Terraform to set the `DATABASE_URL` environment variable.
 DATABASE_URL=$(terraform output -raw database_url) ...

@@ -29,13 +29,13 @@
   },
   "scripts": {
     "clean": "rm -rf dist",
-    "clean:all": "npm run clean && rm -rf node_modules",
+    "clean:all": "pnpm run clean && rm -rf node_modules",
     "build": "tsc -p tsconfig.build.json",
     "dev": "tsc --watch",
     "test": "vitest run --coverage"
   },
   "dependencies": {
-    "@bim/domain": "*",
+    "@bim/domain": "workspace:*",
     "pino": "^10.3.1"
   },
   "peerDependencies": {

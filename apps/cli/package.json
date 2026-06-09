@@ -27,10 +27,11 @@
     "./config/*": "./src/config/*.ts"
   },
   "dependencies": {
-    "@bim/domain": "*",
-    "@bim/lib": "*",
-    "@bim/starknet": "*",
-    "@bim/test-toolkit": "*"
+    "@bim/domain": "workspace:*",
+    "@bim/lib": "workspace:*",
+    "@bim/slack": "workspace:*",
+    "@bim/starknet": "workspace:*",
+    "@bim/test-toolkit": "workspace:*"
   },
   "peerDependencies": {
     "pino": "^10.0.0",
