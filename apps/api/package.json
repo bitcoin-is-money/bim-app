@@ -53,7 +53,7 @@
     "@bim/lib": "workspace:*",
     "@bim/slack": "workspace:*",
     "@bim/starknet": "workspace:*",
-    "@hono/node-server": "^1.19.14",
+    "@hono/node-server": "^2.0.4",
     "@noble/curves": "^1.9.7",
     "@noble/hashes": "^1.8.0",
     "@simplewebauthn/server": "^13.3.1",
@@ -73,8 +73,8 @@
   },
   "devDependencies": {
     "@bim/test-toolkit": "workspace:*",
-    "@testcontainers/postgresql": "^11.14.0",
+    "@testcontainers/postgresql": "^12.0.1",
     "@types/node": "^25.9.2",
-    "testcontainers": "^11.14.0"
+    "testcontainers": "^12.0.1"
   }
 }
