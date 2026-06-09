@@ -24,8 +24,8 @@ conventions we follow, and how to get a change merged.
 
 ## Getting Help
 
-- **Questions & discussion** → [GitHub Discussions](https://github.com/bitcoin-is-money/bim/discussions) (once enabled).
-- **Bug reports** → [open a bug issue](https://github.com/bitcoin-is-money/bim/issues/new/choose).
+- **Questions & discussion** → [GitHub Discussions](https://github.com/bitcoin-is-money/bim-app/discussions) (once enabled).
+- **Bug reports** → [open a bug issue](https://github.com/bitcoin-is-money/bim-app/issues/new/choose).
 - **Security issues** → do **not** open a public issue; see
   [SECURITY.md](SECURITY.md).
 
@@ -68,7 +68,7 @@ pull request.
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/bitcoin-is-money/bim.git
+git clone https://github.com/bitcoin-is-money/bim-app.git
 cd bim
 
 # 2. Install the pinned Node version

@@ -8,13 +8,13 @@
   "author": "yannicklacaute@bitcoinismoney.app",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/bitcoin-is-money/bim.git",
+    "url": "git+https://github.com/bitcoin-is-money/bim-app.git",
     "directory": "packages/atomiq"
   },
   "bugs": {
-    "url": "https://github.com/bitcoin-is-money/bim/issues"
+    "url": "https://github.com/bitcoin-is-money/bim-app/issues"
   },
-  "homepage": "https://github.com/bitcoin-is-money/bim#readme",
+  "homepage": "https://github.com/bitcoin-is-money/bim-app#readme",
   "keywords": [
     "bim",
     "atomiq",
