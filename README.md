@@ -129,7 +129,9 @@ performs WebAuthn ceremonies; all business logic lives server-side.
 
 - **Node.js** — exact version pinned in [`.nvmrc`](.nvmrc) /
   [`.tool-versions`](.tool-versions). Use `nvm install` or `asdf install`.
-  npm is the one bundled with that Node release.
+- **pnpm** — the package manager (`>=11`, pinned via the `packageManager`
+  field in `package.json`). Enable it with `corepack enable` or install
+  it from [pnpm.io](https://pnpm.io/installation).
 - **Docker & Docker Compose** — for local PostgreSQL and integration
   tests
 
@@ -148,11 +150,11 @@ nvm install           # nvm
 # or
 asdf install          # asdf
 
-# 3. Install workspace dependencies
-npm ci --ignore-scripts && npm exec patch-package --ignore-scripts && npx husky
+# 3. Install workspace dependencies (pnpm applies patches automatically)
+pnpm install --frozen-lockfile && pnpm exec husky
 
 # 4. Start PostgreSQL (docker-compose) and push the schema
-npm run db:up
+pnpm db:up
 
 # 5. Create the secret env files (they can start empty)
 touch apps/api/.env.testnet.secret
@@ -161,10 +163,10 @@ touch apps/indexer/.env.testnet.secret
 touch apps/indexer/.env.mainnet.secret
 
 # 6. Start the backend (testnet, port 8080)
-npm run dev
+pnpm dev
 
 # 7. In another terminal, start the Angular dev server (port 4200)
-npm run dev:front
+pnpm dev:front
 ```
 
 Open <http://localhost:4200>, register a passkey, and you're in. See
@@ -174,7 +176,7 @@ optional secrets (AVNU API key, Slack tokens, etc.).
 ### Running against mainnet
 
 ```bash
-NETWORK=mainnet npm run dev
+NETWORK=mainnet pnpm dev
 ```
 
 You will need a real `AVNU_API_KEY` (with credits) in
@@ -211,10 +213,10 @@ bim/
 ## Testing
 
 ```bash
-npm test                         # All unit tests across workspaces
-npm run test:integration          # API integration tests (requires Docker)
-npm run test -w @bim/domain       # Just the domain package
-npm run test:testnet -w @bim/api  # Testnet suite (requires AVNU_API_KEY)
+pnpm test                              # All unit tests across workspaces
+pnpm test:integration                  # API integration tests (requires Docker)
+pnpm --filter @bim/domain test         # Just the domain package
+pnpm --filter @bim/api test:testnet    # Testnet suite (requires AVNU_API_KEY)
 ```
 
 > ⚠️ **After editing any `packages/*` library**, rebuild them before
@@ -223,7 +225,7 @@ npm run test:testnet -w @bim/api  # Testnet suite (requires AVNU_API_KEY)
 > failures:
 >
 > ```bash
-> npm run build:libs
+> pnpm build:libs
 > ```
 
 More details on the testing pyramid, fixtures, and Testcontainers setup
@@ -232,88 +234,87 @@ in [ARCHITECTURE.md § Testing Pyramid](ARCHITECTURE.md#testing-pyramid).
 ## Scripts Reference
 
 <details>
-<summary><strong>Expand the full list of npm scripts</strong></summary>
+<summary><strong>Expand the full list of pnpm scripts</strong></summary>
 
 ### Development
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Start API with tsx watch (testnet, port 8080) |
-| `npm run dev:front` | Start Angular dev server (port 4200) |
+| `pnpm dev` | Start API with tsx watch (testnet, port 8080) |
+| `pnpm dev:front` | Start Angular dev server (port 4200) |
 
 ### Build
 
 | Command | Description |
 |---------|-------------|
-| `npm run build` | Build everything (api + indexer + frontend) |
-| `npm run build:libs` | Build shared libraries |
-| `npm run build:api` | Build API bundle (libs + api + frontend) |
-| `npm run build:front` | Build Angular frontend |
-| `npm run build:indexer` | Build Apibara indexer |
+| `pnpm build` | Build everything (api + indexer + frontend) |
+| `pnpm build:libs` | Build shared libraries |
+| `pnpm build:api` | Build API bundle (libs + api + frontend) |
+| `pnpm build:front` | Build Angular frontend |
+| `pnpm build:indexer` | Build Apibara indexer |
 
 ### Test
 
 | Command | Description |
 |---------|-------------|
-| `npm test` | Run all unit tests (all workspaces) |
-| `npm run test:integration` | Run API integration tests (requires Docker) |
-| `npm run test:testnet -w @bim/api` | Run testnet tests |
-| `npm run test:e2e -w @bim/api` | Run E2E tests against a deployed target |
+| `pnpm test` | Run all unit tests (all workspaces) |
+| `pnpm test:integration` | Run API integration tests (requires Docker) |
+| `pnpm --filter @bim/api test:testnet` | Run testnet tests |
+| `pnpm --filter @bim/api test:e2e` | Run E2E tests against a deployed target |
 
 ### Database
 
 | Command | Description |
 |---------|-------------|
-| `npm run db:up` | Start PostgreSQL container + push schema |
-| `npm run db:push` | Push Drizzle schema to database |
-| `npm run db:generate` | Generate Drizzle migration files |
-| `npm run db:migrate` | Run pending migrations |
-| `npm run db:studio` | Open Drizzle Studio (visual DB browser) |
+| `pnpm db:up` | Start PostgreSQL container + push schema |
+| `pnpm db:push` | Push Drizzle schema to database |
+| `pnpm db:generate` | Generate Drizzle migration files |
+| `pnpm db:migrate` | Run pending migrations |
+| `pnpm db:studio` | Open Drizzle Studio (visual DB browser) |
 
 ### Docker
 
 | Command | Description |
 |---------|-------------|
-| `npm run docker:up` | Build images + start full stack |
-| `npm run docker:down` | Stop all containers |
-| `npm run docker:logs` | Follow container logs |
-| `npm run docker:build` | Build Docker images |
-| `npm run docker:push` | Push images to Scaleway registry |
-| `npm run docker:redeploy` | Update and redeploy Scaleway containers |
-| `npm run docker:ship` | Build + push + redeploy (full deploy pipeline) |
+| `pnpm docker:up` | Build images + start full stack |
+| `pnpm docker:down` | Stop all containers |
+| `pnpm docker:logs` | Follow container logs |
+| `pnpm docker:build` | Build Docker images |
+| `pnpm docker:push` | Push images to Scaleway registry |
+| `pnpm docker:redeploy` | Update and redeploy Scaleway containers |
+| `pnpm docker:ship` | Build + push + redeploy (full deploy pipeline) |
 
 Use `NETWORK=mainnet` to target mainnet (default: `testnet`):
 
 ```bash
-NETWORK=mainnet npm run docker:up
+NETWORK=mainnet pnpm docker:up
 ```
 
 ### Infrastructure (Terraform)
 
 | Command | Description |
 |---------|-------------|
-| `npm run infra:init` | Initialize Terraform |
-| `npm run infra:plan` | Preview infrastructure changes |
-| `npm run infra:apply` | Apply infrastructure changes |
+| `pnpm infra:init` | Initialize Terraform |
+| `pnpm infra:plan` | Preview infrastructure changes |
+| `pnpm infra:apply` | Apply infrastructure changes |
 
 ### Lint & Security
 
 | Command | Description |
 |---------|-------------|
-| `npm run lint` | Lint the entire monorepo |
-| `npm run lint:fix` | Auto-fix lint errors |
-| `npm run security` | Run audit + lockfile-lint |
-| `npm run security:audit` | `better-npm-audit` (moderate level) |
-| `npm run security:lockfile` | Validate lockfile hosts/HTTPS |
+| `pnpm lint` | Lint the entire monorepo |
+| `pnpm lint:fix` | Auto-fix lint errors |
+| `pnpm security` | Run the dependency audit |
+| `pnpm security:audit` | `pnpm audit` (moderate level) |
 
 ### Utility
 
 | Command | Description |
 |---------|-------------|
-| `npm run clean` | Clean build outputs in all workspaces |
-| `npm run clean:all` | Remove all `node_modules` and build outputs |
-| `npm run deps:check` | List outdated dependencies |
-| `npm run deps:update` | Bump dependencies (interactive) |
+| `pnpm clean` | Clean build outputs in all workspaces |
+| `pnpm clean:all` | Remove all `node_modules` and build outputs |
+| `pnpm deps:check` | List outdated dependencies |
+| `pnpm deps:update` | Bump dependencies (interactive) |
 
 </details>
 

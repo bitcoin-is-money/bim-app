@@ -1,7 +1,7 @@
-diff --git a/node_modules/@apibara/plugin-drizzle/dist/index.mjs b/node_modules/@apibara/plugin-drizzle/dist/index.mjs
-index 92bb2af..270d66a 100644
---- a/node_modules/@apibara/plugin-drizzle/dist/index.mjs
-+++ b/node_modules/@apibara/plugin-drizzle/dist/index.mjs
+diff --git a/dist/index.mjs b/dist/index.mjs
+index 92bb2af8e2daf5e197f5fa4484cf2c3f12ba629f..270d66a6dc2b8fd2d3a25d7522de531b58fed16d 100644
+--- a/dist/index.mjs
++++ b/dist/index.mjs
 @@ -468,10 +468,13 @@ async function registerTriggers(tx, tables, idColumnMap, indexerId) {
        );
        await tx.execute(

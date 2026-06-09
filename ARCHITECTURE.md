@@ -164,8 +164,9 @@ bim/
 └── README.md
 ```
 
-Every `packages/*` entry is importable as an npm workspace
-(`@bim/domain`, `@bim/lib`, …). Everything is ESM (`"type": "module"`).
+Every `packages/*` entry is importable as a pnpm workspace
+(`@bim/domain`, `@bim/lib`, …); the workspace globs live in
+`pnpm-workspace.yaml`. Everything is ESM (`"type": "module"`).
 
 ## Dependency Graph
 
@@ -537,7 +538,7 @@ completion.
 
 PostgreSQL, managed via [Drizzle ORM](https://orm.drizzle.team/). The
 schema lives in [`packages/db/src/schema.ts`](packages/db/src/schema.ts);
-see `npm run db:generate` / `npm run db:push` / `npm run db:migrate`.
+see `pnpm db:generate` / `pnpm db:push` / `pnpm db:migrate`.
 
 Key tables (non-exhaustive):
 
@@ -563,15 +564,15 @@ Key tables (non-exhaustive):
 Commands:
 
 ```bash
-npm test                         # All unit tests
-npm run test:integration          # Integration tests (Docker required)
-npm run test:testnet -w @bim/api  # Testnet tests (requires AVNU_API_KEY)
-npm run test:e2e -w @bim/api      # E2E tests against a deployed target
+pnpm test                              # All unit tests
+pnpm test:integration                  # Integration tests (Docker required)
+pnpm --filter @bim/api test:testnet    # Testnet tests (requires AVNU_API_KEY)
+pnpm --filter @bim/api test:e2e        # E2E tests against a deployed target
 ```
 
 > Note: API tests import from each `packages/*` library's compiled
 > `dist/`, not from source. After editing **any** lib (domain, lib, db,
-> starknet, atomiq, slack…), rebuild them all with `npm run build:libs`
+> starknet, atomiq, slack…), rebuild them all with `pnpm build:libs`
 > before re-running the API tests — otherwise you'll be testing against
 > stale output.
 
@@ -596,7 +597,7 @@ full list of variables and their purpose.
 
 Production runs on [Scaleway Serverless Containers](https://www.scaleway.com/en/serverless-containers/):
 
-- **Build & deploy**: `npm run docker:ship` builds both API and indexer
+- **Build & deploy**: `pnpm docker:ship` builds both API and indexer
   images, pushes them to the Scaleway registry, runs database migrations,
   and redeploys the containers. A GitHub Actions workflow
   ([`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)) does

@@ -92,7 +92,7 @@ case "${1:-}" in
     # Push schema
     echo "Pushing database schema..."
     DATABASE_URL="postgresql://bim_user:bim_password@localhost:${DB_PORT}/bim" \
-      npm run db:push -w @bim/db
+      pnpm --filter @bim/db run db:push
 
     # Start remaining services
     APP_VERSION="$VERSION" NODE_VERSION="$NODE_VER" NETWORK="$NETWORK" DB_PORT="$DB_PORT" \

@@ -4,15 +4,15 @@
 
 Start unit tests:
 ```shell
-npm run test
+pnpm test
 ```
 
 Start integration tests:
 ```shell
-npm run test:integration
+pnpm test:integration
 ```
 
 Sample to start a single test (matching describe):
 ```shell
-npm run test:integration -- -t "CreateAccountUseCase"
+pnpm test:integration -- -t "CreateAccountUseCase"
 ```

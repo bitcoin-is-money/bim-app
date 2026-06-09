@@ -56,9 +56,11 @@ pull request.
 
 - **Node.js** — exact version pinned in [`.nvmrc`](.nvmrc) and
   [`.tool-versions`](.tool-versions). Use `nvm install` (nvm) or
-  `asdf install` (asdf) to get the right version. npm is the one
-  bundled with that Node release, so everyone runs the same npm
-  automatically.
+  `asdf install` (asdf) to get the right version.
+- **pnpm** — the package manager (`>=11`, pinned via the
+  `packageManager` field in `package.json` so everyone runs the same
+  pnpm automatically). Enable it with `corepack enable` or install it
+  from [pnpm.io](https://pnpm.io/installation).
 - **Docker & Docker Compose** (for the local PostgreSQL and integration
   tests)
 
@@ -74,11 +76,11 @@ nvm install      # reads .nvmrc           (nvm users)
 # or
 asdf install     # reads .tool-versions   (asdf users)
 
-# 3. Install workspace dependencies
-npm ci --ignore-scripts && npm exec patch-package && npx husky
+# 3. Install workspace dependencies (pnpm applies patches automatically)
+pnpm install --frozen-lockfile && pnpm exec husky
 
 # 4. Start PostgreSQL and push the schema
-npm run db:up
+pnpm db:up
 
 # 5. Create the secret env files (they can start empty)
 touch apps/api/.env.testnet.secret
@@ -87,10 +89,10 @@ touch apps/indexer/.env.testnet.secret
 touch apps/indexer/.env.mainnet.secret
 
 # 6. Start the backend (testnet, port 8080)
-npm run dev
+pnpm dev
 
 # 7. In another terminal, start the Angular dev server (port 4200)
-npm run dev:front
+pnpm dev:front
 ```
 
 See [`apps/api/.env.local.example`](apps/api/.env.local.example) for the
@@ -103,17 +105,18 @@ The most common ones while contributing:
 
 | Command | What it does                             |
 |---------|------------------------------------------|
-| `npm run dev` | Start the API in watch mode              |
-| `npm run dev:front` | Start the Angular dev server in watch mode            |
-| `npm test` | Run all unit tests                       |
-| `npm run test:integration` | Run API integration tests (needs Docker) |
-| `npm run lint` | Lint the whole monorepo                  |
-| `npm run lint:fix` | Auto-fix lint errors                     |
-| `npm run build` | Build backend + frontend + indexer       |
+| `pnpm dev` | Start the API in watch mode              |
+| `pnpm dev:front` | Start the Angular dev server in watch mode            |
+| `pnpm test` | Run all unit tests                       |
+| `pnpm test:integration` | Run API integration tests (needs Docker) |
+| `pnpm lint` | Lint the whole monorepo                  |
+| `pnpm lint:fix` | Auto-fix lint errors                     |
+| `pnpm build` | Build backend + frontend + indexer       |
 
 ## Repository Layout
 
-BIM is a TypeScript monorepo managed with npm workspaces.
+BIM is a TypeScript monorepo managed with pnpm workspaces (defined in
+`pnpm-workspace.yaml`).
 
 ```
 .
@@ -173,7 +176,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for a deeper dive.
   dependency. On the other hand, a heavy dep pulling dozens of
   transitive packages, or a poorly maintained one, deserves discussion
   first: open an issue and make the case.
-- **Linting**: `npm run lint` must pass before a PR is merged. Formatting
+- **Linting**: `pnpm lint` must pass before a PR is merged. Formatting
   follows the project's Prettier config (where applicable) and ESLint
   rules.
 
@@ -186,9 +189,9 @@ patterns.
 
 ### Git hooks
 
-Husky manages Git hooks from `.husky/`. Running `npx husky` once points
-Git to them via `core.hooksPath` (in `.git/config`). It does
-**not** need to be re-run after later `npm install` calls.
+Husky manages Git hooks from `.husky/`. Running `pnpm exec husky` once
+points Git to them via `core.hooksPath` (in `.git/config`). It does
+**not** need to be re-run after later `pnpm install` calls.
 
 On every commit:
 
@@ -219,10 +222,10 @@ On every commit:
 Before opening a PR:
 
 ```bash
-npm test                  # All unit tests across workspaces
-npm run test:integration  # API integration tests (requires Docker)
-npm run lint              # Lint the whole monorepo
-npm run build             # Catch any build-time regressions
+pnpm test                  # All unit tests across workspaces
+pnpm test:integration      # API integration tests (requires Docker)
+pnpm lint                  # Lint the whole monorepo
+pnpm build                 # Catch any build-time regressions
 ```
 
 > ⚠️ **If you changed any `packages/*` library**, rebuild them before
@@ -234,7 +237,7 @@ npm run build             # Catch any build-time regressions
 > The simplest and safest thing is to rebuild all libs in one go:
 >
 > ```bash
-> npm run build:libs
+> pnpm build:libs
 > ```
 >
 > This covers `@bim/lib`, `@bim/domain`, `@bim/db`, `@bim/test-toolkit`,
@@ -250,9 +253,12 @@ enabled).
 
 A single job runs the following steps sequentially:
 
-1. **Build** — `npm run build` (full TypeScript compile of all workspaces)
-2. **Unit tests** — `npm run test` (with coverage, `v8` provider)
-3. **Integration tests** — `npm run test:integration` (with coverage,
+0. **Install** — `pnpm/action-setup` + `actions/setup-node` (with
+   `cache: pnpm`), then `pnpm install --frozen-lockfile` (which also
+   applies the patches registered in `pnpm-workspace.yaml`)
+1. **Build** — `pnpm build` (full TypeScript compile of all workspaces)
+2. **Unit tests** — `pnpm test` (with coverage, `v8` provider)
+3. **Integration tests** — `pnpm test:integration` (with coverage,
    Testcontainers-backed PostgreSQL; coverage written to a separate
    `coverage-integration/` directory to avoid overwriting the unit
    coverage)
@@ -306,8 +312,8 @@ Examples drawn from the project history:
 
 ```
 feat(api): extend startup health checks to all external services
-docs(patches): add README for each npm patch explaining purpose
-chore: patch Atomiq SDK to truncate HTML LP errors
+docs(patches): add README for each pnpm patch explaining purpose
+chore: patch Atomiq base SDK to truncate HTML LP errors
 fix(front): prevent double-submit on pay button
 ```
 
