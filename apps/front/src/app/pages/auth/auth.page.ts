@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ButtonComponent } from '../../components/button/button.component';
 import { PwaInstallBannerComponent } from '../../components/pwa-install-banner/pwa-install-banner.component';
 import { FullPageLayoutComponent } from '../../layout';
@@ -13,7 +13,7 @@ import { AuthService } from '../../services/auth.service';
   imports: [
     CommonModule,
     FormsModule,
-    TranslateModule,
+    TranslatePipe,
     ButtonComponent,
     FullPageLayoutComponent,
     PwaInstallBannerComponent,

@@ -239,11 +239,11 @@ importers:
         specifier: ^7.2.0
         version: 7.2.0
       '@ngx-translate/core':
-        specifier: ^17.0.0
-        version: 17.0.0(@angular/common@22.0.0(@angular/core@22.0.0(@angular/compiler@22.0.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.0.0(@angular/compiler@22.0.0)(rxjs@7.8.2))
+        specifier: ^18.0.0
+        version: 18.0.0(@angular/common@22.0.0(@angular/core@22.0.0(@angular/compiler@22.0.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.0.0(@angular/compiler@22.0.0)(rxjs@7.8.2))(rxjs@7.8.2)
       '@ngx-translate/http-loader':
         specifier: ^18.0.0
-        version: 18.0.0(@angular/common@22.0.0(@angular/core@22.0.0(@angular/compiler@22.0.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.0.0(@angular/compiler@22.0.0)(rxjs@7.8.2))(@ngx-translate/core@17.0.0(@angular/common@22.0.0(@angular/core@22.0.0(@angular/compiler@22.0.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.0.0(@angular/compiler@22.0.0)(rxjs@7.8.2)))
+        version: 18.0.0(@angular/common@22.0.0(@angular/core@22.0.0(@angular/compiler@22.0.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.0.0(@angular/compiler@22.0.0)(rxjs@7.8.2))(@ngx-translate/core@18.0.0(@angular/common@22.0.0(@angular/core@22.0.0(@angular/compiler@22.0.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.0.0(@angular/compiler@22.0.0)(rxjs@7.8.2))(rxjs@7.8.2))
       '@stablelib/base64':
         specifier: ^2.0.1
         version: 2.0.1
@@ -2150,11 +2150,12 @@ packages:
     peerDependencies:
       '@angular/core': '>=21'
 
-  '@ngx-translate/core@17.0.0':
-    resolution: {integrity: sha512-Rft2D5ns2pq4orLZjEtx1uhNuEBerUdpFUG1IcqtGuipj6SavgB8SkxtNQALNDA+EVlvsNCCjC2ewZVtUeN6rg==}
+  '@ngx-translate/core@18.0.0':
+    resolution: {integrity: sha512-Z9u9AXaeuyeHHimivvJQvhal/LJNB+5tlH+FimSU4QQ61FrtRDqgyn6nfFbc6Cb+59NDZdsh4QeTJyPCldFUwA==}
     peerDependencies:
-      '@angular/common': '>=16'
-      '@angular/core': '>=16'
+      '@angular/common': '>=18'
+      '@angular/core': '>=18'
+      rxjs: '>=7'
 
   '@ngx-translate/http-loader@18.0.0':
     resolution: {integrity: sha512-p6QpNcU3rkCYjHbKVIadcYtml/Njpr0aLp8neJ4uJWQ4Xm9f09bIePhOjdjAFHupTptKqKrG1J2gSi3RSwgYeA==}
@@ -7703,17 +7704,18 @@ snapshots:
       '@angular/core': 22.0.0(@angular/compiler@22.0.0)(rxjs@7.8.2)
       tslib: 2.8.1
 
-  '@ngx-translate/core@17.0.0(@angular/common@22.0.0(@angular/core@22.0.0(@angular/compiler@22.0.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.0.0(@angular/compiler@22.0.0)(rxjs@7.8.2))':
+  '@ngx-translate/core@18.0.0(@angular/common@22.0.0(@angular/core@22.0.0(@angular/compiler@22.0.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.0.0(@angular/compiler@22.0.0)(rxjs@7.8.2))(rxjs@7.8.2)':
     dependencies:
       '@angular/common': 22.0.0(@angular/core@22.0.0(@angular/compiler@22.0.0)(rxjs@7.8.2))(rxjs@7.8.2)
       '@angular/core': 22.0.0(@angular/compiler@22.0.0)(rxjs@7.8.2)
+      rxjs: 7.8.2
       tslib: 2.8.1
 
-  '@ngx-translate/http-loader@18.0.0(@angular/common@22.0.0(@angular/core@22.0.0(@angular/compiler@22.0.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.0.0(@angular/compiler@22.0.0)(rxjs@7.8.2))(@ngx-translate/core@17.0.0(@angular/common@22.0.0(@angular/core@22.0.0(@angular/compiler@22.0.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.0.0(@angular/compiler@22.0.0)(rxjs@7.8.2)))':
+  '@ngx-translate/http-loader@18.0.0(@angular/common@22.0.0(@angular/core@22.0.0(@angular/compiler@22.0.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.0.0(@angular/compiler@22.0.0)(rxjs@7.8.2))(@ngx-translate/core@18.0.0(@angular/common@22.0.0(@angular/core@22.0.0(@angular/compiler@22.0.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.0.0(@angular/compiler@22.0.0)(rxjs@7.8.2))(rxjs@7.8.2))':
     dependencies:
       '@angular/common': 22.0.0(@angular/core@22.0.0(@angular/compiler@22.0.0)(rxjs@7.8.2))(rxjs@7.8.2)
       '@angular/core': 22.0.0(@angular/compiler@22.0.0)(rxjs@7.8.2)
-      '@ngx-translate/core': 17.0.0(@angular/common@22.0.0(@angular/core@22.0.0(@angular/compiler@22.0.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.0.0(@angular/compiler@22.0.0)(rxjs@7.8.2))
+      '@ngx-translate/core': 18.0.0(@angular/common@22.0.0(@angular/core@22.0.0(@angular/compiler@22.0.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.0.0(@angular/compiler@22.0.0)(rxjs@7.8.2))(rxjs@7.8.2)
       tslib: 2.8.1
 
   '@ngxpert/hot-toast@6.2.0(@angular/common@22.0.0(@angular/core@22.0.0(@angular/compiler@22.0.0)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.0.0(@angular/compiler@22.0.0)(rxjs@7.8.2))(@ngneat/overview@8.1.0(@angular/core@22.0.0(@angular/compiler@22.0.0)(rxjs@7.8.2)))':

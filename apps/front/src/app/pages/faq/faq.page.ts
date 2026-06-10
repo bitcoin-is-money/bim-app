@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { GoBackHeaderComponent } from '../../components/go-back-header/go-back-header.component';
 import { FullPageLayoutComponent } from '../../layout';
 import { FaqContentService } from './faq-content.service';
@@ -7,7 +7,7 @@ import { FaqContentService } from './faq-content.service';
 @Component({
   selector: 'app-faq',
   standalone: true,
-  imports: [TranslateModule, GoBackHeaderComponent, FullPageLayoutComponent],
+  imports: [TranslatePipe, GoBackHeaderComponent, FullPageLayoutComponent],
   templateUrl: './faq.page.html',
   styleUrl: './faq.page.scss',
 })

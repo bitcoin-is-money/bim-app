@@ -2,14 +2,14 @@ import type { OnInit } from '@angular/core';
 import { Component, computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { FaIconComponent } from '@fortawesome/angular-fontawesome';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { FullPageLayoutComponent } from '../../layout';
 import { PayService } from '../../services/pay.service';
 
 @Component({
   selector: 'app-pay-success',
   standalone: true,
-  imports: [TranslateModule, FaIconComponent, FullPageLayoutComponent],
+  imports: [TranslatePipe, FaIconComponent, FullPageLayoutComponent],
   templateUrl: './pay-success.page.html',
   styleUrl: './pay-success.page.scss',
 })

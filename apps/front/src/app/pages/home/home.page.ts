@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import type { OnInit } from '@angular/core';
 import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { forkJoin } from 'rxjs';
 import { AmountHighlightComponent } from '../../components/amount-highlight/amount-highlight.component';
 import { ButtonComponent } from '../../components/button/button.component';
@@ -23,7 +23,7 @@ import { TransactionListComponent } from './components/transaction-list/transact
   standalone: true,
   imports: [
     CommonModule,
-    TranslateModule,
+    TranslatePipe,
     AmountHighlightComponent,
     TransactionListComponent,
     EmptyTransactionComponent,

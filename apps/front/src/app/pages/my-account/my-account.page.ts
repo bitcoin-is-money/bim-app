@@ -1,7 +1,7 @@
 import { DatePipe } from '@angular/common';
 import type { OnInit } from '@angular/core';
 import { Component, inject, signal } from '@angular/core';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { GoBackHeaderComponent } from '../../components/go-back-header/go-back-header.component';
 import { InfoFieldComponent } from '../../components/info-field/info-field.component';
 import { FullPageLayoutComponent } from '../../layout';
@@ -14,7 +14,7 @@ import { I18nService } from '../../services/i18n.service';
   standalone: true,
   imports: [
     DatePipe,
-    TranslateModule,
+    TranslatePipe,
     GoBackHeaderComponent,
     InfoFieldComponent,
     FullPageLayoutComponent,

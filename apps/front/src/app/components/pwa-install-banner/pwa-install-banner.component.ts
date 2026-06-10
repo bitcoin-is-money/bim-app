@@ -1,12 +1,12 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { PwaInstallService } from '../../services/pwa-install.service';
 import { ButtonComponent } from '../button/button.component';
 
 @Component({
   selector: 'app-pwa-install-banner',
   standalone: true,
-  imports: [TranslateModule, ButtonComponent],
+  imports: [TranslatePipe, ButtonComponent],
   templateUrl: './pwa-install-banner.component.html',
   styleUrl: './pwa-install-banner.component.scss',
 })

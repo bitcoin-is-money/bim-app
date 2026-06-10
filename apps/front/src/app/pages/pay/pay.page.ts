@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import type { OnDestroy } from '@angular/core';
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { environment } from '../../../environments/environment';
 import { ButtonComponent } from '../../components/button/button.component';
@@ -18,7 +18,7 @@ import { PayService } from '../../services/pay.service';
   imports: [
     CommonModule,
     FormsModule,
-    TranslateModule,
+    TranslatePipe,
     ButtonComponent,
     GoBackHeaderComponent,
     FullPageLayoutComponent,

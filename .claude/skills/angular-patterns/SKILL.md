@@ -77,7 +77,7 @@ All standalone (no NgModule). Use `inject()` (not constructor injection).
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, TranslateModule, AmountHighlightComponent, ButtonComponent],
+  imports: [CommonModule, TranslatePipe, AmountHighlightComponent, ButtonComponent],
   templateUrl: './home.page.html',
   styleUrl: './home.page.scss',
 })
@@ -150,10 +150,15 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptors([httpNotificationInterceptor, backendInterceptor])),
     provideRouter(routes),
     provideHotToastConfig({ ... }),
-    provideTranslateHttpLoader({ prefix: './assets/i18n/', suffix: '.json' }),
+    provideTranslateService({
+      loader: provideTranslateHttpLoader({ prefix: './assets/i18n/', suffix: '.json' }),
+      fallbackLang: 'en',
+    }),
   ],
 };
 ```
+
+> ngx-translate v18 is fully standalone: there is no `TranslateModule`. Configure once via `provideTranslateService` (nest the http loader inside it), and import `TranslatePipe` (and `TranslateDirective` if used) directly in component `imports`.
 
 Main libraries: `@ngx-translate/core`, `@ngxpert/hot-toast`, `@fortawesome/angular-fontawesome`, `uqr`.
 

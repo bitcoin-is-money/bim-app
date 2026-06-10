@@ -1,7 +1,7 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import type { SafeHtml } from '@angular/platform-browser';
 import { DomSanitizer } from '@angular/platform-browser';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { renderSVG } from 'uqr';
 import { AmountFieldComponent } from '../../components/amount-field/amount-field.component';
 import { ButtonComponent } from '../../components/button/button.component';
@@ -25,7 +25,7 @@ const NETWORKS: PaymentNetwork[] = ['starknet', 'lightning', 'bitcoin'];
   selector: 'app-receive',
   standalone: true,
   imports: [
-    TranslateModule,
+    TranslatePipe,
     GoBackHeaderComponent,
     NetworkLogoComponent,
     AmountFieldComponent,
