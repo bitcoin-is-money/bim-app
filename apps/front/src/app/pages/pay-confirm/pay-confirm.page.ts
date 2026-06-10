@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, effect, inject, signal } from '@angular/core';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { AmountFieldComponent } from '../../components/amount-field/amount-field.component';
 import { AmountHighlightComponent } from '../../components/amount-highlight/amount-highlight.component';
 import { ButtonComponent } from '../../components/button/button.component';
@@ -20,7 +20,7 @@ import { PayService } from '../../services/pay.service';
   standalone: true,
   imports: [
     CommonModule,
-    TranslateModule,
+    TranslatePipe,
     ButtonComponent,
     GoBackHeaderComponent,
     NetworkLogoComponent,

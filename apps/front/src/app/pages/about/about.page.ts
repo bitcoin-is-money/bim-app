@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { APP_VERSION } from '../../../environments/version';
 import { GoBackHeaderComponent } from '../../components/go-back-header/go-back-header.component';
 import { PwaInstallInfoComponent } from '../../components/pwa-install-info/pwa-install-info.component';
@@ -10,7 +10,7 @@ import { AboutContentService } from './about-content.service';
   selector: 'app-about',
   standalone: true,
   imports: [
-    TranslateModule,
+    TranslatePipe,
     GoBackHeaderComponent,
     FullPageLayoutComponent,
     PwaInstallInfoComponent,

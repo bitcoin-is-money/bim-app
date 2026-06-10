@@ -2,7 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import type { OnInit } from '@angular/core';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ButtonComponent } from '../../components/button/button.component';
 import { SpinnerComponent } from '../../components/spinner/spinner.component';
 import { FullPageLayoutComponent } from '../../layout';
@@ -16,7 +16,7 @@ const POLL_INTERVAL_MS = 1000;
 @Component({
   selector: 'app-account-setup',
   standalone: true,
-  imports: [TranslateModule, SpinnerComponent, ButtonComponent, FullPageLayoutComponent],
+  imports: [TranslatePipe, SpinnerComponent, ButtonComponent, FullPageLayoutComponent],
   templateUrl: './account-setup.page.html',
   styleUrl: './account-setup.page.scss',
 })

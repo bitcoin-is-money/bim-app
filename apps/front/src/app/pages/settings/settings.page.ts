@@ -1,6 +1,6 @@
 import { Component, computed, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { GoBackHeaderComponent } from '../../components/go-back-header/go-back-header.component';
 import { FullPageLayoutComponent } from '../../layout';
 import { CurrencyService } from '../../services/currency.service';
@@ -21,7 +21,7 @@ const LANGUAGE_OPTIONS: [LanguageOption, ...LanguageOption[]] = [
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [FormsModule, TranslateModule, GoBackHeaderComponent, FullPageLayoutComponent],
+  imports: [FormsModule, TranslatePipe, GoBackHeaderComponent, FullPageLayoutComponent],
   templateUrl: './settings.page.html',
   styleUrl: './settings.page.scss',
 })

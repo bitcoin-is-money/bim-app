@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { GoBackHeaderComponent } from '../../components/go-back-header/go-back-header.component';
 import { FullPageLayoutComponent } from '../../layout/full-page-layout/full-page-layout.component';
 import { AuthService } from '../../services/auth.service';
@@ -8,7 +8,7 @@ import { AuthService } from '../../services/auth.service';
 @Component({
   selector: 'app-menu',
   standalone: true,
-  imports: [TranslateModule, GoBackHeaderComponent, FullPageLayoutComponent],
+  imports: [TranslatePipe, GoBackHeaderComponent, FullPageLayoutComponent],
   templateUrl: './menu.page.html',
   styleUrl: './menu.page.scss',
 })

@@ -1,5 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { AmountFieldComponent } from '../../components/amount-field/amount-field.component';
 import { ButtonComponent } from '../../components/button/button.component';
 import { GoBackHeaderComponent } from '../../components/go-back-header/go-back-header.component';
@@ -15,7 +15,7 @@ import { PayService } from '../../services/pay.service';
   selector: 'app-support',
   standalone: true,
   imports: [
-    TranslateModule,
+    TranslatePipe,
     GoBackHeaderComponent,
     FullPageLayoutComponent,
     AmountFieldComponent,

@@ -1,5 +1,5 @@
 import {Component, inject, type OnInit, signal} from '@angular/core';
-import {TranslateModule} from '@ngx-translate/core';
+import {TranslatePipe} from '@ngx-translate/core';
 
 import {FullPageLayoutComponent} from '../../layout';
 import {PwaUpdateService} from '../../services/pwa-update.service';
@@ -27,7 +27,7 @@ const POST_UPDATE_DWELL_MS = 1500;
 @Component({
   selector: 'app-updating',
   standalone: true,
-  imports: [TranslateModule, FullPageLayoutComponent],
+  imports: [TranslatePipe, FullPageLayoutComponent],
   templateUrl: './updating.page.html',
   styleUrl: './updating.page.scss',
 })
