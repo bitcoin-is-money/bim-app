@@ -73,8 +73,8 @@
   },
   "devDependencies": {
     "@bim/test-toolkit": "workspace:*",
-    "@testcontainers/postgresql": "^12.0.1",
+    "@testcontainers/postgresql": "^12.0.2",
     "@types/node": "^25.9.2",
-    "testcontainers": "^12.0.1"
+    "testcontainers": "^12.0.2"
   }
 }
