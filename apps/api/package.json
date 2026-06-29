@@ -45,7 +45,7 @@
   },
   "dependencies": {
     "@atomiqlabs/chain-starknet": "^8.4.5",
-    "@atomiqlabs/sdk": "^8.9.1",
+    "@atomiqlabs/sdk": "^8.9.4",
     "@bim/atomiq": "workspace:*",
     "@bim/atomiq-storage-postgres": "workspace:*",
     "@bim/db": "workspace:*",
