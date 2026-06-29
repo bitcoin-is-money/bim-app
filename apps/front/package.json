@@ -78,7 +78,7 @@
     "@angular/compiler-cli": "^22.0.0",
     "@ngneat/overview": "^8.1.0",
     "@ngxpert/hot-toast": "^6.2.0",
-    "@tailwindcss/postcss": "^4.3.0",
+    "@tailwindcss/postcss": "^4.3.2",
     "@types/canvas-confetti": "^1.9.0",
     "autoprefixer": "^10.5.0",
     "jsdom": "^29.1.1",
