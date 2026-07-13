@@ -82,11 +82,11 @@ importers:
   apps/api:
     dependencies:
       '@atomiqlabs/chain-starknet':
-        specifier: ^8.4.5
-        version: 8.4.5(starknet@10.0.2(typescript@6.0.3)(zod@4.4.3))
+        specifier: ^8.5.1
+        version: 8.5.1(starknet@10.0.2(typescript@6.0.3)(zod@4.4.3))
       '@atomiqlabs/sdk':
-        specifier: ^8.9.1
-        version: 8.9.1(typescript@6.0.3)
+        specifier: ^8.9.5
+        version: 8.9.5(typescript@6.0.3)
       '@bim/atomiq':
         specifier: workspace:*
         version: link:../../packages/atomiq
@@ -799,11 +799,19 @@ packages:
     peerDependencies:
       starknet: ^9.0.0
 
+  '@atomiqlabs/chain-starknet@8.5.1':
+    resolution: {integrity: sha512-P/qX6b6Z4GaivrhZXJ1PiS51d7TK3JQHmWDrV0uQc2TwPqi/JJwpoHAagmpGIlAsenVBZ5CtPFfuVwhIv1G46Q==}
+    peerDependencies:
+      starknet: ^9.0.0
+
   '@atomiqlabs/messenger-nostr@2.0.1':
     resolution: {integrity: sha512-bAtya1kjLjsBsF+Yb2JARHZ9/i/E+seBfc1tDgKrSVX8b2IxAe8Hfajgsk1h2BMRZzkJk/d0SS6OFpXKJ5RHCg==}
 
   '@atomiqlabs/sdk@8.9.1':
     resolution: {integrity: sha512-fKFhjx5YMS1rgDXGuRIv7p/rgGSgpZOc48sD8IYUTcFvYV1JNgW2EX9vrs5HE3krCIuPQzKVetGHNdzR2ItNKw==}
+
+  '@atomiqlabs/sdk@8.9.5':
+    resolution: {integrity: sha512-i0Part2SZVQ1E15V6Uy9xy7lsyhPMSsoS8wZaW1pdei/4RUo0ybSpRvjSGr0+Kp7iT6d1kNL2AbpZDL9dFYA3w==}
 
   '@azu/format-text@1.0.2':
     resolution: {integrity: sha512-Swi4N7Edy1Eqq82GxgEECXSSLyn6GOb5htRFPzBDdUkECGXtlf12ynO5oJSpWKPwCaUssOu7NfhDcCWpIC6Ywg==}
@@ -1036,11 +1044,11 @@ packages:
 
   '@esbuild-kit/core-utils@3.3.2':
     resolution: {integrity: sha512-sPRAnw9CdSsRmEtnsl2WXWdyquogVpB3yZ3dgwJfe8zrOzTsV7cJvmwrKVa+0ma5BoiGJ+BoqkMvawbayKUsqQ==}
-    deprecated: 'Merged into tsx: https://tsx.is'
+    deprecated: 'Merged into tsx: https://tsx.hirok.io'
 
   '@esbuild-kit/esm-loader@2.6.5':
     resolution: {integrity: sha512-FxEMIkJKnodyA1OaCUoEvbYRkoZlLZ4d/eXFu9Fh8CbBBgP5EmZxrfTRyN0qpXZ4vOvqnE5YdRdcrmUUXuU+dA==}
-    deprecated: 'Merged into tsx: https://tsx.is'
+    deprecated: 'Merged into tsx: https://tsx.hirok.io'
 
   '@esbuild/aix-ppc64@0.25.12':
     resolution: {integrity: sha512-Hhmwd6CInZ3dwpuGTF8fJG6yoWmsToE+vYgD4nytZVxcu1ulHpUQRAB1UJ8+N1Am3Mz4+xOByoQoSZf4D+CpkA==}
@@ -4359,6 +4367,7 @@ packages:
   git-raw-commits@5.0.1:
     resolution: {integrity: sha512-Y+csSm2GD/PCSh6Isd/WiMjNAydu0VBiG9J7EdQsNA5P9uXvLayqjmTsNlK5Gs9IhblFZqOU0yid5Il5JPoLiQ==}
     engines: {node: '>=18'}
+    deprecated: Deprecated and no longer maintained. Use @conventional-changelog/git-client instead.
     hasBin: true
 
   glob-parent@5.1.2:
@@ -5939,6 +5948,7 @@ packages:
   tsconfck@3.1.6:
     resolution: {integrity: sha512-ks6Vjr/jEw0P1gmOVwutM3B7fWxoWBL2KRDb1JfqGVawBmO5UsvmWOQFGHBPl5yxYz4eERr19E6L7NMv+Fej4w==}
     engines: {node: ^18 || >=20}
+    deprecated: unmaintained
     hasBin: true
     peerDependencies:
       typescript: ^5.0.0
@@ -6296,6 +6306,10 @@ packages:
 
   yargs@17.7.2:
     resolution: {integrity: sha512-7dSzzRQ++CKnNI/krKnYRV7JKKPUXMEh61soaHKg9mrWEhzFWhFnxPxGl+69cD1Ou63C13NUPCnmIcrvqCuM6w==}
+    engines: {node: '>=12'}
+
+  yargs@17.7.3:
+    resolution: {integrity: sha512-GZtjxm/J/4TSxuL3FNYjCmLktBTnIw/rVmKSIyKeYAZpmJB2ig9VauCC5xsa82GNKVKDAqpOn3KVzNt0zmrU0g==}
     engines: {node: '>=12'}
 
   yargs@18.0.0:
@@ -6743,7 +6757,7 @@ snapshots:
     dependencies:
       '@noble/curves': 1.9.7
       '@noble/hashes': 1.8.0
-      '@scure/btc-signer': 1.7.0
+      '@scure/btc-signer': 1.8.1
       bech32: 1.1.4
       lodash.clonedeep: 4.5.0
       safe-buffer: 5.2.1
@@ -6752,20 +6766,6 @@ snapshots:
     dependencies:
       '@atomiqlabs/base': 13.5.2(patch_hash=d6b4baf1476d0429dce56c279c69cffe23af7286e7e3f8d657c27c53d3c3f8b1)
       '@scure/btc-signer': 1.6.0
-
-  '@atomiqlabs/chain-starknet@8.4.5(starknet@10.0.2(typescript@6.0.3)(zod@4.4.3))':
-    dependencies:
-      '@atomiqlabs/base': 13.5.2(patch_hash=d6b4baf1476d0429dce56c279c69cffe23af7286e7e3f8d657c27c53d3c3f8b1)
-      '@noble/hashes': 1.8.0
-      '@scure/btc-signer': 1.8.1
-      abi-wan-kanabi: 2.2.4
-      buffer: 6.0.3
-      promise-queue-ts: 1.0.0
-      starknet: 10.0.2(typescript@6.0.3)(zod@4.4.3)
-      ws: 8.21.0
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
 
   '@atomiqlabs/chain-starknet@8.4.5(starknet@9.4.2(typescript@6.0.3))':
     dependencies:
@@ -6776,6 +6776,20 @@ snapshots:
       buffer: 6.0.3
       promise-queue-ts: 1.0.0
       starknet: 9.4.2(typescript@6.0.3)
+      ws: 8.21.0
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
+  '@atomiqlabs/chain-starknet@8.5.1(starknet@10.0.2(typescript@6.0.3)(zod@4.4.3))':
+    dependencies:
+      '@atomiqlabs/base': 13.5.2(patch_hash=d6b4baf1476d0429dce56c279c69cffe23af7286e7e3f8d657c27c53d3c3f8b1)
+      '@noble/hashes': 1.8.0
+      '@scure/btc-signer': 1.8.1
+      abi-wan-kanabi: 2.2.4
+      buffer: 6.0.3
+      promise-queue-ts: 1.0.0
+      starknet: 10.0.2(typescript@6.0.3)(zod@4.4.3)
       ws: 8.21.0
     transitivePeerDependencies:
       - bufferutil
@@ -6792,6 +6806,26 @@ snapshots:
       - utf-8-validate
 
   '@atomiqlabs/sdk@8.9.1(typescript@6.0.3)':
+    dependencies:
+      '@atomiqlabs/base': 13.5.2(patch_hash=d6b4baf1476d0429dce56c279c69cffe23af7286e7e3f8d657c27c53d3c3f8b1)
+      '@atomiqlabs/bolt11': 1.6.1(@noble/curves@1.9.7)(@noble/hashes@1.8.0)
+      '@atomiqlabs/btc-mempool': 1.1.2
+      '@atomiqlabs/messenger-nostr': 2.0.1(typescript@6.0.3)
+      '@noble/ciphers': 1.3.0
+      '@noble/curves': 1.9.7
+      '@noble/hashes': 1.8.0
+      '@scure/base': 1.2.6
+      '@scure/bip32': 2.2.0
+      '@scure/bip39': 2.2.0
+      '@scure/btc-signer': 1.7.0
+      buffer: 6.0.3
+      events: 3.3.0
+    transitivePeerDependencies:
+      - bufferutil
+      - typescript
+      - utf-8-validate
+
+  '@atomiqlabs/sdk@8.9.5(typescript@6.0.3)':
     dependencies:
       '@atomiqlabs/base': 13.5.2(patch_hash=d6b4baf1476d0429dce56c279c69cffe23af7286e7e3f8d657c27c53d3c3f8b1)
       '@atomiqlabs/bolt11': 1.6.1(@noble/curves@1.9.7)(@noble/hashes@1.8.0)
@@ -7591,7 +7625,7 @@ snapshots:
       lodash.camelcase: 4.3.0
       long: 5.3.2
       protobufjs: 7.6.2
-      yargs: 17.7.2
+      yargs: 17.7.3
 
   '@harperfast/extended-iterable@1.0.3':
     optional: true
@@ -8420,7 +8454,7 @@ snapshots:
   '@scure/bip32@1.3.1':
     dependencies:
       '@noble/curves': 1.1.0
-      '@noble/hashes': 1.3.1
+      '@noble/hashes': 1.3.2
       '@scure/base': 1.1.1
 
   '@scure/bip32@1.7.0':
@@ -8437,7 +8471,7 @@ snapshots:
 
   '@scure/bip39@1.2.1':
     dependencies:
-      '@noble/hashes': 1.3.1
+      '@noble/hashes': 1.3.2
       '@scure/base': 1.1.1
 
   '@scure/bip39@1.6.0':
@@ -8976,7 +9010,7 @@ snapshots:
       ansicolors: 0.3.2
       cardinal: 2.1.1
       fs-extra: 10.1.0
-      yargs: 17.7.2
+      yargs: 17.7.3
 
   abitype@1.2.3(typescript@6.0.3)(zod@4.4.3):
     optionalDependencies:
@@ -12208,6 +12242,16 @@ snapshots:
   yargs-parser@22.0.0: {}
 
   yargs@17.7.2:
+    dependencies:
+      cliui: 8.0.1
+      escalade: 3.2.0
+      get-caller-file: 2.0.5
+      require-directory: 2.1.1
+      string-width: 4.2.3
+      y18n: 5.0.8
+      yargs-parser: 21.1.1
+
+  yargs@17.7.3:
     dependencies:
       cliui: 8.0.1
       escalade: 3.2.0
