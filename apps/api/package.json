@@ -53,7 +53,7 @@
     "@bim/lib": "workspace:*",
     "@bim/slack": "workspace:*",
     "@bim/starknet": "workspace:*",
-    "@hono/node-server": "^2.0.4",
+    "@hono/node-server": "^2.0.10",
     "@noble/curves": "^1.9.7",
     "@noble/hashes": "^1.8.0",
     "@simplewebauthn/server": "^13.3.1",
