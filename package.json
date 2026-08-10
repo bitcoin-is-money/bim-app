@@ -94,7 +94,7 @@
     "vitest": "^4.1.8"
   },
   "dependencies": {
-    "@atomiqlabs/base": "^13.5.2"
+    "@atomiqlabs/base": "^13.6.0"
   },
   "lint-staged": {
     "*.{ts,tsx,js,mjs,cjs}": "eslint --fix --max-warnings=0 --no-warn-ignored",
