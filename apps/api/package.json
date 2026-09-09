@@ -61,7 +61,7 @@
     "dotenv": "^17.4.2",
     "dotenv-expand": "^13.0.0",
     "drizzle-orm": "^0.45.2",
-    "hono": "^4.12.25",
+    "hono": "^4.13.5",
     "hono-rate-limiter": "^0.5.3",
     "light-bolt11-decoder": "^3.2.0",
     "pg": "^8.21.0",
