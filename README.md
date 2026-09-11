@@ -3,13 +3,19 @@
 
 # **A self-custodial Bitcoin wallet, unlocked by your fingerprint.**
 
+> [!IMPORTANT]
+> **This project is discontinued.** BIM stopped operating in September 2026:
+> the hosted app and the API have been shut down.
+>
+> The repository stays public as a reference for anyone building a
+> WebAuthn-backed smart-contract wallet on Starknet. Read `ARCHITECTURE.md`
+> for the layering, and `doc/flow/` for the payment and swap sequences.
+> Forks are welcome; issues and pull requests will not be answered.
+
 BIM (Bitcoin is money) lets anyone send and receive Bitcoin — on-chain, on the Lightning Network, or as WBTC on Starknet — using nothing but a passkey. No seed phrase to write down. No browser extension. No gas to pre-fund.
 
-**🚀 Try it live:** [**app.bitcoinismoney.app**](https://app.bitcoinismoney.app) — register a passkey in 30 seconds.
-**🌐 Website:** [bitcoinismoney.app](https://bitcoinismoney.app)
+**🌐 Website:** [bitcoinismoney.app](https://bitcoinismoney.app) *(offline)*
 
-[![Live App](https://img.shields.io/badge/app-bitcoinismoney-F7931A?logo=bitcoin&logoColor=white)](https://app.bitcoinismoney.app)
-[![Website](https://img.shields.io/badge/website-bitcoinismoney-F7931A)](https://bitcoinismoney.app)
 [![CI](https://github.com/bitcoin-is-money/bim-app/actions/workflows/ci.yml/badge.svg)](https://github.com/bitcoin-is-money/bim-app/actions/workflows/ci.yml)
 [![Security](https://sonarcloud.io/api/project_badges/measure?project=bitcoin-is-money_bim&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=bitcoin-is-money_bim)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
